@@ -67,6 +67,7 @@ export default function TrainingPlan({ programStyle, goal, paces, latestSleepSco
       icsContent += "BEGIN:VEVENT\n";
       icsContent += `DTSTART;VALUE=DATE:${dateStr}\n`;
       icsContent += `DTEND;VALUE=DATE:${dateStr}\n`;
+      icsContent += `RRULE:FREQ=WEEKLY;COUNT=12\n`;
       icsContent += `SUMMARY:🏃 ${session.jenis}\n`;
       icsContent += `DESCRIPTION:Durasi/Intensitas: ${session.durasi}\\n\\nTujuan: ${session.tujuan}\n`;
       icsContent += "END:VEVENT\n";
