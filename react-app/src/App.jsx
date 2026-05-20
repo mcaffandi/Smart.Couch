@@ -370,7 +370,7 @@ export default function App() {
           <div className="sidebar-logo-icon" style={{ fontSize: 14, fontWeight: 900, letterSpacing: '-0.5px', color: 'white' }}>SC</div>
           <div>
             <div className="sidebar-logo-text">SmartCoach AI</div>
-            <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>Garmin Analyzer</div>
+            <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>AI Coach</div>
           </div>
         </div>
         <button className="mobile-toggle-btn" onClick={() => setSidebarOpen(true)}>
@@ -400,7 +400,7 @@ export default function App() {
             <div className="sidebar-logo-icon" style={{ fontSize: 14, fontWeight: 900, letterSpacing: '-0.5px', color: 'white' }}>SC</div>
             <div>
               <div className="sidebar-logo-text">SmartCoach AI</div>
-              <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Garmin Analyzer</div>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>AI Coach</div>
             </div>
           </div>
           {/* Collapse sidebar button (desktop only) */}
@@ -442,7 +442,7 @@ export default function App() {
         {/* Profile */}
         <div>
           <div className="sidebar-section-title">User Profile</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
             <NumberInput label="Umur" value={age} onChange={setAge} min={10} max={100} />
 
             <div className="form-group">
@@ -497,7 +497,7 @@ export default function App() {
           {/* Analisis button */}
           <button
             className="btn btn-primary"
-            style={{ marginTop: 4 }}
+            style={{ marginTop: 16 }}
             onClick={applyProfileChanges}
           >
             Terapkan &amp; Analisis
