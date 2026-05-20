@@ -12,6 +12,12 @@ import LoginScreen from './LoginScreen';
 import AICoach from './AICoach';
 import LandingPage from './LandingPage';
 import Logo from './Logo';
+import { 
+  auth, 
+  signOut, 
+  onAuthStateChanged, 
+  isConfigured as isFirebaseConfigured 
+} from './firebase';
 
 // ─── Toast component ──────────────────────────────────────────────────────────
 function Toast({ toasts }) {
@@ -102,6 +108,39 @@ export default function App() {
   const [programStyle, setProgramStyle] = useState(() => data.profile?.programStyle ?? 'sedang');
   const [targetPace, setTargetPace] = useState(() => data.profile?.targetPace ?? 5.0);
   const [selectedDays, setSelectedDays] = useState(() => data.profile?.selectedDays ?? ['Selasa', 'Kamis', 'Sabtu']);
+
+  useEffect(() => {
+    if (!isFirebaseConfigured) return;
+
+    const unsubscribe = onAuthStateChanged(auth, (fbUser) => {
+      if (fbUser) {
+        const userIdentifier = fbUser.email || fbUser.displayName || `Anonim-${fbUser.uid.substring(0, 4)}`;
+        setSessionUser(userIdentifier);
+        sessionStorage.setItem('smartcoach_session', userIdentifier);
+        
+        setUsersList(prev => {
+          if (!prev.includes(userIdentifier)) {
+            const updated = [...prev, userIdentifier];
+            saveUsersList(updated);
+            return updated;
+          }
+          return prev;
+        });
+        
+        setCurrentUser(userIdentifier);
+        saveCurrentUser(userIdentifier);
+        const uData = loadUserData(userIdentifier);
+        setData(uData);
+        setAge(uData.profile?.age ?? 31);
+        setGoal(uData.profile?.goal ?? 'maintenance');
+        setProgramStyle(uData.profile?.programStyle ?? 'sedang');
+        setTargetPace(uData.profile?.targetPace ?? 5.0);
+        setSelectedDays(uData.profile?.selectedDays ?? ['Selasa', 'Kamis', 'Sabtu']);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const allDays = useMemo(() => [
     { key: 'Senin', label: 'Sen' },
@@ -622,7 +661,14 @@ export default function App() {
 
         <button
           className="btn btn-secondary"
-          onClick={() => {
+          onClick={async () => {
+            if (isFirebaseConfigured && auth.currentUser) {
+              try {
+                await signOut(auth);
+              } catch (e) {
+                console.error("Signout error", e);
+              }
+            }
             setSessionUser(null);
             sessionStorage.removeItem('smartcoach_session');
             addToast('Berhasil keluar.');
