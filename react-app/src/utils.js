@@ -384,7 +384,15 @@ export const parseGarminZip = async (file, JSZip) => {
         const acts = Array.isArray(data) ? data[0]?.summarizedActivitiesExport ?? [] : [];
         for (const a of acts) {
           if (a.activityType === 'running') {
-            result.running_activities.push(a);
+            result.running_activities.push({
+              startTimeLocal: a.startTimeLocal,
+              distance: a.distance,
+              duration: a.duration,
+              avgHr: a.avgHr,
+              maxHr: a.maxHr,
+              activityType: a.activityType,
+              name: a.name
+            });
             if ((a.maxHr ?? 0) > result.max_hr) result.max_hr = a.maxHr;
           }
         }
