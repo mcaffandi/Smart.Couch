@@ -6,6 +6,8 @@ export default function AICoach({ activities, profile }) {
   const [errorMsg, setErrorMsg] = useState('');
   const [apiKey, setApiKey] = useState(() => localStorage.getItem('groq_api_key') || '');
   const [savedKey, setSavedKey] = useState(!!localStorage.getItem('groq_api_key'));
+  // Use server proxy if no local API key is saved
+  const [useServer, setUseServer] = useState(!localStorage.getItem('groq_api_key'));
 
   const saveKey = () => {
     if (!apiKey.trim()) return;
@@ -13,11 +15,11 @@ export default function AICoach({ activities, profile }) {
     localStorage.setItem('groq_api_key', clean);
     setApiKey(clean);
     setSavedKey(true);
+    setUseServer(false);
+    setErrorMsg('');
   };
 
   const getAIAnalysis = async () => {
-    const cleanKey = apiKey.trim();
-    if (!cleanKey) return;
     setLoading(true);
     setAnalysis('');
     setErrorMsg('');
@@ -60,46 +62,91 @@ Berikan:
 2. Rekomendasi tajam untuk latihan selanjutnya agar bisa mencapai target pace-nya.
 Jawab dalam 1-2 paragraf saja, langsung ke intinya, tanpa basa-basi.`;
 
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 seconds timeout
+      if (useServer) {
+        // Try calling Vercel serverless proxy first
+        const res = await fetch('/api/coach', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ prompt })
+        });
 
-      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        signal: controller.signal,
-        headers: {
-          'Authorization': `Bearer ${cleanKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          model: "llama-3.1-8b-instant", 
-          messages: [{ role: "user", content: prompt }],
-          temperature: 0.7,
-        })
-      });
-      clearTimeout(timeoutId);
-      const data = await res.json();
-      
-      if (data.error) {
-        setErrorMsg(`API Groq Ditolak: ${data.error.message}`);
-        setSavedKey(false);
-        localStorage.removeItem('groq_api_key');
-        setApiKey('');
-      } else if (data.choices && data.choices.length > 0) {
-        setAnalysis(data.choices[0].message.content);
+        if (res.status === 404) {
+          setUseServer(false);
+          setSavedKey(false);
+          setErrorMsg("Local proxy not running. Please configure your API key below.");
+          setLoading(false);
+          return;
+        }
+
+        const data = await res.json();
+        if (!res.ok) {
+          setUseServer(false);
+          setSavedKey(false);
+          setErrorMsg(data.error || "Server proxy error. Please enter your API key manually.");
+          setLoading(false);
+          return;
+        }
+
+        if (data.choices && data.choices.length > 0) {
+          setAnalysis(data.choices[0].message.content);
+        } else {
+          setErrorMsg("Gagal memproses analisis.");
+        }
       } else {
-        setErrorMsg("Gagal memproses analisis. Cek konfigurasi API Key.");
-        setSavedKey(false);
+        // Direct call using user's saved API Key
+        const cleanKey = apiKey.trim();
+        if (!cleanKey) {
+          setErrorMsg("API Key wajib diisi.");
+          setLoading(false);
+          return;
+        }
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 seconds timeout
+
+        const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          signal: controller.signal,
+          headers: {
+            'Authorization': `Bearer ${cleanKey}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            model: "llama-3.1-8b-instant", 
+            messages: [{ role: "user", content: prompt }],
+            temperature: 0.7,
+          })
+        });
+        clearTimeout(timeoutId);
+        const data = await res.json();
+        
+        if (data.error) {
+          setErrorMsg(`API Groq Ditolak: ${data.error.message}`);
+          setSavedKey(false);
+          localStorage.removeItem('groq_api_key');
+          setApiKey('');
+        } else if (data.choices && data.choices.length > 0) {
+          setAnalysis(data.choices[0].message.content);
+        } else {
+          setErrorMsg("Gagal memproses analisis. Cek konfigurasi API Key.");
+          setSavedKey(false);
+        }
       }
     } catch (e) {
       setErrorMsg("Gagal terhubung ke server AI: " + e.message);
-      setSavedKey(false);
+      if (useServer) {
+        setUseServer(false);
+        setSavedKey(false);
+      }
     }
     setLoading(false);
   };
 
   return (
     <div className="animate-fade-in" style={{ marginTop: 20 }}>
-      {!savedKey ? (
+      {(!savedKey && !useServer) ? (
         <div className="info-card purple" style={{ borderColor: errorMsg ? '#fb7185' : undefined }}>
           <label className="form-label" style={{ color: errorMsg ? '#fb7185' : 'var(--accent-purple)', fontWeight: 700 }}>
             {errorMsg ? 'API Key Ditolak / Gagal' : 'Konfigurasi Groq API Key'}
@@ -126,13 +173,15 @@ Jawab dalam 1-2 paragraf saja, langsung ke intinya, tanpa basa-basi.`;
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
            {!analysis && (
              <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 16 }}>
-               <button 
-                  className="login-link-btn" 
-                  style={{ fontSize: 12, color: 'var(--text-muted)' }} 
-                  onClick={() => setSavedKey(false)}
-                >
-                 Ganti API Key
-               </button>
+               {(savedKey || !useServer) && (
+                 <button 
+                    className="login-link-btn" 
+                    style={{ fontSize: 12, color: 'var(--text-muted)' }} 
+                    onClick={() => { setSavedKey(false); setUseServer(false); }}
+                  >
+                   Ganti API Key
+                 </button>
+               )}
                <button 
                   className="btn btn-primary" 
                   onClick={getAIAnalysis} 
@@ -142,6 +191,9 @@ Jawab dalam 1-2 paragraf saja, langsung ke intinya, tanpa basa-basi.`;
                  {loading ? 'Sedang Menganalisis Data...' : 'Enhance Analysis'}
                </button>
              </div>
+           )}
+           {errorMsg && (
+             <div style={{ fontSize: 12, color: '#fb7185', marginTop: 4, fontWeight: 600 }}>{errorMsg}</div>
            )}
         </div>
       )}
@@ -154,7 +206,11 @@ Jawab dalam 1-2 paragraf saja, langsung ke intinya, tanpa basa-basi.`;
               <div style={{ fontSize: 11, color: 'var(--accent-purple)', marginTop: 2 }}>Didukung oleh Groq LLaMA-3</div>
             </div>
             <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-              <button className="login-link-btn" style={{ fontSize: 12, color: 'var(--text-muted)' }} onClick={() => { setAnalysis(''); setSavedKey(false); }}>Ganti Key</button>
+              {(savedKey || !useServer) ? (
+                <button className="login-link-btn" style={{ fontSize: 12, color: 'var(--text-muted)' }} onClick={() => { setAnalysis(''); setSavedKey(false); setUseServer(false); }}>Ganti Key</button>
+              ) : (
+                <button className="login-link-btn" style={{ fontSize: 12, color: 'var(--text-muted)' }} onClick={() => { setAnalysis(''); setSavedKey(false); setUseServer(false); }}>Gunakan API Key Sendiri</button>
+              )}
               <button className="login-link-btn" style={{ fontSize: 12 }} onClick={getAIAnalysis}>Regenerate</button>
             </div>
           </div>
