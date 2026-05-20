@@ -10,6 +10,7 @@ import TrainingPlan from './TrainingPlan';
 import RacePrediction from './RacePrediction';
 import LoginScreen from './LoginScreen';
 import AICoach from './AICoach';
+import LandingPage from './LandingPage';
 
 // ─── Toast component ──────────────────────────────────────────────────────────
 function Toast({ toasts }) {
@@ -138,6 +139,7 @@ export default function App() {
 
   // ── State: active tab ────────────────────────────────────────────────────────
   const [tab, setTab] = useState('dashboard');
+  const [showLanding, setShowLanding] = useState(true);
 
   // ── State: user profiles ─────────────────────────────────────────────────────
   const switchUser = (username) => {
@@ -230,7 +232,7 @@ export default function App() {
     const isGpx = file.name.toLowerCase().endsWith('.gpx');
 
     if (!isZip && !isGpx) {
-      addToast('Pilih file .zip ekspor Garmin atau .gpx dari Strava', 'error');
+      addToast('Pilih file .zip atau .gpx yang valid', 'error');
       return;
     }
     setIsUploading(true);
@@ -336,6 +338,9 @@ export default function App() {
 
   // ─────────────────────────────────────────────────────────────────────────────
   if (!sessionUser) {
+    if (showLanding) {
+      return <LandingPage onGetStarted={() => setShowLanding(false)} />;
+    }
     return (
       <>
         <Toast toasts={toasts} />
@@ -522,7 +527,7 @@ export default function App() {
                 </div>
               ) : (
                 <>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)' }}>Upload Garmin (.zip) / Strava (.gpx)</div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)' }}>Upload data lari (.zip / .gpx)</div>
                   <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>maks 200MB</div>
                 </>
               )}
@@ -667,7 +672,7 @@ export default function App() {
                 onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
               >
                 <div className="empty-step-num">1</div>
-                <div><strong>Upload Garmin (.zip) / Strava (.gpx)</strong> untuk import riwayat lari dan rute lo secara langsung. <i>(Klik di sini)</i></div>
+                <div><strong>Upload data lari (.zip / .gpx)</strong> untuk import riwayat lari dan rute lo secara langsung. <i>(Klik di sini)</i></div>
               </div>
               <div className="empty-step">
                 <div className="empty-step-num">2</div>
@@ -774,6 +779,7 @@ export default function App() {
                   <h2 className="section-title">Rekomendasi Jadwal Mingguan</h2>
                 </div>
                 <TrainingPlan
+                  activities={data.running_activities}
                   programStyle={programStyle}
                   goal={goal}
                   paces={paces}
@@ -840,7 +846,7 @@ export default function App() {
                         return (
                           <div className="info-card" key={date} style={{ borderColor: `${color}30`, background: `${color}06` }}>
                             <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 700, marginBottom: 4 }}>
-                              {new Date(date).toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' })}
+                              {new Date(date).toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
                               {runDates.has(date) && <span className="badge badge-easy" style={{ marginLeft: 8, padding: '1px 6px', fontSize: 10 }}>Lari</span>}
                             </div>
                             <div style={{ fontSize: 24, fontWeight: 800, color }}>

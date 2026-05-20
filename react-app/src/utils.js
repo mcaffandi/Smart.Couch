@@ -426,9 +426,14 @@ export const mergeData = (existing, incoming) => {
   const existingTimes = new Set(existing.running_activities.map(a => a.startTimeLocal));
   const merged = [...existing.running_activities];
   for (const a of incoming.running_activities) {
-    if (!existingTimes.has(a.startTimeLocal)) {
+    const existingIndex = merged.findIndex(ex => ex.startTimeLocal === a.startTimeLocal);
+    if (existingIndex === -1) {
       merged.push(a);
-      existingTimes.add(a.startTimeLocal);
+    } else {
+      // If existing doesn't have a route but incoming DOES (GPX upload), overwrite with incoming route
+      if (!merged[existingIndex].route && a.route) {
+        merged[existingIndex] = { ...merged[existingIndex], route: a.route };
+      }
     }
   }
   return {

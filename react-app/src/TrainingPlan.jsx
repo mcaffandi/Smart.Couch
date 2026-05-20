@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { buildTrainingPlan } from './utils';
 
 const getBadgeClass = (jenis) => {
@@ -9,8 +10,18 @@ const getBadgeClass = (jenis) => {
   return 'badge-recovery';
 };
 
-export default function TrainingPlan({ programStyle, goal, paces, latestSleepScore, actualBestPace, targetPace, selectedDays }) {
-  const plan = buildTrainingPlan(programStyle, goal, paces, selectedDays);
+export default function TrainingPlan({ activities, programStyle, goal, paces, latestSleepScore, actualBestPace, targetPace, selectedDays }) {
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiPlan, setAiPlan] = useState(() => {
+    try {
+      const saved = localStorage.getItem('smartcoach_ai_plan');
+      return saved ? JSON.parse(saved) : null;
+    } catch { return null; }
+  });
+  const [aiError, setAiError] = useState('');
+  
+  const defaultPlan = buildTrainingPlan(programStyle, goal, paces, selectedDays);
+  const plan = aiPlan || defaultPlan;
 
   const formatPace = (minKm) => {
     if (!minKm) return null;
@@ -42,6 +53,76 @@ export default function TrainingPlan({ programStyle, goal, paces, latestSleepSco
         <strong>Kondisi Prima:</strong> Tidur lo sangat baik (skor {latestSleepScore}). Tubuh dalam kondisi prime — waktu ideal untuk push intensitas tinggi.
       </div>
     );
+  };
+
+  const generateAIPlan = async () => {
+    const apiKey = localStorage.getItem('groq_api_key');
+    if (!apiKey) {
+      setAiError('API Key Groq belum disetting di Dashboard.');
+      return;
+    }
+    setAiLoading(true);
+    setAiError('');
+
+    try {
+      const recentRuns = (activities || []).slice(0, 5).map(a => {
+        const dist = ((a.distance || 0) / 100000).toFixed(2);
+        const dur = Math.round((a.duration || 0) / 60000);
+        return `Jarak: ${dist}km, Waktu: ${dur}m, HR: ${a.avgHr || 0}bpm`;
+      }).join('\n');
+
+      const daysInstruction = selectedDays && selectedDays.length > 0
+        ? `Hari Lari yang DIREQUEST: ${selectedDays.join(', ')}.\nSANGAT PENTING: Hanya jadwalkan lari pada hari yang direquest tersebut. Untuk hari selain itu, WAJIB diisi dengan "Total Rest" atau "Cross-Training/Recovery".`
+        : `Hari Lari: Pelari menyerahkan jadwal kepadamu. Atur hari lari yang optimal (3-5 hari seminggu sesuai target). Untuk hari istirahat, WAJIB diisi dengan "Total Rest" atau "Cross-Training/Recovery".`;
+
+      const prompt = `Lo adalah pelatih lari elit (SmartCoach AI). Buatkan jadwal lari 1 minggu (Senin-Minggu) dalam format JSON array yang ketat. 
+Atlet ini punya target utama: ${goal}. 
+${daysInstruction}
+
+Target Pace: ${formatPace(targetPace) || targetPace} min/km. 
+Data lari terakhir mereka (jadikan referensi penyesuaian beban): 
+${recentRuns || "Belum ada riwayat lari."}
+Tidur semalam: skor ${latestSleepScore || "Tidak ada data"}.
+
+Sesuaikan intensitas! Jika HR kemarin tinggi atau tidur kurang, tambahkan rest/recovery.
+Output harus STRICTLY JSON array of objects dengan keys persis: "hari" (Senin-Minggu), "jenis" (contoh: "Easy Run", "Interval", "Total Rest"), "durasi" (contoh: "30 menit", "5x400m", "–"), "tujuan" (alasan logis). Pastikan urutan dari Senin sampai Minggu (7 item).
+Return ONLY the raw JSON array.`;
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        signal: controller.signal,
+        headers: {
+          'Authorization': `Bearer ${apiKey.trim()}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: "llama-3.1-8b-instant",
+          messages: [{ role: "user", content: prompt }],
+          temperature: 0.5,
+        })
+      });
+      clearTimeout(timeoutId);
+      const data = await res.json();
+      if (data.error) throw new Error(data.error.message);
+      
+      let content = data.choices[0].message.content;
+      // strip markdown formatting if the model wraps it in ```json ... ```
+      content = content.replace(/```json/gi, '').replace(/```/g, '').trim();
+      
+      const parsed = JSON.parse(content);
+      if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].hari) {
+        setAiPlan(parsed);
+        localStorage.setItem('smartcoach_ai_plan', JSON.stringify(parsed));
+      } else {
+        throw new Error('Format JSON dari AI tidak sesuai.');
+      }
+    } catch (e) {
+      setAiError('Gagal men-generate jadwal dari AI: ' + e.message);
+    }
+    setAiLoading(false);
   };
 
   const handleExportICS = () => {
@@ -87,7 +168,32 @@ export default function TrainingPlan({ programStyle, goal, paces, latestSleepSco
     <div className="animate-fade-in">
       {smartAlert()}
 
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+          <button 
+            onClick={generateAIPlan}
+            disabled={aiLoading}
+            style={{
+              background: aiPlan ? 'var(--bg-card)' : 'var(--accent-purple)', 
+              color: aiPlan ? 'var(--accent-purple)' : '#fff', 
+              border: aiPlan ? '1px solid var(--accent-purple)' : 'none', 
+              padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 700, 
+              cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+            }}
+          >
+            {aiLoading ? '🔄 Menganalisis...' : (aiPlan ? '⚡ Regenerate AI Plan' : '⚡ AI: Buatkan Jadwal Dinamis')}
+          </button>
+          {aiPlan && (
+            <button 
+              className="login-link-btn"
+              onClick={() => { setAiPlan(null); localStorage.removeItem('smartcoach_ai_plan'); }}
+              style={{ fontSize: 12, color: 'var(--text-muted)' }}
+            >
+              Kembali ke Default
+            </button>
+          )}
+        </div>
+        
         <button 
           onClick={handleExportICS}
           style={{
@@ -109,6 +215,10 @@ export default function TrainingPlan({ programStyle, goal, paces, latestSleepSco
           Export ke Calendar
         </button>
       </div>
+
+      {aiError && (
+        <div style={{ fontSize: 12, color: '#fb7185', fontWeight: 600, marginBottom: 16 }}>{aiError}</div>
+      )}
 
       {/* Sync banner: actual vs target pace */}
       {showSyncBanner && (
