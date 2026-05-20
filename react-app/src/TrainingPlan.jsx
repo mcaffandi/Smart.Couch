@@ -75,7 +75,7 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
         ? `Hari Lari yang DIREQUEST: ${selectedDays.join(', ')}.\nSANGAT PENTING: Hanya jadwalkan lari pada hari yang direquest tersebut. Untuk hari selain itu, WAJIB diisi dengan "Total Rest" atau "Cross-Training/Recovery".`
         : `Hari Lari: Pelari menyerahkan jadwal kepadamu. Atur hari lari yang optimal (3-5 hari seminggu sesuai target). Untuk hari istirahat, WAJIB diisi dengan "Total Rest" atau "Cross-Training/Recovery".`;
 
-      const prompt = `Lo adalah pelatih lari elit (EndurAI). Buatkan jadwal lari 1 minggu (Senin-Minggu) dalam format JSON array yang ketat. 
+      const prompt = `Lo adalah pelatih lari elit (EnduraUP). Buatkan jadwal lari 1 minggu (Senin-Minggu) dalam format JSON array yang ketat. 
 Atlet ini punya target utama: ${goal}. 
 ${daysInstruction}
 
@@ -132,7 +132,7 @@ Return ONLY the raw JSON array.`;
     monday.setDate(today.getDate() - dayOfWeek + 1);
 
     const weekDaysMap = { 'Senin': 0, 'Selasa': 1, 'Rabu': 2, 'Kamis': 3, 'Jumat': 4, 'Sabtu': 5, 'Minggu': 6 };
-    let icsContent = "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//EndurAI//Training Plan//EN\n";
+    let icsContent = "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//EnduraUP//Training Plan//EN\n";
 
     plan.forEach((session) => {
       if (!session || !session.jenis) return;
@@ -158,7 +158,7 @@ Return ONLY the raw JSON array.`;
     const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
     const link = document.createElement('a');
     link.href = window.URL.createObjectURL(blob);
-    link.download = `EndurAI_Plan.ics`;
+    link.download = `EnduraUP_Plan.ics`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

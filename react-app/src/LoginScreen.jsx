@@ -96,7 +96,7 @@ export default function LoginScreen({ onLoginSuccess, usersList, addToast }) {
           <div className="login-logo-icon" style={{ background: 'transparent', width: 'auto', height: 'auto' }}>
             <Logo size={48} />
           </div>
-          <h2 className="login-title">EndurAI</h2>
+          <h2 className="login-title">EnduraUP</h2>
           <p className="login-subtitle">Garmin Connect Export &amp; Training Planner</p>
         </div>
 

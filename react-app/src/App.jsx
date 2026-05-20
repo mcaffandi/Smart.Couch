@@ -370,7 +370,7 @@ export default function App() {
         <div className="sidebar-logo" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <Logo size={24} />
           <div>
-            <div className="sidebar-logo-text">EndurAI</div>
+            <div className="sidebar-logo-text">EnduraUP</div>
             <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>AI Coach</div>
           </div>
         </div>
@@ -400,7 +400,7 @@ export default function App() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <Logo size={28} />
             <div>
-              <div className="sidebar-logo-text">EndurAI</div>
+              <div className="sidebar-logo-text">EnduraUP</div>
               <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>AI Coach</div>
             </div>
           </div>
@@ -433,7 +433,7 @@ export default function App() {
             <div className="user-avatar">{currentUser.substring(0, 2).toUpperCase()}</div>
             <div className="user-name-info">
               <div className="username-text">{currentUser}</div>
-              <div className="role-text">Atlet EndurAI</div>
+              <div className="role-text">Atlet EnduraUP</div>
             </div>
           </div>
         </div>
@@ -654,7 +654,7 @@ export default function App() {
                 </svg>
               </button>
             )}
-            <h1 className="page-title" style={{ margin: 0 }}>EndurAI</h1>
+            <h1 className="page-title" style={{ margin: 0 }}>EnduraUP</h1>
           </div>
           <p className="page-subtitle">Ubah Data Lari &amp; Tidur lo Jadi Rencana Latihan Personal</p>
         </div>

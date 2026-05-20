@@ -14,7 +14,7 @@ export default function LandingPage({ onGetStarted }) {
       <nav className="landing-nav">
         <div className="nav-logo" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <Logo size={28} />
-          <span className="logo-text">EndurAI</span>
+          <span className="logo-text">EnduraUP</span>
         </div>
         <button className="nav-btn" onClick={onGetStarted}>Sign In</button>
       </nav>
@@ -53,7 +53,7 @@ export default function LandingPage({ onGetStarted }) {
               <div className="mac-dots">
                 <span></span><span></span><span></span>
               </div>
-              <div className="mockup-title">EndurAI Dashboard</div>
+              <div className="mockup-title">EnduraUP Dashboard</div>
             </div>
             <div className="mockup-body">
               <div className="mockup-grid">
@@ -113,7 +113,7 @@ export default function LandingPage({ onGetStarted }) {
 
       {/* Footer */}
       <footer className="landing-footer">
-        <p>© {new Date().getFullYear()} EndurAI. Built for runners, by runners.</p>
+        <p>© {new Date().getFullYear()} EnduraUP. Built for runners, by runners.</p>
       </footer>
     </div>
   );
