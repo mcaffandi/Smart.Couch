@@ -4,6 +4,17 @@
   padding: 0;
 }
 
+/* Hide HTML5 spin-buttons on number inputs */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+
 :root {
   --bg-base: #09090b;       /* zinc-950 */
   --bg-surface: #09090b;    /* zinc-950 */
