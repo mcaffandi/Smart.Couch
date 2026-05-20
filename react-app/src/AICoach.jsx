@@ -47,7 +47,7 @@ export default function AICoach({ activities, profile }) {
         return `${m}:${s.toString().padStart(2, '0')}`;
       };
 
-      const prompt = `Lo adalah seorang pelatih lari elit (SmartCoach AI) dengan gaya bicara lugas, cerdas, dan to the point (pakai bahasa pergaulan profesional Indonesia seperti "lo" dan "gue").
+      const prompt = `Lo adalah seorang pelatih lari elit (EndurAI) dengan gaya bicara lugas, cerdas, dan to the point (pakai bahasa pergaulan profesional Indonesia seperti "lo" dan "gue").
 
 Data pelari:
 - Umur: ${profile?.age || 30} tahun

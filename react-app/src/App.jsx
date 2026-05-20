@@ -367,9 +367,9 @@ export default function App() {
       {/* Mobile Top Bar Header */}
       <header className="mobile-header">
         <div className="sidebar-logo">
-          <div className="sidebar-logo-icon" style={{ fontSize: 14, fontWeight: 900, letterSpacing: '-0.5px', color: 'white' }}>SC</div>
+          <div className="sidebar-logo-icon" style={{ fontSize: 14, fontWeight: 900, letterSpacing: '-0.5px', color: 'white' }}>E</div>
           <div>
-            <div className="sidebar-logo-text">SmartCoach AI</div>
+            <div className="sidebar-logo-text">EndurAI</div>
             <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>AI Coach</div>
           </div>
         </div>
@@ -397,9 +397,9 @@ export default function App() {
         {/* Logo */}
         <div className="sidebar-logo" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div className="sidebar-logo-icon" style={{ fontSize: 14, fontWeight: 900, letterSpacing: '-0.5px', color: 'white' }}>SC</div>
+            <div className="sidebar-logo-icon" style={{ fontSize: 14, fontWeight: 900, letterSpacing: '-0.5px', color: 'white' }}>E</div>
             <div>
-              <div className="sidebar-logo-text">SmartCoach AI</div>
+              <div className="sidebar-logo-text">EndurAI</div>
               <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>AI Coach</div>
             </div>
           </div>
@@ -432,7 +432,7 @@ export default function App() {
             <div className="user-avatar">{currentUser.substring(0, 2).toUpperCase()}</div>
             <div className="user-name-info">
               <div className="username-text">{currentUser}</div>
-              <div className="role-text">Atlet SmartCoach</div>
+              <div className="role-text">Atlet EndurAI</div>
             </div>
           </div>
         </div>
@@ -653,7 +653,7 @@ export default function App() {
                 </svg>
               </button>
             )}
-            <h1 className="page-title" style={{ margin: 0 }}>SmartCoach AI</h1>
+            <h1 className="page-title" style={{ margin: 0 }}>EndurAI</h1>
           </div>
           <p className="page-subtitle">Ubah Data Lari &amp; Tidur lo Jadi Rencana Latihan Personal</p>
         </div>

@@ -92,8 +92,8 @@ export default function LoginScreen({ onLoginSuccess, usersList, addToast }) {
     <div className="login-container">
       <div className="login-card">
         <div className="login-header">
-          <div className="login-logo-icon">SC</div>
-          <h2 className="login-title">SmartCoach AI</h2>
+          <div className="login-logo-icon">E</div>
+          <h2 className="login-title">EndurAI</h2>
           <p className="login-subtitle">Garmin Connect Export &amp; Training Planner</p>
         </div>
 
