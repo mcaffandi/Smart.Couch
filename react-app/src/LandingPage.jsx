@@ -1,5 +1,6 @@
 import React from 'react';
 import './LandingPage.css';
+import Logo from './Logo';
 
 export default function LandingPage({ onGetStarted }) {
   return (
@@ -11,8 +12,8 @@ export default function LandingPage({ onGetStarted }) {
 
       {/* Navbar */}
       <nav className="landing-nav">
-        <div className="nav-logo">
-          <div className="logo-icon">E</div>
+        <div className="nav-logo" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <Logo size={28} />
           <span className="logo-text">EndurAI</span>
         </div>
         <button className="nav-btn" onClick={onGetStarted}>Sign In</button>

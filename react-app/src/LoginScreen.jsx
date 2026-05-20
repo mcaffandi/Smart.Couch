@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import Logo from './Logo';
 
 export default function LoginScreen({ onLoginSuccess, usersList, addToast }) {
   const [isRegister, setIsRegister] = useState(false);
@@ -92,7 +93,9 @@ export default function LoginScreen({ onLoginSuccess, usersList, addToast }) {
     <div className="login-container">
       <div className="login-card">
         <div className="login-header">
-          <div className="login-logo-icon">E</div>
+          <div className="login-logo-icon" style={{ background: 'transparent', width: 'auto', height: 'auto' }}>
+            <Logo size={48} />
+          </div>
           <h2 className="login-title">EndurAI</h2>
           <p className="login-subtitle">Garmin Connect Export &amp; Training Planner</p>
         </div>

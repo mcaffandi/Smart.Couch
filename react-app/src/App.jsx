@@ -11,6 +11,7 @@ import RacePrediction from './RacePrediction';
 import LoginScreen from './LoginScreen';
 import AICoach from './AICoach';
 import LandingPage from './LandingPage';
+import Logo from './Logo';
 
 // ─── Toast component ──────────────────────────────────────────────────────────
 function Toast({ toasts }) {
@@ -366,8 +367,8 @@ export default function App() {
     <div className="app-layout">
       {/* Mobile Top Bar Header */}
       <header className="mobile-header">
-        <div className="sidebar-logo">
-          <div className="sidebar-logo-icon" style={{ fontSize: 14, fontWeight: 900, letterSpacing: '-0.5px', color: 'white' }}>E</div>
+        <div className="sidebar-logo" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <Logo size={24} />
           <div>
             <div className="sidebar-logo-text">EndurAI</div>
             <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>AI Coach</div>
@@ -397,7 +398,7 @@ export default function App() {
         {/* Logo */}
         <div className="sidebar-logo" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div className="sidebar-logo-icon" style={{ fontSize: 14, fontWeight: 900, letterSpacing: '-0.5px', color: 'white' }}>E</div>
+            <Logo size={28} />
             <div>
               <div className="sidebar-logo-text">EndurAI</div>
               <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>AI Coach</div>
