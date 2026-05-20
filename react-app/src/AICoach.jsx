@@ -8,12 +8,15 @@ export default function AICoach({ activities, profile }) {
 
   const saveKey = () => {
     if (!apiKey.trim()) return;
-    localStorage.setItem('groq_api_key', apiKey.trim());
+    const clean = apiKey.trim();
+    localStorage.setItem('groq_api_key', clean);
+    setApiKey(clean);
     setSavedKey(true);
   };
 
   const getAIAnalysis = async () => {
-    if (!apiKey) return;
+    const cleanKey = apiKey.trim();
+    if (!cleanKey) return;
     setLoading(true);
     setAnalysis('');
     
@@ -45,7 +48,7 @@ Jawab dalam 1-2 paragraf saja, langsung ke intinya, tanpa basa-basi.`;
       const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${apiKey}`,
+          'Authorization': `Bearer ${cleanKey}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
