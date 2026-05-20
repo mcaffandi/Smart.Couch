@@ -9,6 +9,7 @@ import RunHistory from './RunHistory';
 import TrainingPlan from './TrainingPlan';
 import RacePrediction from './RacePrediction';
 import LoginScreen from './LoginScreen';
+import AICoach from './AICoach';
 
 // ─── Toast component ──────────────────────────────────────────────────────────
 function Toast({ toasts }) {
@@ -733,6 +734,8 @@ export default function App() {
                 {actualMaxHR > 0 && (
                   <HRZoneChart zones={hrZones} avgHr={avgHR ? Math.round(avgHR) : 0} />
                 )}
+
+                <AICoach activities={data.running_activities} profile={{ age, goal, targetPace }} />
 
                 {/* Sleep correlation summary */}
                 {avgRunSleep && avgNonRunSleep && (
