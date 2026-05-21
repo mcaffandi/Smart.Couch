@@ -426,17 +426,19 @@ export default function App() {
       ctx.fillStyle = radialCyan;
       ctx.fillRect(0, 0, 1080, 1080);
     } else if (shareTheme === 'sunrise') {
-      // Draw retro_sunrise.jpg image as background
-      if (retroImageRef.current) {
-        ctx.drawImage(retroImageRef.current, 0, 0, 1080, 1080);
-      } else {
-        // Fallback solid color if image not loaded yet
-        ctx.fillStyle = '#0d626c';
-        ctx.fillRect(0, 0, 1080, 1080);
-      }
-      // Subtle dark overlay for text readability
-      ctx.fillStyle = 'rgba(8, 4, 2, 0.38)';
+      // Cream base
+      ctx.fillStyle = '#fdf8f0';
       ctx.fillRect(0, 0, 1080, 1080);
+      // TOP IMAGE ZONE: retro image in top 38% (golden ratio minor = 1080*0.382=413px)
+      if (retroImageRef.current) {
+        ctx.save();
+        ctx.beginPath();
+        if (ctx.roundRect) { ctx.roundRect(0, 0, 1080, 420, [24, 24, 0, 0]); }
+        else { ctx.rect(0, 0, 1080, 420); }
+        ctx.clip();
+        ctx.drawImage(retroImageRef.current, 0, 0, 1080, 420);
+        ctx.restore();
+      }
     } else { // purple theme
       const grad = ctx.createLinearGradient(0, 0, 1080, 1080);
       grad.addColorStop(0, '#1e1b4b');
@@ -482,102 +484,132 @@ export default function App() {
       cCtx.fill();
     };
 
-    fillRoundedRect(ctx, 60, 60, 960, 960, 24, glassStyle);
-
-    // 2. Draw background grid overlay inside the glass card for technical aesthetic
-    ctx.strokeStyle = isLight ? 'rgba(10, 47, 53, 0.03)' : 'rgba(255, 255, 255, 0.015)';
-    ctx.lineWidth = 1;
-    for (let i = 80; i < 1000; i += 40) {
-      ctx.beginPath();
-      ctx.moveTo(i, 80);
-      ctx.lineTo(i, 960);
-      ctx.stroke();
-
-      ctx.beginPath();
-      ctx.moveTo(80, i);
-      ctx.lineTo(960, i);
-      ctx.stroke();
-    }
-
-    // 3. Draw outer glass card borders
-    ctx.strokeStyle = borderStroke;
-    ctx.lineWidth = 4;
-    if (ctx.roundRect) {
-      ctx.beginPath();
-      ctx.roundRect(60, 60, 960, 960, 24);
-      ctx.stroke();
-    } else {
-      ctx.strokeRect(60, 60, 960, 960);
-    }
-
-    // ── Header ─────────────────────────────────────────────────────────────────
-    ctx.fillStyle = isLight ? '#c0440a' : '#ffffff';
-    ctx.font = '700 34px Outfit, sans-serif';
-    ctx.fillText('EnduraUP', 100, 115);
-
-    ctx.fillStyle = textSecondary;
-    ctx.font = '500 17px Inter, sans-serif';
-    ctx.fillText('AI Running & Recovery Coach', 100, 150);
-
+    // Hoist athlete name (used in both sunrise and dark header branches)
     const athleteName = displayName || (currentUser ? currentUser.split('@')[0] : 'PELARI');
-    ctx.fillStyle = isLight ? '#a0521c' : (shareTheme === 'cyber' ? '#22d3ee' : '#a78bfa');
-    ctx.font = '700 20px Inter, sans-serif';
-    ctx.fillText(athleteName.toUpperCase(), 100, 182);
 
-    // Divider
-    ctx.strokeStyle = isLight ? 'rgba(160, 82, 28, 0.18)' : 'rgba(255, 255, 255, 0.08)';
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.moveTo(100, 205);
-    ctx.lineTo(980, 205);
-    ctx.stroke();
+    if (isLight) {
+      // ── SUNRISE SPLIT LAYOUT ──────────────────────────────────────────────────
+      // Brand in image zone (top-right, like Taskello reference)
+      ctx.textAlign = 'right';
+      ctx.fillStyle = 'rgba(255,255,255,0.95)';
+      ctx.font = '800 30px Outfit, sans-serif';
+      ctx.fillText('EnduraUP', 1000, 100);
+      ctx.fillStyle = 'rgba(255,255,255,0.75)';
+      ctx.font = '500 16px Inter, sans-serif';
+      ctx.fillText('AI Running & Recovery Coach', 1000, 126);
+      ctx.textAlign = 'left';
 
-    // ── Template Content ──────────────────────────────────────────────────────
+      // WHITE GLASS PANEL: bottom 62% (golden ratio major), rounded top
+      const panelY = 375;
+      ctx.beginPath();
+      const pr = 40;
+      ctx.moveTo(0, panelY + pr);
+      ctx.arcTo(0, panelY, pr, panelY, pr);
+      ctx.lineTo(1080 - pr, panelY);
+      ctx.arcTo(1080, panelY, 1080, panelY + pr, pr);
+      ctx.lineTo(1080, 1080); ctx.lineTo(0, 1080);
+      ctx.closePath();
+      ctx.fillStyle = 'rgba(255, 248, 235, 0.97)';
+      ctx.fill();
+      // Panel top border accent
+      ctx.strokeStyle = 'rgba(192, 68, 10, 0.25)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(pr, panelY); ctx.lineTo(1080 - pr, panelY);
+      ctx.stroke();
+
+      // Athlete name at panel top
+      ctx.fillStyle = '#1a120a';
+      ctx.font = '700 26px Outfit, sans-serif';
+      ctx.fillText(athleteName.toUpperCase(), 80, panelY + 52);
+      ctx.fillStyle = 'rgba(124, 74, 30, 0.7)';
+      ctx.font = '500 16px Inter, sans-serif';
+      ctx.fillText('Performance Card', 80, panelY + 78);
+      // Panel divider
+      ctx.strokeStyle = 'rgba(160, 82, 28, 0.15)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(80, panelY + 100); ctx.lineTo(1000, panelY + 100);
+      ctx.stroke();
+
+    } else {
+      // ── DARK THEMES: standard inset card ─────────────────────────────────────
+      fillRoundedRect(ctx, 60, 60, 960, 960, 24, glassStyle);
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.015)';
+      ctx.lineWidth = 1;
+      for (let i = 80; i < 1000; i += 40) {
+        ctx.beginPath(); ctx.moveTo(i, 80); ctx.lineTo(i, 960); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(80, i); ctx.lineTo(960, i); ctx.stroke();
+      }
+      ctx.strokeStyle = borderStroke;
+      ctx.lineWidth = 4;
+      if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(60, 60, 960, 960, 24); ctx.stroke(); }
+      else { ctx.strokeRect(60, 60, 960, 960); }
+
+      // Dark theme header
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '700 34px Outfit, sans-serif';
+      ctx.fillText('EnduraUP', 100, 115);
+      ctx.fillStyle = textSecondary;
+      ctx.font = '500 17px Inter, sans-serif';
+      ctx.fillText('AI Running & Recovery Coach', 100, 150);
+      ctx.fillStyle = shareTheme === 'cyber' ? '#22d3ee' : '#a78bfa';
+      ctx.font = '700 20px Inter, sans-serif';
+      ctx.fillText(athleteName.toUpperCase(), 100, 182);
+      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(100, 205); ctx.lineTo(980, 205); ctx.stroke();
+    }
+
+    // ── TEMPLATE CONTENT ──────────────────────────────────────────────────────
+    // p0 = content start Y | px = content left X | pw = content right X
+    const p0 = isLight ? 475 : 205; // panel content start (after divider)
+    const px = isLight ? 80 : 100;
+    const pw = isLight ? 1000 : 980;
+
     if (shareTemplate === 'vo2') {
+      // Label: p0+34 (lg gap) — φ spacing from divider
       ctx.fillStyle = textMuted;
-      ctx.font = '600 22px Inter, sans-serif';
-      ctx.fillText('ESTIMASI VO2MAX', 100, 268);
+      ctx.font = '600 20px Inter, sans-serif';
+      ctx.fillText('ESTIMASI VO2MAX', px, p0 + 34);
 
       // Big VO2Max number
       ctx.fillStyle = isLight ? '#c0440a' : (shareTheme === 'cyber' ? '#06b6d4' : '#818cf8');
       ctx.font = '700 200px Outfit, sans-serif';
       const textVal = vo2max ? vo2max.toFixed(0) : '–';
-      ctx.fillText(textVal, 88, 510);
+      const numY = isLight ? p0 + 197 : 510;
+      ctx.fillText(textVal, px - (isLight ? 0 : 12), numY);
 
       ctx.fillStyle = textSecondary;
-      ctx.font = '500 24px Inter, sans-serif';
-      ctx.fillText('ml/kg/min', 100, 548);
+      ctx.font = '500 22px Inter, sans-serif';
+      ctx.fillText('ml/kg/min', px, numY + 34);
 
-      // Thin separator
+      const sepY = numY + 34 + 21;
       ctx.strokeStyle = isLight ? 'rgba(160, 82, 28, 0.15)' : 'rgba(255,255,255,0.06)';
       ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(100, 575);
-      ctx.lineTo(980, 575);
-      ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(px, sepY); ctx.lineTo(pw, sepY); ctx.stroke();
 
-      // Fitness Level
       let fitnessLevel = 'Pemula';
       let fitnessDesc = 'Fokus pada konsistensi latihan dasar.';
       if (vo2max >= 62) { fitnessLevel = 'Elite / Profesional'; fitnessDesc = 'Performa puncak luar biasa.'; }
       else if (vo2max >= 57) { fitnessLevel = 'Sangat Baik (Top 10%)'; fitnessDesc = 'Tingkat kebugaran setara pelari kompetitif.'; }
       else if (vo2max >= 52) { fitnessLevel = 'Baik Sekali'; fitnessDesc = 'Kapasitas aerobik sangat kuat.'; }
       else if (vo2max >= 46) { fitnessLevel = 'Di Atas Rata-Rata'; fitnessDesc = 'Performa lari solid dan stabil.'; }
-      else if (vo2max >= 38) { fitnessLevel = 'Rata-Rata'; fitnessDesc = 'Kondisi fisik sehat and aktif.'; }
+      else if (vo2max >= 38) { fitnessLevel = 'Rata-Rata'; fitnessDesc = 'Kondisi fisik sehat dan aktif.'; }
       else if (vo2max >= 30) { fitnessLevel = 'Di Bawah Rata-Rata'; fitnessDesc = 'Potensi peningkatan masih sangat besar.'; }
 
       ctx.fillStyle = textPrimary;
-      ctx.font = '700 38px Outfit, sans-serif';
-      ctx.fillText(fitnessLevel, 100, 650);
+      ctx.font = '700 34px Outfit, sans-serif';
+      ctx.fillText(fitnessLevel, px, sepY + 83);
 
       ctx.fillStyle = textSecondary;
-      ctx.font = '400 26px Inter, sans-serif';
-      ctx.fillText(fitnessDesc, 100, 700);
+      ctx.font = '400 22px Inter, sans-serif';
+      ctx.fillText(fitnessDesc, px, sepY + 83 + 34);
 
     } else if (shareTemplate === 'stats') {
       ctx.fillStyle = textMuted;
-      ctx.font = '600 22px Inter, sans-serif';
-      ctx.fillText('RINGKASAN PERFORMA', 100, 268);
+      ctx.font = '600 20px Inter, sans-serif';
+      ctx.fillText('RINGKASAN PERFORMA', px, p0 + 34);
 
       const targetYear = (() => {
         let y = new Date().getFullYear();
@@ -596,28 +628,30 @@ export default function App() {
       const yearlyAvgHR = hrActs.length ? yearlyActs.reduce((s, a) => s + (a.avgHr ?? 0), 0) / hrActs.length : 0;
       const yearlyMaxHR = yearlyActs.reduce((max, a) => Math.max(max, a.maxHr ?? a.max_hr ?? 0), 0);
 
-      // 2×2 metric grid
       const drawMetric = (x, y, label, val, unit, color) => {
         ctx.fillStyle = textMuted;
-        ctx.font = '600 19px Inter, sans-serif';
+        ctx.font = '600 18px Inter, sans-serif';
         ctx.fillText(label.toUpperCase(), x, y);
         ctx.fillStyle = color;
-        ctx.font = '700 88px Outfit, sans-serif';
-        ctx.fillText(val, x, y + 100);
+        ctx.font = '700 82px Outfit, sans-serif';
+        ctx.fillText(val, x, y + 95);
         ctx.fillStyle = textSecondary;
-        ctx.font = '500 19px Inter, sans-serif';
-        ctx.fillText(unit.toUpperCase(), x, y + 132);
+        ctx.font = '500 18px Inter, sans-serif';
+        ctx.fillText(unit.toUpperCase(), x, y + 124);
       };
 
-      drawMetric(100, 330, `Jarak (${targetYear})`, yearlyDist.toFixed(1), 'km',      isLight ? '#c0440a' : '#818cf8');
-      drawMetric(560, 330, `Latihan (${targetYear})`, yearlySessions.toString(), 'sesi', isLight ? '#2a9d8f' : '#fb7185');
-      drawMetric(100, 590, 'HR Rerata',                yearlyAvgHR ? Math.round(yearlyAvgHR).toString() : '–', 'bpm', isLight ? '#0d626c' : '#34d399');
-      drawMetric(560, 590, 'HR Maks',                  yearlyMaxHR ? yearlyMaxHR.toString() : '–',              'bpm', isLight ? '#b45309' : '#fbbf24');
+      const col2 = isLight ? 580 : 560;
+      const r1y = p0 + 80;
+      const r2y = r1y + 270;
+      drawMetric(px,   r1y, `Jarak (${targetYear})`,   yearlyDist.toFixed(1),                        'km',   isLight ? '#c0440a' : '#818cf8');
+      drawMetric(col2, r1y, `Latihan (${targetYear})`, yearlySessions.toString(),                    'sesi', isLight ? '#2a9d8f' : '#fb7185');
+      drawMetric(px,   r2y, 'HR Rerata',               yearlyAvgHR ? Math.round(yearlyAvgHR).toString() : '–', 'bpm', isLight ? '#0d626c' : '#34d399');
+      drawMetric(col2, r2y, 'HR Maks',                 yearlyMaxHR ? yearlyMaxHR.toString() : '–',   'bpm', isLight ? '#b45309' : '#fbbf24');
 
     } else { // race predictions
       ctx.fillStyle = textMuted;
-      ctx.font = '600 22px Inter, sans-serif';
-      ctx.fillText('PREDIKSI WAKTU RACE', 100, 268);
+      ctx.font = '600 20px Inter, sans-serif';
+      ctx.fillText('PREDIKSI WAKTU RACE', px, p0 + 34);
 
       const RIEGEL = 1.06;
       const RACES = [
@@ -626,57 +660,43 @@ export default function App() {
         { label: 'HALF MARATHON', dist: 21097, color: isLight ? '#b45309' : '#fbbf24' },
         { label: 'MARATHON',      dist: 42195, color: isLight ? '#0d626c' : '#fb7185' }
       ];
-
       const bestRuns = runActs
         .filter(a => a.distance >= 300000 && a.duration > 0)
         .map(a => ({ distM: a.distance / 100, durationSec: a.duration / 1000, paceMinKm: (a.duration / 60000) / (a.distance / 100000) }))
         .filter(a => a.paceMinKm >= 3 && a.paceMinKm <= 20)
         .sort((a, b) => a.paceMinKm - b.paceMinKm);
-
       const ref = bestRuns[0] || (targetPace ? { distM: 5000, durationSec: targetPace * 60 * 5, paceMinKm: targetPace } : null);
-
       if (ref) {
         RACES.forEach((r, idx) => {
           const predSec = ref.durationSec * Math.pow(r.dist / ref.distM, RIEGEL);
           const h = Math.floor(predSec / 3600);
           const m = Math.floor((predSec % 3600) / 60);
           const sec = Math.round(predSec % 60);
-          const timeStr = h > 0
-            ? `${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`
-            : `${m}:${String(sec).padStart(2,'0')}`;
-
-          const rowY = 325 + idx * 162;
-
-          // Color bar
+          const timeStr = h > 0 ? `${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}` : `${m}:${String(sec).padStart(2,'0')}`;
+          const rowY = (p0 + 75) + idx * (isLight ? 118 : 162);
           ctx.fillStyle = r.color;
-          ctx.fillRect(100, rowY - 4, 8, 130);
-
+          ctx.fillRect(px, rowY - 4, 8, isLight ? 100 : 130);
           ctx.fillStyle = textMuted;
-          ctx.font = '600 19px Inter, sans-serif';
-          ctx.fillText(r.label, 124, rowY + 22);
-
+          ctx.font = `600 ${isLight ? 17 : 19}px Inter, sans-serif`;
+          ctx.fillText(r.label, px + 20, rowY + (isLight ? 18 : 22));
           ctx.fillStyle = textPrimary;
-          ctx.font = '700 56px Outfit, sans-serif';
-          ctx.fillText(timeStr, 124, rowY + 92);
+          ctx.font = `700 ${isLight ? 48 : 56}px Outfit, sans-serif`;
+          ctx.fillText(timeStr, px + 20, rowY + (isLight ? 78 : 92));
         });
       }
     }
 
     // ── Footer ────────────────────────────────────────────────────────────────
+    const footerY = isLight ? 970 : 930;
     ctx.strokeStyle = isLight ? 'rgba(160, 82, 28, 0.15)' : 'rgba(255,255,255,0.06)';
     ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(100, 930);
-    ctx.lineTo(980, 930);
-    ctx.stroke();
-
+    ctx.beginPath(); ctx.moveTo(px, footerY); ctx.lineTo(pw, footerY); ctx.stroke();
     ctx.fillStyle = textMuted;
-    ctx.font = '400 17px Inter, sans-serif';
-    ctx.fillText('Dibuat otomatis oleh EnduraUP AI Engine', 100, 958);
-
+    ctx.font = '400 16px Inter, sans-serif';
+    ctx.fillText('Dibuat otomatis oleh EnduraUP AI Engine', px, footerY + 28);
     ctx.fillStyle = isLight ? '#c0440a' : (shareTheme === 'cyber' ? '#06b6d4' : '#a78bfa');
-    ctx.font = '600 19px Inter, sans-serif';
-    ctx.fillText('enduraup.vercel.app', 100, 990);
+    ctx.font = '600 18px Inter, sans-serif';
+    ctx.fillText('enduraup.vercel.app', px, footerY + 58);
 
   }, [showShareModal, shareTemplate, shareTheme, runActs, totalDist, totalSessions, avgHR, actualMaxHR, vo2max, targetPace, displayName, currentUser, avatar, retroImageLoaded]);
 
