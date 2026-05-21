@@ -2,6 +2,32 @@
 
 ---
 
+## [Uncommitted] — 2026-05-21 · Retro Groovy Background & Warm Text Palette
+
+### 🎨 UI / UX
+
+#### Ganti Background Landing Page → Retro Groovy (`retro_sunrise.jpg`)
+- Mengganti background solid gelap (`#09090b`) dengan gambar ilustrasi retro groovy bergaya 70s (`/retro_sunrise.jpg`) yang penuh warna — teal, oranye hangat, kuning emas, krem putih, dengan aksen planet Saturnus, roket, dan peace sign.
+- Menambahkan **dark warm overlay** `rgba(12, 8, 4, 0.72)` di atas gambar sehingga semua teks tetap terbaca dengan nyaman tanpa harus mencerahkan latar berlebihan.
+
+#### Penyesuaian Warna Teks (Warm Cream Palette)
+Seluruh warna teks diubah dari nuansa dingin (`#ffffff`, `#a1a1aa`, `#71717a`) ke nuansa hangat yang serasi dengan palet retro:
+
+| Elemen | Sebelum | Sesudah |
+|---|---|---|
+| Teks utama (hero, heading) | `#ffffff` | `#fdf6e3` (warm cream) |
+| Teks subtitle / body | `#a1a1aa` (abu-abu) | `#d4c9a8` / `#c8b89a` (cream warm) |
+| Badge "V2.0 Now Live" | ungu `#c4b5fd` | amber `#fde68a` |
+| Badge dot | ungu `#a78bfa` | amber `#f59e0b` |
+| Tombol CTA utama | putih solid | gradien amber-oranye `#f59e0b → #e07c24` |
+| Tombol "Learn More" | border putih | border cream semi-transparan |
+| Logo gradient | `#fff → #a78bfa` | `#fdf6e3 → #f59e0b` |
+| Text gradient hero | ungu-biru | `#f59e0b → #ef8c38 → #20b2aa` |
+| Bento glass panels | `rgba(20,20,23,0.35)` | `rgba(10,6,2,0.55)` lebih gelap |
+| Footer text | `#3f3f46` | `#8a7860` (sepia warm) |
+
+---
+
 ## [Uncommitted] — 2026-05-21 · Firestore Database Sync & Landing Page Refactor
 
 ### ✨ Fitur Baru
