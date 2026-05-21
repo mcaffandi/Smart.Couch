@@ -47,6 +47,24 @@ export const loadUserData = (username) => {
     const raw = localStorage.getItem(userKey);
     if (raw) return JSON.parse(raw);
 
+    // If new user and not 'Profil Utama', check if we have local data to migrate
+    if (username !== 'Profil Utama') {
+      const legacyKey = 'smartcoach_data_user_Profil Utama';
+      let legacyRaw = localStorage.getItem(legacyKey);
+      if (!legacyRaw) {
+        legacyRaw = localStorage.getItem(LEGACY_KEY);
+      }
+      if (legacyRaw) {
+        const parsed = JSON.parse(legacyRaw);
+        if (!parsed.profile) {
+          parsed.profile = { ...DEFAULT_PROFILE };
+        }
+        // Save copy for the new user
+        localStorage.setItem(userKey, JSON.stringify(parsed));
+        return parsed;
+      }
+    }
+
     if (username === 'Profil Utama') {
       const legacy = localStorage.getItem(LEGACY_KEY);
       if (legacy) {
