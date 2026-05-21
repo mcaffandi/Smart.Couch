@@ -454,15 +454,16 @@ export default function App() {
 
     const isLight = shareTheme === 'sunrise';
     
-    // Core text colors
-    const textPrimary = isLight ? '#fdf6e3' : '#ffffff';
-    const textSecondary = isLight ? '#fde68a' : 'rgba(255, 255, 255, 0.5)';
-    const textMuted = isLight ? 'rgba(253, 246, 227, 0.55)' : 'rgba(255, 255, 255, 0.25)';
-    const borderStroke = isLight ? 'rgba(245, 158, 11, 0.5)' : (shareTheme === 'cyber' ? 'rgba(6, 182, 212, 0.3)' : 'rgba(167, 139, 250, 0.2)');
+    // Core text colors — sunrise: dark warm text on white glass
+    const textPrimary   = isLight ? '#1a120a' : '#ffffff';
+    const textSecondary = isLight ? '#7c4a1e' : 'rgba(255, 255, 255, 0.5)';
+    const textMuted     = isLight ? 'rgba(60, 35, 10, 0.55)' : 'rgba(255, 255, 255, 0.25)';
+    const borderStroke  = isLight ? 'rgba(200, 120, 40, 0.35)' : (shareTheme === 'cyber' ? 'rgba(6, 182, 212, 0.3)' : 'rgba(167, 139, 250, 0.2)');
 
-    // 1. Draw Glassmorphic Card Backing to isolate and clarify statistics text
-    const glassStyle = isLight 
-      ? 'rgba(8, 4, 2, 0.78)' // dark overlay — increased opacity for better text readability
+    // 1. Draw Glassmorphic Card Backing
+    // Sunrise → warm white frosted glass; others → dark
+    const glassStyle = isLight
+      ? 'rgba(255, 248, 235, 0.84)'
       : (shareTheme === 'cyber' ? 'rgba(2, 6, 23, 0.85)' : (shareTheme === 'dark' ? 'rgba(9, 9, 11, 0.85)' : 'rgba(30, 27, 75, 0.85)'));
 
     const fillRoundedRect = (cCtx, x, y, width, height, radius, fillStyle) => {
@@ -509,47 +510,53 @@ export default function App() {
       ctx.strokeRect(60, 60, 960, 960);
     }
 
-    // Draw App Logo/Watermark
-    ctx.fillStyle = isLight ? '#f05a3f' : '#ffffff';
-    ctx.font = '700 40px Outfit, sans-serif';
-    ctx.fillText('EnduraUP', 100, 130);
+    // ── Header ─────────────────────────────────────────────────────────────────
+    ctx.fillStyle = isLight ? '#c0440a' : '#ffffff';
+    ctx.font = '700 34px Outfit, sans-serif';
+    ctx.fillText('EnduraUP', 100, 115);
 
     ctx.fillStyle = textSecondary;
-    ctx.font = '500 20px Inter, sans-serif';
-    ctx.fillText('AI Running & Recovery Coach', 100, 175);
+    ctx.font = '500 17px Inter, sans-serif';
+    ctx.fillText('AI Running & Recovery Coach', 100, 150);
 
-    // Draw Athlete Name (Clean directly printed, no ATLET prefix!)
     const athleteName = displayName || (currentUser ? currentUser.split('@')[0] : 'PELARI');
-    ctx.fillStyle = isLight ? '#0d626c' : (shareTheme === 'cyber' ? '#22d3ee' : '#a78bfa');
-    ctx.font = '600 24px Inter, sans-serif';
-    ctx.fillText(athleteName.toUpperCase(), 100, 225);
+    ctx.fillStyle = isLight ? '#a0521c' : (shareTheme === 'cyber' ? '#22d3ee' : '#a78bfa');
+    ctx.font = '700 20px Inter, sans-serif';
+    ctx.fillText(athleteName.toUpperCase(), 100, 182);
 
-    // Draw subtle divider line
-    ctx.strokeStyle = isLight ? 'rgba(10, 47, 53, 0.15)' : 'rgba(255, 255, 255, 0.08)';
-    ctx.lineWidth = 2;
+    // Divider
+    ctx.strokeStyle = isLight ? 'rgba(160, 82, 28, 0.18)' : 'rgba(255, 255, 255, 0.08)';
+    ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.moveTo(100, 255);
-    ctx.lineTo(980, 255);
+    ctx.moveTo(100, 205);
+    ctx.lineTo(980, 205);
     ctx.stroke();
 
-    // Draw Template Stats
+    // ── Template Content ──────────────────────────────────────────────────────
     if (shareTemplate === 'vo2') {
-      // Large VO2 Max display
-      ctx.fillStyle = textPrimary;
-      ctx.font = '700 48px Outfit, sans-serif';
-      ctx.fillText('ESTIMASI VO2MAX', 100, 360);
+      ctx.fillStyle = textMuted;
+      ctx.font = '600 22px Inter, sans-serif';
+      ctx.fillText('ESTIMASI VO2MAX', 100, 268);
 
-      // Draw VO2Max score in huge numbers
-      ctx.fillStyle = isLight ? '#f05a3f' : (shareTheme === 'cyber' ? '#06b6d4' : '#818cf8');
-      ctx.font = '700 180px Outfit, sans-serif';
+      // Big VO2Max number
+      ctx.fillStyle = isLight ? '#c0440a' : (shareTheme === 'cyber' ? '#06b6d4' : '#818cf8');
+      ctx.font = '700 200px Outfit, sans-serif';
       const textVal = vo2max ? vo2max.toFixed(0) : '–';
-      ctx.fillText(textVal, 100, 580);
+      ctx.fillText(textVal, 88, 510);
 
       ctx.fillStyle = textSecondary;
-      ctx.font = '500 26px Inter, sans-serif';
-      ctx.fillText('ml/kg/min', 100, 650);
+      ctx.font = '500 24px Inter, sans-serif';
+      ctx.fillText('ml/kg/min', 100, 548);
 
-      // Fitness Level Label
+      // Thin separator
+      ctx.strokeStyle = isLight ? 'rgba(160, 82, 28, 0.15)' : 'rgba(255,255,255,0.06)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(100, 575);
+      ctx.lineTo(980, 575);
+      ctx.stroke();
+
+      // Fitness Level
       let fitnessLevel = 'Pemula';
       let fitnessDesc = 'Fokus pada konsistensi latihan dasar.';
       if (vo2max >= 62) { fitnessLevel = 'Elite / Profesional'; fitnessDesc = 'Performa puncak luar biasa.'; }
@@ -560,26 +567,24 @@ export default function App() {
       else if (vo2max >= 30) { fitnessLevel = 'Di Bawah Rata-Rata'; fitnessDesc = 'Potensi peningkatan masih sangat besar.'; }
 
       ctx.fillStyle = textPrimary;
-      ctx.font = '700 36px Outfit, sans-serif';
-      ctx.fillText(fitnessLevel, 100, 750);
+      ctx.font = '700 38px Outfit, sans-serif';
+      ctx.fillText(fitnessLevel, 100, 650);
 
       ctx.fillStyle = textSecondary;
-      ctx.font = '500 28px Inter, sans-serif';
-      ctx.fillText(fitnessDesc, 100, 810);
+      ctx.font = '400 26px Inter, sans-serif';
+      ctx.fillText(fitnessDesc, 100, 700);
 
     } else if (shareTemplate === 'stats') {
-      ctx.fillStyle = textPrimary;
-      ctx.font = '700 48px Outfit, sans-serif';
-      ctx.fillText('RINGKASAN PERFORMA', 100, 320);
+      ctx.fillStyle = textMuted;
+      ctx.font = '600 22px Inter, sans-serif';
+      ctx.fillText('RINGKASAN PERFORMA', 100, 268);
 
       const targetYear = (() => {
         let y = new Date().getFullYear();
         let acts = runActs.filter(a => a.startTimeLocal && new Date(a.startTimeLocal).getFullYear() === y);
         if (acts.length === 0 && runActs.length > 0) {
           const years = runActs.map(a => a.startTimeLocal ? new Date(a.startTimeLocal).getFullYear() : null).filter(Boolean);
-          if (years.length > 0) {
-            y = Math.max(...years);
-          }
+          if (years.length > 0) y = Math.max(...years);
         }
         return y;
       })();
@@ -587,96 +592,90 @@ export default function App() {
       const yearlyActs = runActs.filter(a => a.startTimeLocal && new Date(a.startTimeLocal).getFullYear() === targetYear);
       const yearlyDist = yearlyActs.reduce((s, a) => s + (a.distance ?? 0) / 100000, 0);
       const yearlySessions = yearlyActs.length;
-      
       const hrActs = yearlyActs.filter(a => a.avgHr);
-      const yearlyAvgHR = hrActs.length
-        ? yearlyActs.reduce((s, a) => s + (a.avgHr ?? 0), 0) / hrActs.length
-        : 0;
+      const yearlyAvgHR = hrActs.length ? yearlyActs.reduce((s, a) => s + (a.avgHr ?? 0), 0) / hrActs.length : 0;
       const yearlyMaxHR = yearlyActs.reduce((max, a) => Math.max(max, a.maxHr ?? a.max_hr ?? 0), 0);
 
-      // Draw 4 Metrics in a 2x2 grid (aligned using fixed vertical offset to prevent overlaps)
+      // 2×2 metric grid
       const drawMetric = (x, y, label, val, unit, color) => {
-        ctx.fillStyle = textSecondary;
-        ctx.font = '600 20px Inter, sans-serif';
-        ctx.fillText(label.toUpperCase(), x, y);
-
-        ctx.fillStyle = color;
-        ctx.font = '700 80px Outfit, sans-serif';
-        ctx.fillText(val, x, y + 90);
-
         ctx.fillStyle = textMuted;
-        ctx.font = '500 20px Inter, sans-serif';
-        ctx.fillText(unit.toUpperCase(), x, y + 130);
+        ctx.font = '600 19px Inter, sans-serif';
+        ctx.fillText(label.toUpperCase(), x, y);
+        ctx.fillStyle = color;
+        ctx.font = '700 88px Outfit, sans-serif';
+        ctx.fillText(val, x, y + 100);
+        ctx.fillStyle = textSecondary;
+        ctx.font = '500 19px Inter, sans-serif';
+        ctx.fillText(unit.toUpperCase(), x, y + 132);
       };
 
-      drawMetric(100, 430, `Jarak (${targetYear})`, yearlyDist.toFixed(1), 'km', isLight ? '#f05a3f' : '#818cf8');
-      drawMetric(560, 430, `Latihan (${targetYear})`, yearlySessions.toString(), 'sesi lari', isLight ? '#2a9d8f' : '#fb7185');
-      drawMetric(100, 690, 'Detak Jantung Rerata', yearlyAvgHR ? Math.round(yearlyAvgHR).toString() : '–', 'bpm', isLight ? '#0d626c' : '#34d399');
-      drawMetric(560, 690, 'Detak Jantung Maks', yearlyMaxHR ? yearlyMaxHR.toString() : '–', 'bpm', isLight ? '#f4b251' : '#fbbf24');
+      drawMetric(100, 330, `Jarak (${targetYear})`, yearlyDist.toFixed(1), 'km',      isLight ? '#c0440a' : '#818cf8');
+      drawMetric(560, 330, `Latihan (${targetYear})`, yearlySessions.toString(), 'sesi', isLight ? '#2a9d8f' : '#fb7185');
+      drawMetric(100, 590, 'HR Rerata',                yearlyAvgHR ? Math.round(yearlyAvgHR).toString() : '–', 'bpm', isLight ? '#0d626c' : '#34d399');
+      drawMetric(560, 590, 'HR Maks',                  yearlyMaxHR ? yearlyMaxHR.toString() : '–',              'bpm', isLight ? '#b45309' : '#fbbf24');
 
     } else { // race predictions
-      ctx.fillStyle = textPrimary;
-      ctx.font = '700 48px Outfit, sans-serif';
-      ctx.fillText('PREDIKSI WAKTU RACE', 100, 300);
+      ctx.fillStyle = textMuted;
+      ctx.font = '600 22px Inter, sans-serif';
+      ctx.fillText('PREDIKSI WAKTU RACE', 100, 268);
 
       const RIEGEL = 1.06;
       const RACES = [
-        { label: '5 KM', dist: 5000, color: isLight ? '#f05a3f' : '#818cf8' },
-        { label: '10 KM', dist: 10000, color: isLight ? '#2a9d8f' : '#34d399' },
-        { label: 'HALF MARATHON', dist: 21097, color: isLight ? '#f4b251' : '#fbbf24' },
-        { label: 'MARATHON', dist: 42195, color: isLight ? '#0d626c' : '#fb7185' }
+        { label: '5 KM',          dist: 5000,  color: isLight ? '#c0440a' : '#818cf8' },
+        { label: '10 KM',         dist: 10000, color: isLight ? '#2a9d8f' : '#34d399' },
+        { label: 'HALF MARATHON', dist: 21097, color: isLight ? '#b45309' : '#fbbf24' },
+        { label: 'MARATHON',      dist: 42195, color: isLight ? '#0d626c' : '#fb7185' }
       ];
 
       const bestRuns = runActs
         .filter(a => a.distance >= 300000 && a.duration > 0)
-        .map(a => ({
-          distM: a.distance / 100,
-          durationSec: a.duration / 1000,
-          paceMinKm: (a.duration / 60000) / (a.distance / 100000),
-        }))
+        .map(a => ({ distM: a.distance / 100, durationSec: a.duration / 1000, paceMinKm: (a.duration / 60000) / (a.distance / 100000) }))
         .filter(a => a.paceMinKm >= 3 && a.paceMinKm <= 20)
         .sort((a, b) => a.paceMinKm - b.paceMinKm);
 
-      const ref = bestRuns[0] || (targetPace ? {
-        distM: 5000,
-        durationSec: targetPace * 60 * 5,
-        paceMinKm: targetPace
-      } : null);
+      const ref = bestRuns[0] || (targetPace ? { distM: 5000, durationSec: targetPace * 60 * 5, paceMinKm: targetPace } : null);
 
       if (ref) {
         RACES.forEach((r, idx) => {
           const predSec = ref.durationSec * Math.pow(r.dist / ref.distM, RIEGEL);
-
           const h = Math.floor(predSec / 3600);
           const m = Math.floor((predSec % 3600) / 60);
           const sec = Math.round(predSec % 60);
-          const timeStr = h > 0 
+          const timeStr = h > 0
             ? `${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`
             : `${m}:${String(sec).padStart(2,'0')}`;
 
-          const y = 400 + idx * 135;
+          const rowY = 325 + idx * 162;
 
+          // Color bar
           ctx.fillStyle = r.color;
-          ctx.fillRect(100, y - 28, 12, 40);
+          ctx.fillRect(100, rowY - 4, 8, 130);
 
-          ctx.fillStyle = textSecondary;
-          ctx.font = '600 20px Inter, sans-serif';
-          ctx.fillText(r.label, 132, y);
+          ctx.fillStyle = textMuted;
+          ctx.font = '600 19px Inter, sans-serif';
+          ctx.fillText(r.label, 124, rowY + 22);
 
           ctx.fillStyle = textPrimary;
-          ctx.font = '700 48px Outfit, sans-serif';
-          ctx.fillText(timeStr, 560, y + 8);
+          ctx.font = '700 56px Outfit, sans-serif';
+          ctx.fillText(timeStr, 124, rowY + 92);
         });
       }
     }
 
-    // Footer Watermark/Info
-    ctx.fillStyle = textMuted;
-    ctx.font = '400 18px Inter, sans-serif';
-    ctx.fillText('Dibuat otomatis oleh EnduraUP AI Engine', 100, 955);
+    // ── Footer ────────────────────────────────────────────────────────────────
+    ctx.strokeStyle = isLight ? 'rgba(160, 82, 28, 0.15)' : 'rgba(255,255,255,0.06)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(100, 930);
+    ctx.lineTo(980, 930);
+    ctx.stroke();
 
-    ctx.fillStyle = isLight ? '#f05a3f' : (shareTheme === 'cyber' ? '#06b6d4' : '#a78bfa');
-    ctx.font = '600 20px Inter, sans-serif';
+    ctx.fillStyle = textMuted;
+    ctx.font = '400 17px Inter, sans-serif';
+    ctx.fillText('Dibuat otomatis oleh EnduraUP AI Engine', 100, 958);
+
+    ctx.fillStyle = isLight ? '#c0440a' : (shareTheme === 'cyber' ? '#06b6d4' : '#a78bfa');
+    ctx.font = '600 19px Inter, sans-serif';
     ctx.fillText('enduraup.vercel.app', 100, 990);
 
   }, [showShareModal, shareTemplate, shareTheme, runActs, totalDist, totalSessions, avgHR, actualMaxHR, vo2max, targetPace, displayName, currentUser, avatar, retroImageLoaded]);
