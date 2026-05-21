@@ -179,15 +179,16 @@ export default function LoginScreen({ onLoginSuccess, usersList, addToast }) {
 
         <form onSubmit={(e) => isFirebaseConfigured ? handleFirebaseAuth(e, false) : handleLocalAuth(e, false)} className="login-form">
           <div className="form-group">
-            <label className="form-label">{isFirebaseConfigured ? 'Email Address' : 'Username'}</label>
+            <label className="form-label">Email Address</label>
             <input
-              type={isFirebaseConfigured ? 'email' : 'text'}
+              type="email"
               className="form-input"
-              placeholder={isFirebaseConfigured ? 'nama@domain.com' : 'Masukkan username...'}
+              placeholder="nama@email.com"
               value={email}
               onChange={e => setEmail(e.target.value)}
               autoFocus
               disabled={loading}
+              autoComplete="username"
             />
           </div>
 
@@ -287,6 +288,26 @@ export default function LoginScreen({ onLoginSuccess, usersList, addToast }) {
             </button>
           </p>
 
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            fontSize: '11px',
+            color: 'var(--text-muted)',
+            marginTop: '16px',
+            background: 'rgba(255, 255, 255, 0.02)',
+            padding: '8px 12px',
+            borderRadius: '8px',
+            border: '1px solid var(--border)'
+          }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#10b981', flexShrink: 0 }}>
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+            <span style={{ textAlign: 'left' }}>Privasi Terjamin: Data aktivitas &amp; profil Anda aman bersama kami.</span>
+          </div>
+
           {!isFirebaseConfigured && (
             <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 14, background: 'rgba(255,255,255,0.03)', padding: '6px 10px', borderRadius: 4, border: '1px solid var(--border)' }}>
               ⚠️ Firebase Auth belum dikonfigurasi. Berjalan dalam mode database lokal.
@@ -310,15 +331,16 @@ export default function LoginScreen({ onLoginSuccess, usersList, addToast }) {
             <div style={{ padding: '18px', display: 'flex', flexDirection: 'column', gap: 16 }}>
               <form onSubmit={(e) => isFirebaseConfigured ? handleFirebaseAuth(e, true) : handleLocalAuth(e, true)} className="login-form">
                 <div className="form-group">
-                  <label className="form-label">{isFirebaseConfigured ? 'Email Address' : 'Username'}</label>
+                  <label className="form-label">Email Address</label>
                   <input
-                    type={isFirebaseConfigured ? 'email' : 'text'}
+                    type="email"
                     className="form-input"
-                    placeholder={isFirebaseConfigured ? 'nama@domain.com' : 'Masukkan username...'}
+                    placeholder="nama@email.com"
                     value={email}
                     onChange={e => setEmail(e.target.value)}
                     autoFocus
                     disabled={loading}
+                    autoComplete="username"
                   />
                 </div>
                 <div className="form-group" style={{ marginTop: 14 }}>

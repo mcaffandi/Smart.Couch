@@ -6,5 +6,29 @@ export default defineConfig({
   server: {
     port: 5173,
     host: true
+  },
+  build: {
+    chunkSizeWarningLimit: 600,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('firebase')) {
+              return 'firebase';
+            }
+            if (id.includes('recharts')) {
+              return 'recharts';
+            }
+            if (id.includes('xlsx') || id.includes('jszip')) {
+              return 'excel-zip';
+            }
+            if (id.includes('react')) {
+              return 'react-core';
+            }
+            return 'vendor';
+          }
+        }
+      }
+    }
   }
 })

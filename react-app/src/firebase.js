@@ -9,6 +9,7 @@ import {
   signOut,
   onAuthStateChanged
 } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
 
 // Firebase configuration using Vite environment variables
 const firebaseConfig = {
@@ -28,10 +29,12 @@ if (!isConfigured) {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+const db = getFirestore(app);
 const googleProvider = new GoogleAuthProvider();
 
 export { 
   auth, 
+  db,
   googleProvider, 
   signInWithPopup, 
   signInWithEmailAndPassword, 

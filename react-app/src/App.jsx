@@ -15,10 +15,12 @@ import LandingPage from './LandingPage';
 import Logo from './Logo';
 import {
   auth,
+  db,
   signOut,
   onAuthStateChanged,
   isConfigured as isFirebaseConfigured
 } from './firebase';
+import { doc, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
 
 // ─── Toast component ──────────────────────────────────────────────────────────
 function Toast({ toasts }) {
@@ -72,10 +74,10 @@ function PaceInput({ value, onChange, label }) {
   const setS = (newS) => onChange((isNull ? 5 : (typeof m === 'number' ? m : 5)) + newS / 60);
 
   return (
-    <div className="form-group">
+    <div className="form-group" style={{ opacity: isNull ? 0.75 : 1 }}>
       {label && <label className="form-label">{label}</label>}
       <div style={{ display: 'flex', gap: 6 }}>
-        <div className="number-input-group" style={{ flex: 1 }}>
+        <div className="number-input-group" style={{ flex: 1, border: isNull ? '1px dashed var(--border)' : '1px solid var(--border)' }}>
           <button type="button" onClick={() => setM(Math.max(3, (isNull ? 5 : m) - 1))}>−</button>
           <input
             type="number"
@@ -87,7 +89,7 @@ function PaceInput({ value, onChange, label }) {
           <button type="button" onClick={() => setM(Math.min(15, (isNull ? 5 : m) + 1))}>+</button>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', fontWeight: 900, color: 'var(--text-muted)' }}>:</div>
-        <div className="number-input-group" style={{ flex: 1 }}>
+        <div className="number-input-group" style={{ flex: 1, border: isNull ? '1px dashed var(--border)' : '1px solid var(--border)' }}>
           <button type="button" onClick={() => setS((isNull ? 0 : s) - 5 < 0 ? 55 : (isNull ? 0 : s) - 5)}>−</button>
           <input
             type="number"
@@ -122,6 +124,7 @@ export default function App() {
   const [weight, setWeight] = useState(() => data.profile?.weight ?? null);
   const [height, setHeight] = useState(() => data.profile?.height ?? null);
   const [gender, setGender] = useState(() => data.profile?.gender ?? '');
+  const [avatar, setAvatar] = useState(() => data.profile?.avatar ?? null);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [editDraft, setEditDraft] = useState({});
   const [profileEditMode, setProfileEditMode] = useState(false);
@@ -157,10 +160,13 @@ export default function App() {
         setWeight(uData.profile?.weight ?? null);
         setHeight(uData.profile?.height ?? null);
         setGender(uData.profile?.gender ?? '');
+        setAvatar(uData.profile?.avatar ?? null);
         setGoal(uData.profile?.goal ?? 'maintenance');
         setProgramStyle(uData.profile?.programStyle ?? 'sedang');
         setTargetPace(uData.profile?.targetPace ?? null);
         setSelectedDays(uData.profile?.selectedDays ?? ['Selasa', 'Kamis', 'Sabtu']);
+        
+        syncFromFirestore(userIdentifier);
       }
     });
 
@@ -206,7 +212,68 @@ export default function App() {
   const [tab, setTab] = useState('dashboard');
   const [showLanding, setShowLanding] = useState(true);
 
+  // ── State: share performance card modal ──────────────────────────────────────
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [shareTemplate, setShareTemplate] = useState('vo2');
+  const [shareTheme, setShareTheme] = useState('dark');
+  const [retroImageLoaded, setRetroImageLoaded] = useState(false);
+  const retroImageRef = useRef(null);
+
+  useEffect(() => {
+    const img = new Image();
+    img.src = '/retro_sunrise.jpg';
+    img.onload = () => {
+      retroImageRef.current = img;
+      setRetroImageLoaded(true);
+    };
+  }, []);
+
   // ── State: user profiles ─────────────────────────────────────────────────────
+  const syncFromFirestore = useCallback(async (username) => {
+    if (!isFirebaseConfigured || !auth.currentUser) return;
+    const userIdentifier = auth.currentUser.email || auth.currentUser.displayName || `Anonim-${auth.currentUser.uid.substring(0, 4)}`;
+    if (username !== userIdentifier) return;
+
+    try {
+      const userDocRef = doc(db, 'users', username);
+      const userDocSnap = await getDoc(userDocRef);
+      if (userDocSnap.exists()) {
+        const cloudData = userDocSnap.data();
+        setData(cloudData);
+        setAge(cloudData.profile?.age ?? null);
+        setDisplayName(cloudData.profile?.displayName ?? '');
+        setWeight(cloudData.profile?.weight ?? null);
+        setHeight(cloudData.profile?.height ?? null);
+        setGender(cloudData.profile?.gender ?? '');
+        setAvatar(cloudData.profile?.avatar ?? null);
+        setGoal(cloudData.profile?.goal ?? 'maintenance');
+        setProgramStyle(cloudData.profile?.programStyle ?? 'sedang');
+        setTargetPace(cloudData.profile?.targetPace ?? null);
+        setSelectedDays(cloudData.profile?.selectedDays ?? ['Selasa', 'Kamis', 'Sabtu']);
+        localStorage.setItem(`smartcoach_data_user_${username}`, JSON.stringify(cloudData));
+      } else {
+        const localData = loadUserData(username);
+        await setDoc(userDocRef, localData);
+      }
+    } catch (e) {
+      console.error('Failed to sync from Firestore:', e);
+    }
+  }, []);
+
+  const saveAndSyncData = useCallback((updatedData) => {
+    setData(updatedData);
+    saveUserData(currentUser, updatedData);
+    if (isFirebaseConfigured && auth.currentUser) {
+      const userIdentifier = auth.currentUser.email || auth.currentUser.displayName || `Anonim-${auth.currentUser.uid.substring(0, 4)}`;
+      if (currentUser === userIdentifier) {
+        const userDocRef = doc(db, 'users', userIdentifier);
+        setDoc(userDocRef, updatedData).catch(e => {
+          console.error('Failed to sync save to Firestore:', e);
+        });
+      }
+    }
+  }, [currentUser]);
+
   const switchUser = (username) => {
     saveCurrentUser(username);
     setCurrentUser(username);
@@ -217,6 +284,7 @@ export default function App() {
     setWeight(uData.profile?.weight ?? null);
     setHeight(uData.profile?.height ?? null);
     setGender(uData.profile?.gender ?? '');
+    setAvatar(uData.profile?.avatar ?? null);
     setGoal(uData.profile?.goal ?? 'maintenance');
     setProgramStyle(uData.profile?.programStyle ?? 'sedang');
     setTargetPace(uData.profile?.targetPace ?? null);
@@ -250,6 +318,16 @@ export default function App() {
     setUsersList(updatedList);
     saveUsersList(updatedList);
     deleteUserData(currentUser);
+
+    if (isFirebaseConfigured && auth.currentUser) {
+      const userIdentifier = auth.currentUser.email || auth.currentUser.displayName || `Anonim-${auth.currentUser.uid.substring(0, 4)}`;
+      if (currentUser === userIdentifier) {
+        deleteDoc(doc(db, 'users', currentUser)).catch(e => {
+          console.error('Failed to delete doc from Firestore:', e);
+        });
+      }
+    }
+
     switchUser(updatedList[0]);
   };
 
@@ -294,6 +372,416 @@ export default function App() {
     return valid[0] ?? null; // fastest (lowest) pace = best
   }, [runActs]);
 
+  const vo2max = useMemo(() => {
+    if (!actualBestPace) return null;
+    const vel = 1000 / actualBestPace; // m/min
+    const o2 = -4.60 + 0.182258 * vel + 0.000104 * vel * vel;
+    const result = Math.round(o2 / 0.85);
+    return Math.min(90, Math.max(10, result));
+  }, [actualBestPace]);
+
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    if (!showShareModal || !canvasRef.current) return;
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+
+    // Set resolution: 1080x1080 for high resolution square post
+    canvas.width = 1080;
+    canvas.height = 1080;
+
+    // Draw background based on theme
+    if (shareTheme === 'dark') {
+      const grad = ctx.createLinearGradient(0, 0, 1080, 1080);
+      grad.addColorStop(0, '#09090b');
+      grad.addColorStop(1, '#18181b');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 1080, 1080);
+
+      // Spotlight glow
+      const radial = ctx.createRadialGradient(200, 200, 50, 200, 200, 600);
+      radial.addColorStop(0, 'rgba(167, 139, 250, 0.08)');
+      radial.addColorStop(1, 'transparent');
+      ctx.fillStyle = radial;
+      ctx.fillRect(0, 0, 1080, 1080);
+    } else if (shareTheme === 'cyber') {
+      const grad = ctx.createLinearGradient(0, 0, 1080, 1080);
+      grad.addColorStop(0, '#020617');
+      grad.addColorStop(1, '#0f172a');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 1080, 1080);
+
+      // Pink glow
+      const radialPink = ctx.createRadialGradient(900, 100, 50, 900, 100, 500);
+      radialPink.addColorStop(0, 'rgba(236, 72, 153, 0.08)');
+      radialPink.addColorStop(1, 'transparent');
+      ctx.fillStyle = radialPink;
+      ctx.fillRect(0, 0, 1080, 1080);
+
+      // Cyan glow
+      const radialCyan = ctx.createRadialGradient(100, 900, 50, 100, 900, 500);
+      radialCyan.addColorStop(0, 'rgba(6, 182, 212, 0.08)');
+      radialCyan.addColorStop(1, 'transparent');
+      ctx.fillStyle = radialCyan;
+      ctx.fillRect(0, 0, 1080, 1080);
+    } else if (shareTheme === 'sunrise') {
+      // Draw wavy retro 70s starburst background for Sunrise Fun
+      const palette = ['#0a2f35', '#0d626c', '#2a9d8f', '#fcedc4', '#f4b251', '#f05a3f'];
+      const cx = 900;
+      const cy = 540;
+
+      // Draw base color
+      ctx.fillStyle = '#0a2f35';
+      ctx.fillRect(0, 0, 1080, 1080);
+
+      // Helper wavy circle drawer
+      const drawWavyCircle = (cCtx, centerX, centerY, radius, amplitude, frequency, fillColor) => {
+        cCtx.fillStyle = fillColor;
+        cCtx.beginPath();
+        const steps = 360;
+        for (let i = 0; i <= steps; i++) {
+          const theta = (i * Math.PI) / 180;
+          const rCur = radius + amplitude * Math.sin(frequency * theta);
+          const x = centerX + rCur * Math.cos(theta);
+          const y = centerY + rCur * Math.sin(theta);
+          if (i === 0) {
+            cCtx.moveTo(x, y);
+          } else {
+            cCtx.lineTo(x, y);
+          }
+        }
+        cCtx.closePath();
+        cCtx.fill();
+      };
+
+      // Draw outer to inner concentric ripples
+      let colorIdx = 0;
+      for (let r = 1600; r >= 60; r -= 100) {
+        const color = palette[colorIdx % palette.length];
+        const amp = 30 + (r * 0.015);
+        const freq = 12; // 12 peaks
+        drawWavyCircle(ctx, cx, cy, r, amp, freq, color);
+        colorIdx++;
+      }
+    } else { // purple theme
+      const grad = ctx.createLinearGradient(0, 0, 1080, 1080);
+      grad.addColorStop(0, '#1e1b4b');
+      grad.addColorStop(1, '#311042');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 1080, 1080);
+
+      // Spotlight glow
+      const radial = ctx.createRadialGradient(540, 540, 50, 540, 540, 700);
+      radial.addColorStop(0, 'rgba(216, 180, 254, 0.05)');
+      radial.addColorStop(1, 'transparent');
+      ctx.fillStyle = radial;
+      ctx.fillRect(0, 0, 1080, 1080);
+    }
+
+    const isLight = shareTheme === 'sunrise';
+    
+    // Core text colors
+    const textPrimary = isLight ? '#0a2f35' : '#ffffff';
+    const textSecondary = isLight ? '#0d626c' : 'rgba(255, 255, 255, 0.5)';
+    const textMuted = isLight ? 'rgba(10, 47, 53, 0.6)' : 'rgba(255, 255, 255, 0.25)';
+    const borderStroke = isLight ? 'rgba(240, 90, 63, 0.4)' : (shareTheme === 'cyber' ? 'rgba(6, 182, 212, 0.3)' : 'rgba(167, 139, 250, 0.2)');
+
+    // 1. Draw Glassmorphic Card Backing to isolate and clarify statistics text
+    const glassStyle = isLight 
+      ? 'rgba(252, 237, 196, 0.88)' // warm cream glass
+      : (shareTheme === 'cyber' ? 'rgba(2, 6, 23, 0.85)' : (shareTheme === 'dark' ? 'rgba(9, 9, 11, 0.85)' : 'rgba(30, 27, 75, 0.85)'));
+
+    const fillRoundedRect = (cCtx, x, y, width, height, radius, fillStyle) => {
+      cCtx.fillStyle = fillStyle;
+      cCtx.beginPath();
+      cCtx.moveTo(x + radius, y);
+      cCtx.lineTo(x + width - radius, y);
+      cCtx.quadraticCurveTo(x + width, y, x + width, y + radius);
+      cCtx.lineTo(x + width, y + height - radius);
+      cCtx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+      cCtx.lineTo(x + radius, y + height);
+      cCtx.quadraticCurveTo(x, y + height, x, y + height - radius);
+      cCtx.lineTo(x, y + radius);
+      cCtx.quadraticCurveTo(x, y, x + radius, y);
+      cCtx.closePath();
+      cCtx.fill();
+    };
+
+    fillRoundedRect(ctx, 60, 60, 960, 960, 24, glassStyle);
+
+    // 2. Draw background grid overlay inside the glass card for technical aesthetic
+    ctx.strokeStyle = isLight ? 'rgba(10, 47, 53, 0.03)' : 'rgba(255, 255, 255, 0.015)';
+    ctx.lineWidth = 1;
+    for (let i = 80; i < 1000; i += 40) {
+      ctx.beginPath();
+      ctx.moveTo(i, 80);
+      ctx.lineTo(i, 960);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(80, i);
+      ctx.lineTo(960, i);
+      ctx.stroke();
+    }
+
+    // 3. Draw outer glass card borders
+    ctx.strokeStyle = borderStroke;
+    ctx.lineWidth = 4;
+    if (ctx.roundRect) {
+      ctx.beginPath();
+      ctx.roundRect(60, 60, 960, 960, 24);
+      ctx.stroke();
+    } else {
+      ctx.strokeRect(60, 60, 960, 960);
+    }
+
+    // Draw App Logo/Watermark
+    ctx.fillStyle = isLight ? '#f05a3f' : '#ffffff';
+    ctx.font = '700 40px Outfit, sans-serif';
+    ctx.fillText('EnduraUP', 100, 130);
+
+    ctx.fillStyle = textSecondary;
+    ctx.font = '500 20px Inter, sans-serif';
+    ctx.fillText('AI Running & Recovery Coach', 100, 175);
+
+    // Draw Athlete Name (Clean directly printed, no ATLET prefix!)
+    const athleteName = displayName || (currentUser ? currentUser.split('@')[0] : 'PELARI');
+    ctx.fillStyle = isLight ? '#0d626c' : (shareTheme === 'cyber' ? '#22d3ee' : '#a78bfa');
+    ctx.font = '600 24px Inter, sans-serif';
+    ctx.fillText(athleteName.toUpperCase(), 100, 225);
+
+    // Draw subtle divider line
+    ctx.strokeStyle = isLight ? 'rgba(10, 47, 53, 0.15)' : 'rgba(255, 255, 255, 0.08)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(100, 255);
+    ctx.lineTo(980, 255);
+    ctx.stroke();
+
+    // Draw Template Stats
+    if (shareTemplate === 'vo2') {
+      // Large VO2 Max display
+      ctx.fillStyle = textPrimary;
+      ctx.font = '700 48px Outfit, sans-serif';
+      ctx.fillText('ESTIMASI VO2MAX', 100, 360);
+
+      // Draw VO2Max score in huge numbers
+      ctx.fillStyle = isLight ? '#f05a3f' : (shareTheme === 'cyber' ? '#06b6d4' : '#818cf8');
+      ctx.font = '700 180px Outfit, sans-serif';
+      const textVal = vo2max ? vo2max.toFixed(0) : '–';
+      ctx.fillText(textVal, 100, 580);
+
+      ctx.fillStyle = textSecondary;
+      ctx.font = '500 26px Inter, sans-serif';
+      ctx.fillText('ml/kg/min', 100, 650);
+
+      // Fitness Level Label
+      let fitnessLevel = 'Pemula';
+      let fitnessDesc = 'Fokus pada konsistensi latihan dasar.';
+      if (vo2max >= 62) { fitnessLevel = 'Elite / Profesional'; fitnessDesc = 'Performa puncak luar biasa.'; }
+      else if (vo2max >= 57) { fitnessLevel = 'Sangat Baik (Top 10%)'; fitnessDesc = 'Tingkat kebugaran setara pelari kompetitif.'; }
+      else if (vo2max >= 52) { fitnessLevel = 'Baik Sekali'; fitnessDesc = 'Kapasitas aerobik sangat kuat.'; }
+      else if (vo2max >= 46) { fitnessLevel = 'Di Atas Rata-Rata'; fitnessDesc = 'Performa lari solid dan stabil.'; }
+      else if (vo2max >= 38) { fitnessLevel = 'Rata-Rata'; fitnessDesc = 'Kondisi fisik sehat and aktif.'; }
+      else if (vo2max >= 30) { fitnessLevel = 'Di Bawah Rata-Rata'; fitnessDesc = 'Potensi peningkatan masih sangat besar.'; }
+
+      ctx.fillStyle = textPrimary;
+      ctx.font = '700 36px Outfit, sans-serif';
+      ctx.fillText(fitnessLevel, 100, 750);
+
+      ctx.fillStyle = textSecondary;
+      ctx.font = '500 28px Inter, sans-serif';
+      ctx.fillText(fitnessDesc, 100, 810);
+
+    } else if (shareTemplate === 'stats') {
+      ctx.fillStyle = textPrimary;
+      ctx.font = '700 48px Outfit, sans-serif';
+      ctx.fillText('RINGKASAN PERFORMA', 100, 320);
+
+      const targetYear = (() => {
+        let y = new Date().getFullYear();
+        let acts = runActs.filter(a => a.startTimeLocal && new Date(a.startTimeLocal).getFullYear() === y);
+        if (acts.length === 0 && runActs.length > 0) {
+          const years = runActs.map(a => a.startTimeLocal ? new Date(a.startTimeLocal).getFullYear() : null).filter(Boolean);
+          if (years.length > 0) {
+            y = Math.max(...years);
+          }
+        }
+        return y;
+      })();
+
+      const yearlyActs = runActs.filter(a => a.startTimeLocal && new Date(a.startTimeLocal).getFullYear() === targetYear);
+      const yearlyDist = yearlyActs.reduce((s, a) => s + (a.distance ?? 0) / 100000, 0);
+      const yearlySessions = yearlyActs.length;
+      
+      const hrActs = yearlyActs.filter(a => a.avgHr);
+      const yearlyAvgHR = hrActs.length
+        ? yearlyActs.reduce((s, a) => s + (a.avgHr ?? 0), 0) / hrActs.length
+        : 0;
+      const yearlyMaxHR = yearlyActs.reduce((max, a) => Math.max(max, a.maxHr ?? a.max_hr ?? 0), 0);
+
+      // Draw 4 Metrics in a 2x2 grid (aligned using fixed vertical offset to prevent overlaps)
+      const drawMetric = (x, y, label, val, unit, color) => {
+        ctx.fillStyle = textSecondary;
+        ctx.font = '600 20px Inter, sans-serif';
+        ctx.fillText(label.toUpperCase(), x, y);
+
+        ctx.fillStyle = color;
+        ctx.font = '700 80px Outfit, sans-serif';
+        ctx.fillText(val, x, y + 90);
+
+        ctx.fillStyle = textMuted;
+        ctx.font = '500 20px Inter, sans-serif';
+        ctx.fillText(unit.toUpperCase(), x, y + 130);
+      };
+
+      drawMetric(100, 430, `Jarak (${targetYear})`, yearlyDist.toFixed(1), 'km', isLight ? '#f05a3f' : '#818cf8');
+      drawMetric(560, 430, `Latihan (${targetYear})`, yearlySessions.toString(), 'sesi lari', isLight ? '#2a9d8f' : '#fb7185');
+      drawMetric(100, 690, 'Detak Jantung Rerata', yearlyAvgHR ? Math.round(yearlyAvgHR).toString() : '–', 'bpm', isLight ? '#0d626c' : '#34d399');
+      drawMetric(560, 690, 'Detak Jantung Maks', yearlyMaxHR ? yearlyMaxHR.toString() : '–', 'bpm', isLight ? '#f4b251' : '#fbbf24');
+
+    } else { // race predictions
+      ctx.fillStyle = textPrimary;
+      ctx.font = '700 48px Outfit, sans-serif';
+      ctx.fillText('PREDIKSI WAKTU RACE', 100, 300);
+
+      const RIEGEL = 1.06;
+      const RACES = [
+        { label: '5 KM', dist: 5000, color: isLight ? '#f05a3f' : '#818cf8' },
+        { label: '10 KM', dist: 10000, color: isLight ? '#2a9d8f' : '#34d399' },
+        { label: 'HALF MARATHON', dist: 21097, color: isLight ? '#f4b251' : '#fbbf24' },
+        { label: 'MARATHON', dist: 42195, color: isLight ? '#0d626c' : '#fb7185' }
+      ];
+
+      const bestRuns = runActs
+        .filter(a => a.distance >= 300000 && a.duration > 0)
+        .map(a => ({
+          distM: a.distance / 100,
+          durationSec: a.duration / 1000,
+          paceMinKm: (a.duration / 60000) / (a.distance / 100000),
+        }))
+        .filter(a => a.paceMinKm >= 3 && a.paceMinKm <= 20)
+        .sort((a, b) => a.paceMinKm - b.paceMinKm);
+
+      const ref = bestRuns[0] || (targetPace ? {
+        distM: 5000,
+        durationSec: targetPace * 60 * 5,
+        paceMinKm: targetPace
+      } : null);
+
+      if (ref) {
+        RACES.forEach((r, idx) => {
+          const predSec = ref.durationSec * Math.pow(r.dist / ref.distM, RIEGEL);
+
+          const h = Math.floor(predSec / 3600);
+          const m = Math.floor((predSec % 3600) / 60);
+          const sec = Math.round(predSec % 60);
+          const timeStr = h > 0 
+            ? `${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`
+            : `${m}:${String(sec).padStart(2,'0')}`;
+
+          const y = 400 + idx * 135;
+
+          ctx.fillStyle = r.color;
+          ctx.fillRect(100, y - 28, 12, 40);
+
+          ctx.fillStyle = textSecondary;
+          ctx.font = '600 20px Inter, sans-serif';
+          ctx.fillText(r.label, 132, y);
+
+          ctx.fillStyle = textPrimary;
+          ctx.font = '700 48px Outfit, sans-serif';
+          ctx.fillText(timeStr, 560, y + 8);
+        });
+      }
+    }
+
+    // Footer Watermark/Info
+    ctx.fillStyle = textMuted;
+    ctx.font = '400 18px Inter, sans-serif';
+    ctx.fillText('Dibuat otomatis oleh EnduraUP AI Engine', 100, 955);
+
+    ctx.fillStyle = isLight ? '#f05a3f' : (shareTheme === 'cyber' ? '#06b6d4' : '#a78bfa');
+    ctx.font = '600 20px Inter, sans-serif';
+    ctx.fillText('enduraup.vercel.app', 100, 990);
+
+  }, [showShareModal, shareTemplate, shareTheme, runActs, totalDist, totalSessions, avgHR, actualMaxHR, vo2max, targetPace, displayName, currentUser, avatar]);
+
+  const shareOrDownloadImage = async () => {
+    if (!canvasRef.current) return;
+    const canvas = canvasRef.current;
+    
+    try {
+      if (navigator.share && navigator.canShare) {
+        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+        const file = new File([blob], `EnduraUP_Stats_${shareTemplate}.png`, { type: 'image/png' });
+        
+        if (navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            files: [file],
+            title: 'EnduraUP Performance Card',
+            text: 'Lihat pencapaian lari gue di EnduraUP! Gabung yuk di enduraup.vercel.app 🏃‍♂️🔥',
+          });
+          addToast('Berhasil membuka menu bagikan!');
+          return;
+        }
+      }
+    } catch (err) {
+      console.warn('Sharing failed, falling back to download:', err);
+    }
+    
+    // Fallback to direct download
+    const link = document.createElement('a');
+    link.download = `EnduraUP_Stats_${shareTemplate}_${Date.now()}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    addToast('Gambar berhasil diunduh! Siap dibagikan ke Instagram/WA.');
+  };
+
+  const copyLinkToClipboard = () => {
+    navigator.clipboard.writeText('https://enduraup.vercel.app').then(() => {
+      addToast('Link website berhasil disalin! Siap dibagikan.');
+    }).catch(err => {
+      console.error('Failed to copy link:', err);
+      addToast('Gagal menyalin link.', 'error');
+    });
+  };
+
+  const copyImageToClipboard = async () => {
+    if (!canvasRef.current) return;
+    try {
+      const blob = await new Promise(resolve => canvasRef.current.toBlob(resolve, 'image/png'));
+      await navigator.clipboard.write([
+        new ClipboardItem({ 'image/png': blob })
+      ]);
+      addToast('Gambar berhasil disalin ke clipboard! Siap di-paste (Ctrl+V/Cmd+V).');
+    } catch (err) {
+      console.error('Failed to copy image:', err);
+      addToast('Gagal menyalin gambar. Silakan unduh gambar terlebih dahulu.', 'error');
+    }
+  };
+
+  const shareToWhatsApp = () => {
+    const text = encodeURIComponent('Lihat hasil analisis latihan lari dan performa VO2Max saya di EnduraUP! Cek di: https://enduraup.vercel.app 🏃‍♂️🔥');
+    window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
+  };
+
+  const shareToTwitter = () => {
+    const text = encodeURIComponent('Lihat hasil analisis lari & performa VO2Max saya di EnduraUP! 🏃‍♂️🔥');
+    const url = encodeURIComponent('https://enduraup.vercel.app');
+    window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank');
+  };
+
+  const shareToInstagram = () => {
+    if (!canvasRef.current) return;
+    const link = document.createElement('a');
+    link.download = `EnduraUP_Stats_${shareTemplate}_${Date.now()}.png`;
+    link.href = canvasRef.current.toDataURL('image/png');
+    link.click();
+    addToast('Gambar diunduh! Silakan buka Instagram untuk membagikan ke Story/Feed dengan tag #EnduraUP');
+  };
+
   // ── File upload (Garmin ZIP & Strava GPX) ──────────────────────────────────
   const handleFileUpload = async (file) => {
     if (!file) return;
@@ -321,8 +809,7 @@ export default function App() {
       }
       const merged = mergeData(data, incoming);
       merged.profile = { age, goal, programStyle, targetPace, selectedDays };
-      setData(merged);
-      saveUserData(currentUser, merged);
+      saveAndSyncData(merged);
       addToast(`Berhasil import ${incoming.running_activities.length} sesi lari.`);
       setSidebarOpen(false);
     } catch (e) {
@@ -497,8 +984,7 @@ export default function App() {
             profile: { age, goal, programStyle, targetPace, selectedDays }
           };
 
-          setData(updated);
-          saveUserData(currentUser, updated);
+          saveAndSyncData(updated);
           addToast(`Import Excel Berhasil: ${newRuns.length} sesi lari & ${Object.keys(newSleep).length} data tidur.`);
           setSidebarOpen(false);
         } catch (err) {
@@ -533,8 +1019,7 @@ export default function App() {
       max_hr: Math.max(data.max_hr ?? 0, manualRun.maxHr),
       profile: { age, goal, programStyle, targetPace, selectedDays }
     };
-    setData(updated);
-    saveUserData(currentUser, updated);
+    saveAndSyncData(updated);
     addToast('Sesi lari berhasil disimpan.');
     setSidebarOpen(false);
   };
@@ -551,8 +1036,7 @@ export default function App() {
       },
       profile: { age, goal, programStyle, targetPace, selectedDays }
     };
-    setData(updated);
-    saveUserData(currentUser, updated);
+    saveAndSyncData(updated);
     addToast('Data tidur berhasil disimpan.');
     setSidebarOpen(false);
   };
@@ -565,8 +1049,7 @@ export default function App() {
       max_hr: 0,
       profile: { age, goal, programStyle, targetPace, selectedDays }
     };
-    setData(updated);
-    saveUserData(currentUser, updated);
+    saveAndSyncData(updated);
     setConfirmReset(false);
     setTab('dashboard');
     addToast('Semua data berhasil dihapus.', 'error');
@@ -575,12 +1058,15 @@ export default function App() {
 
   // ── Apply profile changes ─────────────────────────────────────────────────────
   const applyProfileChanges = () => {
+    if (age !== null && age !== undefined && age < 10) {
+      addToast('Umur tidak boleh kurang dari 10 tahun.', 'error');
+      return;
+    }
     const updated = {
       ...data,
-      profile: { age, displayName, weight, height, gender, goal, programStyle, targetPace, selectedDays }
+      profile: { age, displayName, weight, height, gender, avatar, goal, programStyle, targetPace, selectedDays }
     };
-    setData(updated);
-    saveUserData(currentUser, updated);
+    saveAndSyncData(updated);
     addToast('Profil diperbarui & disimpan.');
     setTab('dashboard');
     setSidebarOpen(false);
@@ -613,6 +1099,9 @@ export default function App() {
       </>
     );
   }
+
+  const rColor = latestSleepScore >= 80 ? '#10b981' : latestSleepScore >= 60 ? '#f59e0b' : '#ef4444';
+  const rBgColor = latestSleepScore >= 80 ? 'rgba(16, 185, 129, 0.08)' : latestSleepScore >= 60 ? 'rgba(245, 158, 11, 0.08)' : 'rgba(239, 68, 68, 0.08)';
 
   return (
     <div className="app-layout">
@@ -652,7 +1141,11 @@ export default function App() {
 
               {/* Header */}
               <div style={{ padding: '18px 18px 14px', display: 'flex', alignItems: 'center', gap: 12, borderBottom: '1px solid var(--border)' }}>
-                <div style={{ width: 44, height: 44, borderRadius: 12, background: 'linear-gradient(135deg,#818cf8,#a78bfa)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 800, color: '#fff', flexShrink: 0 }}>{initials}</div>
+                {d.avatar || avatar ? (
+                  <img src={d.avatar || avatar} alt="Profile" style={{ width: 44, height: 44, borderRadius: 12, objectFit: 'cover', flexShrink: 0 }} />
+                ) : (
+                  <div style={{ width: 44, height: 44, borderRadius: 12, background: 'linear-gradient(135deg,#818cf8,#a78bfa)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 800, color: '#fff', flexShrink: 0 }}>{initials}</div>
+                )}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 15, fontWeight: 700, color: curName ? 'var(--text-primary)' : 'var(--text-muted)', fontStyle: curName ? 'normal' : 'italic', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {curName || 'Belum ada nama'}
@@ -680,12 +1173,49 @@ export default function App() {
                       <span style={{ fontSize: 16, fontWeight: 800, color: bmiCat.c }}>{bmi} <span style={{ fontSize: 11, fontWeight: 600 }}>— {bmiCat.l}</span></span>
                     </div>
                   )}
-                  <button onClick={() => { setEditDraft({ displayName: curName, age: curAge, gender: curGender, weight: curWeight, height: curHeight }); setProfileEditMode(true); }}
+                  <button onClick={() => { setEditDraft({ displayName: curName, age: curAge, gender: curGender, weight: curWeight, height: curHeight, avatar: avatar }); setProfileEditMode(true); }}
                     style={{ padding: '10px', borderRadius: 8, background: 'var(--accent-purple)', border: 'none', color: '#fff', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13, fontWeight: 700, width: '100%' }}
                   >Edit Profil</button>
                 </>) : (<>
 
                 {/* ── EDIT MODE ── */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: 10 }}>
+                    <div style={{ position: 'relative', width: 52, height: 52, flexShrink: 0 }}>
+                      {d.avatar ? (
+                        <img src={d.avatar} alt="Avatar" style={{ width: 52, height: 52, borderRadius: 10, objectFit: 'cover', border: '1.5px solid var(--accent-purple)' }} />
+                      ) : (
+                        <div style={{ width: 52, height: 52, borderRadius: 10, background: 'linear-gradient(135deg,#818cf8,#a78bfa)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 800, color: '#fff' }}>
+                          {initials}
+                        </div>
+                      )}
+                      <label htmlFor="avatar-upload" style={{ position: 'absolute', bottom: -4, right: -4, background: 'var(--accent-purple)', borderRadius: '50%', width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', border: '1.5px solid var(--bg-surface)' }}>
+                        <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M12 5v14M5 12h14"/>
+                        </svg>
+                      </label>
+                      <input id="avatar-upload" type="file" accept="image/*" style={{ display: 'none' }} onChange={e => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        if (file.size > 200 * 1024) {
+                          addToast('Ukuran foto terlalu besar. Maksimal 200 KB.', 'error');
+                          return;
+                        }
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                          setEditDraft(prev => ({ ...prev, avatar: reader.result }));
+                        };
+                        reader.readAsDataURL(file);
+                      }} />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-primary)' }}>Foto Profil</div>
+                      <div style={{ fontSize: 9, color: 'var(--text-muted)' }}>Maksimal 200 KB (JPEG/PNG)</div>
+                      {d.avatar && (
+                        <button onClick={() => setEditDraft(prev => ({ ...prev, avatar: null }))} style={{ background: 'none', border: 'none', color: '#fb7185', fontSize: 9, padding: 0, marginTop: 2, cursor: 'pointer', textDecoration: 'underline', fontFamily: 'inherit', fontWeight: 600 }}>Hapus Foto</button>
+                      )}
+                    </div>
+                  </div>
+
                   <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent-purple)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Identitas</div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                     <div>
@@ -735,12 +1265,51 @@ export default function App() {
                       style={{ flex: 1, padding: '10px', borderRadius: 8, background: 'none', border: '1px solid var(--border)', color: 'var(--text-secondary)', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13, fontWeight: 600 }}
                     >Batal</button>
                     <button onClick={() => {
-                      if (d.displayName !== undefined) setDisplayName(d.displayName.trim());
-                      if (d.age !== undefined) setAge(d.age);
-                      if (d.weight !== undefined) setWeight(d.weight);
-                      if (d.height !== undefined) setHeight(d.height);
-                      if (d.gender !== undefined) setGender(d.gender);
-                      setEditDraft({}); setProfileEditMode(false); setShowProfileModal(false);
+                      const finalDisplayName = d.displayName !== undefined ? d.displayName.trim() : (displayName || '');
+                      const finalAge = d.age !== undefined ? d.age : age;
+                      const finalWeight = d.weight !== undefined ? d.weight : weight;
+                      const finalHeight = d.height !== undefined ? d.height : height;
+                      const finalGender = d.gender !== undefined ? d.gender : gender;
+                      const finalAvatar = d.avatar !== undefined ? d.avatar : avatar;
+
+                      if (finalAge !== null && finalAge !== undefined && finalAge < 10) {
+                        addToast('Umur tidak boleh kurang dari 10 tahun.', 'error');
+                        return;
+                      }
+                      if (finalHeight !== null && finalHeight !== undefined && finalHeight > 250) {
+                        addToast('Tinggi tidak boleh lebih dari 250 cm.', 'error');
+                        return;
+                      }
+
+                      if (d.displayName !== undefined) setDisplayName(finalDisplayName);
+                      if (d.age !== undefined) setAge(finalAge);
+                      if (d.weight !== undefined) setWeight(finalWeight);
+                      if (d.height !== undefined) setHeight(finalHeight);
+                      if (d.gender !== undefined) setGender(finalGender);
+                      setAvatar(finalAvatar);
+
+                      const updated = {
+                        ...data,
+                        profile: {
+                          ...(data.profile || {}),
+                          displayName: finalDisplayName,
+                          age: finalAge,
+                          weight: finalWeight,
+                          height: finalHeight,
+                          gender: finalGender,
+                          avatar: finalAvatar,
+                          goal: data.profile?.goal ?? goal,
+                          programStyle: data.profile?.programStyle ?? programStyle,
+                          targetPace: data.profile?.targetPace ?? targetPace,
+                          selectedDays: data.profile?.selectedDays ?? selectedDays
+                        }
+                      };
+                      saveAndSyncData(updated);
+
+                      setEditDraft({});
+                      setProfileEditMode(false);
+                      setShowProfileModal(false);
+                      addToast('Profil diperbarui & disimpan.');
                     }}
                       style={{ flex: 2, padding: '10px', borderRadius: 8, background: 'var(--accent-purple)', border: 'none', color: '#fff', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13, fontWeight: 700 }}
                     >✓ Simpan</button>
@@ -829,14 +1398,18 @@ export default function App() {
             onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(129,140,248,0.5)'; e.currentTarget.style.background = 'var(--bg-card-hover)'; }}
             onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'var(--bg-card)'; }}
           >
-            <div style={{
-              width: 34, height: 34, borderRadius: 8, flexShrink: 0,
-              background: 'linear-gradient(135deg, #818cf8, #a78bfa)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 12, fontWeight: 800, color: '#fff',
-            }}>
-              {(displayName || currentUser).substring(0, 2).toUpperCase()}
-            </div>
+            {avatar ? (
+              <img src={avatar} alt="Profile" style={{ width: 34, height: 34, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }} />
+            ) : (
+              <div style={{
+                width: 34, height: 34, borderRadius: 8, flexShrink: 0,
+                background: 'linear-gradient(135deg, #818cf8, #a78bfa)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 12, fontWeight: 800, color: '#fff',
+              }}>
+                {(displayName || currentUser).substring(0, 2).toUpperCase()}
+              </div>
+            )}
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 13, fontWeight: 600, color: displayName ? 'var(--text-primary)' : 'var(--text-muted)', fontStyle: displayName ? 'normal' : 'italic', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {displayName || 'Isi nama profil...'}
@@ -854,9 +1427,9 @@ export default function App() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
 
             {/* Age — empty/grey placeholder when not set */}
-            <div className="form-group">
+            <div className="form-group" style={{ opacity: age === null ? 0.75 : 1 }}>
               <label className="form-label">Umur</label>
-              <div className="number-input-group">
+              <div className="number-input-group" style={{ border: age === null ? '1px dashed var(--border)' : '1px solid var(--border)' }}>
                 <button type="button" onClick={() => setAge(prev => Math.max(10, (prev ?? 25) - 1))}>−</button>
                 <input
                   type="number"
@@ -1096,7 +1669,253 @@ export default function App() {
         >
           Logout / Keluar
         </button>
+        <div style={{ fontSize: 10, color: 'var(--text-muted)', textAlign: 'center', marginTop: 12, opacity: 0.7 }}>
+          v2.0.0
+        </div>
       </aside>
+
+      {/* ── Share Stats Modal Overlay ───────────────────────────────────────── */}
+      {showShareModal && (
+        <div 
+          className="profile-modal-backdrop" 
+          onClick={e => { if (e.target === e.currentTarget) setShowShareModal(false); }}
+        >
+          <div style={{ 
+            background: 'var(--bg-surface)', 
+            border: '1px solid var(--border)', 
+            borderRadius: 16, 
+            width: '100%', 
+            maxWidth: 500, 
+            maxHeight: '95vh', 
+            overflowY: 'auto',
+            padding: 24,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 20
+          }}>
+            {/* Modal Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border)', paddingBottom: 12 }}>
+              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: 'var(--text-primary)' }}>Bagikan Pencapaian</h2>
+              <button 
+                onClick={() => setShowShareModal(false)}
+                style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: 20, cursor: 'pointer' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Template Selector */}
+            <div>
+              <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>
+                Pilih Statistik
+              </label>
+              <div style={{ display: 'flex', gap: 8 }}>
+                {[
+                  { key: 'vo2', label: 'Estimasi VO2Max' },
+                  { key: 'stats', label: 'Ringkasan Stats' },
+                  { key: 'race', label: 'Prediksi Race' }
+                ].map(t => (
+                  <button
+                    key={t.key}
+                    onClick={() => setShareTemplate(t.key)}
+                    style={{
+                      flex: 1,
+                      padding: '8px 12px',
+                      borderRadius: 8,
+                      border: '1px solid ' + (shareTemplate === t.key ? 'var(--accent-purple)' : 'var(--border)'),
+                      background: shareTemplate === t.key ? 'rgba(167, 139, 250, 0.1)' : 'transparent',
+                      color: shareTemplate === t.key ? 'var(--text-primary)' : 'var(--text-muted)',
+                      fontSize: 12,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      fontFamily: 'inherit',
+                      transition: 'all 0.15s'
+                    }}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Theme Selector */}
+            <div>
+              <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>
+                Pilih Tema Desain
+              </label>
+              <div style={{ display: 'flex', gap: 8 }}>
+                {[
+                  { key: 'dark', label: 'Sleek Dark', color: 'linear-gradient(135deg, #09090b, #18181b)' },
+                  { key: 'cyber', label: 'Cyberpunk', color: 'linear-gradient(135deg, #020617, #0f172a)' },
+                  { key: 'purple', label: 'Amethyst', color: 'linear-gradient(135deg, #1e1b4b, #311042)' },
+                  { key: 'sunrise', label: 'Sunrise Fun', color: 'linear-gradient(135deg, #fff1f2, #ffedd5)' }
+                ].map(th => (
+                  <button
+                    key={th.key}
+                    onClick={() => setShareTheme(th.key)}
+                    style={{
+                      flex: 1,
+                      padding: '10px 8px',
+                      borderRadius: 8,
+                      border: '1px solid ' + (shareTheme === th.key ? (th.key === 'sunrise' ? '#e11d48' : '#ffffff') : 'var(--border)'),
+                      background: th.color,
+                      color: th.key === 'sunrise' ? '#be123c' : '#ffffff',
+                      fontSize: 11,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      fontFamily: 'inherit',
+                      boxShadow: shareTheme === th.key ? (th.key === 'sunrise' ? '0 0 10px rgba(225, 29, 72, 0.4)' : '0 0 10px rgba(167, 139, 250, 0.4)') : 'none',
+                      transition: 'all 0.15s'
+                    }}
+                  >
+                    {th.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Live Canvas Preview */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+              <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', alignSelf: 'flex-start' }}>
+                Preview Gambar (Kotak 1:1)
+              </label>
+              <div style={{ 
+                width: '100%', 
+                aspectRatio: '1/1', 
+                background: '#000', 
+                borderRadius: 12, 
+                overflow: 'hidden', 
+                border: '1px solid var(--border)',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.4)'
+              }}>
+                <canvas 
+                  ref={canvasRef} 
+                  style={{ width: '100%', height: '100%', display: 'block' }} 
+                />
+              </div>
+            </div>
+
+            {/* Download / Share Buttons */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {/* Primary Download Button */}
+              <button
+                onClick={shareOrDownloadImage}
+                className="btn btn-primary"
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '12px', fontSize: 14, width: '100%' }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                Unduh Gambar Performa (PNG)
+              </button>
+
+              <div style={{ borderTop: '1px solid var(--border)', paddingTop: 14 }}>
+                <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 12 }}>
+                  Bagikan Langsung
+                </label>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8 }}>
+                  {/* WhatsApp */}
+                  <button
+                    onClick={shareToWhatsApp}
+                    style={{
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6,
+                      background: 'rgba(37, 211, 102, 0.08)', border: '1px solid rgba(37, 211, 102, 0.3)',
+                      borderRadius: 10, padding: '10px 0', cursor: 'pointer', transition: 'all 0.15s', color: '#25D366'
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(37, 211, 102, 0.16)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'rgba(37, 211, 102, 0.08)'; }}
+                    title="Bagikan ke WhatsApp"
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+                    </svg>
+                    <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)' }}>WA</span>
+                  </button>
+
+                  {/* Twitter / X */}
+                  <button
+                    onClick={shareToTwitter}
+                    style={{
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6,
+                      background: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border)',
+                      borderRadius: 10, padding: '10px 0', cursor: 'pointer', transition: 'all 0.15s', color: 'var(--text-primary)'
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)'; }}
+                    title="Bagikan ke Twitter / X"
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M4 4l11.733 16h4.267l-11.733 -16z" />
+                      <path d="M4 20l6.768 -6.768m2.46 -2.46l6.772 -6.772" />
+                    </svg>
+                    <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)' }}>Twitter</span>
+                  </button>
+
+                  {/* Instagram */}
+                  <button
+                    onClick={shareToInstagram}
+                    style={{
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6,
+                      background: 'rgba(225, 48, 108, 0.08)', border: '1px solid rgba(225, 48, 108, 0.3)',
+                      borderRadius: 10, padding: '10px 0', cursor: 'pointer', transition: 'all 0.15s', color: '#E1306C'
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(225, 48, 108, 0.16)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'rgba(225, 48, 108, 0.08)'; }}
+                    title="Bagikan ke Instagram"
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+                      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                      <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+                    </svg>
+                    <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)' }}>IG</span>
+                  </button>
+
+                  {/* Salin Gambar */}
+                  <button
+                    onClick={copyImageToClipboard}
+                    style={{
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6,
+                      background: 'rgba(129, 140, 248, 0.08)', border: '1px solid rgba(129, 140, 248, 0.3)',
+                      borderRadius: 10, padding: '10px 0', cursor: 'pointer', transition: 'all 0.15s', color: '#818cf8'
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(129, 140, 248, 0.16)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'rgba(129, 140, 248, 0.08)'; }}
+                    title="Salin Gambar ke Clipboard"
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                    </svg>
+                    <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)' }}>Salin Gbr</span>
+                  </button>
+
+                  {/* Salin Link */}
+                  <button
+                    onClick={copyLinkToClipboard}
+                    style={{
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6,
+                      background: 'rgba(167, 139, 250, 0.08)', border: '1px solid rgba(167, 139, 250, 0.3)',
+                      borderRadius: 10, padding: '10px 0', cursor: 'pointer', transition: 'all 0.15s', color: '#a78bfa'
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(167, 139, 250, 0.16)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'rgba(167, 139, 250, 0.08)'; }}
+                    title="Salin Link Website"
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                    </svg>
+                    <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)' }}>Link</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ═══════════════════════════════ MAIN ══════════════════════════════════ */}
       <main className="main-content">
@@ -1121,6 +1940,41 @@ export default function App() {
               </button>
             )}
             <h1 className="page-title" style={{ margin: 0 }}>EnduraUP</h1>
+            {hasData && (
+              <button
+                onClick={() => setShowShareModal(true)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--text-muted)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: 6,
+                  borderRadius: '50%',
+                  transition: 'all 0.15s',
+                  width: 30,
+                  height: 30,
+                  marginTop: 2
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.background = 'var(--bg-surface)';
+                  e.currentTarget.style.color = 'var(--accent-purple)';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.background = 'none';
+                  e.currentTarget.style.color = 'var(--text-muted)';
+                }}
+                title="Bagikan Kartu Performa (PNG)"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+                  <polyline points="16 6 12 2 8 6"/>
+                  <line x1="12" y1="2" x2="12" y2="15"/>
+                </svg>
+              </button>
+            )}
           </div>
           <p className="page-subtitle">Ubah Data Lari &amp; Tidur lo Jadi Rencana Latihan Personal</p>
         </div>
@@ -1186,6 +2040,40 @@ export default function App() {
             {/* ─────────────────── DASHBOARD ─────────────────── */}
             {tab === 'dashboard' && (
               <div className="animate-fade-in">
+                {latestSleepDate && (
+                  <div className="readiness-card animate-fade-in">
+                    <div className="readiness-dial-wrapper">
+                      <div className="readiness-dial" style={{ 
+                        borderColor: rBgColor,
+                        borderTopColor: rColor,
+                        borderRightColor: rColor,
+                      }}>
+                        <div className="readiness-dial-value">{latestSleepScore}%</div>
+                      </div>
+                      <div className="readiness-dial-label" style={{ color: rColor }}>
+                        {latestSleepScore >= 80 ? 'Prima' : latestSleepScore >= 60 ? 'Cukup' : 'Rendah'}
+                      </div>
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <h3 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: rColor }}>
+                          <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                        </svg>
+                        Kesiapan Latihan Terkini
+                      </h3>
+                      <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.6', margin: 0 }}>
+                        Berdasarkan rekaman tidur terakhir tanggal <strong>{latestSleepDate}</strong>, kesiapan fisik Anda berada di tingkat <strong>{latestSleepScore}%</strong>.{' '}
+                        {latestSleepScore >= 80 
+                          ? 'Tubuh Anda dalam kondisi prima dan siap untuk menerima latihan berintensitas tinggi hari ini.' 
+                          : latestSleepScore >= 60 
+                            ? 'Pemulihan Anda cukup baik. Silakan latihan, namun hindari memaksakan diri terlalu keras (overpush).' 
+                            : 'Tingkat pemulihan rendah. Kami sangat menyarankan untuk memprioritaskan istirahat, hidrasi, dan pemulihan hari ini.'
+                        }
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 {/* Metrics */}
                 <div className="metrics-grid">
                   {[
@@ -1315,18 +2203,45 @@ export default function App() {
                 ) : (
                   <>
                     {latestSleepDate && (
-                      <div className={`alert ${latestSleepScore >= 80 ? 'alert-success' : latestSleepScore >= 60 ? 'alert-warning' : 'alert-danger'}`} style={{ marginBottom: 20 }}>
-                        <strong>Skor Tidur Terbaru ({latestSleepDate}):</strong> {latestSleepScore}/100{' '}
-                        {latestSleepScore >= 80 ? '— Prima! Siap latihan keras.' : latestSleepScore >= 60 ? '— Cukup, tapi jangan overpush.' : '— Drop. Prioritaskan recovery dulu.'}
+                      <div className="readiness-card animate-fade-in">
+                        <div className="readiness-dial-wrapper">
+                          <div className="readiness-dial" style={{ 
+                            borderColor: rBgColor,
+                            borderTopColor: rColor,
+                            borderRightColor: rColor,
+                          }}>
+                            <div className="readiness-dial-value">{latestSleepScore}%</div>
+                          </div>
+                          <div className="readiness-dial-label" style={{ color: rColor }}>
+                            {latestSleepScore >= 80 ? 'Prima' : latestSleepScore >= 60 ? 'Cukup' : 'Rendah'}
+                          </div>
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <h3 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: rColor }}>
+                              <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                            </svg>
+                            Kesiapan Latihan Terkini
+                          </h3>
+                          <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.6', margin: 0 }}>
+                            Berdasarkan rekaman tidur terakhir tanggal <strong>{latestSleepDate}</strong>, kesiapan fisik Anda berada di tingkat <strong>{latestSleepScore}%</strong>.{' '}
+                            {latestSleepScore >= 80 
+                              ? 'Tubuh Anda dalam kondisi prima dan siap untuk menerima latihan berintensitas tinggi hari ini.' 
+                              : latestSleepScore >= 60 
+                                ? 'Pemulihan Anda cukup baik. Silakan latihan, namun hindari memaksakan diri terlalu keras (overpush).' 
+                                : 'Tingkat pemulihan rendah. Kami sangat menyarankan untuk memprioritaskan istirahat, hidrasi, dan pemulihan hari ini.'
+                            }
+                          </p>
+                        </div>
                       </div>
                     )}
 
                     <div className="sleep-history-grid">
                       {Object.entries(sleepRecs).sort(([a], [b]) => b.localeCompare(a)).map(([date, rec]) => {
                         const s = rec.score;
-                        const color = s >= 80 ? '#34d399' : s >= 60 ? '#fbbf24' : '#fb7185';
+                        const color = s >= 80 ? '#10b981' : s >= 60 ? '#f59e0b' : '#ef4444';
                         return (
-                          <div className="sleep-history-card" key={date} style={{ borderColor: `${color}30`, background: `${color}06` }}>
+                          <div className="sleep-history-card" key={date}>
                             <div className="sleep-card-left">
                               <div className="sleep-card-date">
                                 {new Date(date).toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}

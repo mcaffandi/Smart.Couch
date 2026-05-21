@@ -1418,3 +1418,73 @@ html, body {
   font-weight: 500;
   color: var(--text-muted);
 }
+
+/* Dashboard & Sleep Tab Readiness Card (Senada dengan Landing Page) */
+.readiness-card {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 22px;
+  border-radius: 16px;
+  margin-bottom: 24px;
+  background: rgba(255, 255, 255, 0.02) !important;
+  border: 1px solid var(--border) !important;
+  backdrop-filter: blur(10px);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Spotlight glow background effect */
+.readiness-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -20%;
+  width: 140px;
+  height: 140px;
+  background: radial-gradient(circle, rgba(167, 139, 250, 0.15) 0%, transparent 70%);
+  pointer-events: none;
+  filter: blur(20px);
+}
+
+.readiness-dial-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.readiness-dial {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  border: 4px solid rgba(255, 255, 255, 0.03);
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.01);
+}
+
+.readiness-dial-value {
+  font-size: 16px;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.readiness-dial-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+@media (max-width: 600px) {
+  .readiness-card {
+    flex-direction: column;
+    text-align: center;
+    gap: 16px;
+    align-items: center;
+  }
+}
+
