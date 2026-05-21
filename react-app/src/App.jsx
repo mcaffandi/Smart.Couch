@@ -426,44 +426,17 @@ export default function App() {
       ctx.fillStyle = radialCyan;
       ctx.fillRect(0, 0, 1080, 1080);
     } else if (shareTheme === 'sunrise') {
-      // Draw wavy retro 70s starburst background for Sunrise Fun
-      const palette = ['#0a2f35', '#0d626c', '#2a9d8f', '#fcedc4', '#f4b251', '#f05a3f'];
-      const cx = 900;
-      const cy = 540;
-
-      // Draw base color
-      ctx.fillStyle = '#0a2f35';
-      ctx.fillRect(0, 0, 1080, 1080);
-
-      // Helper wavy circle drawer
-      const drawWavyCircle = (cCtx, centerX, centerY, radius, amplitude, frequency, fillColor) => {
-        cCtx.fillStyle = fillColor;
-        cCtx.beginPath();
-        const steps = 360;
-        for (let i = 0; i <= steps; i++) {
-          const theta = (i * Math.PI) / 180;
-          const rCur = radius + amplitude * Math.sin(frequency * theta);
-          const x = centerX + rCur * Math.cos(theta);
-          const y = centerY + rCur * Math.sin(theta);
-          if (i === 0) {
-            cCtx.moveTo(x, y);
-          } else {
-            cCtx.lineTo(x, y);
-          }
-        }
-        cCtx.closePath();
-        cCtx.fill();
-      };
-
-      // Draw outer to inner concentric ripples
-      let colorIdx = 0;
-      for (let r = 1600; r >= 60; r -= 100) {
-        const color = palette[colorIdx % palette.length];
-        const amp = 30 + (r * 0.015);
-        const freq = 12; // 12 peaks
-        drawWavyCircle(ctx, cx, cy, r, amp, freq, color);
-        colorIdx++;
+      // Draw retro_sunrise.jpg image as background
+      if (retroImageRef.current) {
+        ctx.drawImage(retroImageRef.current, 0, 0, 1080, 1080);
+      } else {
+        // Fallback solid color if image not loaded yet
+        ctx.fillStyle = '#0d626c';
+        ctx.fillRect(0, 0, 1080, 1080);
       }
+      // Subtle dark overlay for text readability
+      ctx.fillStyle = 'rgba(8, 4, 2, 0.38)';
+      ctx.fillRect(0, 0, 1080, 1080);
     } else { // purple theme
       const grad = ctx.createLinearGradient(0, 0, 1080, 1080);
       grad.addColorStop(0, '#1e1b4b');
@@ -482,14 +455,14 @@ export default function App() {
     const isLight = shareTheme === 'sunrise';
     
     // Core text colors
-    const textPrimary = isLight ? '#0a2f35' : '#ffffff';
-    const textSecondary = isLight ? '#0d626c' : 'rgba(255, 255, 255, 0.5)';
-    const textMuted = isLight ? 'rgba(10, 47, 53, 0.6)' : 'rgba(255, 255, 255, 0.25)';
-    const borderStroke = isLight ? 'rgba(240, 90, 63, 0.4)' : (shareTheme === 'cyber' ? 'rgba(6, 182, 212, 0.3)' : 'rgba(167, 139, 250, 0.2)');
+    const textPrimary = isLight ? '#fdf6e3' : '#ffffff';
+    const textSecondary = isLight ? '#fde68a' : 'rgba(255, 255, 255, 0.5)';
+    const textMuted = isLight ? 'rgba(253, 246, 227, 0.55)' : 'rgba(255, 255, 255, 0.25)';
+    const borderStroke = isLight ? 'rgba(245, 158, 11, 0.5)' : (shareTheme === 'cyber' ? 'rgba(6, 182, 212, 0.3)' : 'rgba(167, 139, 250, 0.2)');
 
     // 1. Draw Glassmorphic Card Backing to isolate and clarify statistics text
     const glassStyle = isLight 
-      ? 'rgba(252, 237, 196, 0.88)' // warm cream glass
+      ? 'rgba(8, 4, 2, 0.60)' // dark overlay so retro image shows through + text readable
       : (shareTheme === 'cyber' ? 'rgba(2, 6, 23, 0.85)' : (shareTheme === 'dark' ? 'rgba(9, 9, 11, 0.85)' : 'rgba(30, 27, 75, 0.85)'));
 
     const fillRoundedRect = (cCtx, x, y, width, height, radius, fillStyle) => {
@@ -706,7 +679,7 @@ export default function App() {
     ctx.font = '600 20px Inter, sans-serif';
     ctx.fillText('enduraup.vercel.app', 100, 990);
 
-  }, [showShareModal, shareTemplate, shareTheme, runActs, totalDist, totalSessions, avgHR, actualMaxHR, vo2max, targetPace, displayName, currentUser, avatar]);
+  }, [showShareModal, shareTemplate, shareTheme, runActs, totalDist, totalSessions, avgHR, actualMaxHR, vo2max, targetPace, displayName, currentUser, avatar, retroImageLoaded]);
 
   const shareOrDownloadImage = async () => {
     if (!canvasRef.current) return;
