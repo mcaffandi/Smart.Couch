@@ -462,7 +462,7 @@ export default function App() {
 
     // 1. Draw Glassmorphic Card Backing to isolate and clarify statistics text
     const glassStyle = isLight 
-      ? 'rgba(8, 4, 2, 0.60)' // dark overlay so retro image shows through + text readable
+      ? 'rgba(8, 4, 2, 0.78)' // dark overlay — increased opacity for better text readability
       : (shareTheme === 'cyber' ? 'rgba(2, 6, 23, 0.85)' : (shareTheme === 'dark' ? 'rgba(9, 9, 11, 0.85)' : 'rgba(30, 27, 75, 0.85)'));
 
     const fillRoundedRect = (cCtx, x, y, width, height, radius, fillStyle) => {
@@ -1144,6 +1144,66 @@ export default function App() {
                     <div style={{ background: `${bmiCat.c}12`, border: `1px solid ${bmiCat.c}40`, borderRadius: 8, padding: '10px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>BMI</span>
                       <span style={{ fontSize: 16, fontWeight: 800, color: bmiCat.c }}>{bmi} <span style={{ fontSize: 11, fontWeight: 600 }}>— {bmiCat.l}</span></span>
+                    </div>
+                  )}
+                  {/* ── LOGIN PROMPT for anonymous users ── */}
+                  {currentUser?.startsWith('Anonim-') && (
+                    <div style={{
+                      background: 'linear-gradient(135deg, rgba(129,140,248,0.08), rgba(167,139,250,0.05))',
+                      border: '1px solid rgba(167,139,250,0.2)',
+                      borderRadius: 10,
+                      padding: '14px 16px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 10,
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                        <div style={{ fontSize: 18, flexShrink: 0 }}>🔐</div>
+                        <div>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 3 }}>
+                            Kamu masuk sebagai Anonim
+                          </div>
+                          <div style={{ fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.5 }}>
+                            Data kamu hanya tersimpan di perangkat ini. Masuk dengan akun untuk menyimpan data ke cloud dan akses dari mana saja.
+                          </div>
+                        </div>
+                      </div>
+                      <button
+                        onClick={async () => {
+                          try {
+                            if (isFirebaseConfigured && auth.currentUser) {
+                              await signOut(auth);
+                            }
+                          } catch (e) { /* ignore */ }
+                          sessionStorage.removeItem('smartcoach_session');
+                          setSessionUser(null);
+                          setShowLanding(false);
+                          closeModal();
+                        }}
+                        style={{
+                          padding: '9px 14px',
+                          borderRadius: 8,
+                          background: 'var(--accent-purple)',
+                          border: 'none',
+                          color: '#fff',
+                          cursor: 'pointer',
+                          fontFamily: 'inherit',
+                          fontSize: 13,
+                          fontWeight: 700,
+                          width: '100%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: 6,
+                        }}
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+                          <polyline points="10 17 15 12 10 7"/>
+                          <line x1="15" y1="12" x2="3" y2="12"/>
+                        </svg>
+                        Masuk / Buat Akun
+                      </button>
                     </div>
                   )}
                   <button onClick={() => { setEditDraft({ displayName: curName, age: curAge, gender: curGender, weight: curWeight, height: curHeight, avatar: avatar }); setProfileEditMode(true); }}
