@@ -14,6 +14,7 @@ export default function LoginScreen({ onLoginSuccess, usersList, addToast }) {
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
   // Local storage auth legacy fallback
   const getAuthDb = () => {
@@ -72,6 +73,7 @@ export default function LoginScreen({ onLoginSuccess, usersList, addToast }) {
       }
 
       addToast(isLegacyClaim ? 'Berhasil mengamankan profil lama lo!' : 'Akun berhasil dibuat!');
+      setShowRegisterModal(false);
       onLoginSuccess(cleanUser);
     } else {
       const registeredPassword = db[cleanUser];
@@ -93,6 +95,7 @@ export default function LoginScreen({ onLoginSuccess, usersList, addToast }) {
 
   const handleFirebaseAuth = async (e, isRegister) => {
     if (e) e.preventDefault();
+    if (loading) return;
     const cleanEmail = email.trim();
     const cleanPass = password.trim();
 
@@ -101,10 +104,12 @@ export default function LoginScreen({ onLoginSuccess, usersList, addToast }) {
       return;
     }
 
+    setLoading(true);
     try {
       if (isRegister) {
         const userCredential = await createUserWithEmailAndPassword(auth, cleanEmail, cleanPass);
         addToast('Akun Firebase berhasil didaftarkan!');
+        setShowRegisterModal(false);
         const userIdentifier = userCredential.user.email;
         onLoginSuccess(userIdentifier);
       } else {
@@ -123,10 +128,14 @@ export default function LoginScreen({ onLoginSuccess, usersList, addToast }) {
         errorMsg = 'Email atau password salah.';
       }
       addToast(errorMsg, 'error');
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleGoogleSignIn = async () => {
+    if (loading) return;
+    setLoading(true);
     try {
       const result = await signInWithPopup(auth, googleProvider);
       addToast(`Selamat datang, ${result.user.displayName || 'User'}!`);
@@ -135,10 +144,14 @@ export default function LoginScreen({ onLoginSuccess, usersList, addToast }) {
     } catch (error) {
       console.error(error);
       addToast('Gagal masuk menggunakan akun Google.', 'error');
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleAnonymousSignIn = async () => {
+    if (loading) return;
+    setLoading(true);
     try {
       const result = await signInAnonymously(auth);
       addToast('Masuk sebagai Pengguna Anonim.');
@@ -147,6 +160,8 @@ export default function LoginScreen({ onLoginSuccess, usersList, addToast }) {
     } catch (error) {
       console.error(error);
       addToast('Gagal masuk secara anonim.', 'error');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -171,6 +186,7 @@ export default function LoginScreen({ onLoginSuccess, usersList, addToast }) {
               value={email}
               onChange={e => setEmail(e.target.value)}
               autoFocus
+              disabled={loading}
             />
           </div>
 
@@ -182,11 +198,12 @@ export default function LoginScreen({ onLoginSuccess, usersList, addToast }) {
               placeholder="Masukkan password..."
               value={password}
               onChange={e => setPassword(e.target.value)}
+              disabled={loading}
             />
           </div>
 
-          <button type="submit" className="btn btn-primary" style={{ marginTop: 22, height: 42 }}>
-            Masuk ke Dashboard
+          <button type="submit" className="btn btn-primary" style={{ marginTop: 22, height: 42 }} disabled={loading}>
+            {loading ? 'Memproses...' : 'Masuk ke Dashboard'}
           </button>
         </form>
 
@@ -204,6 +221,7 @@ export default function LoginScreen({ onLoginSuccess, usersList, addToast }) {
                 className="btn btn-secondary"
                 style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', height: 40 }}
                 onClick={handleGoogleSignIn}
+                disabled={loading}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" style={{ marginRight: 8 }}>
                   <path fill="#EA4335" d="M12 5.04c1.66 0 3.2.57 4.38 1.69l3.27-3.27C17.67 1.48 15.02 1 12 1 7.28 1 3.22 3.72 1.25 7.68l3.86 3C6.02 7.74 8.78 5.04 12 5.04z" />
@@ -218,6 +236,7 @@ export default function LoginScreen({ onLoginSuccess, usersList, addToast }) {
                 className="btn btn-secondary"
                 style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', height: 40 }}
                 onClick={handleAnonymousSignIn}
+                disabled={loading}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 8 }}>
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
@@ -268,6 +287,7 @@ export default function LoginScreen({ onLoginSuccess, usersList, addToast }) {
                     value={email}
                     onChange={e => setEmail(e.target.value)}
                     autoFocus
+                    disabled={loading}
                   />
                 </div>
                 <div className="form-group" style={{ marginTop: 14 }}>
@@ -278,10 +298,11 @@ export default function LoginScreen({ onLoginSuccess, usersList, addToast }) {
                     placeholder="Masukkan password..."
                     value={password}
                     onChange={e => setPassword(e.target.value)}
+                    disabled={loading}
                   />
                 </div>
-                <button type="submit" className="btn btn-primary" style={{ marginTop: 22, height: 42 }}>
-                  Daftar & Masuk
+                <button type="submit" className="btn btn-primary" style={{ marginTop: 22, height: 42 }} disabled={loading}>
+                  {loading ? 'Memproses...' : 'Daftar & Masuk'}
                 </button>
               </form>
             </div>
