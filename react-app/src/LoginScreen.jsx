@@ -11,7 +11,7 @@ import {
 } from './firebase';
 
 export default function LoginScreen({ onLoginSuccess, usersList, addToast }) {
-  const [isRegister, setIsRegister] = useState(false);
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
@@ -38,8 +38,8 @@ export default function LoginScreen({ onLoginSuccess, usersList, addToast }) {
     } catch (e) {}
   };
 
-  const handleLocalSubmit = (e) => {
-    e.preventDefault();
+  const handleLocalAuth = (e, isRegister) => {
+    if (e) e.preventDefault();
     const cleanUser = email.trim();
     const cleanPass = password.trim();
 
@@ -77,7 +77,7 @@ export default function LoginScreen({ onLoginSuccess, usersList, addToast }) {
       const registeredPassword = db[cleanUser];
       if (usersList.includes(cleanUser) && !registeredPassword) {
         addToast('Profil ini belum memiliki password. Silakan Daftar untuk membuat password.', 'warning');
-        setIsRegister(true);
+        setShowRegisterModal(true);
         return;
       }
 
@@ -91,8 +91,8 @@ export default function LoginScreen({ onLoginSuccess, usersList, addToast }) {
     }
   };
 
-  const handleFirebaseSubmit = async (e) => {
-    e.preventDefault();
+  const handleFirebaseAuth = async (e, isRegister) => {
+    if (e) e.preventDefault();
     const cleanEmail = email.trim();
     const cleanPass = password.trim();
 
@@ -161,7 +161,7 @@ export default function LoginScreen({ onLoginSuccess, usersList, addToast }) {
           <p className="login-subtitle">Garmin Connect Export &amp; Training Planner</p>
         </div>
 
-        <form onSubmit={isFirebaseConfigured ? handleFirebaseSubmit : handleLocalSubmit} className="login-form">
+        <form onSubmit={(e) => isFirebaseConfigured ? handleFirebaseAuth(e, false) : handleLocalAuth(e, false)} className="login-form">
           <div className="form-group">
             <label className="form-label">{isFirebaseConfigured ? 'Email Address' : 'Username'}</label>
             <input
@@ -186,7 +186,7 @@ export default function LoginScreen({ onLoginSuccess, usersList, addToast }) {
           </div>
 
           <button type="submit" className="btn btn-primary" style={{ marginTop: 22, height: 42 }}>
-            {isRegister ? 'Daftar & Masuk' : 'Masuk ke Dashboard'}
+            Masuk ke Dashboard
           </button>
         </form>
 
@@ -230,21 +230,12 @@ export default function LoginScreen({ onLoginSuccess, usersList, addToast }) {
         )}
 
         <div className="login-footer" style={{ marginTop: 20 }}>
-          {isRegister ? (
-            <p>
-              Sudah punya akun?{' '}
-              <button className="login-link-btn" onClick={() => setIsRegister(false)}>
-                Masuk di sini
-              </button>
-            </p>
-          ) : (
-            <p>
-              Belum punya akun?{' '}
-              <button className="login-link-btn" onClick={() => setIsRegister(true)}>
-                Daftar baru
-              </button>
-            </p>
-          )}
+          <p>
+            Belum punya akun?{' '}
+            <button className="login-link-btn" onClick={() => setShowRegisterModal(true)}>
+              Daftar baru
+            </button>
+          </p>
 
           {!isFirebaseConfigured && (
             <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 14, background: 'rgba(255,255,255,0.03)', padding: '6px 10px', borderRadius: 4, border: '1px solid var(--border)' }}>
@@ -253,6 +244,50 @@ export default function LoginScreen({ onLoginSuccess, usersList, addToast }) {
           )}
         </div>
       </div>
+
+      {showRegisterModal && (
+        <div className="profile-modal-backdrop" onClick={e => { if (e.target === e.currentTarget) setShowRegisterModal(false); }}>
+          <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 16, width: '100%', maxWidth: 400, maxHeight: '92vh', overflowY: 'auto' }}>
+            <div style={{ padding: '18px 18px 14px', display: 'flex', alignItems: 'center', gap: 12, borderBottom: '1px solid var(--border)' }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)' }}>Daftar Akun Baru</div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Buat profil untuk mulai latihan</div>
+              </div>
+              <button onClick={() => setShowRegisterModal(false)}
+                style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 6, color: 'var(--text-muted)', cursor: 'pointer', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontFamily: 'inherit', flexShrink: 0 }}
+              >×</button>
+            </div>
+            <div style={{ padding: '18px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <form onSubmit={(e) => isFirebaseConfigured ? handleFirebaseAuth(e, true) : handleLocalAuth(e, true)} className="login-form">
+                <div className="form-group">
+                  <label className="form-label">{isFirebaseConfigured ? 'Email Address' : 'Username'}</label>
+                  <input
+                    type={isFirebaseConfigured ? 'email' : 'text'}
+                    className="form-input"
+                    placeholder={isFirebaseConfigured ? 'nama@domain.com' : 'Masukkan username...'}
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    autoFocus
+                  />
+                </div>
+                <div className="form-group" style={{ marginTop: 14 }}>
+                  <label className="form-label">Password</label>
+                  <input
+                    type="password"
+                    className="form-input"
+                    placeholder="Masukkan password..."
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                  />
+                </div>
+                <button type="submit" className="btn btn-primary" style={{ marginTop: 22, height: 42 }}>
+                  Daftar & Masuk
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
