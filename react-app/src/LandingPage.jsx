@@ -26,7 +26,7 @@ export default function LandingPage({ onGetStarted }) {
             <span className="badge-dot"></span> V2.0 Now Live
           </div>
           <h1 className="hero-title">
-            Unlock Your True 
+            Unlock Your True
             <span className="text-gradient"> Running Potential</span>
           </h1>
           <p className="hero-subtitle">
@@ -45,7 +45,7 @@ export default function LandingPage({ onGetStarted }) {
             </button>
           </div>
         </div>
-        
+
         {/* Mockup / Dashboard Preview */}
         <div className="hero-mockup animate-float">
           <div className="mockup-glass">

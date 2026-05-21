@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import Logo from './Logo';
-import { 
-  isConfigured as isFirebaseConfigured, 
-  auth, 
+import {
+  isConfigured as isFirebaseConfigured,
+  auth,
   googleProvider,
   signInWithPopup,
   signInWithEmailAndPassword,
@@ -199,9 +199,9 @@ export default function LoginScreen({ onLoginSuccess, usersList, addToast }) {
             </div>
 
             <div style={{ display: 'flex', gap: 10 }}>
-              <button 
-                type="button" 
-                className="btn btn-secondary" 
+              <button
+                type="button"
+                className="btn btn-secondary"
                 style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', height: 40 }}
                 onClick={handleGoogleSignIn}
               >
@@ -213,9 +213,9 @@ export default function LoginScreen({ onLoginSuccess, usersList, addToast }) {
                 </svg>
                 Google
               </button>
-              <button 
-                type="button" 
-                className="btn btn-secondary" 
+              <button
+                type="button"
+                className="btn btn-secondary"
                 style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', height: 40 }}
                 onClick={handleAnonymousSignIn}
               >

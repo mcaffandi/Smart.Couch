@@ -38,7 +38,7 @@ export default function RunHistory({ activities }) {
     const width = 200;
     const height = 120;
     const pad = 10;
-    
+
     // lat is y (inverted), lon is x
     const getPt = (lat, lon) => {
       const x = pad + (lon - minLon) / (maxLon - minLon || 1) * (width - 2*pad);
@@ -49,9 +49,9 @@ export default function RunHistory({ activities }) {
     const pts = route.map(([lat, lon]) => getPt(lat, lon)).join(' ');
 
     return (
-      <div className="route-map-container" style={{ 
-        width: '100%', height: '120px', background: 'rgba(30, 41, 59, 0.4)', 
-        borderRadius: 8, marginTop: 12, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)' 
+      <div className="route-map-container" style={{
+        width: '100%', height: '120px', background: 'rgba(30, 41, 59, 0.4)',
+        borderRadius: 8, marginTop: 12, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)'
       }}>
         <svg width="100%" height="100%" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet">
           <polyline points={pts} fill="none" stroke="#818cf8" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />

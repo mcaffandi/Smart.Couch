@@ -131,9 +131,9 @@ export default function RacePrediction({ activities, targetPace }) {
   const allRuns    = useMemo(() => getBestRuns(activities),     [activities]); // ALL data
   const recentRuns = useMemo(() => getBestRuns(activities, 90), [activities]); // last 90 days
   const realRefRun = allRuns[0]; // best run ever as reference
-  
+
   const hasData = !!realRefRun;
-  
+
   // If no data but targetPace is available, simulate a 5k run at targetPace
   const refRun = realRefRun || (targetPace ? {
     distM: 5000,
@@ -150,7 +150,7 @@ export default function RacePrediction({ activities, targetPace }) {
       ? '90 hari terakhir'
       : `semua data (${allRuns.length} sesi)`
     : 'Simulasi Target Pace';
-    
+
   const confidence  = hasData ? (recentRuns.length >= 5 ? 'Tinggi' : recentRuns.length >= 2 ? 'Sedang' : 'Rendah') : 'Teoretis';
   const confColor   = hasData ? (recentRuns.length >= 5 ? '#34d399' : recentRuns.length >= 2 ? '#fbbf24' : '#fb7185') : '#818cf8';
 
@@ -309,7 +309,7 @@ export default function RacePrediction({ activities, targetPace }) {
             border: '1px solid rgba(129,140,248,0.25)',
             borderRadius: 14, padding: '20px',
           }}>
-            <div style={{ display: 'flex', alignItems: 'flex-end', gap: 20, flexWrap: 'wrap', marginBottom: 14 }}>
+            <div className="prediction-estimation-header" style={{ marginBottom: 14 }}>
               <div>
                 <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em' }}>
                   Estimasi Tercapai
@@ -319,8 +319,8 @@ export default function RacePrediction({ activities, targetPace }) {
                 </div>
                 <div style={{ fontSize: 14, color: 'var(--text-secondary)', fontWeight: 600 }}>minggu</div>
               </div>
-              <div style={{ flex: 1, minWidth: 160 }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <div className="prediction-grid-container" style={{ flex: 1, minWidth: 160 }}>
+                <div className="prediction-details-grid">
                   <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 10, padding: '10px 12px' }}>
                     <div style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>Prediksi Saat Ini</div>
                     <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)', marginTop: 2 }}>{secsToTime(currentPred.predSec)}</div>

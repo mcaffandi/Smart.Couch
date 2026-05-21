@@ -19,7 +19,7 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
     } catch { return null; }
   });
   const [aiError, setAiError] = useState('');
-  
+
   const defaultPlan = buildTrainingPlan(programStyle, goal, paces, selectedDays);
   const plan = aiPlan || defaultPlan;
 
@@ -75,12 +75,12 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
         ? `Hari Lari yang DIREQUEST: ${selectedDays.join(', ')}.\nSANGAT PENTING: Hanya jadwalkan lari pada hari yang direquest tersebut. Untuk hari selain itu, WAJIB diisi dengan "Total Rest" atau "Cross-Training/Recovery".`
         : `Hari Lari: Pelari menyerahkan jadwal kepadamu. Atur hari lari yang optimal (3-5 hari seminggu sesuai target). Untuk hari istirahat, WAJIB diisi dengan "Total Rest" atau "Cross-Training/Recovery".`;
 
-      const prompt = `Lo adalah pelatih lari elit (EnduraUP). Buatkan jadwal lari 1 minggu (Senin-Minggu) dalam format JSON array yang ketat. 
-Atlet ini punya target utama: ${goal}. 
+      const prompt = `Lo adalah pelatih lari elit (EnduraUP). Buatkan jadwal lari 1 minggu (Senin-Minggu) dalam format JSON array yang ketat.
+Atlet ini punya target utama: ${goal}.
 ${daysInstruction}
 
-Target Pace: ${formatPace(targetPace) || targetPace} min/km. 
-Data lari terakhir mereka (jadikan referensi penyesuaian beban): 
+Target Pace: ${formatPace(targetPace) || targetPace} min/km.
+Data lari terakhir mereka (jadikan referensi penyesuaian beban):
 ${recentRuns || "Belum ada riwayat lari."}
 Tidur semalam: skor ${latestSleepScore || "Tidak ada data"}.
 
@@ -107,11 +107,11 @@ Return ONLY the raw JSON array.`;
       clearTimeout(timeoutId);
       const data = await res.json();
       if (data.error) throw new Error(data.error.message);
-      
+
       let content = data.choices[0].message.content;
       // strip markdown formatting if the model wraps it in ```json ... ```
       content = content.replace(/```json/gi, '').replace(/```/g, '').trim();
-      
+
       const parsed = JSON.parse(content);
       if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].hari) {
         setAiPlan(parsed);
@@ -168,23 +168,39 @@ Return ONLY the raw JSON array.`;
     <div className="animate-fade-in">
       {smartAlert()}
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+      <div className="training-header-controls" style={{ marginBottom: 16 }}>
         <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-          <button 
+          <button
             onClick={generateAIPlan}
             disabled={aiLoading}
             style={{
-              background: aiPlan ? 'var(--bg-card)' : 'var(--accent-purple)', 
-              color: aiPlan ? 'var(--accent-purple)' : '#fff', 
-              border: aiPlan ? '1px solid var(--accent-purple)' : 'none', 
-              padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 700, 
+              background: aiPlan ? 'var(--bg-card)' : 'var(--accent-purple)',
+              color: aiPlan ? 'var(--accent-purple)' : '#fff',
+              border: aiPlan ? '1px solid var(--accent-purple)' : 'none',
+              padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 700,
               cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
             }}
           >
-            {aiLoading ? '🔄 Menganalisis...' : (aiPlan ? '⚡ Regenerate AI Plan' : '⚡ AI: Buatkan Jadwal Dinamis')}
+            {aiLoading ? (
+              <svg className="spinner-rotate" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="2" x2="12" y2="6"></line>
+                <line x1="12" y1="18" x2="12" y2="22"></line>
+                <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line>
+                <line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line>
+                <line x1="2" y1="12" x2="6" y2="12"></line>
+                <line x1="18" y1="12" x2="22" y2="12"></line>
+                <line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line>
+                <line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line>
+              </svg>
+            ) : (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" fill="currentColor" fillOpacity="0.3"/>
+              </svg>
+            )}
+            {aiLoading ? 'Menganalisis...' : (aiPlan ? 'Regenerate AI Plan' : 'AI: Buatkan Jadwal Dinamis')}
           </button>
           {aiPlan && (
-            <button 
+            <button
               className="login-link-btn"
               onClick={() => { setAiPlan(null); localStorage.removeItem('smartcoach_ai_plan'); }}
               style={{ fontSize: 12, color: 'var(--text-muted)' }}
@@ -193,12 +209,12 @@ Return ONLY the raw JSON array.`;
             </button>
           )}
         </div>
-        
-        <button 
+
+        <button
           onClick={handleExportICS}
           style={{
-            background: 'var(--accent-purple)', color: '#fff', border: 'none', 
-            padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 700, 
+            background: 'var(--accent-purple)', color: '#fff', border: 'none',
+            padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 700,
             cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
             boxShadow: '0 4px 12px rgba(139,92,246,0.25)', transition: 'transform 0.1s'
           }}
@@ -258,7 +274,8 @@ Return ONLY the raw JSON array.`;
         </div>
       </div>
 
-      <div style={{ overflowX: 'auto', borderRadius: 14, border: '1px solid var(--border)' }}>
+      {/* Desktop Table View */}
+      <div className="training-table-desktop" style={{ overflowX: 'auto', borderRadius: 14, border: '1px solid var(--border)' }}>
         <table className="training-table">
           <thead>
             <tr>
@@ -281,6 +298,24 @@ Return ONLY the raw JSON array.`;
         </table>
       </div>
 
+      {/* Mobile Cards View */}
+      <div className="training-cards-mobile">
+        {plan.map((row, i) => (
+          <div key={i} className="training-card-item">
+            <div className="training-card-header">
+              <span className="training-card-day">{row.hari}</span>
+              <span className={`badge ${getBadgeClass(row.jenis)}`}>{row.jenis}</span>
+            </div>
+            <div className="training-card-dur">
+              {row.durasi}
+            </div>
+            <div className="training-card-tujuan">
+              {row.tujuan}
+            </div>
+          </div>
+        ))}
+      </div>
+
       <details style={{ marginTop: 20 }}>
         <summary style={{
           cursor: 'pointer', padding: '12px 16px', background: 'var(--bg-card)',
@@ -295,7 +330,7 @@ Return ONLY the raw JSON array.`;
           border: '1px solid var(--border)', borderRadius: 10,
           display: 'flex', flexDirection: 'column', gap: 24
         }}>
-          
+
           <div>
             <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--accent-purple)', marginBottom: 8 }}>💪 1. Core & Leg Stabilizer (Tanpa Squat / Lunges)</div>
             <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 10 }}>

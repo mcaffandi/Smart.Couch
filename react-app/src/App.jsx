@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
+import * as XLSX from 'xlsx';
 import {
   loadUsersList, saveUsersList, getCurrentUser, saveCurrentUser,
   loadUserData, saveUserData, deleteUserData,
@@ -12,11 +13,11 @@ import LoginScreen from './LoginScreen';
 import AICoach from './AICoach';
 import LandingPage from './LandingPage';
 import Logo from './Logo';
-import { 
-  auth, 
-  signOut, 
-  onAuthStateChanged, 
-  isConfigured as isFirebaseConfigured 
+import {
+  auth,
+  signOut,
+  onAuthStateChanged,
+  isConfigured as isFirebaseConfigured
 } from './firebase';
 
 // ─── Toast component ──────────────────────────────────────────────────────────
@@ -63,26 +64,39 @@ function NumberInput({ value, onChange, min, max, step = 1, label }) {
   );
 }
 function PaceInput({ value, onChange, label }) {
-  const m = Math.floor(value);
-  const s = Math.round((value - m) * 60);
+  const isNull = value === null || value === undefined;
+  const m = isNull ? '' : Math.floor(value);
+  const s = isNull ? '' : Math.round((value - Math.floor(value)) * 60);
 
-  const setM = (newM) => onChange(newM + s / 60);
-  const setS = (newS) => onChange(m + newS / 60);
+  const setM = (newM) => onChange(newM + (isNull ? 0 : (typeof s === 'number' ? s : 0)) / 60);
+  const setS = (newS) => onChange((isNull ? 5 : (typeof m === 'number' ? m : 5)) + newS / 60);
 
   return (
     <div className="form-group">
       {label && <label className="form-label">{label}</label>}
       <div style={{ display: 'flex', gap: 6 }}>
         <div className="number-input-group" style={{ flex: 1 }}>
-          <button type="button" onClick={() => setM(Math.max(3, m - 1))}>−</button>
-          <input type="number" value={m} onChange={e => setM(Math.max(3, parseInt(e.target.value) || 0))} style={{ textAlign: 'center' }} />
-          <button type="button" onClick={() => setM(Math.min(15, m + 1))}>+</button>
+          <button type="button" onClick={() => setM(Math.max(3, (isNull ? 5 : m) - 1))}>−</button>
+          <input
+            type="number"
+            value={m}
+            placeholder="—"
+            onChange={e => setM(Math.max(3, parseInt(e.target.value) || 0))}
+            style={{ textAlign: 'center', color: isNull ? 'var(--text-muted)' : 'var(--text-primary)' }}
+          />
+          <button type="button" onClick={() => setM(Math.min(15, (isNull ? 5 : m) + 1))}>+</button>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', fontWeight: 900, color: 'var(--text-muted)' }}>:</div>
         <div className="number-input-group" style={{ flex: 1 }}>
-          <button type="button" onClick={() => setS(s - 5 < 0 ? 55 : s - 5)}>−</button>
-          <input type="number" value={s} onChange={e => setS(Math.min(59, Math.max(0, parseInt(e.target.value) || 0)))} style={{ textAlign: 'center' }} />
-          <button type="button" onClick={() => setS(s + 5 >= 60 ? 0 : s + 5)}>+</button>
+          <button type="button" onClick={() => setS((isNull ? 0 : s) - 5 < 0 ? 55 : (isNull ? 0 : s) - 5)}>−</button>
+          <input
+            type="number"
+            value={s}
+            placeholder="—"
+            onChange={e => setS(Math.min(59, Math.max(0, parseInt(e.target.value) || 0)))}
+            style={{ textAlign: 'center', color: isNull ? 'var(--text-muted)' : 'var(--text-primary)' }}
+          />
+          <button type="button" onClick={() => setS((isNull ? 0 : s) + 5 >= 60 ? 0 : (isNull ? 0 : s) + 5)}>+</button>
         </div>
       </div>
     </div>
@@ -103,10 +117,17 @@ export default function App() {
   const fileInputRef = useRef(null);
 
   // ── State: profile ───────────────────────────────────────────────────────────
-  const [age, setAge] = useState(() => data.profile?.age ?? 31);
+  const [age, setAge] = useState(() => data.profile?.age ?? null);
+  const [displayName, setDisplayName] = useState(() => data.profile?.displayName ?? '');
+  const [weight, setWeight] = useState(() => data.profile?.weight ?? null);
+  const [height, setHeight] = useState(() => data.profile?.height ?? null);
+  const [gender, setGender] = useState(() => data.profile?.gender ?? '');
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [editDraft, setEditDraft] = useState({});
+  const [profileEditMode, setProfileEditMode] = useState(false);
   const [goal, setGoal] = useState(() => data.profile?.goal ?? 'maintenance');
   const [programStyle, setProgramStyle] = useState(() => data.profile?.programStyle ?? 'sedang');
-  const [targetPace, setTargetPace] = useState(() => data.profile?.targetPace ?? 5.0);
+  const [targetPace, setTargetPace] = useState(() => data.profile?.targetPace ?? null);
   const [selectedDays, setSelectedDays] = useState(() => data.profile?.selectedDays ?? ['Selasa', 'Kamis', 'Sabtu']);
 
   useEffect(() => {
@@ -117,7 +138,7 @@ export default function App() {
         const userIdentifier = fbUser.email || fbUser.displayName || `Anonim-${fbUser.uid.substring(0, 4)}`;
         setSessionUser(userIdentifier);
         sessionStorage.setItem('smartcoach_session', userIdentifier);
-        
+
         setUsersList(prev => {
           if (!prev.includes(userIdentifier)) {
             const updated = [...prev, userIdentifier];
@@ -126,15 +147,19 @@ export default function App() {
           }
           return prev;
         });
-        
+
         setCurrentUser(userIdentifier);
         saveCurrentUser(userIdentifier);
         const uData = loadUserData(userIdentifier);
         setData(uData);
-        setAge(uData.profile?.age ?? 31);
+        setAge(uData.profile?.age ?? null);
+        setDisplayName(uData.profile?.displayName ?? '');
+        setWeight(uData.profile?.weight ?? null);
+        setHeight(uData.profile?.height ?? null);
+        setGender(uData.profile?.gender ?? '');
         setGoal(uData.profile?.goal ?? 'maintenance');
         setProgramStyle(uData.profile?.programStyle ?? 'sedang');
-        setTargetPace(uData.profile?.targetPace ?? 5.0);
+        setTargetPace(uData.profile?.targetPace ?? null);
         setSelectedDays(uData.profile?.selectedDays ?? ['Selasa', 'Kamis', 'Sabtu']);
       }
     });
@@ -187,10 +212,14 @@ export default function App() {
     setCurrentUser(username);
     const uData = loadUserData(username);
     setData(uData);
-    setAge(uData.profile?.age ?? 31);
+    setAge(uData.profile?.age ?? null);
+    setDisplayName(uData.profile?.displayName ?? '');
+    setWeight(uData.profile?.weight ?? null);
+    setHeight(uData.profile?.height ?? null);
+    setGender(uData.profile?.gender ?? '');
     setGoal(uData.profile?.goal ?? 'maintenance');
     setProgramStyle(uData.profile?.programStyle ?? 'sedang');
-    setTargetPace(uData.profile?.targetPace ?? 5.0);
+    setTargetPace(uData.profile?.targetPace ?? null);
     setSelectedDays(uData.profile?.selectedDays ?? ['Selasa', 'Kamis', 'Sabtu']);
     addToast(`Masuk sebagai ${username}`);
   };
@@ -216,7 +245,7 @@ export default function App() {
       return;
     }
     if (!confirm(`Hapus profil "${currentUser}" beserta seluruh datanya?`)) return;
-    
+
     const updatedList = usersList.filter(u => u !== currentUser);
     setUsersList(updatedList);
     saveUsersList(updatedList);
@@ -303,6 +332,189 @@ export default function App() {
     setIsUploading(false);
   };
 
+  const downloadExcelTemplate = () => {
+    try {
+      const wb = XLSX.utils.book_new();
+
+      // Sheet 1: Riwayat Lari
+      const runHeaders = [
+        ["Tanggal (YYYY-MM-DD)", "Nama Aktivitas", "Jarak (km)", "Durasi (menit)", "Avg HR (bpm)", "Max HR (bpm)"],
+        ["2026-05-20", "Morning Run BSD", 5.2, 32, 142, 168],
+        ["2026-05-18", "Easy Run Senayan", 8.0, 52, 138, 155]
+      ];
+      const wsRuns = XLSX.utils.aoa_to_sheet(runHeaders);
+
+      wsRuns['!cols'] = [
+        { wch: 22 }, // Tanggal
+        { wch: 25 }, // Nama Aktivitas
+        { wch: 12 }, // Jarak
+        { wch: 15 }, // Durasi
+        { wch: 14 }, // Avg HR
+        { wch: 14 }  // Max HR
+      ];
+      XLSX.utils.book_append_sheet(wb, wsRuns, "Riwayat Lari");
+
+      // Sheet 2: Kualitas Tidur
+      const sleepHeaders = [
+        ["Tanggal (YYYY-MM-DD)", "Skor Tidur (1-100)", "Durasi Tidur (jam)"],
+        ["2026-05-20", 85, 7.5],
+        ["2026-05-19", 68, 6.0]
+      ];
+      const wsSleep = XLSX.utils.aoa_to_sheet(sleepHeaders);
+      wsSleep['!cols'] = [
+        { wch: 22 }, // Tanggal
+        { wch: 18 }, // Skor
+        { wch: 18 }  // Durasi
+      ];
+      XLSX.utils.book_append_sheet(wb, wsSleep, "Kualitas Tidur");
+
+      XLSX.writeFile(wb, "Template_Data_EnduraUP.xlsx");
+      addToast("Template Excel terunduh!");
+    } catch (e) {
+      console.error(e);
+      addToast("Gagal mengunduh template Excel", "error");
+    }
+  };
+
+  const handleExcelUpload = async (file) => {
+    if (!file) return;
+    setIsUploading(true);
+    try {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          const dataArr = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(dataArr, { type: 'array' });
+
+          let newRuns = [];
+          let newSleep = {};
+          let maxHrFound = 0;
+
+          const parseExcelDateVal = (val) => {
+            if (!val) return null;
+            if (typeof val === 'number') {
+              const date = new Date(Math.round((val - 25569) * 86400 * 1000));
+              return isNaN(date.getTime()) ? null : date;
+            }
+            const date = new Date(val);
+            return isNaN(date.getTime()) ? null : date;
+          };
+
+          // Process "Riwayat Lari" sheet
+          const runSheetName = workbook.SheetNames.find(name =>
+            name.toLowerCase().includes('lari') || name.toLowerCase().includes('run')
+          );
+          if (runSheetName) {
+            const runSheet = workbook.Sheets[runSheetName];
+            const runRows = XLSX.utils.sheet_to_json(runSheet);
+            runRows.forEach(row => {
+              const keys = Object.keys(row);
+              const dateKey = keys.find(k => k.toLowerCase().includes('tanggal') || k.toLowerCase().includes('date'));
+              const nameKey = keys.find(k => k.toLowerCase().includes('nama') || k.toLowerCase().includes('activity') || k.toLowerCase().includes('name'));
+              const distKey = keys.find(k => k.toLowerCase().includes('jarak') || k.toLowerCase().includes('distance'));
+              const durKey = keys.find(k => k.toLowerCase().includes('durasi') || k.toLowerCase().includes('duration'));
+              const avgHrKey = keys.find(k => k.toLowerCase().includes('avg') || k.toLowerCase().includes('rata-rata'));
+              const maxHrKey = keys.find(k => k.toLowerCase().includes('max') || k.toLowerCase().includes('maks'));
+
+              const dateVal = dateKey ? row[dateKey] : null;
+              const nameVal = nameKey ? row[nameKey] : "Lari Excel";
+              const distVal = distKey ? parseFloat(row[distKey]) : null;
+              const durVal = durKey ? parseFloat(row[durKey]) : null;
+              const avgHrVal = avgHrKey ? parseInt(row[avgHrKey]) : null;
+              const maxHrVal = maxHrKey ? parseInt(row[maxHrKey]) : null;
+
+              const parsedDate = parseExcelDateVal(dateVal);
+              if (parsedDate && distVal !== null && !isNaN(distVal) && durVal !== null && !isNaN(durVal)) {
+                newRuns.push({
+                  startTimeLocal: parsedDate.getTime(),
+                  distance: distVal * 100000, // km to cm
+                  duration: durVal * 60000,    // minutes to ms
+                  avgHr: avgHrVal && !isNaN(avgHrVal) ? avgHrVal : null,
+                  maxHr: maxHrVal && !isNaN(maxHrVal) ? maxHrVal : null,
+                  activityType: 'running',
+                  name: String(nameVal).trim(),
+                });
+                if (maxHrVal && !isNaN(maxHrVal) && maxHrVal > maxHrFound) {
+                  maxHrFound = maxHrVal;
+                }
+              }
+            });
+          }
+
+          // Process "Kualitas Tidur" sheet
+          const sleepSheetName = workbook.SheetNames.find(name =>
+            name.toLowerCase().includes('tidur') || name.toLowerCase().includes('sleep')
+          );
+          if (sleepSheetName) {
+            const sleepSheet = workbook.Sheets[sleepSheetName];
+            const sleepRows = XLSX.utils.sheet_to_json(sleepSheet);
+            sleepRows.forEach(row => {
+              const keys = Object.keys(row);
+              const dateKey = keys.find(k => k.toLowerCase().includes('tanggal') || k.toLowerCase().includes('date'));
+              const scoreKey = keys.find(k => k.toLowerCase().includes('skor') || k.toLowerCase().includes('score') || k.toLowerCase().includes('kualitas'));
+              const durKey = keys.find(k => k.toLowerCase().includes('durasi') || k.toLowerCase().includes('duration') || k.toLowerCase().includes('tidur'));
+
+              const dateVal = dateKey ? row[dateKey] : null;
+              const scoreVal = scoreKey ? parseInt(row[scoreKey]) : null;
+              const durVal = durKey ? parseFloat(row[durKey]) : null;
+
+              const parsedDate = parseExcelDateVal(dateVal);
+              if (parsedDate && scoreVal !== null && !isNaN(scoreVal)) {
+                const dateStr = parsedDate.toISOString().split('T')[0];
+                newSleep[dateStr] = {
+                  score: Math.min(100, Math.max(0, scoreVal)),
+                  duration: durVal && !isNaN(durVal) ? durVal : 7.0
+                };
+              }
+            });
+          }
+
+          if (newRuns.length === 0 && Object.keys(newSleep).length === 0) {
+            addToast('Tidak ada data lari atau tidur yang valid ditemukan di file Excel.', 'error');
+            setIsUploading(false);
+            return;
+          }
+
+          // Merge and save
+          const mergedRuns = [...data.running_activities];
+          newRuns.forEach(r => {
+            const idx = mergedRuns.findIndex(ex => ex.startTimeLocal === r.startTimeLocal);
+            if (idx === -1) {
+              mergedRuns.push(r);
+            } else {
+              mergedRuns[idx] = { ...mergedRuns[idx], ...r };
+            }
+          });
+
+          const mergedSleep = { ...data.sleep_records, ...newSleep };
+          const mergedMaxHr = Math.max(data.max_hr || 0, maxHrFound);
+
+          const updated = {
+            ...data,
+            running_activities: mergedRuns,
+            sleep_records: mergedSleep,
+            max_hr: mergedMaxHr,
+            profile: { age, goal, programStyle, targetPace, selectedDays }
+          };
+
+          setData(updated);
+          saveUserData(currentUser, updated);
+          addToast(`Import Excel Berhasil: ${newRuns.length} sesi lari & ${Object.keys(newSleep).length} data tidur.`);
+          setSidebarOpen(false);
+        } catch (err) {
+          console.error(err);
+          addToast('Gagal memproses file Excel. Cek format template.', 'error');
+        }
+        setIsUploading(false);
+      };
+      reader.readAsArrayBuffer(file);
+    } catch (e) {
+      console.error(e);
+      addToast('Gagal membaca file Excel.', 'error');
+      setIsUploading(false);
+    }
+  };
+
   // ── Save manual run ───────────────────────────────────────────────────────────
   const saveManualRun = () => {
     const epochMs = new Date(manualRun.date).getTime();
@@ -365,7 +577,7 @@ export default function App() {
   const applyProfileChanges = () => {
     const updated = {
       ...data,
-      profile: { age, goal, programStyle, targetPace, selectedDays }
+      profile: { age, displayName, weight, height, gender, goal, programStyle, targetPace, selectedDays }
     };
     setData(updated);
     saveUserData(currentUser, updated);
@@ -404,6 +616,143 @@ export default function App() {
 
   return (
     <div className="app-layout">
+
+      {/* ── Profile Edit Modal Overlay ───────────────────────────────────────── */}
+      {showProfileModal && (() => {
+        const d = editDraft;
+        const curName = displayName || '';
+        const curAge = age;
+        const curGender = gender;
+        const curWeight = weight;
+        const curHeight = height;
+        const initials = (curName || currentUser).substring(0, 2).toUpperCase();
+        const bmi = curWeight && curHeight ? (curWeight / ((curHeight / 100) ** 2)).toFixed(1) : null;
+        const bmiCat = bmi ? (bmi < 18.5 ? { l: 'Underweight', c: '#60a5fa' } : bmi < 25 ? { l: 'Normal', c: '#34d399' } : bmi < 30 ? { l: 'Overweight', c: '#fbbf24' } : { l: 'Obese', c: '#fb7185' }) : null;
+
+        const inp = { background: 'var(--bg-base)', border: '1px solid var(--border)', borderRadius: 8, color: 'var(--text-primary)', fontFamily: 'inherit', fontSize: 13, fontWeight: 500, padding: '9px 12px', width: '100%', outline: 'none', boxSizing: 'border-box', transition: 'border-color 0.15s' };
+        const lbl = { fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase', display: 'block', marginBottom: 5 };
+        const onF = e => (e.target.style.borderColor = 'var(--accent-purple)');
+        const onB = e => (e.target.style.borderColor = 'var(--border)');
+
+        const closeModal = () => { setEditDraft({}); setProfileEditMode(false); setShowProfileModal(false); };
+
+        // ── Stat chip (view mode) ────────────────────────────────────────────────
+        const Stat = ({ label, value, unit }) => (
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 8, padding: '10px 12px' }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 4 }}>{label}</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: value ? 'var(--text-primary)' : 'var(--text-muted)', fontStyle: value ? 'normal' : 'italic' }}>
+              {value ? <>{value}<span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-muted)', marginLeft: 2 }}>{unit}</span></> : '—'}
+            </div>
+          </div>
+        );
+
+        return (
+          <div className="profile-modal-backdrop" onClick={e => { if (e.target === e.currentTarget) closeModal(); }}>
+            <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 16, width: '100%', maxWidth: 400, maxHeight: '92vh', overflowY: 'auto' }}>
+
+              {/* Header */}
+              <div style={{ padding: '18px 18px 14px', display: 'flex', alignItems: 'center', gap: 12, borderBottom: '1px solid var(--border)' }}>
+                <div style={{ width: 44, height: 44, borderRadius: 12, background: 'linear-gradient(135deg,#818cf8,#a78bfa)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 800, color: '#fff', flexShrink: 0 }}>{initials}</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: curName ? 'var(--text-primary)' : 'var(--text-muted)', fontStyle: curName ? 'normal' : 'italic', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {curName || 'Belum ada nama'}
+                  </div>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{currentUser}</div>
+                </div>
+                <button onClick={closeModal}
+                  style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 6, color: 'var(--text-muted)', cursor: 'pointer', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontFamily: 'inherit', flexShrink: 0 }}
+                >×</button>
+              </div>
+
+              <div style={{ padding: '18px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+                {/* ── VIEW MODE ── */}
+                {!profileEditMode ? (<>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                    <Stat label="Umur" value={curAge} unit="thn" />
+                    <Stat label="Kelamin" value={curGender === 'pria' ? 'Pria' : curGender === 'wanita' ? 'Wanita' : null} unit="" />
+                    <Stat label="Berat" value={curWeight} unit="kg" />
+                    <Stat label="Tinggi" value={curHeight} unit="cm" />
+                  </div>
+                  {bmiCat && (
+                    <div style={{ background: `${bmiCat.c}12`, border: `1px solid ${bmiCat.c}40`, borderRadius: 8, padding: '10px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>BMI</span>
+                      <span style={{ fontSize: 16, fontWeight: 800, color: bmiCat.c }}>{bmi} <span style={{ fontSize: 11, fontWeight: 600 }}>— {bmiCat.l}</span></span>
+                    </div>
+                  )}
+                  <button onClick={() => { setEditDraft({ displayName: curName, age: curAge, gender: curGender, weight: curWeight, height: curHeight }); setProfileEditMode(true); }}
+                    style={{ padding: '10px', borderRadius: 8, background: 'var(--accent-purple)', border: 'none', color: '#fff', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13, fontWeight: 700, width: '100%' }}
+                  >Edit Profil</button>
+                </>) : (<>
+
+                {/* ── EDIT MODE ── */}
+                  <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent-purple)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Identitas</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    <div>
+                      <label style={lbl}>Nama Tampilan</label>
+                      <input autoFocus type="text" placeholder="Nama kamu..." style={inp}
+                        value={d.displayName ?? ''} onChange={e => setEditDraft(p => ({ ...p, displayName: e.target.value }))} onFocus={onF} onBlur={onB} />
+                    </div>
+                    <div>
+                      <label style={lbl}>Akun / Email</label>
+                      <input type="text" style={{ ...inp, color: 'var(--text-muted)', cursor: 'not-allowed' }} value={currentUser} readOnly />
+                    </div>
+                  </div>
+
+                  <div style={{ height: 1, background: 'var(--border)' }} />
+                  <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent-purple)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Data Fisik</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                    <div>
+                      <label style={lbl}>Umur (tahun)</label>
+                      <input type="number" min={10} max={100} placeholder="—" style={inp}
+                        value={d.age ?? ''} onChange={e => { const v = e.target.value; setEditDraft(p => ({ ...p, age: v === '' ? null : parseInt(v) || null })); }} onFocus={onF} onBlur={onB} />
+                    </div>
+                    <div>
+                      <label style={lbl}>Jenis Kelamin</label>
+                      <select style={{ ...inp, cursor: 'pointer' }} value={d.gender ?? ''} onChange={e => setEditDraft(p => ({ ...p, gender: e.target.value }))} onFocus={onF} onBlur={onB}>
+                        <option value="">— Pilih —</option>
+                        <option value="pria">Pria</option>
+                        <option value="wanita">Wanita</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label style={lbl}>Berat (kg)</label>
+                      <input type="number" min={30} max={200} step={0.5} placeholder="—" style={inp}
+                        value={d.weight ?? ''} onChange={e => { const v = e.target.value; setEditDraft(p => ({ ...p, weight: v === '' ? null : parseFloat(v) || null })); }} onFocus={onF} onBlur={onB} />
+                    </div>
+                    <div>
+                      <label style={lbl}>Tinggi (cm)</label>
+                      <input type="number" min={100} max={250} placeholder="—" style={inp}
+                        value={d.height ?? ''} onChange={e => { const v = e.target.value; setEditDraft(p => ({ ...p, height: v === '' ? null : parseInt(v) || null })); }} onFocus={onF} onBlur={onB} />
+                    </div>
+                  </div>
+
+                  {/* Live BMI in edit mode */}
+                  {(() => { const ew = d.weight; const eh = d.height; if (!ew || !eh) return null; const eb = (ew / ((eh / 100) ** 2)).toFixed(1); const ec = eb < 18.5 ? { l: 'Underweight', c: '#60a5fa' } : eb < 25 ? { l: 'Normal', c: '#34d399' } : eb < 30 ? { l: 'Overweight', c: '#fbbf24' } : { l: 'Obese', c: '#fb7185' }; return <div style={{ background: `${ec.c}12`, border: `1px solid ${ec.c}40`, borderRadius: 8, padding: '10px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>BMI</span><span style={{ fontSize: 15, fontWeight: 800, color: ec.c }}>{eb} <span style={{ fontSize: 11, fontWeight: 600 }}>— {ec.l}</span></span></div>; })()}
+
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button onClick={() => { setEditDraft({}); setProfileEditMode(false); }}
+                      style={{ flex: 1, padding: '10px', borderRadius: 8, background: 'none', border: '1px solid var(--border)', color: 'var(--text-secondary)', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13, fontWeight: 600 }}
+                    >Batal</button>
+                    <button onClick={() => {
+                      if (d.displayName !== undefined) setDisplayName(d.displayName.trim());
+                      if (d.age !== undefined) setAge(d.age);
+                      if (d.weight !== undefined) setWeight(d.weight);
+                      if (d.height !== undefined) setHeight(d.height);
+                      if (d.gender !== undefined) setGender(d.gender);
+                      setEditDraft({}); setProfileEditMode(false); setShowProfileModal(false);
+                    }}
+                      style={{ flex: 2, padding: '10px', borderRadius: 8, background: 'var(--accent-purple)', border: 'none', color: '#fff', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13, fontWeight: 700 }}
+                    >✓ Simpan</button>
+                  </div>
+                </>)}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+
       {/* Mobile Top Bar Header */}
       <header className="mobile-header">
         <div className="sidebar-logo" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -444,8 +793,8 @@ export default function App() {
             </div>
           </div>
           {/* Collapse sidebar button (desktop only) */}
-          <button 
-            className="sidebar-toggle-btn-desktop" 
+          <button
+            className="sidebar-toggle-btn-desktop"
             style={{ width: 28, height: 28 }}
             onClick={() => {
               setSidebarCollapsed(true);
@@ -466,15 +815,35 @@ export default function App() {
         <div className="sidebar-divider" />
 
         {/* Active Account Info */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <div className="sidebar-section-title">Akun Aktif</div>
-          <div className="user-profile-badge">
-            <div className="user-avatar">{currentUser.substring(0, 2).toUpperCase()}</div>
-            <div className="user-name-info">
-              <div className="username-text">{currentUser}</div>
-              <div className="role-text">Atlet EnduraUP</div>
+        <div>
+          <div className="sidebar-section-title" style={{ marginBottom: 8 }}>Akun Aktif</div>
+          <button
+            type="button"
+            onClick={() => { setEditDraft({}); setProfileEditMode(false); setShowProfileModal(true); }}
+            style={{
+              width: '100%', background: 'var(--bg-card)', border: '1px solid var(--border)',
+              borderRadius: 10, padding: '10px 12px', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', gap: 10,
+              transition: 'border-color 0.15s, background 0.15s', textAlign: 'left',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(129,140,248,0.5)'; e.currentTarget.style.background = 'var(--bg-card-hover)'; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'var(--bg-card)'; }}
+          >
+            <div style={{
+              width: 34, height: 34, borderRadius: 8, flexShrink: 0,
+              background: 'linear-gradient(135deg, #818cf8, #a78bfa)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 12, fontWeight: 800, color: '#fff',
+            }}>
+              {(displayName || currentUser).substring(0, 2).toUpperCase()}
             </div>
-          </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: displayName ? 'var(--text-primary)' : 'var(--text-muted)', fontStyle: displayName ? 'normal' : 'italic', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {displayName || 'Isi nama profil...'}
+              </div>
+              <div style={{ fontSize: 10, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{currentUser}</div>
+            </div>
+          </button>
         </div>
 
         <div className="sidebar-divider" />
@@ -483,7 +852,27 @@ export default function App() {
         <div>
           <div className="sidebar-section-title">User Profile</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-            <NumberInput label="Umur" value={age} onChange={setAge} min={10} max={100} />
+
+            {/* Age — empty/grey placeholder when not set */}
+            <div className="form-group">
+              <label className="form-label">Umur</label>
+              <div className="number-input-group">
+                <button type="button" onClick={() => setAge(prev => Math.max(10, (prev ?? 25) - 1))}>−</button>
+                <input
+                  type="number"
+                  value={age ?? ''}
+                  min={10}
+                  max={100}
+                  placeholder="—"
+                  onChange={e => {
+                    const v = e.target.value;
+                    setAge(v === '' ? null : Math.min(100, Math.max(10, parseInt(v) || 10)));
+                  }}
+                  style={{ color: age === null ? 'var(--text-muted)' : 'var(--text-primary)' }}
+                />
+                <button type="button" onClick={() => setAge(prev => Math.min(100, (prev ?? 24) + 1))}>+</button>
+              </div>
+            </div>
 
             <div className="form-group">
               <label className="form-label">Goal Utama</label>
@@ -547,28 +936,59 @@ export default function App() {
         <div className="sidebar-divider" />
 
         {/* Import Data */}
-        <div>
-          <div className="sidebar-section-title">Impor / Tambah Data</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div className="sidebar-section-title" style={{ marginBottom: 0 }}>Impor / Tambah Data</div>
 
-          {/* Garmin ZIP */}
-          <div style={{ marginBottom: 10 }}>
+          {/* Unified Upload Area */}
+          <div>
             <input
-              ref={fileInputRef} type="file" accept=".zip,.gpx" style={{ display: 'none' }}
-              onChange={e => handleFileUpload(e.target.files[0])}
+              ref={fileInputRef} type="file" accept=".zip,.gpx,.xlsx,.xls,.csv" style={{ display: 'none' }}
+              onChange={e => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const name = file.name.toLowerCase();
+                if (name.endsWith('.zip') || name.endsWith('.gpx')) {
+                  handleFileUpload(file);
+                } else if (name.endsWith('.xlsx') || name.endsWith('.xls') || name.endsWith('.csv')) {
+                  handleExcelUpload(file);
+                } else {
+                  addToast('Format file tidak didukung', 'error');
+                }
+              }}
             />
             <div
               className={`file-upload-area ${isUploading ? 'has-file' : ''}`}
               onClick={() => fileInputRef.current?.click()}
+              style={{ cursor: 'pointer' }}
             >
               {isUploading ? (
                 <div>
                   <div className="loading-bar" style={{ marginBottom: 8 }} />
-                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Memproses ZIP…</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Memproses data…</div>
                 </div>
               ) : (
                 <>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)' }}>Upload data lari (.zip / .gpx)</div>
-                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>maks 200MB</div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)' }}>Upload data lari / tidur</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+                    Format: .zip, .gpx, .xlsx, .csv (maks 200MB)
+                  </div>
+                  <div style={{ marginTop: 6 }}>
+                    <span
+                      onClick={e => {
+                        e.stopPropagation();
+                        downloadExcelTemplate();
+                      }}
+                      style={{
+                        fontSize: 11,
+                        color: '#60a5fa',
+                        textDecoration: 'underline',
+                        fontWeight: 600,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Unduh template Excel / CSV
+                    </span>
+                  </div>
                 </>
               )}
             </div>
@@ -684,7 +1104,7 @@ export default function App() {
         <div className="page-header" style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             {sidebarCollapsed && (
-              <button 
+              <button
                 className="sidebar-toggle-btn-desktop"
                 onClick={() => {
                   setSidebarCollapsed(false);
@@ -711,8 +1131,8 @@ export default function App() {
             <h2 className="empty-state-title">Selamat Datang</h2>
             <p className="empty-state-desc">Database lokal masih kosong. Mulai dengan menambahkan data lo.</p>
             <div className="empty-state-steps">
-              <div 
-                className="empty-step" 
+              <div
+                className="empty-step"
                 style={{ cursor: 'pointer', transition: 'all 0.2s' }}
                 onClick={() => fileInputRef.current?.click()}
                 onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
@@ -721,13 +1141,28 @@ export default function App() {
                 <div className="empty-step-num">1</div>
                 <div><strong>Upload data lari (.zip / .gpx)</strong> untuk import riwayat lari dan rute lo secara langsung. <i>(Klik di sini)</i></div>
               </div>
-              <div className="empty-step">
+              <div
+                className="empty-step"
+                style={{ cursor: 'pointer', transition: 'all 0.2s' }}
+                onClick={() => fileInputRef.current?.click()}
+                onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+                onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+              >
                 <div className="empty-step-num">2</div>
-                <div><strong>Atau input manual</strong> sesi lari dan data tidur melalui sidebar kiri. Data disimpan permanen di browser lo.</div>
+                <div>
+                  <strong>Impor via Excel / CSV</strong> untuk menambahkan riwayat lari dan data tidur sekaligus.{' '}
+                  <span
+                    onClick={e => { e.stopPropagation(); downloadExcelTemplate(); }}
+                    style={{ textDecoration: 'underline', color: '#60a5fa', fontWeight: 'bold', cursor: 'pointer' }}
+                  >
+                    Unduh template di sini
+                  </span>
+                  {' '}atau klik kotak ini untuk mengunggah file.
+                </div>
               </div>
               <div className="empty-step">
                 <div className="empty-step-num">3</div>
-                <div>Set profil (umur, goal, target pace) untuk rekomendasi jadwal yang dipersonalisasi.</div>
+                <div><strong>Atau input manual</strong> sesi lari &amp; tidur atau set profil (umur, goal, target pace) melalui sidebar kiri.</div>
               </div>
             </div>
           </div>
@@ -886,22 +1321,25 @@ export default function App() {
                       </div>
                     )}
 
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12 }}>
+                    <div className="sleep-history-grid">
                       {Object.entries(sleepRecs).sort(([a], [b]) => b.localeCompare(a)).map(([date, rec]) => {
                         const s = rec.score;
                         const color = s >= 80 ? '#34d399' : s >= 60 ? '#fbbf24' : '#fb7185';
                         return (
-                          <div className="info-card" key={date} style={{ borderColor: `${color}30`, background: `${color}06` }}>
-                            <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 700, marginBottom: 4 }}>
-                              {new Date(date).toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
-                              {runDates.has(date) && <span className="badge badge-easy" style={{ marginLeft: 8, padding: '1px 6px', fontSize: 10 }}>Lari</span>}
+                          <div className="sleep-history-card" key={date} style={{ borderColor: `${color}30`, background: `${color}06` }}>
+                            <div className="sleep-card-left">
+                              <div className="sleep-card-date">
+                                {new Date(date).toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
+                                {runDates.has(date) && <span className="badge badge-easy" style={{ marginLeft: 8, padding: '1px 6px', fontSize: 10 }}>Lari</span>}
+                              </div>
+                              {rec.duration && (
+                                <div className="sleep-card-dur">{rec.duration.toFixed(1)} jam tidur</div>
+                              )}
                             </div>
-                            <div style={{ fontSize: 24, fontWeight: 800, color }}>
-                              {s}<span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-muted)' }}>/100</span>
+                            <div className="sleep-card-right" style={{ color }}>
+                              <span className="sleep-score-big">{s}</span>
+                              <span className="sleep-score-lbl">/100</span>
                             </div>
-                            {rec.duration && (
-                              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>{rec.duration.toFixed(1)} jam</div>
-                            )}
                           </div>
                         );
                       })}

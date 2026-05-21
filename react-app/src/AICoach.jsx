@@ -33,13 +33,13 @@ export default function AICoach({ activities, profile }) {
             date = d.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' });
           }
         } catch (err) {}
-        
+
         const dist = ((a.distance || 0) / 100000).toFixed(2);
         const dur = Math.round((a.duration || 0) / 60000);
         const pace = dist > 0 ? (dur / dist).toFixed(2) : "0";
         return `- ${date}: Jarak ${dist}km, Waktu ${dur}m, Pace ${pace}m/km, HR ${a.avgHr || 0}bpm`;
       }).join('\n');
-      
+
       const formatPace = (p) => {
         if(!p) return "0:00";
         const m = Math.floor(p);
@@ -114,14 +114,14 @@ Jawab dalam 1-2 paragraf saja, langsung ke intinya, tanpa basa-basi.`;
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            model: "llama-3.1-8b-instant", 
+            model: "llama-3.1-8b-instant",
             messages: [{ role: "user", content: prompt }],
             temperature: 0.7,
           })
         });
         clearTimeout(timeoutId);
         const data = await res.json();
-        
+
         if (data.error) {
           setErrorMsg(`API Groq Ditolak: ${data.error.message}`);
           setSavedKey(false);
@@ -152,11 +152,11 @@ Jawab dalam 1-2 paragraf saja, langsung ke intinya, tanpa basa-basi.`;
             {errorMsg ? 'API Key Ditolak / Gagal' : 'Konfigurasi Groq API Key'}
           </label>
           <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
-            <input 
-              type="password" 
-              className="form-input" 
-              value={apiKey} 
-              onChange={e => { setApiKey(e.target.value); setErrorMsg(''); }} 
+            <input
+              type="password"
+              className="form-input"
+              value={apiKey}
+              onChange={e => { setApiKey(e.target.value); setErrorMsg(''); }}
               placeholder="gsk_..."
               style={{ flex: 1, background: 'rgba(0,0,0,0.2)', borderColor: errorMsg ? 'rgba(251,113,133,0.5)' : undefined }}
             />
@@ -174,20 +174,43 @@ Jawab dalam 1-2 paragraf saja, langsung ke intinya, tanpa basa-basi.`;
            {!analysis && (
              <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 16 }}>
                {(savedKey || !useServer) && (
-                 <button 
-                    className="login-link-btn" 
-                    style={{ fontSize: 12, color: 'var(--text-muted)' }} 
+                 <button
+                    className="login-link-btn"
+                    style={{ fontSize: 12, color: 'var(--text-muted)' }}
                     onClick={() => { setSavedKey(false); setUseServer(false); }}
                   >
                    Ganti API Key
                  </button>
                )}
-               <button 
-                  className="btn btn-primary" 
-                  onClick={getAIAnalysis} 
+               <button
+                  className="btn btn-primary"
+                  onClick={getAIAnalysis}
                   disabled={loading || activities.length === 0}
-                  style={{ background: 'var(--accent-purple)', borderColor: 'var(--accent-purple)', width: 'auto' }}
+                  style={{
+                    background: 'var(--accent-purple)',
+                    borderColor: 'var(--accent-purple)',
+                    width: 'auto',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6
+                  }}
                 >
+                 {loading ? (
+                   <svg className="spinner-rotate" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                     <line x1="12" y1="2" x2="12" y2="6"></line>
+                     <line x1="12" y1="18" x2="12" y2="22"></line>
+                     <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line>
+                     <line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line>
+                     <line x1="2" y1="12" x2="6" y2="12"></line>
+                     <line x1="18" y1="12" x2="22" y2="12"></line>
+                     <line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line>
+                     <line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line>
+                   </svg>
+                 ) : (
+                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                     <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" fill="currentColor" fillOpacity="0.3"/>
+                   </svg>
+                 )}
                  {loading ? 'Sedang Menganalisis Data...' : 'Enhance Analysis'}
                </button>
              </div>
