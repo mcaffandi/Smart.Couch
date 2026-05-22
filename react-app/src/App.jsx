@@ -556,12 +556,20 @@ export default function App() {
       // ── SUNRISE SPLIT LAYOUT ──────────────────────────────────────────────────
       // Brand in image zone (top-right) — larger for 1080px canvas
       ctx.textAlign = 'right';
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+      ctx.shadowBlur = 8;
+      ctx.shadowOffsetX = 2;
+      ctx.shadowOffsetY = 2;
       ctx.fillStyle = 'rgba(255,255,255,0.95)';
       ctx.font = '800 52px Outfit, sans-serif';
       ctx.fillText('EnduraUP', 1030, 110);
-      ctx.fillStyle = 'rgba(255,255,255,0.78)';
+      ctx.fillStyle = 'rgba(255,255,255,0.85)';
       ctx.font = '500 26px Inter, sans-serif';
       ctx.fillText('AI Running & Recovery Coach', 1030, 152);
+      ctx.shadowColor = 'transparent';
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 0;
       ctx.textAlign = 'left';
 
       // WHITE GLASS PANEL: bottom 62% (golden ratio major), rounded top
