@@ -727,30 +727,37 @@ export default function App() {
 
     } else {
       // ════════════════════════════════════════════════════════════════════
-      // DARK THEMES LAYOUT (unchanged)
+      // DARK THEMES LAYOUT — harmonized font scale
+      // Canvas: 1080×1080 | Card: y=60 to y=1020 | Header: y=115-205
       // ════════════════════════════════════════════════════════════════════
-      const p0 = 205;
+      const p0 = 205;  // content start (after header divider)
       const px = 100;
       const pw = 980;
 
       if (shareTemplate === 'vo2') {
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
-        ctx.font = '600 20px Inter, sans-serif';
-        ctx.fillText('ESTIMASI VO2MAX', px, p0 + 34);
+        // Section label ── 24px (was 20px)
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+        ctx.font = '600 24px Inter, sans-serif';
+        ctx.fillText('ESTIMASI VO2MAX', px, p0 + 44);
 
+        // Main number ── 160px (was 200px — too dominant)
+        // Baseline at ~490, cap top ~360, nicely centred in upper half
         ctx.fillStyle = shareTheme === 'cyber' ? '#06b6d4' : '#818cf8';
-        ctx.font = '700 200px Outfit, sans-serif';
+        ctx.font = '700 160px Outfit, sans-serif';
         const textVal = vo2max ? vo2max.toFixed(0) : '–';
-        ctx.fillText(textVal, px - 12, 510);
+        ctx.fillText(textVal, px, 490);
 
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-        ctx.font = '500 22px Inter, sans-serif';
-        ctx.fillText('ml/kg/min', px, 544);
+        // Unit ── 28px (was 22px)
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
+        ctx.font = '500 28px Inter, sans-serif';
+        ctx.fillText('ml/kg/min', px, 530);
 
-        ctx.strokeStyle = 'rgba(255,255,255,0.06)';
-        ctx.lineWidth = 1;
-        ctx.beginPath(); ctx.moveTo(px, 572); ctx.lineTo(pw, 572); ctx.stroke();
+        // Separator
+        ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(px, 565); ctx.lineTo(pw, 565); ctx.stroke();
 
+        // Fitness level ── 44px (was 34px)
         let fitnessLevel = 'Pemula';
         let fitnessDesc = 'Fokus pada konsistensi latihan dasar.';
         if (vo2max >= 62) { fitnessLevel = 'Elite / Profesional'; fitnessDesc = 'Performa puncak luar biasa.'; }
@@ -761,21 +768,23 @@ export default function App() {
         else if (vo2max >= 30) { fitnessLevel = 'Di Bawah Rata-Rata'; fitnessDesc = 'Potensi peningkatan masih sangat besar.'; }
 
         ctx.fillStyle = '#ffffff';
-        ctx.font = '700 34px Outfit, sans-serif';
-        ctx.fillText(fitnessLevel, px, 655);
+        ctx.font = '700 44px Outfit, sans-serif';
+        ctx.fillText(fitnessLevel, px, 632);
 
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-        ctx.font = '400 22px Inter, sans-serif';
-        ctx.fillText(fitnessDesc, px, 689);
+        // Desc ── 26px (was 22px)
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
+        ctx.font = '400 26px Inter, sans-serif';
+        ctx.fillText(fitnessDesc, px, 672);
 
       } else if (shareTemplate === 'stats') {
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
-        ctx.font = '600 20px Inter, sans-serif';
-        ctx.fillText('RINGKASAN PERFORMA', px, p0 + 34);
+        // Section label ── 24px (was 20px)
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+        ctx.font = '600 24px Inter, sans-serif';
+        ctx.fillText('RINGKASAN PERFORMA', px, p0 + 44);
 
         const targetYear = (() => {
           let y = new Date().getFullYear();
-          let acts = runActs.filter(a => a.startTimeLocal && new Date(a.startTimeLocal).getFullYear() === y);
+          const acts = runActs.filter(a => a.startTimeLocal && new Date(a.startTimeLocal).getFullYear() === y);
           if (acts.length === 0 && runActs.length > 0) {
             const years = runActs.map(a => a.startTimeLocal ? new Date(a.startTimeLocal).getFullYear() : null).filter(Boolean);
             if (years.length > 0) y = Math.max(...years);
@@ -790,27 +799,30 @@ export default function App() {
         const yearlyAvgHR = hrActs.length ? yearlyActs.reduce((s, a) => s + (a.avgHr ?? 0), 0) / hrActs.length : 0;
         const yearlyMaxHR = yearlyActs.reduce((max, a) => Math.max(max, a.maxHr ?? a.max_hr ?? 0), 0);
 
+        // drawMetric: label 22px, value 90px, unit 22px — more balanced
         const drawMetric = (x, y, label, val, unit, color) => {
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
-          ctx.font = '600 18px Inter, sans-serif';
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+          ctx.font = '600 22px Inter, sans-serif';
           ctx.fillText(label.toUpperCase(), x, y);
           ctx.fillStyle = color;
-          ctx.font = '700 82px Outfit, sans-serif';
-          ctx.fillText(val, x, y + 95);
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-          ctx.font = '500 18px Inter, sans-serif';
-          ctx.fillText(unit.toUpperCase(), x, y + 124);
+          ctx.font = '700 90px Outfit, sans-serif';
+          ctx.fillText(val, x, y + 108);
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
+          ctx.font = '500 22px Inter, sans-serif';
+          ctx.fillText(unit.toUpperCase(), x, y + 140);
         };
 
+        // 2×2 grid: row1 at p0+80=285, row2 at p0+345=550
         drawMetric(px,  p0 + 80,  `Jarak (${targetYear})`,   yearlyDist.toFixed(1),                        'km',   '#818cf8');
         drawMetric(560, p0 + 80,  `Latihan (${targetYear})`, yearlySessions.toString(),                    'sesi', '#fb7185');
-        drawMetric(px,  p0 + 350, 'HR Rerata',               yearlyAvgHR ? Math.round(yearlyAvgHR).toString() : '–', 'bpm', '#34d399');
-        drawMetric(560, p0 + 350, 'HR Maks',                 yearlyMaxHR ? yearlyMaxHR.toString() : '–',   'bpm', '#fbbf24');
+        drawMetric(px,  p0 + 345, 'HR Rerata',               yearlyAvgHR ? Math.round(yearlyAvgHR).toString() : '–', 'bpm', '#34d399');
+        drawMetric(560, p0 + 345, 'HR Maks',                 yearlyMaxHR ? yearlyMaxHR.toString() : '–',   'bpm', '#fbbf24');
 
       } else { // race predictions
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
-        ctx.font = '600 20px Inter, sans-serif';
-        ctx.fillText('PREDIKSI WAKTU RACE', px, p0 + 34);
+        // Section label ── 24px (was 20px)
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+        ctx.font = '600 24px Inter, sans-serif';
+        ctx.fillText('PREDIKSI WAKTU RACE', px, p0 + 44);
 
         const RIEGEL = 1.06;
         const RACES = [
@@ -826,35 +838,37 @@ export default function App() {
           .sort((a, b) => a.paceMinKm - b.paceMinKm);
         const ref = bestRuns[0] || (targetPace ? { distM: 5000, durationSec: targetPace * 60 * 5, paceMinKm: targetPace } : null);
         if (ref) {
+          // 4 rows × 158px, starts at p0+80=285
+          // each row: label(24px) at rowY+26 | time(62px) at rowY+102
           RACES.forEach((r, idx) => {
             const predSec = ref.durationSec * Math.pow(r.dist / ref.distM, RIEGEL);
             const h = Math.floor(predSec / 3600);
             const m = Math.floor((predSec % 3600) / 60);
             const sec = Math.round(predSec % 60);
             const timeStr = h > 0 ? `${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}` : `${m}:${String(sec).padStart(2,'0')}`;
-            const rowY = (p0 + 75) + idx * 162;
+            const rowY = (p0 + 80) + idx * 158;
             ctx.fillStyle = r.color;
-            ctx.fillRect(px, rowY - 4, 8, 130);
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
-            ctx.font = '600 19px Inter, sans-serif';
-            ctx.fillText(r.label, px + 20, rowY + 22);
+            ctx.fillRect(px, rowY, 8, 124);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+            ctx.font = '600 22px Inter, sans-serif';
+            ctx.fillText(r.label, px + 24, rowY + 26);
             ctx.fillStyle = '#ffffff';
-            ctx.font = '700 56px Outfit, sans-serif';
-            ctx.fillText(timeStr, px + 20, rowY + 92);
+            ctx.font = '700 62px Outfit, sans-serif';
+            ctx.fillText(timeStr, px + 24, rowY + 102);
           });
         }
       }
 
-      // ── DARK FOOTER ── y=930
-      ctx.strokeStyle = 'rgba(255,255,255,0.06)';
-      ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.moveTo(px, 930); ctx.lineTo(pw, 930); ctx.stroke();
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
-      ctx.font = '400 16px Inter, sans-serif';
-      ctx.fillText('Dibuat otomatis oleh EnduraUP AI Engine', px, 958);
+      // ── DARK FOOTER ── y=934
+      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(px, 934); ctx.lineTo(pw, 934); ctx.stroke();
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+      ctx.font = '400 18px Inter, sans-serif';
+      ctx.fillText('Dibuat otomatis oleh EnduraUP AI Engine', px, 962);
       ctx.fillStyle = shareTheme === 'cyber' ? '#06b6d4' : '#a78bfa';
-      ctx.font = '600 18px Inter, sans-serif';
-      ctx.fillText('enduraup.vercel.app', px, 988);
+      ctx.font = '600 22px Inter, sans-serif';
+      ctx.fillText('enduraup.vercel.app', px, 996);
 
     } // end else (dark themes)
 
