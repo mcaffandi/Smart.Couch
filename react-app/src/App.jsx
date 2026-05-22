@@ -1913,24 +1913,39 @@ export default function App() {
           <div className="sidebar-section-title">{t.userProfile}</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
 
-            {/* Age — empty/grey placeholder when not set */}
-            <div className="form-group" style={{ opacity: age === null ? 0.75 : 1 }}>
-              <label className="form-label">{t.age}</label>
-              <div className="number-input-group" style={{ border: age === null ? '1px dashed var(--border)' : '1px solid var(--border)' }}>
-                <button type="button" onClick={() => setAge(prev => Math.max(10, (prev ?? 25) - 1))}>−</button>
+            {/* Age — premium Range Slider */}
+            <div className="form-group">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                <label className="form-label" style={{ margin: 0 }}>{t.age}</label>
+                <span style={{ 
+                  fontSize: '11px', 
+                  fontWeight: 700, 
+                  color: age === null ? 'var(--text-muted)' : 'var(--accent-purple)',
+                  background: age === null ? 'rgba(255,255,255,0.03)' : 'rgba(167, 139, 250, 0.12)',
+                  padding: '2px 8px',
+                  borderRadius: '6px',
+                  border: age === null ? '1px dashed var(--border)' : '1px solid rgba(167, 139, 250, 0.2)'
+                }}>
+                  {age === null ? (lang === 'id' ? 'Belum diatur' : 'Not set') : `${age} ${lang === 'id' ? 'Tahun' : 'Years'}`}
+                </span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <input
-                  type="number"
-                  value={age ?? ''}
-                  min={10}
-                  max={100}
-                  placeholder="—"
-                  onChange={e => {
-                    const v = e.target.value;
-                    setAge(v === '' ? null : Math.min(100, Math.max(10, parseInt(v) || 10)));
+                  type="range"
+                  min="10"
+                  max="100"
+                  value={age ?? 30}
+                  onChange={e => setAge(parseInt(e.target.value))}
+                  style={{
+                    width: '100%',
+                    cursor: 'pointer'
                   }}
-                  style={{ color: age === null ? 'var(--text-muted)' : 'var(--text-primary)' }}
+                  className="age-slider"
                 />
-                <button type="button" onClick={() => setAge(prev => Math.min(100, (prev ?? 24) + 1))}>+</button>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: 'var(--text-muted)', fontWeight: 600, marginTop: 2 }}>
+                <span>10</span>
+                <span>100</span>
               </div>
             </div>
 

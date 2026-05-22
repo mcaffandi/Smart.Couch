@@ -3,10 +3,10 @@ const CURRENT_KEY = 'smartcoach_current_user';
 const LEGACY_KEY = 'smartcoach_data';
 
 const DEFAULT_PROFILE = {
-  age: 31,
+  age: null,
   goal: 'maintenance',
   programStyle: 'sedang',
-  targetPace: 5.0,
+  targetPace: null,
   selectedDays: ['Selasa', 'Kamis', 'Sabtu']
 };
 
@@ -119,6 +119,13 @@ export const formatDate = (dateStr) => {
 // Pace Helpers
 // ──────────────────────────────────────────────
 export const getPaceRecommendations = (targetPace) => {
+  if (!targetPace) {
+    return {
+      ngepush: '—',
+      sedang: '—',
+      santai: '—'
+    };
+  }
   const baseSecs = targetPace * 60;
 
   const formatP = (p) => {

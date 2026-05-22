@@ -1586,3 +1586,48 @@ html, body {
   background: rgba(167, 139, 250, 0.12);
   color: var(--accent-purple);
 }
+
+/* Custom range slider styling */
+.age-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--border);
+  height: 6px;
+  border-radius: 3px;
+  outline: none;
+  transition: opacity 0.2s;
+}
+
+.age-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 3px solid var(--accent-purple);
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+  transition: transform 0.1s ease, background-color 0.1s;
+}
+
+.age-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+  background: var(--accent-purple);
+}
+
+.age-slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 3px solid var(--accent-purple);
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+  transition: transform 0.1s ease, background-color 0.1s;
+}
+
+.age-slider::-moz-range-thumb:hover {
+  transform: scale(1.15);
+  background: var(--accent-purple);
+}
