@@ -195,6 +195,7 @@ export default function App() {
   const [showShareModal, setShowShareModal] = useState(false);
   const [shareTemplate, setShareTemplate] = useState('vo2');
   const [shareTheme, setShareTheme] = useState('dark');
+  const [customCaption, setCustomCaption] = useState('Lihat pencapaian lari gue di EnduraUP! Gabung yuk di enduraup.vercel.app 🏃‍♂️🔥');
   const [retroImageLoaded, setRetroImageLoaded] = useState(false);
   const retroImageRef = useRef(null);
 
@@ -940,7 +941,7 @@ export default function App() {
           await navigator.share({
             files: [file],
             title: lang === 'id' ? 'Kartu Performa EnduraUP' : 'EnduraUP Performance Card',
-            text: lang === 'id' ? 'Lihat pencapaian lari gue di EnduraUP! Gabung yuk di enduraup.vercel.app 🏃‍♂️🔥' : 'Check out my running stats on EnduraUP! Join me at enduraup.vercel.app 🏃‍♂️🔥',
+            text: customCaption,
           });
           addToast('Berhasil membuka menu bagikan!');
           return;
@@ -2362,6 +2363,30 @@ export default function App() {
 
             {/* Download / Share Buttons */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {/* Custom Caption Input */}
+              <div>
+                <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>
+                  Caption Sosmed (Bisa Diedit)
+                </label>
+                <textarea
+                  value={customCaption}
+                  onChange={e => setCustomCaption(e.target.value)}
+                  rows={2}
+                  style={{
+                    width: '100%',
+                    background: 'var(--bg-base)',
+                    border: '1px solid var(--border)',
+                    borderRadius: 8,
+                    padding: '8px 12px',
+                    color: 'var(--text-primary)',
+                    fontFamily: 'inherit',
+                    fontSize: 13,
+                    resize: 'none',
+                    outline: 'none'
+                  }}
+                />
+              </div>
+
               {/* Primary Download Button */}
               <button
                 onClick={shareOrDownloadImage}
@@ -2373,7 +2398,7 @@ export default function App() {
                   <polyline points="7 10 12 15 17 10" />
                   <line x1="12" y1="15" x2="12" y2="3" />
                 </svg>
-                Unduh Gambar Performa (PNG)
+                {Boolean(navigator.share) ? (lang === 'id' ? 'Bagikan Gambar & Caption (Share)' : 'Share Image & Caption') : (lang === 'id' ? 'Unduh Gambar Performa (PNG)' : 'Download Performance Image (PNG)')}
               </button>
 
               <div style={{ borderTop: '1px solid var(--border)', paddingTop: 14 }}>
