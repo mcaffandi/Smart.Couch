@@ -2449,7 +2449,7 @@ export default function App() {
                   e.currentTarget.style.background = 'none';
                   e.currentTarget.style.color = 'var(--text-muted)';
                 }}
-                title="Bagikan Kartu Performa (PNG)"
+                title={lang === 'id' ? "Bagikan Kartu Performa (PNG)" : "Share Performance Card (PNG)"}
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
@@ -2459,7 +2459,11 @@ export default function App() {
               </button>
             )}
           </div>
-          <p className="page-subtitle">Ubah Data Lari &amp; Tidur lo Jadi Rencana Latihan Personal</p>
+          <p className="page-subtitle">
+            {lang === 'id' 
+              ? "Ubah Data Lari & Tidur lo Jadi Rencana Latihan Personal" 
+              : "Transform your run & sleep data into a personalized training plan"}
+          </p>
         </div>
 
         {!hasData ? (
