@@ -580,143 +580,286 @@ export default function App() {
     }
 
     // ── TEMPLATE CONTENT ──────────────────────────────────────────────────────
-    // p0 = content start Y | px = content left X | pw = content right X
-    const p0 = isLight ? 548 : 205; // panelY(420) + header(128) = 548
-    const px = isLight ? 80 : 100;
-    const pw = isLight ? 1000 : 980;
+    // Sunrise and dark themes have SEPARATE layout blocks for clarity
+    // Canvas: 1080×1080 | Panel starts: y=420 | Content starts: y=548
 
-    if (shareTemplate === 'vo2') {
-      // Label: section title
-      ctx.fillStyle = textMuted;
-      ctx.font = `600 ${isLight ? 32 : 20}px Inter, sans-serif`;
-      ctx.fillText('ESTIMASI VO2MAX', px, p0 + (isLight ? 44 : 34));
+    if (isLight) {
+      // ════════════════════════════════════════════════════════════════════
+      // SUNRISE LAYOUT — all coordinates hardcoded, no overflow
+      // Available: y=548 to y=960 (content) + y=960 to y=1080 (footer)
+      // ════════════════════════════════════════════════════════════════════
+      const lx = 80;   // left margin
+      const rx = 1000; // right edge
 
-      // Big VO2Max number (200px on dark, 210px on sunrise)
-      ctx.fillStyle = isLight ? '#c0440a' : (shareTheme === 'cyber' ? '#06b6d4' : '#818cf8');
-      ctx.font = '700 200px Outfit, sans-serif';
-      const textVal = vo2max ? vo2max.toFixed(0) : '–';
-      const numY = isLight ? p0 + 230 : 510;
-      ctx.fillText(textVal, px - (isLight ? 0 : 12), numY);
-
-      ctx.fillStyle = textSecondary;
-      ctx.font = `500 ${isLight ? 36 : 22}px Inter, sans-serif`;
-      ctx.fillText('ml/kg/min', px, numY + (isLight ? 50 : 34));
-
-      const sepY = numY + (isLight ? 50 : 34) + (isLight ? 34 : 21);
-      ctx.strokeStyle = isLight ? 'rgba(160, 82, 28, 0.15)' : 'rgba(255,255,255,0.06)';
-      ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.moveTo(px, sepY); ctx.lineTo(pw, sepY); ctx.stroke();
-
-      let fitnessLevel = 'Pemula';
-      let fitnessDesc = 'Fokus pada konsistensi latihan dasar.';
-      if (vo2max >= 62) { fitnessLevel = 'Elite / Profesional'; fitnessDesc = 'Performa puncak luar biasa.'; }
-      else if (vo2max >= 57) { fitnessLevel = 'Sangat Baik (Top 10%)'; fitnessDesc = 'Tingkat kebugaran setara pelari kompetitif.'; }
-      else if (vo2max >= 52) { fitnessLevel = 'Baik Sekali'; fitnessDesc = 'Kapasitas aerobik sangat kuat.'; }
-      else if (vo2max >= 46) { fitnessLevel = 'Di Atas Rata-Rata'; fitnessDesc = 'Performa lari solid dan stabil.'; }
-      else if (vo2max >= 38) { fitnessLevel = 'Rata-Rata'; fitnessDesc = 'Kondisi fisik sehat dan aktif.'; }
-      else if (vo2max >= 30) { fitnessLevel = 'Di Bawah Rata-Rata'; fitnessDesc = 'Potensi peningkatan masih sangat besar.'; }
-
-      ctx.fillStyle = textPrimary;
-      ctx.font = `700 ${isLight ? 52 : 34}px Outfit, sans-serif`;
-      ctx.fillText(fitnessLevel, px, sepY + (isLight ? 72 : 83));
-
-      ctx.fillStyle = textSecondary;
-      ctx.font = `400 ${isLight ? 34 : 22}px Inter, sans-serif`;
-      ctx.fillText(fitnessDesc, px, sepY + (isLight ? 72 : 83) + (isLight ? 50 : 34));
-
-    } else if (shareTemplate === 'stats') {
-      ctx.fillStyle = textMuted;
-      ctx.font = `600 ${isLight ? 32 : 20}px Inter, sans-serif`;
-      ctx.fillText('RINGKASAN PERFORMA', px, p0 + (isLight ? 44 : 34));
-
-      const targetYear = (() => {
-        let y = new Date().getFullYear();
-        let acts = runActs.filter(a => a.startTimeLocal && new Date(a.startTimeLocal).getFullYear() === y);
-        if (acts.length === 0 && runActs.length > 0) {
-          const years = runActs.map(a => a.startTimeLocal ? new Date(a.startTimeLocal).getFullYear() : null).filter(Boolean);
-          if (years.length > 0) y = Math.max(...years);
-        }
-        return y;
-      })();
-
-      const yearlyActs = runActs.filter(a => a.startTimeLocal && new Date(a.startTimeLocal).getFullYear() === targetYear);
-      const yearlyDist = yearlyActs.reduce((s, a) => s + (a.distance ?? 0) / 100000, 0);
-      const yearlySessions = yearlyActs.length;
-      const hrActs = yearlyActs.filter(a => a.avgHr);
-      const yearlyAvgHR = hrActs.length ? yearlyActs.reduce((s, a) => s + (a.avgHr ?? 0), 0) / hrActs.length : 0;
-      const yearlyMaxHR = yearlyActs.reduce((max, a) => Math.max(max, a.maxHr ?? a.max_hr ?? 0), 0);
-
-      const drawMetric = (x, y, label, val, unit, color) => {
+      if (shareTemplate === 'vo2') {
+        // Section label ── y=592
         ctx.fillStyle = textMuted;
-        ctx.font = `600 ${isLight ? 28 : 18}px Inter, sans-serif`;
-        ctx.fillText(label.toUpperCase(), x, y);
-        ctx.fillStyle = color;
-        ctx.font = `700 ${isLight ? 110 : 82}px Outfit, sans-serif`;
-        ctx.fillText(val, x, y + (isLight ? 128 : 95));
+        ctx.font = '600 30px Inter, sans-serif';
+        ctx.fillText('ESTIMASI VO2MAX', lx, 592);
+
+        // Big number (150px) ── baseline y=748, cap top ~598 → nice gap after label
+        ctx.fillStyle = '#c0440a';
+        ctx.font = '700 150px Outfit, sans-serif';
+        const textVal = vo2max ? vo2max.toFixed(0) : '–';
+        ctx.fillText(textVal, lx, 748);
+
+        // Unit ── y=790
         ctx.fillStyle = textSecondary;
-        ctx.font = `500 ${isLight ? 28 : 18}px Inter, sans-serif`;
-        ctx.fillText(unit.toUpperCase(), x, y + (isLight ? 168 : 124));
-      };
+        ctx.font = '500 32px Inter, sans-serif';
+        ctx.fillText('ml/kg/min', lx, 790);
 
-      const col2 = isLight ? 580 : 560;
-      const r1y = p0 + (isLight ? 60 : 80);
-      const r2y = r1y + (isLight ? 300 : 270);
-      drawMetric(px,   r1y, `Jarak (${targetYear})`,   yearlyDist.toFixed(1),                        'km',   isLight ? '#c0440a' : '#818cf8');
-      drawMetric(col2, r1y, `Latihan (${targetYear})`, yearlySessions.toString(),                    'sesi', isLight ? '#2a9d8f' : '#fb7185');
-      drawMetric(px,   r2y, 'HR Rerata',               yearlyAvgHR ? Math.round(yearlyAvgHR).toString() : '–', 'bpm', isLight ? '#0d626c' : '#34d399');
-      drawMetric(col2, r2y, 'HR Maks',                 yearlyMaxHR ? yearlyMaxHR.toString() : '–',   'bpm', isLight ? '#b45309' : '#fbbf24');
+        // Separator ── y=828
+        ctx.strokeStyle = 'rgba(160, 82, 28, 0.18)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(lx, 828); ctx.lineTo(rx, 828); ctx.stroke();
 
-    } else { // race predictions
-      ctx.fillStyle = textMuted;
-      ctx.font = `600 ${isLight ? 32 : 20}px Inter, sans-serif`;
-      ctx.fillText('PREDIKSI WAKTU RACE', px, p0 + (isLight ? 44 : 34));
+        // Fitness level ── y=886
+        let fitnessLevel = 'Pemula';
+        let fitnessDesc = 'Fokus pada konsistensi latihan dasar.';
+        if (vo2max >= 62) { fitnessLevel = 'Elite / Profesional'; fitnessDesc = 'Performa puncak luar biasa.'; }
+        else if (vo2max >= 57) { fitnessLevel = 'Sangat Baik (Top 10%)'; fitnessDesc = 'Tingkat kebugaran setara pelari kompetitif.'; }
+        else if (vo2max >= 52) { fitnessLevel = 'Baik Sekali'; fitnessDesc = 'Kapasitas aerobik sangat kuat.'; }
+        else if (vo2max >= 46) { fitnessLevel = 'Di Atas Rata-Rata'; fitnessDesc = 'Performa lari solid dan stabil.'; }
+        else if (vo2max >= 38) { fitnessLevel = 'Rata-Rata'; fitnessDesc = 'Kondisi fisik sehat dan aktif.'; }
+        else if (vo2max >= 30) { fitnessLevel = 'Di Bawah Rata-Rata'; fitnessDesc = 'Potensi peningkatan masih sangat besar.'; }
 
-      const RIEGEL = 1.06;
-      const RACES = [
-        { label: '5 KM',          dist: 5000,  color: isLight ? '#c0440a' : '#818cf8' },
-        { label: '10 KM',         dist: 10000, color: isLight ? '#2a9d8f' : '#34d399' },
-        { label: 'HALF MARATHON', dist: 21097, color: isLight ? '#b45309' : '#fbbf24' },
-        { label: 'MARATHON',      dist: 42195, color: isLight ? '#0d626c' : '#fb7185' }
-      ];
-      const bestRuns = runActs
-        .filter(a => a.distance >= 300000 && a.duration > 0)
-        .map(a => ({ distM: a.distance / 100, durationSec: a.duration / 1000, paceMinKm: (a.duration / 60000) / (a.distance / 100000) }))
-        .filter(a => a.paceMinKm >= 3 && a.paceMinKm <= 20)
-        .sort((a, b) => a.paceMinKm - b.paceMinKm);
-      const ref = bestRuns[0] || (targetPace ? { distM: 5000, durationSec: targetPace * 60 * 5, paceMinKm: targetPace } : null);
-      if (ref) {
-        RACES.forEach((r, idx) => {
-          const predSec = ref.durationSec * Math.pow(r.dist / ref.distM, RIEGEL);
-          const h = Math.floor(predSec / 3600);
-          const m = Math.floor((predSec % 3600) / 60);
-          const sec = Math.round(predSec % 60);
-          const timeStr = h > 0 ? `${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}` : `${m}:${String(sec).padStart(2,'0')}`;
-          const rowY = (p0 + 60) + idx * (isLight ? 130 : 162);
-          ctx.fillStyle = r.color;
-          ctx.fillRect(px, rowY - 4, isLight ? 10 : 8, isLight ? 118 : 130);
+        ctx.fillStyle = textPrimary;
+        ctx.font = '700 48px Outfit, sans-serif';
+        ctx.fillText(fitnessLevel, lx, 886);
+
+        // Fitness desc ── y=930
+        ctx.fillStyle = textSecondary;
+        ctx.font = '400 28px Inter, sans-serif';
+        ctx.fillText(fitnessDesc, lx, 930);
+
+      } else if (shareTemplate === 'stats') {
+        // Section label ── y=592
+        ctx.fillStyle = textMuted;
+        ctx.font = '600 30px Inter, sans-serif';
+        ctx.fillText('RINGKASAN PERFORMA', lx, 592);
+
+        const targetYear = (() => {
+          let y = new Date().getFullYear();
+          let acts = runActs.filter(a => a.startTimeLocal && new Date(a.startTimeLocal).getFullYear() === y);
+          if (acts.length === 0 && runActs.length > 0) {
+            const years = runActs.map(a => a.startTimeLocal ? new Date(a.startTimeLocal).getFullYear() : null).filter(Boolean);
+            if (years.length > 0) y = Math.max(...years);
+          }
+          return y;
+        })();
+
+        const yearlyActs = runActs.filter(a => a.startTimeLocal && new Date(a.startTimeLocal).getFullYear() === targetYear);
+        const yearlyDist = yearlyActs.reduce((s, a) => s + (a.distance ?? 0) / 100000, 0);
+        const yearlySessions = yearlyActs.length;
+        const hrActs = yearlyActs.filter(a => a.avgHr);
+        const yearlyAvgHR = hrActs.length ? yearlyActs.reduce((s, a) => s + (a.avgHr ?? 0), 0) / hrActs.length : 0;
+        const yearlyMaxHR = yearlyActs.reduce((max, a) => Math.max(max, a.maxHr ?? a.max_hr ?? 0), 0);
+
+        // 2×2 grid — row1: y=630, row2: y=810 | col1: lx, col2: 580
+        // Each metric: label(26px) → +104 value(80px) → +38 unit(24px)
+        const drawM = (x, y, label, val, unit, color) => {
           ctx.fillStyle = textMuted;
-          ctx.font = `600 ${isLight ? 28 : 19}px Inter, sans-serif`;
-          ctx.fillText(r.label, px + 24, rowY + (isLight ? 28 : 22));
-          ctx.fillStyle = textPrimary;
-          ctx.font = `700 ${isLight ? 64 : 56}px Outfit, sans-serif`;
-          ctx.fillText(timeStr, px + 24, rowY + (isLight ? 104 : 92));
-        });
-      }
-    }
+          ctx.font = '600 26px Inter, sans-serif';
+          ctx.fillText(label.toUpperCase(), x, y);
+          ctx.fillStyle = color;
+          ctx.font = '700 80px Outfit, sans-serif';
+          ctx.fillText(val, x, y + 96);
+          ctx.fillStyle = textSecondary;
+          ctx.font = '500 24px Inter, sans-serif';
+          ctx.fillText(unit.toUpperCase(), x, y + 132);
+        };
+        drawM(lx,  630, `Jarak (${targetYear})`,   yearlyDist.toFixed(1),                        'km',   '#c0440a');
+        drawM(580, 630, `Latihan (${targetYear})`, yearlySessions.toString(),                    'sesi', '#2a9d8f');
+        drawM(lx,  810, 'HR Rerata',               yearlyAvgHR ? Math.round(yearlyAvgHR).toString() : '–', 'bpm', '#0d626c');
+        drawM(580, 810, 'HR Maks',                 yearlyMaxHR ? yearlyMaxHR.toString() : '–',   'bpm', '#b45309');
 
-    // ── Footer ────────────────────────────────────────────────────────────────
-    const footerY = isLight ? 960 : 930;
-    ctx.strokeStyle = isLight ? 'rgba(160, 82, 28, 0.15)' : 'rgba(255,255,255,0.06)';
-    ctx.lineWidth = 1.5;
-    ctx.beginPath(); ctx.moveTo(px, footerY); ctx.lineTo(pw, footerY); ctx.stroke();
-    ctx.fillStyle = textMuted;
-    ctx.font = `400 ${isLight ? 24 : 16}px Inter, sans-serif`;
-    ctx.fillText('Dibuat otomatis oleh EnduraUP AI Engine', px, footerY + (isLight ? 36 : 28));
-    ctx.fillStyle = isLight ? '#c0440a' : (shareTheme === 'cyber' ? '#06b6d4' : '#a78bfa');
-    ctx.font = `600 ${isLight ? 28 : 18}px Inter, sans-serif`;
-    ctx.fillText('enduraup.vercel.app', px, footerY + (isLight ? 80 : 58));
+      } else { // race predictions
+        // Section label ── y=592
+        ctx.fillStyle = textMuted;
+        ctx.font = '600 30px Inter, sans-serif';
+        ctx.fillText('PREDIKSI WAKTU RACE', lx, 592);
+
+        const RIEGEL = 1.06;
+        const RACES = [
+          { label: '5 KM',          dist: 5000,  color: '#c0440a' },
+          { label: '10 KM',         dist: 10000, color: '#2a9d8f' },
+          { label: 'HALF MARATHON', dist: 21097, color: '#b45309' },
+          { label: 'MARATHON',      dist: 42195, color: '#0d626c' }
+        ];
+        const bestRuns = runActs
+          .filter(a => a.distance >= 300000 && a.duration > 0)
+          .map(a => ({ distM: a.distance / 100, durationSec: a.duration / 1000, paceMinKm: (a.duration / 60000) / (a.distance / 100000) }))
+          .filter(a => a.paceMinKm >= 3 && a.paceMinKm <= 20)
+          .sort((a, b) => a.paceMinKm - b.paceMinKm);
+        const ref = bestRuns[0] || (targetPace ? { distM: 5000, durationSec: targetPace * 60 * 5, paceMinKm: targetPace } : null);
+        if (ref) {
+          // 4 rows × 94px = 376px, starts at y=622, ends at y=998 last baseline
+          // each row: bar | label(24px) at rowY+24 | time(56px) at rowY+90
+          RACES.forEach((r, idx) => {
+            const predSec = ref.durationSec * Math.pow(r.dist / ref.distM, RIEGEL);
+            const h = Math.floor(predSec / 3600);
+            const m = Math.floor((predSec % 3600) / 60);
+            const sec = Math.round(predSec % 60);
+            const timeStr = h > 0 ? `${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}` : `${m}:${String(sec).padStart(2,'0')}`;
+            const rowY = 622 + idx * 94;
+            ctx.fillStyle = r.color;
+            ctx.fillRect(lx, rowY, 8, 80);
+            ctx.fillStyle = textMuted;
+            ctx.font = '600 24px Inter, sans-serif';
+            ctx.fillText(r.label, lx + 22, rowY + 24);
+            ctx.fillStyle = textPrimary;
+            ctx.font = '700 54px Outfit, sans-serif';
+            ctx.fillText(timeStr, lx + 22, rowY + 82);
+          });
+        }
+      }
+
+      // ── SUNRISE FOOTER ── y=960 to y=1080
+      ctx.strokeStyle = 'rgba(160, 82, 28, 0.15)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(lx, 962); ctx.lineTo(rx, 962); ctx.stroke();
+      ctx.fillStyle = textMuted;
+      ctx.font = '400 22px Inter, sans-serif';
+      ctx.fillText('Dibuat otomatis oleh EnduraUP AI Engine', lx, 994);
+      ctx.fillStyle = '#c0440a';
+      ctx.font = '600 26px Inter, sans-serif';
+      ctx.fillText('enduraup.vercel.app', lx, 1034);
+
+    } else {
+      // ════════════════════════════════════════════════════════════════════
+      // DARK THEMES LAYOUT (unchanged)
+      // ════════════════════════════════════════════════════════════════════
+      const p0 = 205;
+      const px = 100;
+      const pw = 980;
+
+      if (shareTemplate === 'vo2') {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+        ctx.font = '600 20px Inter, sans-serif';
+        ctx.fillText('ESTIMASI VO2MAX', px, p0 + 34);
+
+        ctx.fillStyle = shareTheme === 'cyber' ? '#06b6d4' : '#818cf8';
+        ctx.font = '700 200px Outfit, sans-serif';
+        const textVal = vo2max ? vo2max.toFixed(0) : '–';
+        ctx.fillText(textVal, px - 12, 510);
+
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+        ctx.font = '500 22px Inter, sans-serif';
+        ctx.fillText('ml/kg/min', px, 544);
+
+        ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(px, 572); ctx.lineTo(pw, 572); ctx.stroke();
+
+        let fitnessLevel = 'Pemula';
+        let fitnessDesc = 'Fokus pada konsistensi latihan dasar.';
+        if (vo2max >= 62) { fitnessLevel = 'Elite / Profesional'; fitnessDesc = 'Performa puncak luar biasa.'; }
+        else if (vo2max >= 57) { fitnessLevel = 'Sangat Baik (Top 10%)'; fitnessDesc = 'Tingkat kebugaran setara pelari kompetitif.'; }
+        else if (vo2max >= 52) { fitnessLevel = 'Baik Sekali'; fitnessDesc = 'Kapasitas aerobik sangat kuat.'; }
+        else if (vo2max >= 46) { fitnessLevel = 'Di Atas Rata-Rata'; fitnessDesc = 'Performa lari solid dan stabil.'; }
+        else if (vo2max >= 38) { fitnessLevel = 'Rata-Rata'; fitnessDesc = 'Kondisi fisik sehat dan aktif.'; }
+        else if (vo2max >= 30) { fitnessLevel = 'Di Bawah Rata-Rata'; fitnessDesc = 'Potensi peningkatan masih sangat besar.'; }
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '700 34px Outfit, sans-serif';
+        ctx.fillText(fitnessLevel, px, 655);
+
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+        ctx.font = '400 22px Inter, sans-serif';
+        ctx.fillText(fitnessDesc, px, 689);
+
+      } else if (shareTemplate === 'stats') {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+        ctx.font = '600 20px Inter, sans-serif';
+        ctx.fillText('RINGKASAN PERFORMA', px, p0 + 34);
+
+        const targetYear = (() => {
+          let y = new Date().getFullYear();
+          let acts = runActs.filter(a => a.startTimeLocal && new Date(a.startTimeLocal).getFullYear() === y);
+          if (acts.length === 0 && runActs.length > 0) {
+            const years = runActs.map(a => a.startTimeLocal ? new Date(a.startTimeLocal).getFullYear() : null).filter(Boolean);
+            if (years.length > 0) y = Math.max(...years);
+          }
+          return y;
+        })();
+
+        const yearlyActs = runActs.filter(a => a.startTimeLocal && new Date(a.startTimeLocal).getFullYear() === targetYear);
+        const yearlyDist = yearlyActs.reduce((s, a) => s + (a.distance ?? 0) / 100000, 0);
+        const yearlySessions = yearlyActs.length;
+        const hrActs = yearlyActs.filter(a => a.avgHr);
+        const yearlyAvgHR = hrActs.length ? yearlyActs.reduce((s, a) => s + (a.avgHr ?? 0), 0) / hrActs.length : 0;
+        const yearlyMaxHR = yearlyActs.reduce((max, a) => Math.max(max, a.maxHr ?? a.max_hr ?? 0), 0);
+
+        const drawMetric = (x, y, label, val, unit, color) => {
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+          ctx.font = '600 18px Inter, sans-serif';
+          ctx.fillText(label.toUpperCase(), x, y);
+          ctx.fillStyle = color;
+          ctx.font = '700 82px Outfit, sans-serif';
+          ctx.fillText(val, x, y + 95);
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+          ctx.font = '500 18px Inter, sans-serif';
+          ctx.fillText(unit.toUpperCase(), x, y + 124);
+        };
+
+        drawMetric(px,  p0 + 80,  `Jarak (${targetYear})`,   yearlyDist.toFixed(1),                        'km',   '#818cf8');
+        drawMetric(560, p0 + 80,  `Latihan (${targetYear})`, yearlySessions.toString(),                    'sesi', '#fb7185');
+        drawMetric(px,  p0 + 350, 'HR Rerata',               yearlyAvgHR ? Math.round(yearlyAvgHR).toString() : '–', 'bpm', '#34d399');
+        drawMetric(560, p0 + 350, 'HR Maks',                 yearlyMaxHR ? yearlyMaxHR.toString() : '–',   'bpm', '#fbbf24');
+
+      } else { // race predictions
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+        ctx.font = '600 20px Inter, sans-serif';
+        ctx.fillText('PREDIKSI WAKTU RACE', px, p0 + 34);
+
+        const RIEGEL = 1.06;
+        const RACES = [
+          { label: '5 KM',          dist: 5000,  color: '#818cf8' },
+          { label: '10 KM',         dist: 10000, color: '#34d399' },
+          { label: 'HALF MARATHON', dist: 21097, color: '#fbbf24' },
+          { label: 'MARATHON',      dist: 42195, color: '#fb7185' }
+        ];
+        const bestRuns = runActs
+          .filter(a => a.distance >= 300000 && a.duration > 0)
+          .map(a => ({ distM: a.distance / 100, durationSec: a.duration / 1000, paceMinKm: (a.duration / 60000) / (a.distance / 100000) }))
+          .filter(a => a.paceMinKm >= 3 && a.paceMinKm <= 20)
+          .sort((a, b) => a.paceMinKm - b.paceMinKm);
+        const ref = bestRuns[0] || (targetPace ? { distM: 5000, durationSec: targetPace * 60 * 5, paceMinKm: targetPace } : null);
+        if (ref) {
+          RACES.forEach((r, idx) => {
+            const predSec = ref.durationSec * Math.pow(r.dist / ref.distM, RIEGEL);
+            const h = Math.floor(predSec / 3600);
+            const m = Math.floor((predSec % 3600) / 60);
+            const sec = Math.round(predSec % 60);
+            const timeStr = h > 0 ? `${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}` : `${m}:${String(sec).padStart(2,'0')}`;
+            const rowY = (p0 + 75) + idx * 162;
+            ctx.fillStyle = r.color;
+            ctx.fillRect(px, rowY - 4, 8, 130);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+            ctx.font = '600 19px Inter, sans-serif';
+            ctx.fillText(r.label, px + 20, rowY + 22);
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '700 56px Outfit, sans-serif';
+            ctx.fillText(timeStr, px + 20, rowY + 92);
+          });
+        }
+      }
+
+      // ── DARK FOOTER ── y=930
+      ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(px, 930); ctx.lineTo(pw, 930); ctx.stroke();
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+      ctx.font = '400 16px Inter, sans-serif';
+      ctx.fillText('Dibuat otomatis oleh EnduraUP AI Engine', px, 958);
+      ctx.fillStyle = shareTheme === 'cyber' ? '#06b6d4' : '#a78bfa';
+      ctx.font = '600 18px Inter, sans-serif';
+      ctx.fillText('enduraup.vercel.app', px, 988);
+
+    } // end else (dark themes)
 
   }, [showShareModal, shareTemplate, shareTheme, runActs, totalDist, totalSessions, avgHR, actualMaxHR, vo2max, targetPace, displayName, currentUser, avatar, retroImageLoaded]);
+
 
   const shareOrDownloadImage = async () => {
     if (!canvasRef.current) return;
