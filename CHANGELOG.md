@@ -2,6 +2,36 @@
 
 ---
 
+## [Uncommitted] — 2026-05-22 · Bilingual Support & Sports-Science Training Readiness
+
+### ✨ Fitur Baru
+
+#### Dukungan Bilingual Penuh (Bahasa Indonesia & English)
+- Menambahkan switcher bahasa (ID/EN) di pojok kanan atas sidebar dengan persistensi otomatis di `localStorage`.
+- Melokalisasi seluruh bagian aplikasi secara dinamis:
+  - **Landing Page**: Header, tombol CTA, bento grid preview cards, jaminan privasi data, dan footer.
+  - **Login / Register Screen**: Input form, label, tombol login anonim/social, validasi email/password, dan dialog registrasi.
+  - **Dashboard & Analisis**: Menu navigasi tab, profil pengguna (umur/pace/hari latihan), rekomendasi pace lari, grafik jarak bulanan, grafik zona detak jantung, korelasi tidur, histori lari, dan rekomendasi AI Coach.
+  - **Rencana Latihan (Training Plan)**: Tabel kalender latihan, status cross-training, serta ekspor berkas kalender format `.ics`.
+  - **Ekspor Kartu Pencapaian**: Tombol "Bagikan", slider kustomisasi, petunjuk watermark, dan ekspor visual canvas.
+
+#### Algoritma Kesiapan Latihan Terkini (Current Training Readiness) Dinamis
+- Menggantikan visual dial kesiapan latihan statis (sebelumnya hanya membaca skor tidur) dengan model kalkulasi olahraga (*sports-science recovery*) yang dinamis:
+  - Menghitung **hari istirahat (Rest Days)** sejak lari terakhir (`daysSinceLastRun`).
+  - Memberikan penyesuaian skor berupa penalti kelelahan aktif jika baru lari hari ini (`-20`) atau kemarin (`-10`).
+  - Memberikan bonus pemulihan bertahap untuk istirahat 3 hari (`+10%`) dan istirahat $\ge$ 4 hari (`+15%` bonus dengan batas bawah skor minimal `80%` jika skor tidur malam terakhir $\ge 50\%$).
+  - Menampilkan keterangan ringkasan kalkulasi secara dinamis baik dalam Bahasa Indonesia maupun English (misal: *"Lo udah istirahat 4 hari. Kesiapan fisik pulih maksimal..."*).
+
+#### Template Data Excel Lokalisasi Dinamis
+- Menyesuaikan format nama berkas Excel yang diunduh (`Template_Data_EnduraUP.xlsx` untuk ID, `EnduraUP_Data_Template.xlsx` untuk EN).
+- Melokalisasi nama sheet ("Riwayat Lari" / "Run History", "Kualitas Tidur" / "Sleep Quality", "Panduan Pengisian" / "Instructions Guide"), kolom header, data isian, dan teks panduan pengisian instruksi secara real-time berdasarkan bahasa aktif.
+
+### 🏗️ Perubahan Teknis & Bug Fix
+- Memperbaiki tag penutup HTML/JSX pada kontainer `.sidebar-logo` di `App.jsx` yang sebelumnya tidak ditutup sehingga menyebabkan kegagalan compile esbuild pada asides.
+- Menyelaraskan pewarnaan dial kesiapan latihan (hijau/kuning/merah) agar sinkron dengan skor kesiapan baru yang telah disesuaikan.
+
+---
+
 ## [Uncommitted] — 2026-05-21 · Retro Groovy Background & Warm Text Palette
 
 ### 🎨 UI / UX
