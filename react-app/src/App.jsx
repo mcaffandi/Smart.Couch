@@ -2284,25 +2284,26 @@ export default function App() {
         {!hasData ? (
           /* Empty state */
           <div className="empty-state animate-fade-in">
+            <div className="empty-state-icon-wrapper">
+              <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+            </div>
             <h2 className="empty-state-title">Selamat Datang</h2>
-            <p className="empty-state-desc">Database lokal masih kosong. Mulai dengan menambahkan data lo.</p>
+            <p className="empty-state-desc">Database lokal masih kosong. Mulai dengan menambahkan data latihan atau tidur lo.</p>
             <div className="empty-state-steps">
               <div
-                className="empty-step"
-                style={{ cursor: 'pointer', transition: 'all 0.2s' }}
+                className="empty-step clickable"
                 onClick={() => fileInputRef.current?.click()}
-                onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
-                onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
               >
                 <div className="empty-step-num">1</div>
                 <div><strong>Upload data lari (.zip / .gpx)</strong> untuk import riwayat lari dan rute lo secara langsung. <i>(Klik di sini)</i></div>
               </div>
               <div
-                className="empty-step"
-                style={{ cursor: 'pointer', transition: 'all 0.2s' }}
+                className="empty-step clickable"
                 onClick={() => fileInputRef.current?.click()}
-                onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
-                onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
               >
                 <div className="empty-step-num">2</div>
                 <div>
