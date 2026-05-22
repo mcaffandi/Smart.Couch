@@ -361,23 +361,23 @@ export default function App() {
   const latestSleepDate = sortedSleepDates[0] ?? null;
   const latestSleepScore = latestSleepDate ? sleepRecs[latestSleepDate].score : null;
 
-  // Calculate days since last run relative to the latestSleepDate
+  // Calculate days since last run relative to today's date
   const daysSinceLastRun = useMemo(() => {
-    if (!latestSleepDate || !runActs || runActs.length === 0) return null;
+    if (!runActs || runActs.length === 0) return null;
     const runDatesArray = runActs
       .map(a => a.startTimeLocal ? msToDate(a.startTimeLocal) : null)
       .filter(Boolean)
-      .filter(d => d <= latestSleepDate)
       .sort()
       .reverse();
     if (runDatesArray.length === 0) return null;
     const lastRunDate = runDatesArray[0];
-    const dSleep = new Date(latestSleepDate);
+    const todayStr = new Date().toISOString().split('T')[0];
+    const dToday = new Date(todayStr);
     const dRun = new Date(lastRunDate);
-    const diffTime = dSleep - dRun;
+    const diffTime = dToday - dRun;
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
     return Math.max(0, diffDays);
-  }, [latestSleepDate, runActs]);
+  }, [runActs]);
 
   // Adjust readiness score based on sleep score and running fatigue/rest
   const trainingReadiness = useMemo(() => {
