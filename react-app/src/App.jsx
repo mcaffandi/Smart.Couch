@@ -2619,36 +2619,6 @@ export default function App() {
             {/* ─────────────────── DASHBOARD ─────────────────── */}
             {tab === 'dashboard' && (
               <div className="animate-fade-in">
-                {latestSleepDate && (
-                  <div className="readiness-card animate-fade-in">
-                    <div className="readiness-dial-wrapper">
-                      <div className="readiness-dial" style={{ 
-                        borderColor: rBgColor,
-                        borderTopColor: rColor,
-                        borderRightColor: rColor,
-                      }}>
-                        <div className="readiness-dial-value">{trainingReadinessScore}%</div>
-                      </div>
-                      <div className="readiness-dial-label" style={{ color: rColor }}>
-                        {trainingReadinessScore >= 80 ? (lang === 'id' ? 'Prima' : 'Prime') : trainingReadinessScore >= 60 ? (lang === 'id' ? 'Cukup' : 'Fair') : (lang === 'id' ? 'Rendah' : 'Low')}
-                      </div>
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <h3 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: rColor }}>
-                          <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-                        </svg>
-                        {lang === 'id' ? 'Kesiapan Latihan Terkini' : 'Current Training Readiness'}
-                      </h3>
-                      <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.6', margin: 0 }}>
-                        {readinessDesc.sleepPart}
-                        {readinessDesc.restPart}
-                        {readinessDesc.actionPart}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
                 {/* Metrics */}
                 <div className="metrics-grid">
                   {[
@@ -2667,69 +2637,105 @@ export default function App() {
                   ))}
                 </div>
 
-                {actualMaxHR > 0 && (
-                  <div className="info-card purple" style={{ marginBottom: 20 }}>
-                    <div style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.7 }}>
-                      <strong style={{ color: 'var(--text-primary)' }}>{lang === 'id' ? 'Detak Jantung:' : 'Heart Rate:'}</strong>{' '}
-                      {lang === 'id' ? (
-                        <>
-                          Estimasi Max HR berdasarkan umur ({age} tahun) adalah <strong>{220 - age} bpm</strong>,
-                          tapi data mencatat hingga <strong style={{ color: '#fbbf24' }}>{actualMaxHR} bpm</strong>.
-                          Zona latihan lo dikalkulasi pakai data aktual yang lebih akurat.
-                        </>
-                      ) : (
-                        <>
-                          Estimated Max HR based on age ({age} years) is <strong>{220 - age} bpm</strong>,
-                          but your data recorded up to <strong style={{ color: '#fbbf24' }}>{actualMaxHR} bpm</strong>.
-                          Your training zones are calculated using your more accurate actual data.
-                        </>
-                      )}
-                    </div>
+                <div className="dashboard-layout" style={{ marginTop: 20 }}>
+                  {/* Left Column: Primary training metrics and coaches */}
+                  <div className="dashboard-main-col">
+                    {latestSleepDate && (
+                      <div className="readiness-card animate-fade-in">
+                        <div className="readiness-dial-wrapper">
+                          <div className="readiness-dial" style={{ 
+                            borderColor: rBgColor,
+                            borderTopColor: rColor,
+                            borderRightColor: rColor,
+                          }}>
+                            <div className="readiness-dial-value">{trainingReadinessScore}%</div>
+                          </div>
+                          <div className="readiness-dial-label" style={{ color: rColor }}>
+                            {trainingReadinessScore >= 80 ? (lang === 'id' ? 'Prima' : 'Prime') : trainingReadinessScore >= 60 ? (lang === 'id' ? 'Cukup' : 'Fair') : (lang === 'id' ? 'Rendah' : 'Low')}
+                          </div>
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <h3 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: rColor }}>
+                              <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                            </svg>
+                            {lang === 'id' ? 'Kesiapan Latihan Terkini' : 'Current Training Readiness'}
+                          </h3>
+                          <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.6', margin: 0 }}>
+                            {readinessDesc.sleepPart}
+                            {readinessDesc.restPart}
+                            {readinessDesc.actionPart}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    <TrendChart activities={runActs} lang={lang} />
+                    <AICoach activities={data.running_activities} profile={{ age, goal, targetPace }} lang={lang} />
                   </div>
-                )}
 
-                {/* Charts */}
-                <TrendChart activities={runActs} lang={lang} />
+                  {/* Right Column: Secondary charts and summaries */}
+                  <div className="dashboard-side-col">
+                    {actualMaxHR > 0 && (
+                      <HRZoneChart zones={hrZones} avgHr={avgHR ? Math.round(avgHR) : 0} lang={lang} />
+                    )}
 
-                {actualMaxHR > 0 && (
-                  <HRZoneChart zones={hrZones} avgHr={avgHR ? Math.round(avgHR) : 0} lang={lang} />
-                )}
-
-                <AICoach activities={data.running_activities} profile={{ age, goal, targetPace }} lang={lang} />
-
-                {/* Sleep correlation summary */}
-                {avgRunSleep && avgNonRunSleep && (
-                  <div>
-                    <div className="section-header">
-                      <h2 className="section-title">{lang === 'id' ? 'Korelasi Tidur & Lari' : 'Sleep & Run Correlation'}</h2>
-                    </div>
-                    <div className="sleep-grid">
-                      <div className="sleep-card">
-                        <div className="sleep-card-label" style={{ color: '#818cf8' }}>{lang === 'id' ? 'Tidur Setelah Lari' : 'Sleep After Run'}</div>
-                        <div className="sleep-card-value">{avgRunSleep}<span className="metric-unit">/100</span></div>
+                    {actualMaxHR > 0 && (
+                      <div className="info-card purple">
+                        <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                          <strong style={{ color: 'var(--text-primary)' }}>{lang === 'id' ? 'Detak Jantung:' : 'Heart Rate:'}</strong>{' '}
+                          {lang === 'id' ? (
+                            <>
+                              Estimasi Max HR berdasarkan umur ({age} tahun) adalah <strong>{220 - age} bpm</strong>,
+                              tapi data mencatat hingga <strong style={{ color: '#fbbf24' }}>{actualMaxHR} bpm</strong>.
+                              Zona latihan lo dikalkulasi pakai data aktual yang lebih akurat.
+                            </>
+                          ) : (
+                            <>
+                              Estimated Max HR based on age ({age} years) is <strong>{220 - age} bpm</strong>,
+                              but your data recorded up to <strong style={{ color: '#fbbf24' }}>{actualMaxHR} bpm</strong>.
+                              Your training zones are calculated using your more accurate actual data.
+                            </>
+                          )}
+                        </div>
                       </div>
-                      <div className="sleep-card">
-                        <div className="sleep-card-label" style={{ color: '#94a3b8' }}>{lang === 'id' ? 'Tidur Tanpa Lari' : 'Sleep Without Run'}</div>
-                        <div className="sleep-card-value">{avgNonRunSleep}<span className="metric-unit">/100</span></div>
-                      </div>
-                    </div>
-                    {parseFloat(avgRunSleep) > parseFloat(avgNonRunSleep) ? (
-                      <div className="alert alert-success">
-                        {lang === 'id' 
-                          ? <>Lari meningkatkan kualitas tidur lo sebesar <strong>{(parseFloat(avgRunSleep) - parseFloat(avgNonRunSleep)).toFixed(1)} poin</strong>.</>
-                          : <>Running improves your sleep quality by <strong>{(parseFloat(avgRunSleep) - parseFloat(avgNonRunSleep)).toFixed(1)} points</strong>.</>
-                        }
-                      </div>
-                    ) : (
-                      <div className="alert alert-info">
-                        {lang === 'id'
-                          ? <>Tidur lo cenderung lebih baik di hari tidak lari (selisih {(parseFloat(avgNonRunSleep) - parseFloat(avgRunSleep)).toFixed(1)} poin). Coba evaluasi recovery-mu.</>
-                          : <>Your sleep tends to be better on rest days (difference of {(parseFloat(avgNonRunSleep) - parseFloat(avgRunSleep)).toFixed(1)} points). Assess your recovery routines.</>
-                        }
+                    )}
+
+                    {/* Sleep correlation summary */}
+                    {avgRunSleep && avgNonRunSleep && (
+                      <div className="chart-container" style={{ padding: '20px' }}>
+                        <div className="chart-title" style={{ marginBottom: 14 }}>
+                          {lang === 'id' ? 'Korelasi Tidur & Lari' : 'Sleep & Run Correlation'}
+                        </div>
+                        <div className="sleep-grid">
+                          <div className="sleep-card">
+                            <div className="sleep-card-label" style={{ color: '#818cf8' }}>{lang === 'id' ? 'Tidur Setelah Lari' : 'Sleep After Run'}</div>
+                            <div className="sleep-card-value">{avgRunSleep}<span className="metric-unit">/100</span></div>
+                          </div>
+                          <div className="sleep-card">
+                            <div className="sleep-card-label" style={{ color: '#94a3b8' }}>{lang === 'id' ? 'Tidur Tanpa Lari' : 'Sleep Without Run'}</div>
+                            <div className="sleep-card-value">{avgNonRunSleep}<span className="metric-unit">/100</span></div>
+                          </div>
+                        </div>
+                        {parseFloat(avgRunSleep) > parseFloat(avgNonRunSleep) ? (
+                          <div className="alert alert-success" style={{ marginTop: 10, marginBottom: 0 }}>
+                            {lang === 'id' 
+                              ? <>Lari meningkatkan kualitas tidur lo sebesar <strong>{(parseFloat(avgRunSleep) - parseFloat(avgNonRunSleep)).toFixed(1)} poin</strong>.</>
+                              : <>Running improves your sleep quality by <strong>{(parseFloat(avgRunSleep) - parseFloat(avgNonRunSleep)).toFixed(1)} points</strong>.</>
+                            }
+                          </div>
+                        ) : (
+                          <div className="alert alert-info" style={{ marginTop: 10, marginBottom: 0 }}>
+                            {lang === 'id'
+                              ? <>Tidur lo cenderung lebih baik di hari tidak lari (selisih {(parseFloat(avgNonRunSleep) - parseFloat(avgRunSleep)).toFixed(1)} poin). Coba evaluasi recovery-mu.</>
+                              : <>Your sleep tends to be better on rest days (difference of {(parseFloat(avgNonRunSleep) - parseFloat(avgRunSleep)).toFixed(1)} points). Assess your recovery routines.</>
+                            }
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
-                )}
+                </div>
               </div>
             )}
 
