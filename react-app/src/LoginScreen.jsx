@@ -5,7 +5,6 @@ import {
   auth,
   googleProvider,
   signInWithPopup,
-  signInWithRedirect,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signInAnonymously
@@ -154,11 +153,16 @@ export default function LoginScreen({ onLoginSuccess, usersList, addToast, lang 
     if (loading) return;
     setLoading(true);
     try {
-      // Use redirect instead of popup to prevent popup blockers on mobile browsers
-      await signInWithRedirect(auth, googleProvider);
+      const result = await signInWithPopup(auth, googleProvider);
+      addToast(lang === 'id' ? `Selamat datang, ${result.user.displayName || 'User'}!` : `Welcome, ${result.user.displayName || 'User'}!`);
+      const userIdentifier = result.user.email || result.user.displayName;
+      onLoginSuccess(userIdentifier);
     } catch (error) {
       console.error(error);
-      addToast(lang === 'id' ? 'Gagal masuk menggunakan akun Google.' : 'Failed to sign in with Google.', 'error');
+      if (error.code !== 'auth/popup-closed-by-user') {
+        addToast(lang === 'id' ? 'Gagal masuk menggunakan akun Google.' : 'Failed to sign in with Google.', 'error');
+      }
+    } finally {
       setLoading(false);
     }
   };
