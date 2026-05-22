@@ -150,10 +150,8 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
 
   const generateAIPlan = async () => {
     const apiKey = localStorage.getItem('groq_api_key');
-    if (!apiKey) {
-      setAiError(lang === 'id' ? 'API Key Groq belum disetting di Dashboard.' : 'Groq API Key has not been set in the Dashboard.');
-      return;
-    }
+    const useProxy = !apiKey;
+
     setAiLoading(true);
     setAiError('');
 
@@ -200,27 +198,45 @@ Adjust intensity! If heart rate was high or sleep was insufficient, add rest/rec
 Output must be a STRICTLY JSON array of objects with keys exactly: "hari" (Monday-Sunday, e.g., "Monday", "Tuesday", etc.), "jenis" (e.g. "Easy Run", "Interval", "Total Rest"), "durasi" (e.g. "30 minutes", "5x400m", "–"), "tujuan" (logical reasoning). Ensure the order goes Monday to Sunday (7 items).
 Return ONLY the raw JSON array.`;
 
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000);
+      let content = '';
 
-      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        signal: controller.signal,
-        headers: {
-          'Authorization': `Bearer ${apiKey.trim()}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          model: "llama-3.1-8b-instant",
-          messages: [{ role: "user", content: prompt }],
-          temperature: 0.5,
-        })
-      });
-      clearTimeout(timeoutId);
-      const data = await res.json();
-      if (data.error) throw new Error(data.error.message);
+      if (useProxy) {
+        // Fallback to Vercel proxy
+        const res = await fetch('/api/coach', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ prompt })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || (lang === 'id' ? "Error server proxy. Silakan masukkan API Key Groq di Dashboard." : "Server proxy error. Please enter Groq API Key in Dashboard."));
+        }
+        content = data.choices[0].message.content;
+      } else {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000);
 
-      let content = data.choices[0].message.content;
+        const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          signal: controller.signal,
+          headers: {
+            'Authorization': `Bearer ${apiKey.trim()}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            model: "llama-3.1-8b-instant",
+            messages: [{ role: "user", content: prompt }],
+            temperature: 0.5,
+          })
+        });
+        clearTimeout(timeoutId);
+        const data = await res.json();
+        if (data.error) throw new Error(data.error.message);
+        content = data.choices[0].message.content;
+      }
+
       // strip markdown formatting if the model wraps it in ```json ... ```
       content = content.replace(/```json/gi, '').replace(/```/g, '').trim();
 
