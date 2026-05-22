@@ -1023,6 +1023,39 @@ export default function App() {
       ];
       XLSX.utils.book_append_sheet(wb, wsSleep, "Kualitas Tidur");
 
+      // Sheet 3: Panduan Pengisian
+      const guideData = [
+        ["PANDUAN PENGISIAN TEMPLATE EXCEL ENDURAUP"],
+        [""],
+        ["1. SHEET RIWAYAT LARI:"],
+        ["   - Tanggal: Format harus YYYY-MM-DD (Contoh: 2026-05-20)."],
+        ["   - Jarak: Tulis dalam satuan kilometer (km), desimal pakai titik (Contoh: 5.2)."],
+        ["   - Durasi: Tulis dalam satuan menit (Contoh: 45)."],
+        ["   - Avg HR & Max HR: Tulis detak jantung rerata & maks dalam bpm (opsional)."],
+        [""],
+        ["2. SHEET KUALITAS TIDUR:"],
+        ["   - Tanggal: Format harus YYYY-MM-DD (Contoh: 2026-05-20)."],
+        ["   - Durasi Tidur: Tulis durasi tidur dalam jam (Contoh: 7.5 atau 6)."],
+        ["   - Skor/Kualitas Tidur: Bisa diisi dengan 3 cara:"],
+        ["       a) Menggunakan Angka: Isi skor 0-100 langsung (jika dari smartwatch)."],
+        ["       b) Menggunakan Kata Kunci Kualitas:"],
+        ["          * 'pulas' / 'sangat baik' / 'nyenyak'  --> Diubah otomatis menjadi skor 90"],
+        ["          * 'cukup' / 'baik' / 'normal'           --> Diubah otomatis menjadi skor 75"],
+        ["          * 'kurang' / 'buruk' / 'lelah'          --> Diubah otomatis menjadi skor 55"],
+        ["          * 'begadang' / 'sangat kurang' / 'parah'--> Diubah otomatis menjadi skor 30"],
+        ["       c) Biarkan Kosong (Auto-hitung dari durasi tidur):"],
+        ["          * Durasi 7 s.d 9 jam                    --> Otomatis diberi skor 85"],
+        ["          * Durasi 6 s.d 7 jam                    --> Otomatis diberi skor 70"],
+        ["          * Durasi 5 s.d 6 jam                    --> Otomatis diberi skor 55"],
+        ["          * Durasi di bawah 5 jam                 --> Otomatis diberi skor 35"],
+        ["          * Durasi di atas 9 jam (oversleep)      --> Otomatis diberi skor 75"],
+        [""],
+        ["*Catatan: Sistem tidak akan membaca baris panduan ini, Anda bebas mengunggah file Excel dengan sheet panduan ini tetap ada."]
+      ];
+      const wsGuide = XLSX.utils.aoa_to_sheet(guideData);
+      wsGuide['!cols'] = [{ wch: 100 }];
+      XLSX.utils.book_append_sheet(wb, wsGuide, "Panduan Pengisian");
+
       XLSX.writeFile(wb, "Template_Data_EnduraUP.xlsx");
       addToast("Template Excel terunduh!");
     } catch (e) {
