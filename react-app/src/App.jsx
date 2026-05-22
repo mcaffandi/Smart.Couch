@@ -80,10 +80,20 @@ export default function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => localStorage.getItem('smartcoach_sidebar_collapsed') === 'true');
   const fileInputRef = useRef(null);
   const [lang, setLang] = useState(() => localStorage.getItem('smartcoach_lang') || 'id');
+  const [theme, setTheme] = useState(() => localStorage.getItem('smartcoach_theme') || 'system');
 
   useEffect(() => {
     localStorage.setItem('smartcoach_lang', lang);
   }, [lang]);
+
+  useEffect(() => {
+    localStorage.setItem('smartcoach_theme', theme);
+    if (theme === 'system') {
+      document.documentElement.removeAttribute('data-theme');
+    } else {
+      document.documentElement.setAttribute('data-theme', theme);
+    }
+  }, [theme]);
 
   const t = translations[lang] || translations.id;
 
@@ -1768,10 +1778,6 @@ export default function App() {
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div className="lang-switcher">
-            <button className={`lang-btn ${lang === 'id' ? 'active' : ''}`} onClick={() => setLang('id')}>ID</button>
-            <button className={`lang-btn ${lang === 'en' ? 'active' : ''}`} onClick={() => setLang('en')}>EN</button>
-          </div>
           <button className="mobile-toggle-btn" onClick={() => setSidebarOpen(true)}>
             {lang === 'id' ? 'Profil & Data' : 'Profile & Data'}
           </button>
@@ -1822,10 +1828,6 @@ export default function App() {
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <div className="lang-switcher" style={{ marginRight: 2 }}>
-              <button className={`lang-btn ${lang === 'id' ? 'active' : ''}`} onClick={() => setLang('id')}>ID</button>
-              <button className={`lang-btn ${lang === 'en' ? 'active' : ''}`} onClick={() => setLang('en')}>EN</button>
-            </div>
             {/* Collapse sidebar button (desktop only) */}
              <button
               className="sidebar-toggle-btn-desktop"
@@ -2221,6 +2223,17 @@ export default function App() {
         >
           {t.logout}
         </button>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 12, marginTop: 24 }}>
+          <div className="lang-switcher">
+            <button className={`lang-btn ${lang === 'id' ? 'active' : ''}`} onClick={() => setLang('id')} title="Bahasa Indonesia">ID</button>
+            <button className={`lang-btn ${lang === 'en' ? 'active' : ''}`} onClick={() => setLang('en')} title="English">EN</button>
+          </div>
+          <div className="lang-switcher">
+            <button className={`lang-btn ${theme === 'light' ? 'active' : ''}`} onClick={() => setTheme('light')} title="Light Mode">☀️</button>
+            <button className={`lang-btn ${theme === 'dark' ? 'active' : ''}`} onClick={() => setTheme('dark')} title="Dark Mode">🌙</button>
+            <button className={`lang-btn ${theme === 'system' ? 'active' : ''}`} onClick={() => setTheme('system')} title="System Default">💻</button>
+          </div>
+        </div>
         <div style={{ fontSize: 10, color: 'var(--text-muted)', textAlign: 'center', marginTop: 12, opacity: 0.7 }}>
           v2.0.0
         </div>

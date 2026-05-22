@@ -51,7 +51,7 @@ export default function RunHistory({ activities, lang = 'id' }) {
     return (
       <div className="route-map-container" style={{
         width: '100%', height: '120px', background: 'rgba(30, 41, 59, 0.4)',
-        borderRadius: 8, marginTop: 12, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)'
+        borderRadius: 8, marginTop: 12, overflow: 'hidden', border: '1px solid var(--border)'
       }}>
         <svg width="100%" height="100%" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet">
           <polyline points={pts} fill="none" stroke="#818cf8" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />

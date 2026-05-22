@@ -311,7 +311,7 @@ export default function LoginScreen({ onLoginSuccess, usersList, addToast, lang 
             fontSize: '11px',
             color: 'var(--text-muted)',
             marginTop: '16px',
-            background: 'rgba(255, 255, 255, 0.02)',
+            background: 'var(--bg-card)',
             padding: '8px 12px',
             borderRadius: '8px',
             border: '1px solid var(--border)'
@@ -328,7 +328,7 @@ export default function LoginScreen({ onLoginSuccess, usersList, addToast, lang 
           </div>
 
           {!isFirebaseConfigured && (
-            <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 14, background: 'rgba(255,255,255,0.03)', padding: '6px 10px', borderRadius: 4, border: '1px solid var(--border)' }}>
+            <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 14, background: 'var(--hover-overlay)', padding: '6px 10px', borderRadius: 4, border: '1px solid var(--border)' }}>
               {lang === 'id' 
                 ? '⚠️ Firebase Auth belum dikonfigurasi. Berjalan dalam mode database lokal.' 
                 : '⚠️ Firebase Auth is not configured. Running in local database mode.'}

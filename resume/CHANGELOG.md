@@ -75,8 +75,29 @@ Dokumen ini berisi rangkuman fitur dan perubahan yang telah diimplementasikan pa
 - **Status**: Selesai
 - **Waktu Selesai**: 2026-05-21 20:32:17 WIB
 
+### 📅 22 Mei 2026
 
+#### **Step 10: Dukungan Bilingual Penuh (ID/EN)**
+- **Deskripsi**: Menambahkan fitur multi-bahasa (Bahasa Indonesia dan English) secara menyeluruh pada aplikasi, termasuk Landing Page, form otentikasi, dashboard analitik, rencana latihan, dan modal ekspor kartu pencapaian. Pilihan bahasa tersimpan otomatis di `localStorage`.
+- **Status**: Selesai
+- **Waktu Selesai**: 2026-05-22 18:51:00 WIB
 
+#### **Step 11: Algoritma Kesiapan Latihan Berbasis Sports-Science**
+- **Deskripsi**: Meningkatkan algoritma kesiapan latihan yang sebelumnya statis menjadi model dinamis yang mengevaluasi periode istirahat sejak lari terakhir. Mengkalkulasi penalti kelelahan dan bonus pemulihan bertahap untuk akurasi data yang lebih presisi.
+- **Status**: Selesai
+- **Waktu Selesai**: 2026-05-22 18:51:00 WIB
 
+#### **Step 12: Peningkatan Interaksi Input Profil Sidebar**
+- **Deskripsi**: Mengganti kolom input teks konvensional untuk variabel umur dan target pace dengan komponen Range Slider yang interaktif dan presisi, lengkap dengan lencana status dinamis.
+- **Status**: Selesai
+- **Waktu Selesai**: 2026-05-22 18:51:00 WIB
 
+#### **Step 13: Redesain Visual Sidebar & Ikon Toggle**
+- **Deskripsi**: Meningkatkan estetika visual pada komponen sidebar, mendesain ulang kartu akun aktif dengan gradasi latar belakang dan *hover glow* ungu. Mengganti ikon toggle panel dengan ikon yang lebih intuitif (*double chevron* & *hamburger menu*).
+- **Status**: Selesai
+- **Waktu Selesai**: 2026-05-22 18:51:00 WIB
 
+#### **Step 14: Template Data Excel Dinamis & Bug Fixes**
+- **Deskripsi**: Melokalisasi penamaan berkas `.xlsx` dan sheet ekspor Excel. Selain itu, menyelesaikan sejumlah perbaikan (*bug fixes*) termasuk tag HTML yang tidak tertutup, penyelaras pewarnaan dial kesiapan latihan, serta *drop shadow* pada teks kanvas hasil ekspor.
+- **Status**: Selesai
+- **Waktu Selesai**: 2026-05-22 18:51:00 WIB

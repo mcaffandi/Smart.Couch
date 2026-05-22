@@ -336,7 +336,7 @@ export default function RacePrediction({ activities, targetPace, lang = 'id' }) 
         {/* Result */}
         {!goalValid ? (
           <div style={{
-            padding: '16px', borderRadius: 12, background: 'rgba(255,255,255,0.02)',
+            padding: '16px', borderRadius: 12, background: 'var(--hover-overlay)',
             border: '1px dashed var(--border)', textAlign: 'center',
             fontSize: 13, color: 'var(--text-muted)'
           }}>
@@ -376,25 +376,25 @@ export default function RacePrediction({ activities, targetPace, lang = 'id' }) 
               </div>
               <div className="prediction-grid-container" style={{ flex: 1, minWidth: 160 }}>
                 <div className="prediction-details-grid">
-                  <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 10, padding: '10px 12px' }}>
+                  <div style={{ background: 'var(--hover-overlay)', borderRadius: 10, padding: '10px 12px' }}>
                     <div style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>
                       {lang === 'id' ? 'Prediksi Saat Ini' : 'Current Prediction'}
                     </div>
                     <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)', marginTop: 2 }}>{secsToTime(currentPred.predSec)}</div>
                   </div>
-                  <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 10, padding: '10px 12px' }}>
+                  <div style={{ background: 'var(--hover-overlay)', borderRadius: 10, padding: '10px 12px' }}>
                     <div style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>
                       {lang === 'id' ? 'Target Lo' : 'Your Goal'}
                     </div>
                     <div style={{ fontSize: 16, fontWeight: 800, color: '#818cf8', marginTop: 2 }}>{secsToTime(goalSecs)}</div>
                   </div>
-                  <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 10, padding: '10px 12px' }}>
+                  <div style={{ background: 'var(--hover-overlay)', borderRadius: 10, padding: '10px 12px' }}>
                     <div style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>
                       {lang === 'id' ? 'Pace Target' : 'Target Pace'}
                     </div>
                     <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)', marginTop: 2 }}>{formatPace(goalPaceMinKm)} /km</div>
                   </div>
-                  <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 10, padding: '10px 12px' }}>
+                  <div style={{ background: 'var(--hover-overlay)', borderRadius: 10, padding: '10px 12px' }}>
                     <div style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>
                       {lang === 'id' ? 'Perlu Improve' : 'Improvement Needed'}
                     </div>
@@ -412,7 +412,7 @@ export default function RacePrediction({ activities, targetPace, lang = 'id' }) 
                 <span>{lang === 'id' ? `Pace sekarang: ${formatPace(refRun.paceMinKm)}` : `Current pace: ${formatPace(refRun.paceMinKm)}`}</span>
                 <span>{lang === 'id' ? `Target: ${formatPace(goalPaceMinKm)}` : `Goal: ${formatPace(goalPaceMinKm)}`}</span>
               </div>
-              <div style={{ height: 6, background: 'rgba(255,255,255,0.06)', borderRadius: 99, overflow: 'hidden' }}>
+              <div style={{ height: 6, background: 'var(--hover-overlay)', borderRadius: 99, overflow: 'hidden' }}>
                 <div style={{
                   height: '100%',
                   width: `${Math.min(100, Math.max(5, (goalPaceMinKm / refRun.paceMinKm) * 100))}%`,
@@ -467,7 +467,7 @@ export default function RacePrediction({ activities, targetPace, lang = 'id' }) 
       )}
 
       {/* Method note */}
-      <div style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.6, padding: '10px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: 10, border: '1px solid var(--border)' }}>
+      <div style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.6, padding: '10px 14px', background: 'var(--hover-overlay)', borderRadius: 10, border: '1px solid var(--border)' }}>
         {lang === 'id' ? (
           <>
             <strong style={{ color: 'var(--text-secondary)' }}>Metode:</strong> Prediksi menggunakan{' '}
