@@ -1010,15 +1010,16 @@ export default function App() {
 
       // Sheet 2: Kualitas Tidur
       const sleepHeaders = [
-        ["Tanggal (YYYY-MM-DD)", "Skor Tidur (1-100)", "Durasi Tidur (jam)"],
-        ["2026-05-20", 85, 7.5],
-        ["2026-05-19", 68, 6.0]
+        ["Tanggal (YYYY-MM-DD)", "Skor/Kualitas (0-100 atau kata: pulas/cukup/kurang/begadang)", "Durasi Tidur (jam)"],
+        ["2026-05-20", "pulas", 7.5],
+        ["2026-05-19", "", 6.0], // Kosong = otomatis dihitung dari durasi
+        ["2026-05-18", 85, 8.0]
       ];
       const wsSleep = XLSX.utils.aoa_to_sheet(sleepHeaders);
       wsSleep['!cols'] = [
         { wch: 22 }, // Tanggal
-        { wch: 18 }, // Skor
-        { wch: 18 }  // Durasi
+        { wch: 55 }, // Skor / Kualitas
+        { wch: 22 }  // Durasi
       ];
       XLSX.utils.book_append_sheet(wb, wsSleep, "Kualitas Tidur");
 
@@ -1106,19 +1107,60 @@ export default function App() {
               const keys = Object.keys(row);
               const dateKey = keys.find(k => k.toLowerCase().includes('tanggal') || k.toLowerCase().includes('date'));
               const scoreKey = keys.find(k => k.toLowerCase().includes('skor') || k.toLowerCase().includes('score') || k.toLowerCase().includes('kualitas'));
-              const durKey = keys.find(k => k.toLowerCase().includes('durasi') || k.toLowerCase().includes('duration') || k.toLowerCase().includes('tidur'));
+              const durKey = keys.find(k => k.toLowerCase().includes('durasi') || k.toLowerCase().includes('duration') || k.toLowerCase().includes('tidur') || k.toLowerCase().includes('waktu'));
 
               const dateVal = dateKey ? row[dateKey] : null;
-              const scoreVal = scoreKey ? parseInt(row[scoreKey]) : null;
+              const scoreValRaw = scoreKey ? row[scoreKey] : null;
               const durVal = durKey ? parseFloat(row[durKey]) : null;
 
               const parsedDate = parseExcelDateVal(dateVal);
-              if (parsedDate && scoreVal !== null && !isNaN(scoreVal)) {
-                const dateStr = parsedDate.toISOString().split('T')[0];
-                newSleep[dateStr] = {
-                  score: Math.min(100, Math.max(0, scoreVal)),
-                  duration: durVal && !isNaN(durVal) ? durVal : 7.0
-                };
+              if (parsedDate) {
+                let scoreVal = null;
+                const durValParsed = (durVal && !isNaN(durVal)) ? durVal : null;
+
+                // 1. Try parsing scoreValRaw as number or text
+                if (scoreValRaw !== null && scoreValRaw !== undefined) {
+                  const rawStr = String(scoreValRaw).trim().toLowerCase();
+                  const parsedInt = parseInt(rawStr);
+                  if (!isNaN(parsedInt)) {
+                    scoreVal = Math.min(100, Math.max(0, parsedInt));
+                  } else {
+                    // Match qualitative words
+                    if (rawStr.includes('pulas') || rawStr.includes('sangat baik') || rawStr.includes('nyenyak') || rawStr.includes('puncak') || rawStr.includes('puas')) {
+                      scoreVal = 90;
+                    } else if (rawStr.includes('cukup') || rawStr.includes('baik') || rawStr.includes('normal')) {
+                      scoreVal = 75;
+                    } else if (rawStr.includes('kurang') || rawStr.includes('buruk') || rawStr.includes('poor') || rawStr.includes('lelah')) {
+                      scoreVal = 55;
+                    } else if (rawStr.includes('begadang') || rawStr.includes('sangat kurang') || rawStr.includes('parah') || rawStr.includes('insomnia')) {
+                      scoreVal = 30;
+                    }
+                  }
+                }
+
+                // 2. Fallback: Auto-calculate score from duration if empty
+                if (scoreVal === null && durValParsed !== null) {
+                  if (durValParsed >= 7 && durValParsed <= 9) {
+                    scoreVal = 85;
+                  } else if (durValParsed >= 6 && durValParsed < 7) {
+                    scoreVal = 70;
+                  } else if (durValParsed >= 5 && durValParsed < 6) {
+                    scoreVal = 55;
+                  } else if (durValParsed < 5) {
+                    scoreVal = 35;
+                  } else { // durValParsed > 9
+                    scoreVal = 75;
+                  }
+                }
+
+                // Write to newSleep if we have a valid score
+                if (scoreVal !== null) {
+                  const dateStr = parsedDate.toISOString().split('T')[0];
+                  newSleep[dateStr] = {
+                    score: scoreVal,
+                    duration: durValParsed !== null ? durValParsed : 7.0
+                  };
+                }
               }
             });
           }
