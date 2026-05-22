@@ -1588,7 +1588,7 @@ html, body {
 }
 
 /* Custom range slider styling */
-.age-slider {
+.app-slider {
   -webkit-appearance: none;
   appearance: none;
   background: var(--border);
@@ -1598,7 +1598,7 @@ html, body {
   transition: opacity 0.2s;
 }
 
-.age-slider::-webkit-slider-thumb {
+.app-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
   width: 18px;
@@ -1611,12 +1611,12 @@ html, body {
   transition: transform 0.1s ease, background-color 0.1s;
 }
 
-.age-slider::-webkit-slider-thumb:hover {
+.app-slider::-webkit-slider-thumb:hover {
   transform: scale(1.15);
   background: var(--accent-purple);
 }
 
-.age-slider::-moz-range-thumb {
+.app-slider::-moz-range-thumb {
   width: 12px;
   height: 12px;
   border-radius: 50%;
@@ -1627,7 +1627,7 @@ html, body {
   transition: transform 0.1s ease, background-color 0.1s;
 }
 
-.age-slider::-moz-range-thumb:hover {
+.app-slider::-moz-range-thumb:hover {
   transform: scale(1.15);
   background: var(--accent-purple);
 }

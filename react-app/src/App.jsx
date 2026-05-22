@@ -66,45 +66,6 @@ function NumberInput({ value, onChange, min, max, step = 1, label }) {
     </div>
   );
 }
-function PaceInput({ value, onChange, label }) {
-  const isNull = value === null || value === undefined;
-  const m = isNull ? '' : Math.floor(value);
-  const s = isNull ? '' : Math.round((value - Math.floor(value)) * 60);
-
-  const setM = (newM) => onChange(newM + (isNull ? 0 : (typeof s === 'number' ? s : 0)) / 60);
-  const setS = (newS) => onChange((isNull ? 5 : (typeof m === 'number' ? m : 5)) + newS / 60);
-
-  return (
-    <div className="form-group" style={{ opacity: isNull ? 0.75 : 1 }}>
-      {label && <label className="form-label">{label}</label>}
-      <div style={{ display: 'flex', gap: 6 }}>
-        <div className="number-input-group" style={{ flex: 1, border: isNull ? '1px dashed var(--border)' : '1px solid var(--border)' }}>
-          <button type="button" onClick={() => setM(Math.max(3, (isNull ? 5 : m) - 1))}>−</button>
-          <input
-            type="number"
-            value={m}
-            placeholder="—"
-            onChange={e => setM(Math.max(3, parseInt(e.target.value) || 0))}
-            style={{ textAlign: 'center', color: isNull ? 'var(--text-muted)' : 'var(--text-primary)' }}
-          />
-          <button type="button" onClick={() => setM(Math.min(15, (isNull ? 5 : m) + 1))}>+</button>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', fontWeight: 900, color: 'var(--text-muted)' }}>:</div>
-        <div className="number-input-group" style={{ flex: 1, border: isNull ? '1px dashed var(--border)' : '1px solid var(--border)' }}>
-          <button type="button" onClick={() => setS((isNull ? 0 : s) - 5 < 0 ? 55 : (isNull ? 0 : s) - 5)}>−</button>
-          <input
-            type="number"
-            value={s}
-            placeholder="—"
-            onChange={e => setS(Math.min(59, Math.max(0, parseInt(e.target.value) || 0)))}
-            style={{ textAlign: 'center', color: isNull ? 'var(--text-muted)' : 'var(--text-primary)' }}
-          />
-          <button type="button" onClick={() => setS((isNull ? 0 : s) + 5 >= 60 ? 0 : (isNull ? 0 : s) + 5)}>+</button>
-        </div>
-      </div>
-    </div>
-  );
-}
 // ─── Main App ─────────────────────────────────────────────────────────────────
 export default function App() {
   // ── State: data ─────────────────────────────────────────────────────────────
@@ -1848,7 +1809,7 @@ export default function App() {
               <button className={`lang-btn ${lang === 'en' ? 'active' : ''}`} onClick={() => setLang('en')}>EN</button>
             </div>
             {/* Collapse sidebar button (desktop only) */}
-            <button
+             <button
               className="sidebar-toggle-btn-desktop"
               style={{ width: 28, height: 28 }}
               onClick={() => {
@@ -1858,12 +1819,11 @@ export default function App() {
               title={lang === 'id' ? 'Sembunyikan Panel' : 'Collapse Panel'}
               aria-label="Collapse Sidebar"
             >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect width="18" height="18" x="3" y="3" rx="2" />
-              <path d="M9 3v16" />
-              <path d="m16 15-3-3 3-3" />
-            </svg>
-          </button>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="m11 17-5-5 5-5" />
+                <path d="m18 17-5-5 5-5" />
+              </svg>
+            </button>
           <button className="mobile-close-btn" onClick={() => setSidebarOpen(false)}>×</button>
         </div>
       </div>
@@ -1877,31 +1837,57 @@ export default function App() {
             type="button"
             onClick={() => { setEditDraft({}); setProfileEditMode(false); setShowProfileModal(true); }}
             style={{
-              width: '100%', background: 'var(--bg-card)', border: '1px solid var(--border)',
-              borderRadius: 10, padding: '10px 12px', cursor: 'pointer',
-              display: 'flex', alignItems: 'center', gap: 10,
-              transition: 'border-color 0.15s, background 0.15s', textAlign: 'left',
+              width: '100%',
+              background: 'linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)',
+              border: '1px solid var(--border)',
+              borderRadius: 12,
+              padding: '12px 14px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 12,
+              transition: 'all 0.2s ease',
+              textAlign: 'left',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
             }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(129,140,248,0.5)'; e.currentTarget.style.background = 'var(--bg-card-hover)'; }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'var(--bg-card)'; }}
+            onMouseEnter={e => { 
+              e.currentTarget.style.borderColor = 'rgba(167, 139, 250, 0.4)'; 
+              e.currentTarget.style.background = 'linear-gradient(135deg, rgba(167, 139, 250, 0.06) 0%, rgba(129, 140, 248, 0.02) 100%)';
+              e.currentTarget.style.transform = 'translateY(-1px)';
+              e.currentTarget.style.boxShadow = '0 6px 16px rgba(167, 139, 250, 0.08)';
+            }}
+            onMouseLeave={e => { 
+              e.currentTarget.style.borderColor = 'var(--border)'; 
+              e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)';
+              e.currentTarget.style.transform = 'none';
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
+            }}
           >
             {avatar ? (
-              <img src={avatar} alt="Profile" style={{ width: 34, height: 34, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }} />
+              <img src={avatar} alt="Profile" style={{ width: 36, height: 36, borderRadius: 10, objectFit: 'cover', flexShrink: 0, border: '2px solid rgba(167, 139, 250, 0.3)' }} />
             ) : (
               <div style={{
-                width: 34, height: 34, borderRadius: 8, flexShrink: 0,
+                width: 36, height: 36, borderRadius: 10, flexShrink: 0,
                 background: 'linear-gradient(135deg, #818cf8, #a78bfa)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 12, fontWeight: 800, color: '#fff',
+                fontSize: 13, fontWeight: 800, color: '#fff',
+                boxShadow: '0 2px 8px rgba(129, 140, 248, 0.4)'
               }}>
                 {(displayName || currentUser).substring(0, 2).toUpperCase()}
               </div>
             )}
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: displayName ? 'var(--text-primary)' : 'var(--text-muted)', fontStyle: displayName ? 'normal' : 'italic', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <div style={{ fontSize: 13, fontWeight: 650, color: displayName ? 'var(--text-primary)' : 'var(--text-muted)', fontStyle: displayName ? 'normal' : 'italic', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {displayName || t.fillProfileName}
               </div>
-              <div style={{ fontSize: 10, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{currentUser}</div>
+              <div style={{ fontSize: 10, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 1 }}>{currentUser}</div>
+            </div>
+            {/* Edit indicator */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 22, height: 22, borderRadius: '50%', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border)', flexShrink: 0 }}>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 20h9"/>
+                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+              </svg>
             </div>
           </button>
         </div>
@@ -1940,7 +1926,7 @@ export default function App() {
                     width: '100%',
                     cursor: 'pointer'
                   }}
-                  className="age-slider"
+                  className="app-slider"
                 />
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: 'var(--text-muted)', fontWeight: 600, marginTop: 2 }}>
@@ -1970,7 +1956,49 @@ export default function App() {
               </select>
             </div>
 
-            <PaceInput label={t.targetPace} value={targetPace} onChange={setTargetPace} />
+            {/* Target Pace — premium Range Slider */}
+            <div className="form-group">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                <label className="form-label" style={{ margin: 0 }}>{t.targetPace}</label>
+                <span style={{ 
+                  fontSize: '11px', 
+                  fontWeight: 700, 
+                  color: targetPace === null ? 'var(--text-muted)' : 'var(--accent-purple)',
+                  background: targetPace === null ? 'rgba(255,255,255,0.03)' : 'rgba(167, 139, 250, 0.12)',
+                  padding: '2px 8px',
+                  borderRadius: '6px',
+                  border: targetPace === null ? '1px dashed var(--border)' : '1px solid rgba(167, 139, 250, 0.2)'
+                }}>
+                  {(() => {
+                    if (!targetPace) return lang === 'id' ? 'Belum diatur' : 'Not set';
+                    const mins = Math.floor(targetPace);
+                    const secs = Math.round((targetPace - mins) * 60);
+                    const finalMins = secs >= 60 ? mins + 1 : mins;
+                    const finalSecs = secs >= 60 ? 0 : secs;
+                    return `${finalMins}:${String(finalSecs).padStart(2, '0')} /km`;
+                  })()}
+                </span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <input
+                  type="range"
+                  min="3.0"
+                  max="10.0"
+                  step="0.083333"
+                  value={targetPace ?? 5.5}
+                  onChange={e => setTargetPace(parseFloat(e.target.value))}
+                  style={{
+                    width: '100%',
+                    cursor: 'pointer'
+                  }}
+                  className="app-slider"
+                />
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: 'var(--text-muted)', fontWeight: 600, marginTop: 2 }}>
+                <span>3:00 /km</span>
+                <span>10:00 /km</span>
+              </div>
+            </div>
 
             <div className="form-group">
               <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -2438,10 +2466,10 @@ export default function App() {
                 title="Tampilkan Panel"
                 aria-label="Expand Sidebar"
               >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect width="18" height="18" x="3" y="3" rx="2" />
-                  <path d="M9 3v16" />
-                  <path d="m14 9 3 3-3 3" />
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="4" x2="20" y1="12" y2="12" />
+                  <line x1="4" x2="20" y1="6" y2="6" />
+                  <line x1="4" x2="20" y1="18" y2="18" />
                 </svg>
               </button>
             )}
