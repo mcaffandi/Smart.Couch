@@ -2,7 +2,7 @@
 
 ---
 
-## [Uncommitted] — 2026-05-22 · Bilingual Support & Sports-Science Training Readiness
+## [Uncommitted] — 2026-05-22 · Bilingual Support, Sidebar UX Overhaul & Sports-Science Training Readiness
 
 ### ✨ Fitur Baru
 
@@ -17,10 +17,18 @@
 
 #### Algoritma Kesiapan Latihan Terkini (Current Training Readiness) Dinamis
 - Menggantikan visual dial kesiapan latihan statis (sebelumnya hanya membaca skor tidur) dengan model kalkulasi olahraga (*sports-science recovery*) yang dinamis:
-  - Menghitung **hari istirahat (Rest Days)** sejak lari terakhir (`daysSinceLastRun`).
+  - Menghitung **hari istirahat (Rest Days)** sejak lari terakhir (`daysSinceLastRun`) relatif terhadap **tanggal hari ini (tanggal lokal sistem)** alih-alih `latestSleepDate` untuk menghindari anomali.
   - Memberikan penyesuaian skor berupa penalti kelelahan aktif jika baru lari hari ini (`-20`) atau kemarin (`-10`).
   - Memberikan bonus pemulihan bertahap untuk istirahat 3 hari (`+10%`) dan istirahat $\ge$ 4 hari (`+15%` bonus dengan batas bawah skor minimal `80%` jika skor tidur malam terakhir $\ge 50\%$).
   - Menampilkan keterangan ringkasan kalkulasi secara dinamis baik dalam Bahasa Indonesia maupun English (misal: *"Lo udah istirahat 4 hari. Kesiapan fisik pulih maksimal..."*).
+
+#### Input Profil Sidebar Berbasis Range Slider (Scroll/Tarik)
+- Menggantikan input angka umur konvensional yang memiliki bug *aggressive intermediate clamping* dengan **Range Slider Umur** (rentang 10-100 tahun) dilengkapi lencana status dinamis (`31 Tahun` / `Belum diatur`).
+- Menggantikan kolom input angka kembar target pace dengan **Range Slider Target Pace** (rentang 3:00/km - 10:00/km) dengan tingkat presisi geser 5 detik (`step="0.083333"`) dan visualisasi lencana penunjuk dinamis.
+
+#### Peningkatan Visual & Desain Premium Sidebar
+- **Kartu Akun Aktif**: Mendesain ulang dengan linear gradient latar belakang (`linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01))`), efek hover glow ungu, transisi transformasi 3D `translateY(-1px)`, dan indikator sunting (ikon pena).
+- **Tombol Toggle Desktop**: Mengubah ikon tombol sembunyikan/collapse panel menjadi ikon **double chevron kiri** (`chevrons-left`), dan ikon tampilkan/expand panel menjadi ikon **menu hamburger** (`menu`).
 
 #### Template Data Excel Lokalisasi Dinamis
 - Menyesuaikan format nama berkas Excel yang diunduh (`Template_Data_EnduraUP.xlsx` untuk ID, `EnduraUP_Data_Template.xlsx` untuk EN).
@@ -29,6 +37,10 @@
 ### 🏗️ Perubahan Teknis & Bug Fix
 - Memperbaiki tag penutup HTML/JSX pada kontainer `.sidebar-logo` di `App.jsx` yang sebelumnya tidak ditutup sehingga menyebabkan kegagalan compile esbuild pada asides.
 - Menyelaraskan pewarnaan dial kesiapan latihan (hijau/kuning/merah) agar sinkron dengan skor kesiapan baru yang telah disesuaikan.
+- Menambahkan efek **drop shadow** (`shadowColor: rgba(0,0,0,0.5)`, `shadowBlur: 8`, offset 2px) pada teks brand header canvas ("EnduraUP" dan "AI Running & Recovery Coach") pada tema Sunrise Fun kartu pencapaian agar terbaca dengan jelas di atas background retro sunrise yang cerah.
+- Mengubah rujukan profil awal (`DEFAULT_PROFILE` di `utils.js`) agar umur (`age`) dan target pace (`targetPace`) bernilai `null` secara default bagi pengguna baru.
+- Menambahkan validasi anti-crash pada pembaca rekomendasi tempo (`getPaceRecommendations`) agar mengembalikan tanda strip `—` saat target pace kosong.
+- Menghapus komponen `PaceInput` yang sudah tidak digunakan di `App.jsx` untuk menjaga kebersihan codebase.
 
 ---
 
