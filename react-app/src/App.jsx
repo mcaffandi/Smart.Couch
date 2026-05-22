@@ -693,23 +693,23 @@ export default function App() {
           .sort((a, b) => a.paceMinKm - b.paceMinKm);
         const ref = bestRuns[0] || (targetPace ? { distM: 5000, durationSec: targetPace * 60 * 5, paceMinKm: targetPace } : null);
         if (ref) {
-          // 4 rows × 94px = 376px, starts at y=622, ends at y=998 last baseline
-          // each row: bar | label(24px) at rowY+24 | time(56px) at rowY+90
+          // 4 rows step 82px, starts at y=612, ends at 858. 
+          // Bar height 68px, text ends at y=920. Perfect spacing above footer at 962.
           RACES.forEach((r, idx) => {
             const predSec = ref.durationSec * Math.pow(r.dist / ref.distM, RIEGEL);
             const h = Math.floor(predSec / 3600);
             const m = Math.floor((predSec % 3600) / 60);
             const sec = Math.round(predSec % 60);
             const timeStr = h > 0 ? `${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}` : `${m}:${String(sec).padStart(2,'0')}`;
-            const rowY = 622 + idx * 94;
+            const rowY = 612 + idx * 82;
             ctx.fillStyle = r.color;
-            ctx.fillRect(lx, rowY, 8, 80);
+            ctx.fillRect(lx, rowY, 6, 68);
             ctx.fillStyle = textMuted;
-            ctx.font = '600 24px Inter, sans-serif';
-            ctx.fillText(r.label, lx + 22, rowY + 24);
+            ctx.font = '600 20px Inter, sans-serif';
+            ctx.fillText(r.label, lx + 20, rowY + 18);
             ctx.fillStyle = textPrimary;
-            ctx.font = '700 54px Outfit, sans-serif';
-            ctx.fillText(timeStr, lx + 22, rowY + 82);
+            ctx.font = '700 46px Outfit, sans-serif';
+            ctx.fillText(timeStr, lx + 20, rowY + 62);
           });
         }
       }
@@ -838,23 +838,23 @@ export default function App() {
           .sort((a, b) => a.paceMinKm - b.paceMinKm);
         const ref = bestRuns[0] || (targetPace ? { distM: 5000, durationSec: targetPace * 60 * 5, paceMinKm: targetPace } : null);
         if (ref) {
-          // 4 rows × 158px, starts at p0+80=285
-          // each row: label(24px) at rowY+26 | time(62px) at rowY+102
+          // 4 rows step 142px, starts at p0+80=285, ends at 711. 
+          // Bar height 108px, text ends at y=821. Perfect gap before footer divider at 934.
           RACES.forEach((r, idx) => {
             const predSec = ref.durationSec * Math.pow(r.dist / ref.distM, RIEGEL);
             const h = Math.floor(predSec / 3600);
             const m = Math.floor((predSec % 3600) / 60);
             const sec = Math.round(predSec % 60);
             const timeStr = h > 0 ? `${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}` : `${m}:${String(sec).padStart(2,'0')}`;
-            const rowY = (p0 + 80) + idx * 158;
+            const rowY = (p0 + 80) + idx * 142;
             ctx.fillStyle = r.color;
-            ctx.fillRect(px, rowY, 8, 124);
+            ctx.fillRect(px, rowY, 6, 108);
             ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
-            ctx.font = '600 22px Inter, sans-serif';
-            ctx.fillText(r.label, px + 24, rowY + 26);
+            ctx.font = '600 20px Inter, sans-serif';
+            ctx.fillText(r.label, px + 20, rowY + 22);
             ctx.fillStyle = '#ffffff';
-            ctx.font = '700 62px Outfit, sans-serif';
-            ctx.fillText(timeStr, px + 24, rowY + 102);
+            ctx.font = '700 58px Outfit, sans-serif';
+            ctx.fillText(timeStr, px + 20, rowY + 90);
           });
         }
       }
