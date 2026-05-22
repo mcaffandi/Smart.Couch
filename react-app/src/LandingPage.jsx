@@ -23,9 +23,6 @@ export default function LandingPage({ onGetStarted }) {
       {/* Hero Section */}
       <section className="hero-section">
         <div className="hero-content">
-          <div className="badge-pill">
-            <span className="badge-dot"></span> V2.0 Now Live
-          </div>
           <h1 className="hero-title">
             Unlock your true <br/>
             <span className="text-gradient">running potential</span>
@@ -198,7 +195,12 @@ export default function LandingPage({ onGetStarted }) {
       </section>
 
       <footer className="landing-footer">
-        <p>© {new Date().getFullYear()} EnduraUP. Built for runners, by runners. • v2.0.0</p>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
+          <div className="badge-pill" style={{ marginBottom: 0 }}>
+            <span className="badge-dot"></span> V2.0 Now Live
+          </div>
+        </div>
+        <p>© {new Date().getFullYear()} EnduraUP. Built for runners, by runners.</p>
         <p className="footer-privacy" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 8, fontSize: 12, color: '#52525b' }}>
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#10b981' }}>
             <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
