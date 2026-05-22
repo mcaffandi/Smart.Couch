@@ -194,7 +194,7 @@ Seluruh warna teks diubah dari nuansa dingin (`#ffffff`, `#a1a1aa`, `#71717a`) k
 ## To Do / Next
 
 - [x] Simpan profil ke Firebase Firestore (saat ini hanya localStorage)
-- [ ] Validasi input: tidak bisa simpan umur < 10 atau tinggi > 250
-- [ ] Foto/avatar upload untuk profil
-- [ ] Umur & pace di sidebar otomatis grey saat user baru (clear localStorage)
-- [ ] Chunk size optimization: bundle saat ini ~1.2MB (warning Vite > 500kB)
+- [x] Validasi input: tidak bisa simpan umur < 10 atau tinggi > 250
+- [x] Foto/avatar upload untuk profil
+- [x] Umur & pace di sidebar otomatis grey saat user baru (clear localStorage)
+- [x] Chunk size optimization: bundle saat ini ~1.2MB (warning Vite > 500kB)
