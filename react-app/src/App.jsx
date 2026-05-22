@@ -135,11 +135,11 @@ export default function App() {
         const uData = loadUserData(userIdentifier);
         setData(uData);
         setAge(uData.profile?.age ?? null);
-        setDisplayName(uData.profile?.displayName ?? '');
+        setDisplayName(uData.profile?.displayName || fbUser.displayName || '');
         setWeight(uData.profile?.weight ?? null);
         setHeight(uData.profile?.height ?? null);
         setGender(uData.profile?.gender ?? '');
-        setAvatar(uData.profile?.avatar ?? null);
+        setAvatar(uData.profile?.avatar || fbUser.photoURL || null);
         setGoal(uData.profile?.goal ?? 'maintenance');
         setProgramStyle(uData.profile?.programStyle ?? 'sedang');
         setTargetPace(uData.profile?.targetPace ?? null);
