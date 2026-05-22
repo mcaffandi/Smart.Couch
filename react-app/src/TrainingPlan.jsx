@@ -1,6 +1,75 @@
 import { useState } from 'react';
 import { buildTrainingPlan } from './utils';
 
+const dayTranslations = {
+  'Senin': 'Monday',
+  'Selasa': 'Tuesday',
+  'Rabu': 'Wednesday',
+  'Kamis': 'Thursday',
+  'Jumat': 'Friday',
+  'Sabtu': 'Saturday',
+  'Minggu': 'Sunday'
+};
+
+const typeTranslations = {
+  'Rest / Stretching': 'Rest / Stretching',
+  'Easy Run': 'Easy Run',
+  'Easy Run (Fat Burn)': 'Easy Run (Fat Burn)',
+  'Zone 2 Run': 'Zone 2 Run',
+  'Zone 2 / MAF Run': 'Zone 2 / MAF Run',
+  'Zone 2 Run (Hill/Tanjakan)': 'Zone 2 Run (Hills)',
+  'MAF / Zone 2 Run': 'MAF / Zone 2 Run',
+  'Steady Run': 'Steady Run',
+  'Long Run': 'Long Run',
+  'Long Base Run': 'Long Base Run',
+  'Long MAF Run': 'Long MAF Run',
+  'Interval / Tempo': 'Interval / Tempo',
+  'HIIT Run': 'HIIT Run',
+  'Recovery Jog': 'Recovery Jog',
+  'Active Recovery': 'Active Recovery',
+  'Total Rest': 'Total Rest',
+  'Core & Leg Stabilizer': 'Core & Leg Stabilizer',
+  'Yoga / Mobility': 'Yoga / Mobility',
+  'Breathing / Relaksasi': 'Breathing / Relaxation'
+};
+
+const tujuanTranslations = {
+  'Hari pemulihan total untuk pemulihan jaringan otot.': 'Total recovery day to rebuild muscle tissue.',
+  'Sesi lari tunggal minggu ini: fokus menjaga kebugaran dasar.': 'Single run session this week: focus on maintaining baseline fitness.',
+  'Lari pelan untuk menjaga detak jantung rendah (Base Building).': 'Slow run to keep heart rate low (Base Building).',
+  'Lari intensitas rendah untuk konsistensi aerobik.': 'Low-intensity run for aerobic consistency.',
+  'Adaptasi kapiler untuk efisiensi jantung.': 'Capillary adaptation for cardiac efficiency.',
+  'Lari jarak jauh mingguan untuk stamina fisik.': 'Weekly long run for physical stamina.',
+  'Melatih ketahanan otot jantung pada denyut rendah.': 'Training cardiac muscle endurance at low HR.',
+  'Membangun volume lari aerobik dasar.': 'Building baseline aerobic volume.',
+  'Volume aerobik rendah untuk menurunkan resting HR.': 'Low aerobic volume to lower resting HR.',
+  'Melatih kapasitas paru-paru dan kecepatan kaki.': 'Training lung capacity and leg speed.',
+  'Menguatkan otot kaki tanpa terlalu meledakkan HR.': 'Strengthening leg muscles without excessively spiking HR.',
+  'Memicu metabolisme pembakaran kalori pasca-latihan.': 'Triggers post-exercise calorie-burning metabolism.',
+  'Membangun ketahanan fisik jangka panjang.': 'Building long-term physical endurance.',
+  'Adaptasi efisiensi metabolisme lemak dan jantung kuat.': 'Adapting fat metabolism efficiency and strengthening cardiac muscle.',
+  'Volume aerobik dasar mingguan.': 'Weekly baseline aerobic volume.',
+  'Meningkatkan ambang laktat jantung.': 'Improving cardiac lactate threshold.',
+  'Membangun dasar paru-paru tanpa mengorbankan otot.': 'Building lung capacity baseline without sacrificing muscle.',
+  'Sirkulasi darah ringan membantu pemulihan otot.': 'Light blood circulation to assist muscle recovery.',
+  'Long run spesifik melatih daya tahan kaki.': 'Long run specifically to build leg endurance.',
+  'Waktu di bawah tekanan untuk merendahkan resting HR.': 'Time under tension to lower resting HR.',
+  'Membangun volume kardio mingguan.': 'Building weekly cardio volume.',
+  'Fokus pernapasan (nasal breathing) di denyut rendah.': 'Nasal breathing focus at low HR.',
+  'Melatih kecepatan dan VO2Max.': 'Training speed and VO2Max.',
+  'Pemulihan aktif.': 'Active recovery.',
+  'Meningkatkan stroke volume jantung.': 'Increasing cardiac stroke volume.',
+  'Lari ringan menjaga ritme latihan.': 'Light run to maintain training rhythm.',
+  'Ketahanan panjang untuk efisiensi pembakaran lemak.': 'Long-term endurance for fat-burning efficiency.',
+  'Puncak ketahanan tubuh minggu ini.': 'Peak body endurance of the week.',
+  'Jalan/jog ringan menjaga metabolisme tubuh.': 'Light walk/jog to maintain metabolism.',
+  'Melatih otot inti (Plank/Bridge) dan engkel, TANPA squat/lunges berat.': 'Train core (Plank/Bridge) and ankle stability, WITHOUT heavy squats/lunges.',
+  'Peregangan dinamis fokus pada pinggul, betis, dan peregangan hamstring.': 'Dynamic stretching focusing on hips, calves, and hamstrings.',
+  'Latihan pernapasan perut (Nasal Breathing) untuk melatih kapasitas oksigen.': 'Belly breathing practice (Nasal Breathing) to build oxygen capacity.',
+  'Jalan santai/bersepeda ringan untuk melancarkan sirkulasi darah tanpa beban.': 'Leisurely walk/light cycling to promote blood circulation without impact.',
+  'Pemulihan pasif total. Fokus pada tidur berkualitas dan asupan protein.': 'Total passive recovery. Focus on quality sleep and protein intake.'
+};
+
 const getBadgeClass = (jenis) => {
   if (jenis.includes('Rest') || jenis.includes('Total')) return 'badge-rest';
   if (jenis.includes('Easy') || jenis.includes('Active') || jenis.includes('Walk') || jenis.includes('Zone 2') || jenis.includes('MAF')) return 'badge-easy';
@@ -10,7 +79,7 @@ const getBadgeClass = (jenis) => {
   return 'badge-recovery';
 };
 
-export default function TrainingPlan({ activities, programStyle, goal, paces, latestSleepScore, actualBestPace, targetPace, selectedDays }) {
+export default function TrainingPlan({ activities, programStyle, goal, paces, latestSleepScore, actualBestPace, targetPace, selectedDays, lang = 'id' }) {
   const [aiLoading, setAiLoading] = useState(false);
   const [aiPlan, setAiPlan] = useState(() => {
     try {
@@ -40,17 +109,41 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
     if (latestSleepScore === null) return null;
     if (latestSleepScore < 60) return (
       <div className="alert alert-danger" style={{ marginBottom: 18 }}>
-        <strong>Kondisi Drop:</strong> Skor tidur lo {latestSleepScore} — tidur kurang. Kalau jadwal hari ini interval atau tempo, <strong>sangat disarankan ganti ke Easy Run atau Rest</strong> untuk cegah cedera.
+        {lang === 'id' ? (
+          <>
+            <strong>Kondisi Drop:</strong> Skor tidur lo {latestSleepScore} — tidur kurang. Kalau jadwal hari ini interval atau tempo, <strong>sangat disarankan ganti ke Easy Run atau Rest</strong> untuk cegah cedera.
+          </>
+        ) : (
+          <>
+            <strong>Poor Sleep:</strong> Your sleep score is {latestSleepScore} — insufficient rest. If today's scheduled run is an interval or tempo, <strong>it is highly recommended to switch to an Easy Run or Rest</strong> to prevent injury.
+          </>
+        )}
       </div>
     );
     if (latestSleepScore < 80) return (
       <div className="alert alert-warning" style={{ marginBottom: 18 }}>
-        <strong>Kondisi Sedang:</strong> Tidur lo cukup tapi belum optimal (skor {latestSleepScore}). Jalankan latihan sesuai jadwal, tapi jangan dipaksain sampai batas.
+        {lang === 'id' ? (
+          <>
+            <strong>Kondisi Sedang:</strong> Tidur lo cukup tapi belum optimal (skor {latestSleepScore}). Jalankan latihan sesuai jadwal, tapi jangan dipaksain sampai batas.
+          </>
+        ) : (
+          <>
+            <strong>Fair Sleep:</strong> Your sleep is decent but not optimal (score {latestSleepScore}). Stick to the schedule, but avoid pushing to the absolute limit.
+          </>
+        )}
       </div>
     );
     return (
       <div className="alert alert-success" style={{ marginBottom: 18 }}>
-        <strong>Kondisi Prima:</strong> Tidur lo sangat baik (skor {latestSleepScore}). Tubuh dalam kondisi prime — waktu ideal untuk push intensitas tinggi.
+        {lang === 'id' ? (
+          <>
+            <strong>Kondisi Prima:</strong> Tidur lo sangat baik (skor {latestSleepScore}). Tubuh dalam kondisi prime — waktu ideal untuk push intensitas tinggi.
+          </>
+        ) : (
+          <>
+            <strong>Prime Condition:</strong> Your sleep is excellent (score {latestSleepScore}). Your body is in prime shape — an ideal time to push high-intensity training.
+          </>
+        )}
       </div>
     );
   };
@@ -58,7 +151,7 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
   const generateAIPlan = async () => {
     const apiKey = localStorage.getItem('groq_api_key');
     if (!apiKey) {
-      setAiError('API Key Groq belum disetting di Dashboard.');
+      setAiError(lang === 'id' ? 'API Key Groq belum disetting di Dashboard.' : 'Groq API Key has not been set in the Dashboard.');
       return;
     }
     setAiLoading(true);
@@ -68,14 +161,21 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
       const recentRuns = (activities || []).slice(0, 5).map(a => {
         const dist = ((a.distance || 0) / 100000).toFixed(2);
         const dur = Math.round((a.duration || 0) / 60000);
-        return `Jarak: ${dist}km, Waktu: ${dur}m, HR: ${a.avgHr || 0}bpm`;
+        return lang === 'id' 
+          ? `Jarak: ${dist}km, Waktu: ${dur}m, HR: ${a.avgHr || 0}bpm`
+          : `Distance: ${dist}km, Duration: ${dur}m, HR: ${a.avgHr || 0}bpm`;
       }).join('\n');
 
       const daysInstruction = selectedDays && selectedDays.length > 0
-        ? `Hari Lari yang DIREQUEST: ${selectedDays.join(', ')}.\nSANGAT PENTING: Hanya jadwalkan lari pada hari yang direquest tersebut. Untuk hari selain itu, WAJIB diisi dengan "Total Rest" atau "Cross-Training/Recovery".`
-        : `Hari Lari: Pelari menyerahkan jadwal kepadamu. Atur hari lari yang optimal (3-5 hari seminggu sesuai target). Untuk hari istirahat, WAJIB diisi dengan "Total Rest" atau "Cross-Training/Recovery".`;
+        ? (lang === 'id' 
+            ? `Hari Lari yang DIREQUEST: ${selectedDays.join(', ')}.\nSANGAT PENTING: Hanya jadwalkan lari pada hari yang direquest tersebut. Untuk hari selain itu, WAJIB diisi dengan "Total Rest" atau "Cross-Training/Recovery".`
+            : `REQUESTED Running Days: ${selectedDays.join(', ')}.\nVERY IMPORTANT: Only schedule running workouts on these specific requested days. For all other days, write "Total Rest" or "Cross-Training/Recovery".`)
+        : (lang === 'id'
+            ? `Hari Lari: Pelari menyerahkan jadwal kepadamu. Atur hari lari yang optimal (3-5 hari seminggu sesuai target). Untuk hari istirahat, WAJIB diisi dengan "Total Rest" atau "Cross-Training/Recovery".`
+            : `Running Days: The runner lets you decide. Optimize running days (3-5 days/week based on the target). For rest days, write "Total Rest" or "Cross-Training/Recovery".`);
 
-      const prompt = `Lo adalah pelatih lari elit (EnduraUP). Buatkan jadwal lari 1 minggu (Senin-Minggu) dalam format JSON array yang ketat.
+      const prompt = lang === 'id'
+        ? `Lo adalah pelatih lari elit (EnduraUP). Buatkan jadwal lari 1 minggu (Senin-Minggu) dalam format JSON array yang ketat.
 Atlet ini punya target utama: ${goal}.
 ${daysInstruction}
 
@@ -86,6 +186,18 @@ Tidur semalam: skor ${latestSleepScore || "Tidak ada data"}.
 
 Sesuaikan intensitas! Jika HR kemarin tinggi atau tidur kurang, tambahkan rest/recovery.
 Output harus STRICTLY JSON array of objects dengan keys persis: "hari" (Senin-Minggu), "jenis" (contoh: "Easy Run", "Interval", "Total Rest"), "durasi" (contoh: "30 menit", "5x400m", "–"), "tujuan" (alasan logis). Pastikan urutan dari Senin sampai Minggu (7 item).
+Return ONLY the raw JSON array.`
+        : `You are an elite running coach (EnduraUP). Create a strict 1-week training plan (Monday-Sunday) in JSON array format.
+This athlete's main goal: ${goal}.
+${daysInstruction}
+
+Target Pace: ${formatPace(targetPace) || targetPace} min/km.
+Their latest run data (use as reference to adjust load):
+${recentRuns || "No running history yet."}
+Sleep last night: score ${latestSleepScore || "No data"}.
+
+Adjust intensity! If heart rate was high or sleep was insufficient, add rest/recovery.
+Output must be a STRICTLY JSON array of objects with keys exactly: "hari" (Monday-Sunday, e.g., "Monday", "Tuesday", etc.), "jenis" (e.g. "Easy Run", "Interval", "Total Rest"), "durasi" (e.g. "30 minutes", "5x400m", "–"), "tujuan" (logical reasoning). Ensure the order goes Monday to Sunday (7 items).
 Return ONLY the raw JSON array.`;
 
       const controller = new AbortController();
@@ -117,10 +229,10 @@ Return ONLY the raw JSON array.`;
         setAiPlan(parsed);
         localStorage.setItem('smartcoach_ai_plan', JSON.stringify(parsed));
       } else {
-        throw new Error('Format JSON dari AI tidak sesuai.');
+        throw new Error(lang === 'id' ? 'Format JSON dari AI tidak sesuai.' : 'JSON format from AI is invalid.');
       }
     } catch (e) {
-      setAiError('Gagal men-generate jadwal dari AI: ' + e.message);
+      setAiError((lang === 'id' ? 'Gagal men-generate jadwal dari AI: ' : 'Failed to generate training plan from AI: ') + e.message);
     }
     setAiLoading(false);
   };
@@ -131,12 +243,15 @@ Return ONLY the raw JSON array.`;
     const monday = new Date(today);
     monday.setDate(today.getDate() - dayOfWeek + 1);
 
-    const weekDaysMap = { 'Senin': 0, 'Selasa': 1, 'Rabu': 2, 'Kamis': 3, 'Jumat': 4, 'Sabtu': 5, 'Minggu': 6 };
+    const weekDaysMap = { 
+      'Senin': 0, 'Selasa': 1, 'Rabu': 2, 'Kamis': 3, 'Jumat': 4, 'Sabtu': 5, 'Minggu': 6,
+      'Monday': 0, 'Tuesday': 1, 'Wednesday': 2, 'Thursday': 3, 'Friday': 4, 'Saturday': 5, 'Sunday': 6
+    };
     let icsContent = "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//EnduraUP//Training Plan//EN\n";
 
     plan.forEach((session) => {
       if (!session || !session.jenis) return;
-      const offset = weekDaysMap[session.hari];
+      const offset = weekDaysMap[session.hari] !== undefined ? weekDaysMap[session.hari] : 0;
       const sessionDate = new Date(monday);
       sessionDate.setDate(monday.getDate() + offset);
 
@@ -149,8 +264,8 @@ Return ONLY the raw JSON array.`;
       icsContent += `DTSTART;VALUE=DATE:${dateStr}\n`;
       icsContent += `DTEND;VALUE=DATE:${dateStr}\n`;
       icsContent += `RRULE:FREQ=WEEKLY;COUNT=12\n`;
-      icsContent += `SUMMARY:🏃 ${session.jenis}\n`;
-      icsContent += `DESCRIPTION:Durasi/Intensitas: ${session.durasi}\\n\\nTujuan: ${session.tujuan}\n`;
+      icsContent += `SUMMARY:🏃 ${getJenis(session.jenis)}\n`;
+      icsContent += `DESCRIPTION:${lang === 'id' ? 'Durasi/Intensitas' : 'Duration/Intensity'}: ${getDurasi(session.durasi)}\\n\\n${lang === 'id' ? 'Tujuan' : 'Purpose'}: ${getTujuan(session.tujuan)}\n`;
       icsContent += "END:VEVENT\n";
     });
     icsContent += "END:VCALENDAR";
@@ -162,6 +277,66 @@ Return ONLY the raw JSON array.`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const getHari = (day) => lang === 'id' ? day : (dayTranslations[day] || day);
+  const getJenis = (type) => lang === 'id' ? type : (typeTranslations[type] || type);
+  const getTujuan = (purpose) => lang === 'id' ? purpose : (tujuanTranslations[purpose] || purpose);
+  const getDurasi = (dur) => {
+    if (!dur) return '–';
+    if (lang === 'id') return dur;
+    return dur
+      .replace(/menit/gi, 'minutes')
+      .replace(/Santai/gi, 'Easy')
+      .replace(/Sedang/gi, 'Moderate')
+      .replace(/Ngepush/gi, 'Push')
+      .replace(/Bodyweight/gi, 'Bodyweight')
+      .replace(/Matras/gi, 'Mat')
+      .replace(/Fokus Pernapasan/gi, 'Breathing Focus')
+      .replace(/Jalan Kaki/gi, 'Walking');
+  };
+
+  const guides = {
+    title: lang === 'id' ? '▶ Panduan Cross-Training (Core, Yoga, Breathing)' : '▶ Cross-Training Guide (Core, Yoga, Breathing)',
+    coreTitle: lang === 'id' ? '💪 1. Core & Leg Stabilizer (Tanpa Squat / Lunges)' : '💪 1. Core & Leg Stabilizer (No Squats / Lunges)',
+    coreDesc: lang === 'id' ? 'Fokus stabilitas pinggul, gluteus, & engkel. 100% bodyweight. Lakukan 3 set x 10-15 repetisi.' : 'Focus on hip, glutes, & ankle stability. 100% bodyweight. Perform 3 sets x 10-15 reps.',
+    coreList: lang === 'id' ? [
+      { name: 'Glute Bridges', desc: 'Rebahan, tekuk lutut, angkat pinggul sejajar paha. Tahan pantat 2 detik di atas. (Fokus Hamstring & Bokong)' },
+      { name: 'Clamshells', desc: 'Tidur miring, lutut tekuk 90°. Buka lutut atas perlahan tanpa goyang pinggul. (Cegah lutut masuk ke dalam)' },
+      { name: 'Donkey Kicks', desc: 'Posisi merangkak, tendang satu tumit ke arah langit-langit. Kunci punggung agar tidak melengkung. (Sangat efektif untuk Gluteus/Bokong)' },
+      { name: 'Fire Hydrants', desc: 'Posisi merangkak, angkat lutut ke arah samping luar. (Membuka mobilitas persendian pinggul)' },
+      { name: 'Calf Raises (Jinjit)', desc: 'Jinjit perlahan lalu turun perlahan di ujung anak tangga. (Mencegah cedera tulang kering / Shin Splints)' }
+    ] : [
+      { name: 'Glute Bridges', desc: 'Lie on your back, bend knees, lift hips level with thighs. Hold for 2 seconds at the top. (Hamstrings & Glutes focus)' },
+      { name: 'Clamshells', desc: 'Lie on side, knees bent 90°. Open top knee slowly without turning hips. (Prevents knee caving)' },
+      { name: 'Donkey Kicks', desc: 'On all fours, kick one heel up towards the ceiling. Keep back flat. (Highly effective for Gluteus/Buttocks)' },
+      { name: 'Fire Hydrants', desc: 'On all fours, lift knee out to the side. (Opens hip joint mobility)' },
+      { name: 'Calf Raises', desc: 'Rise slowly on toes, lower down below stair edge. (Prevents shin splints / Achilles injury)' }
+    ],
+    yogaTitle: lang === 'id' ? '🧘‍♀️ 2. Yoga / Mobility Matras' : '🧘‍♀️ 2. Yoga / Mat Mobility',
+    yogaDesc: lang === 'id' ? 'Fokus memanjangkan otot yang tegang dan membuka mobilitas pinggul. Tahan pose 30-45 detik.' : 'Focus on lengthening tight muscles and opening hip mobility. Hold pose for 30-45 seconds.',
+    yogaList: lang === 'id' ? [
+      { name: 'Downward Dog', desc: 'Tangan & kaki di lantai (V terbalik). Tarik tumit ke lantai untuk peregangan achilles.' },
+      { name: 'Pigeon Pose', desc: 'Lipat satu kaki di depan matras, kaki belakang lurus. Sangat ampuh untuk otot bokong/piriformis.' },
+      { name: 'Cat-Cow', desc: 'Posisi merangkak. Lengkungkan punggung ke atas, lalu tekuk ke bawah. Melumasi tulang belakang.' }
+    ] : [
+      { name: 'Downward Dog', desc: 'Hands & feet on floor (inverted V). Draw heels to floor for Achilles stretch.' },
+      { name: 'Pigeon Pose', desc: 'Fold one leg in front on the mat, back leg straight. Extremely effective for glutes/piriformis.' },
+      { name: 'Cat-Cow', desc: 'On all fours. Arch spine up, then flex down. Lubricates the spine.' }
+    ],
+    breathTitle: lang === 'id' ? '🫁 3. Breathing & Relaksasi' : '🫁 3. Breathing & Relaxation',
+    breathDesc: lang === 'id' ? 'Fokus melatih kapasitas oksigen dan menurunkan resting heart rate secara pasif.' : 'Focus on training oxygen capacity and lowering resting heart rate passively.',
+    breathList: lang === 'id' ? [
+      { name: 'Box Breathing (4-4-4-4)', desc: 'Tarik napas 4 detik, tahan 4d, buang 4d, tahan 4d (tanpa napas). Ulangi 5-10 menit.' },
+      { name: 'Strict Nasal Breathing', desc: 'Lakukan pernapasan hanya menggunakan hidung (tarik & buang).' },
+      { name: 'Diaphragmatic', desc: 'Saat napas ditarik, perut harus membesar seperti balon (bukan dada yang membusung).' }
+    ] : [
+      { name: 'Box Breathing (4-4-4-4)', desc: 'Inhale 4s, hold 4s, exhale 4s, hold 4s. Repeat for 5-10 minutes.' },
+      { name: 'Strict Nasal Breathing', desc: 'Breathe strictly through your nose (inhale & exhale).' },
+      { name: 'Diaphragmatic', desc: 'As you inhale, expand your belly like a balloon (not swelling the chest).' }
+    ],
+    recommendTitle: lang === 'id' ? 'Rekomendasi:' : 'Recommendation:',
+    recommendDesc: lang === 'id' ? 'Konsistensi lebih penting dari durasi. Lakukan rutinitas ini di hari "Rest" dengan intensitas ringan agar otot siap untuk jadwal lari berikutnya.' : 'Consistency is more important than duration. Perform this routine on "Rest" days at low intensity to prep muscles for the next run.'
   };
 
   return (
@@ -197,7 +372,7 @@ Return ONLY the raw JSON array.`;
                 <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" fill="currentColor" fillOpacity="0.3"/>
               </svg>
             )}
-            {aiLoading ? 'Menganalisis...' : (aiPlan ? 'Regenerate AI Plan' : 'AI: Buatkan Jadwal Dinamis')}
+            {aiLoading ? (lang === 'id' ? 'Menganalisis...' : 'Analyzing...') : (aiPlan ? (lang === 'id' ? 'Regenerate AI Plan' : 'Regenerate AI Plan') : (lang === 'id' ? 'AI: Buatkan Jadwal Dinamis' : 'AI: Generate Dynamic Plan'))}
           </button>
           {aiPlan && (
             <button
@@ -205,7 +380,7 @@ Return ONLY the raw JSON array.`;
               onClick={() => { setAiPlan(null); localStorage.removeItem('smartcoach_ai_plan'); }}
               style={{ fontSize: 12, color: 'var(--text-muted)' }}
             >
-              Kembali ke Default
+              {lang === 'id' ? 'Kembali ke Default' : 'Back to Default'}
             </button>
           )}
         </div>
@@ -228,7 +403,7 @@ Return ONLY the raw JSON array.`;
             <line x1="8" y1="2" x2="8" y2="6"></line>
             <line x1="3" y1="10" x2="21" y2="10"></line>
           </svg>
-          Export ke Calendar
+          {lang === 'id' ? 'Export ke Calendar' : 'Export to Calendar'}
         </button>
       </div>
 
@@ -244,13 +419,25 @@ Return ONLY the raw JSON array.`;
           display: 'flex', alignItems: 'flex-start', gap: 12
         }}>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: '#fbbf24', marginBottom: 4 }}>SINKRONISASI DATA</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: '#fbbf24', marginBottom: 4 }}>{lang === 'id' ? 'SINKRONISASI DATA' : 'DATA SYNCHRONIZATION'}</div>
             <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-              Pace terbaik lo dari data: <strong style={{ color: 'var(--text-primary)' }}>{formatPace(actualBestPace)} min/km</strong>
-              {' '}· Target lo: <strong style={{ color: '#818cf8' }}>{formatPace(targetPace)} min/km</strong>
-              <br />
-              Rencana latihan ini dirancang untuk membawa lo dari kemampuan saat ini menuju target tersebut.
-              Zone Ngepush / Sedang / Santai di bawah mengacu pada <strong>target pace</strong> lo.
+              {lang === 'id' ? (
+                <>
+                  Pace terbaik lo dari data: <strong style={{ color: 'var(--text-primary)' }}>{formatPace(actualBestPace)} min/km</strong>
+                  {' '}· Target lo: <strong style={{ color: '#818cf8' }}>{formatPace(targetPace)} min/km</strong>
+                  <br />
+                  Rencana latihan ini dirancang untuk membawa lo dari kemampuan saat ini menuju target tersebut.
+                  Zone Ngepush / Sedang / Santai di bawah mengacu pada <strong>target pace</strong> lo.
+                </>
+              ) : (
+                <>
+                  Your best pace from data: <strong style={{ color: 'var(--text-primary)' }}>{formatPace(actualBestPace)} min/km</strong>
+                  {' '}· Your target: <strong style={{ color: '#818cf8' }}>{formatPace(targetPace)} min/km</strong>
+                  <br />
+                  This training plan is designed to help you reach that target from your current fitness level.
+                  The Push / Moderate / Easy zones below refer to your <strong>target pace</strong>.
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -258,17 +445,17 @@ Return ONLY the raw JSON array.`;
 
       <div className="pace-grid" style={{ marginBottom: 20 }}>
         <div className="pace-card" style={{ background: 'rgba(251,113,133,0.07)', border: '1px solid rgba(251,113,133,0.2)' }}>
-          <div className="pace-label" style={{ color: '#fb7185' }}>Ngepush</div>
+          <div className="pace-label" style={{ color: '#fb7185' }}>{lang === 'id' ? 'Ngepush' : 'Push'}</div>
           <div className="pace-value">{paces.ngepush}</div>
           <div className="pace-unit">min/km</div>
         </div>
         <div className="pace-card" style={{ background: 'rgba(56,189,248,0.07)', border: '1px solid rgba(56,189,248,0.2)' }}>
-          <div className="pace-label" style={{ color: '#38bdf8' }}>Sedang</div>
+          <div className="pace-label" style={{ color: '#38bdf8' }}>{lang === 'id' ? 'Sedang' : 'Moderate'}</div>
           <div className="pace-value">{paces.sedang}</div>
           <div className="pace-unit">min/km</div>
         </div>
         <div className="pace-card" style={{ background: 'rgba(52,211,153,0.07)', border: '1px solid rgba(52,211,153,0.2)' }}>
-          <div className="pace-label" style={{ color: '#34d399' }}>Santai</div>
+          <div className="pace-label" style={{ color: '#34d399' }}>{lang === 'id' ? 'Santai' : 'Easy'}</div>
           <div className="pace-value">{paces.santai}</div>
           <div className="pace-unit">min/km</div>
         </div>
@@ -279,19 +466,19 @@ Return ONLY the raw JSON array.`;
         <table className="training-table">
           <thead>
             <tr>
-              <th>Hari</th>
-              <th>Jenis Latihan</th>
-              <th>Durasi / Intensitas</th>
-              <th>Tujuan</th>
+              <th>{lang === 'id' ? 'Hari' : 'Day'}</th>
+              <th>{lang === 'id' ? 'Jenis Latihan' : 'Workout Type'}</th>
+              <th>{lang === 'id' ? 'Durasi / Intensitas' : 'Duration / Intensity'}</th>
+              <th>{lang === 'id' ? 'Tujuan' : 'Target / Purpose'}</th>
             </tr>
           </thead>
           <tbody>
             {plan.map((row, i) => (
               <tr key={i}>
-                <td style={{ fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>{row.hari}</td>
-                <td><span className={`badge ${getBadgeClass(row.jenis)}`}>{row.jenis}</span></td>
-                <td style={{ color: 'var(--text-secondary)', fontSize: 13 }}>{row.durasi}</td>
-                <td style={{ color: 'var(--text-muted)', fontSize: 13 }}>{row.tujuan}</td>
+                <td style={{ fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>{getHari(row.hari)}</td>
+                <td><span className={`badge ${getBadgeClass(row.jenis)}`}>{getJenis(row.jenis)}</span></td>
+                <td style={{ color: 'var(--text-secondary)', fontSize: 13 }}>{getDurasi(row.durasi)}</td>
+                <td style={{ color: 'var(--text-muted)', fontSize: 13 }}>{getTujuan(row.tujuan)}</td>
               </tr>
             ))}
           </tbody>
@@ -303,14 +490,14 @@ Return ONLY the raw JSON array.`;
         {plan.map((row, i) => (
           <div key={i} className="training-card-item">
             <div className="training-card-header">
-              <span className="training-card-day">{row.hari}</span>
-              <span className={`badge ${getBadgeClass(row.jenis)}`}>{row.jenis}</span>
+              <span className="training-card-day">{getHari(row.hari)}</span>
+              <span className={`badge ${getBadgeClass(row.jenis)}`}>{getJenis(row.jenis)}</span>
             </div>
             <div className="training-card-dur">
-              {row.durasi}
+              {getDurasi(row.durasi)}
             </div>
             <div className="training-card-tujuan">
-              {row.tujuan}
+              {getTujuan(row.tujuan)}
             </div>
           </div>
         ))}
@@ -323,7 +510,7 @@ Return ONLY the raw JSON array.`;
           fontWeight: 600, color: 'var(--text-secondary)', userSelect: 'none',
           transition: 'all 0.2s', outline: 'none'
         }}>
-          ▶ Panduan Cross-Training (Core, Yoga, Breathing)
+          {guides.title}
         </summary>
         <div style={{
           marginTop: 8, padding: '18px 20px', background: 'var(--bg-card)',
@@ -332,44 +519,42 @@ Return ONLY the raw JSON array.`;
         }}>
 
           <div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--accent-purple)', marginBottom: 8 }}>💪 1. Core & Leg Stabilizer (Tanpa Squat / Lunges)</div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--accent-purple)', marginBottom: 8 }}>{guides.coreTitle}</div>
             <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 10 }}>
-              Fokus stabilitas pinggul, gluteus, & engkel. 100% bodyweight. Lakukan 3 set x 10-15 repetisi.
+              {guides.coreDesc}
             </p>
             <ul style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.7, paddingLeft: 16 }}>
-              <li><strong style={{color: 'var(--text-primary)'}}>Glute Bridges:</strong> Rebahan, tekuk lutut, angkat pinggul sejajar paha. Tahan pantat 2 detik di atas. (Fokus Hamstring & Bokong)</li>
-              <li><strong style={{color: 'var(--text-primary)'}}>Clamshells:</strong> Tidur miring, lutut tekuk 90°. Buka lutut atas perlahan tanpa goyang pinggul. (Cegah lutut masuk ke dalam)</li>
-              <li><strong style={{color: 'var(--text-primary)'}}>Donkey Kicks:</strong> Posisi merangkak, tendang satu tumit ke arah langit-langit. Kunci punggung agar tidak melengkung. (Sangat efektif untuk Gluteus/Bokong)</li>
-              <li><strong style={{color: 'var(--text-primary)'}}>Fire Hydrants:</strong> Posisi merangkak, angkat lutut ke arah samping luar. (Membuka mobilitas persendian pinggul)</li>
-              <li><strong style={{color: 'var(--text-primary)'}}>Calf Raises (Jinjit):</strong> Jinjit perlahan lalu turun perlahan di ujung anak tangga. (Mencegah cedera tulang kering / <em>Shin Splints</em>)</li>
+              {guides.coreList.map((item, idx) => (
+                <li key={idx}><strong style={{color: 'var(--text-primary)'}}>{item.name}:</strong> {item.desc}</li>
+              ))}
             </ul>
           </div>
 
           <div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: '#38bdf8', marginBottom: 8 }}>🧘‍♀️ 2. Yoga / Mobility Matras</div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: '#38bdf8', marginBottom: 8 }}>{guides.yogaTitle}</div>
             <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 10 }}>
-              Fokus memanjangkan otot yang tegang dan membuka mobilitas pinggul. Tahan pose 30-45 detik.
+              {guides.yogaDesc}
             </p>
             <ul style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.7, paddingLeft: 16 }}>
-              <li><strong style={{color: 'var(--text-primary)'}}>Downward Dog:</strong> Tangan & kaki di lantai (V terbalik). Tarik tumit ke lantai untuk peregangan achilles.</li>
-              <li><strong style={{color: 'var(--text-primary)'}}>Pigeon Pose:</strong> Lipat satu kaki di depan matras, kaki belakang lurus. Sangat ampuh untuk otot bokong/piriformis.</li>
-              <li><strong style={{color: 'var(--text-primary)'}}>Cat-Cow:</strong> Posisi merangkak. Lengkungkan punggung ke atas, lalu tekuk ke bawah. Melumasi tulang belakang.</li>
+              {guides.yogaList.map((item, idx) => (
+                <li key={idx}><strong style={{color: 'var(--text-primary)'}}>{item.name}:</strong> {item.desc}</li>
+              ))}
             </ul>
           </div>
 
           <div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: '#34d399', marginBottom: 8 }}>🫁 3. Breathing & Relaksasi</div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: '#34d399', marginBottom: 8 }}>{guides.breathTitle}</div>
             <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 10 }}>
-              Fokus melatih kapasitas oksigen dan menurunkan <em>resting heart rate</em> secara pasif.
+              {guides.breathDesc}
             </p>
             <ul style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.7, paddingLeft: 16 }}>
-              <li><strong style={{color: 'var(--text-primary)'}}>Box Breathing (4-4-4-4):</strong> Tarik napas 4 detik, tahan 4d, buang 4d, tahan 4d (tanpa napas). Ulangi 5-10 menit.</li>
-              <li><strong style={{color: 'var(--text-primary)'}}>Strict Nasal Breathing:</strong> Lakukan pernapasan hanya menggunakan <strong>hidung</strong> (tarik & buang).</li>
-              <li><strong style={{color: 'var(--text-primary)'}}>Diaphragmatic:</strong> Saat napas ditarik, perut harus membesar seperti balon (bukan dada yang membusung).</li>
+              {guides.breathList.map((item, idx) => (
+                <li key={idx}><strong style={{color: 'var(--text-primary)'}}>{item.name}:</strong> {item.desc}</li>
+              ))}
             </ul>
           </div>
           <div className="alert alert-info" style={{ marginTop: 4 }}>
-            Rekomendasi: Konsistensi lebih penting dari durasi. Lakukan rutinitas ini di hari "Rest" dengan intensitas ringan agar otot siap untuk jadwal lari berikutnya.
+            <strong>{guides.recommendTitle}</strong> {guides.recommendDesc}
           </div>
         </div>
       </details>

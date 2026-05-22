@@ -2,7 +2,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { msToDate } from './utils';
 
 // ─── Trend chart (monthly distance) ─────────────────────────────────────────
-export function TrendChart({ activities }) {
+export function TrendChart({ activities, lang = 'id' }) {
   const monthly = {};
   for (const a of activities) {
     if (!a.startTimeLocal) continue;
@@ -18,7 +18,7 @@ export function TrendChart({ activities }) {
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([key, km]) => ({
       key,
-      label: new Date(key + '-01').toLocaleDateString('id-ID', { month: 'short', year: '2-digit' }),
+      label: new Date(key + '-01').toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-US', { month: 'short', year: '2-digit' }),
       km: parseFloat(km.toFixed(1)),
     }));
 
@@ -42,8 +42,10 @@ export function TrendChart({ activities }) {
   return (
     <div className="chart-container">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 4 }}>
-        <div className="chart-title">Total Jarak per Bulan (km)</div>
-        <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Total keseluruhan: <strong style={{ color: 'var(--text-primary)' }}>{totalKm} km</strong></div>
+        <div className="chart-title">{lang === 'id' ? 'Total Jarak per Bulan (km)' : 'Total Monthly Distance (km)'}</div>
+        <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+          {lang === 'id' ? 'Total keseluruhan:' : 'Overall total:'} <strong style={{ color: 'var(--text-primary)' }}>{totalKm} km</strong>
+        </div>
       </div>
       <ResponsiveContainer width="100%" height={220}>
         <LineChart data={data} margin={{ top: 4, right: 16, left: -10, bottom: 0 }}>
@@ -63,15 +65,24 @@ export function TrendChart({ activities }) {
 }
 
 // ─── HR Zones bar chart ───────────────────────────────────────────────────────
-export function HRZoneChart({ zones, avgHr }) {
-  const data = zones.map(z => ({
-    zone: z.zone.split(' – ')[0],
-    label: z.zone,
-    min: z.min,
-    max: z.max,
-    color: z.color,
-    value: z.max - z.min,
-  }));
+export function HRZoneChart({ zones, avgHr, lang = 'id' }) {
+  const data = zones.map(z => {
+    let zoneLabel = z.zone;
+    if (lang === 'id') {
+      zoneLabel = z.zone
+        .replace(/Recovery/gi, 'Pemulihan')
+        .replace(/Aerobic/gi, 'Aerobik')
+        .replace(/Threshold/gi, 'Ambang Batas');
+    }
+    return {
+      zone: zoneLabel.split(' – ')[0],
+      label: zoneLabel,
+      min: z.min,
+      max: z.max,
+      color: z.color,
+      value: z.max - z.min,
+    };
+  });
 
   const CustomTooltip = ({ active, payload }) => {
     if (active && payload?.length) {
@@ -84,7 +95,11 @@ export function HRZoneChart({ zones, avgHr }) {
         }}>
           <div style={{ fontWeight: 700, marginBottom: 4, color: d.color }}>{d.label}</div>
           <div style={{ color: 'var(--text-secondary)' }}>{d.min} – {d.max} bpm</div>
-          {inZone && <div style={{ color: '#34d399', marginTop: 4 }}>← Avg HR lo ({avgHr} bpm)</div>}
+          {inZone && (
+            <div style={{ color: '#34d399', marginTop: 4 }}>
+              {lang === 'id' ? `← Avg HR lo (${avgHr} bpm)` : `← Your avg HR (${avgHr} bpm)`}
+            </div>
+          )}
         </div>
       );
     }
@@ -93,7 +108,7 @@ export function HRZoneChart({ zones, avgHr }) {
 
   return (
     <div className="chart-container">
-      <div className="chart-title">Zona Detak Jantung</div>
+      <div className="chart-title">{lang === 'id' ? 'Zona Detak Jantung' : 'Heart Rate Zones'}</div>
       <ResponsiveContainer width="100%" height={200}>
         <BarChart data={data} layout="vertical" margin={{ top: 4, right: 16, left: 60, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" horizontal={false} />

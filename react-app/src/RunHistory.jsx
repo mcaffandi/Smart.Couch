@@ -2,7 +2,7 @@ import { useState } from 'react';
 
 const ITEMS_PER_PAGE = 10;
 
-export default function RunHistory({ activities }) {
+export default function RunHistory({ activities, lang = 'id' }) {
   const [page, setPage] = useState(0);
 
   const sorted = [...activities].sort((a, b) =>
@@ -14,15 +14,15 @@ export default function RunHistory({ activities }) {
 
   const msToDate = (ms) => {
     const d = new Date(ms);
-    return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+    return d.toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-US', { day: '2-digit', month: 'short', year: 'numeric' });
   };
 
   const getBadge = (avgHr, maxHr) => {
     if (!avgHr) return null;
     const intensity = avgHr;
-    if (intensity > 170) return { label: 'Ngepush', cls: 'badge-interval' };
-    if (intensity > 155) return { label: 'Sedang', cls: 'badge-long' };
-    return { label: 'Santai', cls: 'badge-easy' };
+    if (intensity > 170) return { label: lang === 'id' ? 'Ngepush' : 'Interval/Push', cls: 'badge-interval' };
+    if (intensity > 155) return { label: lang === 'id' ? 'Sedang' : 'Moderate', cls: 'badge-long' };
+    return { label: lang === 'id' ? 'Santai' : 'Easy', cls: 'badge-easy' };
   };
 
   const RouteMap = ({ route }) => {
@@ -75,7 +75,7 @@ export default function RunHistory({ activities }) {
             <div className="history-item animate-fade-in" key={i} style={{ animationDelay: `${i * 0.04}s` }}>
               <div className="history-meta">
                 <span className="history-date">{msToDate(act.startTimeLocal)}</span>
-                <span className="history-name">{act.name ?? 'Running Session'}</span>
+                <span className="history-name">{act.name ?? (lang === 'id' ? 'Sesi Lari' : 'Running Session')}</span>
                 {badge && <span className={`badge ${badge.cls}`} style={{ marginTop: 4, width: 'fit-content' }}>{badge.label}</span>}
               </div>
               <div className="history-stats">
@@ -86,7 +86,7 @@ export default function RunHistory({ activities }) {
                 {durMin > 0 && (
                   <div className="history-stat">
                     <div className="history-stat-value">{durMin}</div>
-                    <div className="history-stat-label">menit</div>
+                    <div className="history-stat-label">{lang === 'id' ? 'menit' : 'mins'}</div>
                   </div>
                 )}
                 {act.avgHr && (

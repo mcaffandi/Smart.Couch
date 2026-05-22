@@ -1,8 +1,11 @@
 import React from 'react';
 import './LandingPage.css';
 import Logo from './Logo';
+import { translations } from './translations';
 
-export default function LandingPage({ onGetStarted }) {
+export default function LandingPage({ onGetStarted, lang, setLang }) {
+  const t = translations[lang] || translations.id;
+
   return (
     <div className="landing-container">
       {/* Subtle grid pattern background */}
@@ -17,29 +20,33 @@ export default function LandingPage({ onGetStarted }) {
           <Logo size={26} />
           <span className="logo-text">EnduraUP</span>
         </div>
-        <button className="nav-btn-primary" onClick={onGetStarted}>Sign In</button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div className="lang-switcher">
+            <button className={`lang-btn ${lang === 'id' ? 'active' : ''}`} onClick={() => setLang('id')}>ID</button>
+            <button className={`lang-btn ${lang === 'en' ? 'active' : ''}`} onClick={() => setLang('en')}>EN</button>
+          </div>
+          <button className="nav-btn-primary" onClick={onGetStarted}>{t.signIn}</button>
+        </div>
       </nav>
 
       {/* Hero Section */}
       <section className="hero-section">
         <div className="hero-content">
           <h1 className="hero-title">
-            Unlock your true <br/>
-            <span className="text-gradient">running potential</span>
+            {t.heroTitleLine1} <br/>
+            <span className="text-gradient">{t.heroTitleLine2}</span>
           </h1>
-          <p className="hero-subtitle">
-            Upload your Garmin or Strava data and let our AI create a highly personalized training plan tailored to your sleep, recovery, and goals.
-          </p>
+          <p className="hero-subtitle">{t.heroSubtitle}</p>
           <div className="hero-cta-group">
             <button className="btn-glow" onClick={onGetStarted}>
-              Get Started Free
+              {t.getStartedFree}
               <svg className="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="5" y1="12" x2="19" y2="12"></line>
                 <polyline points="12 5 19 12 12 19"></polyline>
               </svg>
             </button>
             <button className="btn-outline-landing" onClick={() => document.getElementById('features').scrollIntoView({ behavior: 'smooth' })}>
-              Learn More
+              {t.learnMore}
             </button>
           </div>
         </div>
@@ -51,7 +58,7 @@ export default function LandingPage({ onGetStarted }) {
               <div className="mac-dots">
                 <span></span><span></span><span></span>
               </div>
-              <div className="mockup-title">EnduraUP Dashboard Preview</div>
+              <div className="mockup-title">{t.dashboardPreview}</div>
             </div>
             <div className="mockup-body">
               <div className="mockup-layout">
@@ -66,28 +73,28 @@ export default function LandingPage({ onGetStarted }) {
                 <div className="mockup-panel">
                   <div className="mockup-grid">
                     <div className="mockup-card highlight">
-                      <div className="card-label">Weekly Mileage</div>
+                      <div className="card-label">{t.weeklyMileage}</div>
                       <div className="card-value">42.8 <span className="card-unit">km</span></div>
                       <div className="card-desc">▲ 12% vs last week</div>
                     </div>
                     <div className="mockup-card">
-                      <div className="card-label">Sleep Score</div>
+                      <div className="card-label">{t.sleepScore}</div>
                       <div className="card-value color-purple">88<span className="card-unit">/100</span></div>
-                      <div className="card-desc">Excellent Recovery</div>
+                      <div className="card-desc">{t.excellentRecovery}</div>
                     </div>
                     <div className="mockup-card">
-                      <div className="card-label">Pace Target</div>
+                      <div className="card-label">{t.paceTarget}</div>
                       <div className="card-value color-blue">5:15 <span className="card-unit">/km</span></div>
-                      <div className="card-desc">Easy Run Zone</div>
+                      <div className="card-desc">{t.easyRunZone}</div>
                     </div>
                   </div>
                   {/* Mockup Chart Area */}
                   <div className="mockup-chart-container">
                     <div className="mockup-chart-header">
-                      <div className="chart-label">Fitness Progress (VO2 Max Equivalent)</div>
+                      <div className="chart-label">{t.fitnessProgress}</div>
                       <div className="chart-legend">
-                        <span className="legend-dot color-purple"></span> Lari
-                        <span className="legend-dot color-blue"></span> Tidur
+                        <span className="legend-dot color-purple"></span> {t.run}
+                        <span className="legend-dot color-blue"></span> {t.sleep}
                       </div>
                     </div>
                     <div className="mockup-chart-bars">
@@ -110,8 +117,8 @@ export default function LandingPage({ onGetStarted }) {
       {/* Bento Grid Features Section */}
       <section id="features" className="features-section">
         <div className="section-header">
-          <h2 className="section-heading">Smarter Training, Faster Results</h2>
-          <p className="section-subheading">A comprehensive tool built specifically for runners who want data-driven plans without the clutter.</p>
+          <h2 className="section-heading">{t.smarterTraining}</h2>
+          <p className="section-subheading">{t.bentoSubtitle}</p>
         </div>
         
         <div className="bento-grid">
@@ -122,8 +129,8 @@ export default function LandingPage({ onGetStarted }) {
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
               </div>
               <div className="bento-text">
-                <h3>Unified Data Import</h3>
-                <p>Drag and drop ZIP exports from Garmin Connect, standard GPX files from Strava, or custom Excel/CSV training templates. We seamlessly parse and consolidate your history without requiring complex API integrations.</p>
+                <h3>{t.unifiedImportTitle}</h3>
+                <p>{t.unifiedImportDesc}</p>
               </div>
             </div>
             <div className="bento-visual visual-import">
@@ -139,8 +146,8 @@ export default function LandingPage({ onGetStarted }) {
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
               </div>
               <div className="bento-text">
-                <h3>Race Predictor</h3>
-                <p>Get accurate estimated finishing times for 5K, 10K, Half, and Full Marathons, calculated via the Pete Riegel formula using your recent pacing statistics.</p>
+                <h3>{t.racePredictorTitle}</h3>
+                <p>{t.racePredictorDesc}</p>
               </div>
             </div>
             <div className="bento-visual visual-race">
@@ -157,8 +164,8 @@ export default function LandingPage({ onGetStarted }) {
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
               </div>
               <div className="bento-text">
-                <h3>Adaptive Training Calendar</h3>
-                <p>Generate highly tailored training schedules that fit your schedule. Choose which days to run, select your program style (ngepush, sedang, or santai), and watch your target paces adjust dynamically.</p>
+                <h3>{t.adaptiveCalendarTitle}</h3>
+                <p>{t.adaptiveCalendarDesc}</p>
               </div>
             </div>
             <div className="bento-visual visual-calendar">
@@ -178,8 +185,8 @@ export default function LandingPage({ onGetStarted }) {
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
               </div>
               <div className="bento-text">
-                <h3>AI Recovery &amp; Sleep Correlation</h3>
-                <p>We don't just look at mileage. Our AI maps the relationship between your sleep scores and your heart rate zones to prevent overtraining and optimize recovery.</p>
+                <h3>{t.sleepCorrelationTitle}</h3>
+                <p>{t.sleepCorrelationDesc}</p>
               </div>
             </div>
             <div className="bento-visual visual-sleep">
@@ -187,7 +194,7 @@ export default function LandingPage({ onGetStarted }) {
                 <div className="sleep-score-dial">
                   <div className="dial-value">85%</div>
                 </div>
-                <div className="dial-label">Ready to Run</div>
+                <div className="dial-label">{t.readyToRun}</div>
               </div>
             </div>
           </div>
@@ -200,13 +207,13 @@ export default function LandingPage({ onGetStarted }) {
             <span className="badge-dot"></span> V2.0 Now Live
           </div>
         </div>
-        <p>© {new Date().getFullYear()} EnduraUP. Built for runners, by runners.</p>
+        <p>© {new Date().getFullYear()} EnduraUP. {t.builtForRunners}</p>
         <p className="footer-privacy" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 8, fontSize: 12, color: '#52525b' }}>
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#10b981' }}>
             <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
             <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
           </svg>
-          Data Anda aman bersama kami. Kami tidak membagikan atau menjual data latihan Anda.
+          {t.dataSafe}
         </p>
       </footer>
     </div>

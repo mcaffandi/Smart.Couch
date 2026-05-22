@@ -10,7 +10,7 @@ import {
   signInAnonymously
 } from './firebase';
 
-export default function LoginScreen({ onLoginSuccess, usersList, addToast }) {
+export default function LoginScreen({ onLoginSuccess, usersList, addToast, lang = 'id' }) {
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -46,7 +46,7 @@ export default function LoginScreen({ onLoginSuccess, usersList, addToast }) {
     const cleanPass = password.trim();
 
     if (!cleanUser || !cleanPass) {
-      addToast('Username dan password wajib diisi.', 'error');
+      addToast(lang === 'id' ? 'Username dan password wajib diisi.' : 'Username and password are required.', 'error');
       return;
     }
 
@@ -54,7 +54,7 @@ export default function LoginScreen({ onLoginSuccess, usersList, addToast }) {
 
     if (isRegister) {
       if (db[cleanUser]) {
-        addToast('Username sudah terdaftar.', 'error');
+        addToast(lang === 'id' ? 'Username sudah terdaftar.' : 'Username is already registered.', 'error');
         return;
       }
 
@@ -73,23 +73,32 @@ export default function LoginScreen({ onLoginSuccess, usersList, addToast }) {
         } catch (err) {}
       }
 
-      addToast(isLegacyClaim ? 'Berhasil mengamankan profil lama lo!' : 'Akun berhasil dibuat!');
+      addToast(
+        isLegacyClaim 
+          ? (lang === 'id' ? 'Berhasil mengamankan profil lama lo!' : 'Successfully secured your old profile!')
+          : (lang === 'id' ? 'Akun berhasil dibuat!' : 'Account created successfully!')
+      );
       setShowRegisterModal(false);
       onLoginSuccess(cleanUser);
     } else {
       const registeredPassword = db[cleanUser];
       if (usersList.includes(cleanUser) && !registeredPassword) {
-        addToast('Profil ini belum memiliki password. Silakan Daftar untuk membuat password.', 'warning');
+        addToast(
+          lang === 'id' 
+            ? 'Profil ini belum memiliki password. Silakan Daftar untuk membuat password.'
+            : 'This profile does not have a password yet. Please Register to create a password.', 
+          'warning'
+        );
         setShowRegisterModal(true);
         return;
       }
 
       if (!registeredPassword || registeredPassword !== cleanPass) {
-        addToast('Username atau password salah.', 'error');
+        addToast(lang === 'id' ? 'Username atau password salah.' : 'Invalid username or password.', 'error');
         return;
       }
 
-      addToast(`Selamat datang kembali, ${cleanUser}!`);
+      addToast(lang === 'id' ? `Selamat datang kembali, ${cleanUser}!` : `Welcome back, ${cleanUser}!`);
       onLoginSuccess(cleanUser);
     }
   };
@@ -101,7 +110,7 @@ export default function LoginScreen({ onLoginSuccess, usersList, addToast }) {
     const cleanPass = password.trim();
 
     if (!cleanEmail || !cleanPass) {
-      addToast('Email dan password wajib diisi.', 'error');
+      addToast(lang === 'id' ? 'Email dan password wajib diisi.' : 'Email and password are required.', 'error');
       return;
     }
 
@@ -109,24 +118,30 @@ export default function LoginScreen({ onLoginSuccess, usersList, addToast }) {
     try {
       if (isRegister) {
         const userCredential = await createUserWithEmailAndPassword(auth, cleanEmail, cleanPass);
-        addToast('Akun Firebase berhasil didaftarkan!');
+        addToast(lang === 'id' ? 'Akun Firebase berhasil didaftarkan!' : 'Firebase account registered successfully!');
         setShowRegisterModal(false);
         const userIdentifier = userCredential.user.email;
         onLoginSuccess(userIdentifier);
       } else {
         const userCredential = await signInWithEmailAndPassword(auth, cleanEmail, cleanPass);
-        addToast('Berhasil masuk menggunakan Firebase!');
+        addToast(lang === 'id' ? 'Berhasil masuk menggunakan Firebase!' : 'Successfully signed in with Firebase!');
         const userIdentifier = userCredential.user.email;
         onLoginSuccess(userIdentifier);
       }
     } catch (error) {
       console.error(error);
-      let errorMsg = 'Gagal melakukan otentikasi.';
-      if (error.code === 'auth/email-already-in-use') errorMsg = 'Email ini sudah terdaftar.';
-      if (error.code === 'auth/weak-password') errorMsg = 'Password minimal terdiri dari 6 karakter.';
-      if (error.code === 'auth/invalid-email') errorMsg = 'Format email tidak valid.';
+      let errorMsg = lang === 'id' ? 'Gagal melakukan otentikasi.' : 'Failed to authenticate.';
+      if (error.code === 'auth/email-already-in-use') {
+        errorMsg = lang === 'id' ? 'Email ini sudah terdaftar.' : 'This email is already registered.';
+      }
+      if (error.code === 'auth/weak-password') {
+        errorMsg = lang === 'id' ? 'Password minimal terdiri dari 6 karakter.' : 'Password must be at least 6 characters.';
+      }
+      if (error.code === 'auth/invalid-email') {
+        errorMsg = lang === 'id' ? 'Format email tidak valid.' : 'Invalid email format.';
+      }
       if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
-        errorMsg = 'Email atau password salah.';
+        errorMsg = lang === 'id' ? 'Email atau password salah.' : 'Invalid email or password.';
       }
       addToast(errorMsg, 'error');
     } finally {
@@ -139,12 +154,12 @@ export default function LoginScreen({ onLoginSuccess, usersList, addToast }) {
     setLoading(true);
     try {
       const result = await signInWithPopup(auth, googleProvider);
-      addToast(`Selamat datang, ${result.user.displayName || 'User'}!`);
+      addToast(lang === 'id' ? `Selamat datang, ${result.user.displayName || 'User'}!` : `Welcome, ${result.user.displayName || 'User'}!`);
       const userIdentifier = result.user.email || result.user.displayName;
       onLoginSuccess(userIdentifier);
     } catch (error) {
       console.error(error);
-      addToast('Gagal masuk menggunakan akun Google.', 'error');
+      addToast(lang === 'id' ? 'Gagal masuk menggunakan akun Google.' : 'Failed to sign in with Google.', 'error');
     } finally {
       setLoading(false);
     }
@@ -155,12 +170,12 @@ export default function LoginScreen({ onLoginSuccess, usersList, addToast }) {
     setLoading(true);
     try {
       const result = await signInAnonymously(auth);
-      addToast('Masuk sebagai Pengguna Anonim.');
+      addToast(lang === 'id' ? 'Masuk sebagai Pengguna Anonim.' : 'Logged in as Anonymous.');
       const userIdentifier = `Anonim-${result.user.uid.substring(0, 4)}`;
       onLoginSuccess(userIdentifier);
     } catch (error) {
       console.error(error);
-      addToast('Gagal masuk secara anonim.', 'error');
+      addToast(lang === 'id' ? 'Gagal masuk secara anonim.' : 'Failed to sign in anonymously.', 'error');
     } finally {
       setLoading(false);
     }
@@ -179,11 +194,11 @@ export default function LoginScreen({ onLoginSuccess, usersList, addToast }) {
 
         <form onSubmit={(e) => isFirebaseConfigured ? handleFirebaseAuth(e, false) : handleLocalAuth(e, false)} className="login-form">
           <div className="form-group">
-            <label className="form-label">Email Address</label>
+            <label className="form-label">{lang === 'id' ? 'Alamat Email / Username' : 'Email Address / Username'}</label>
             <input
-              type="email"
+              type="text"
               className="form-input"
-              placeholder="nama@email.com"
+              placeholder={lang === 'id' ? 'nama@email.com atau username' : 'email@domain.com or username'}
               value={email}
               onChange={e => setEmail(e.target.value)}
               autoFocus
@@ -198,7 +213,7 @@ export default function LoginScreen({ onLoginSuccess, usersList, addToast }) {
               <input
                 type={showPassword ? 'text' : 'password'}
                 className="form-input"
-                placeholder="Masukkan password..."
+                placeholder={lang === 'id' ? 'Masukkan password...' : 'Enter password...'}
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 disabled={loading}
@@ -235,7 +250,7 @@ export default function LoginScreen({ onLoginSuccess, usersList, addToast }) {
           </div>
 
           <button type="submit" className="btn btn-primary" style={{ marginTop: 22, height: 42 }} disabled={loading}>
-            {loading ? 'Memproses...' : 'Masuk ke Dashboard'}
+            {loading ? (lang === 'id' ? 'Memproses...' : 'Processing...') : (lang === 'id' ? 'Masuk ke Dashboard' : 'Sign in to Dashboard')}
           </button>
         </form>
 
@@ -243,7 +258,7 @@ export default function LoginScreen({ onLoginSuccess, usersList, addToast }) {
           <>
             <div style={{ display: 'flex', alignItems: 'center', margin: '20px 0', color: 'var(--text-muted)', fontSize: 12 }}>
               <div style={{ flex: 1, height: 1, background: 'var(--border)' }}></div>
-              <span style={{ padding: '0 10px' }}>atau masuk dengan</span>
+              <span style={{ padding: '0 10px' }}>{lang === 'id' ? 'atau masuk dengan' : 'or sign in with'}</span>
               <div style={{ flex: 1, height: 1, background: 'var(--border)' }}></div>
             </div>
 
@@ -274,7 +289,7 @@ export default function LoginScreen({ onLoginSuccess, usersList, addToast }) {
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                   <circle cx="12" cy="7" r="4" />
                 </svg>
-                Anonim
+                {lang === 'id' ? 'Anonim' : 'Anonymous'}
               </button>
             </div>
           </>
@@ -282,9 +297,9 @@ export default function LoginScreen({ onLoginSuccess, usersList, addToast }) {
 
         <div className="login-footer" style={{ marginTop: 20 }}>
           <p>
-            Belum punya akun?{' '}
+            {lang === 'id' ? 'Belum punya akun?' : "Don't have an account?"}{' '}
             <button className="login-link-btn" onClick={() => setShowRegisterModal(true)}>
-              Daftar baru
+              {lang === 'id' ? 'Daftar baru' : 'Register here'}
             </button>
           </p>
 
@@ -305,12 +320,18 @@ export default function LoginScreen({ onLoginSuccess, usersList, addToast }) {
               <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
               <path d="M7 11V7a5 5 0 0 1 10 0v4" />
             </svg>
-            <span style={{ textAlign: 'left' }}>Privasi Terjamin: Data aktivitas &amp; profil Anda aman bersama kami.</span>
+            <span style={{ textAlign: 'left' }}>
+              {lang === 'id' 
+                ? 'Privasi Terjamin: Data aktivitas & profil Anda aman bersama kami.' 
+                : 'Privacy Guaranteed: Your activity & profile data are secure with us.'}
+            </span>
           </div>
 
           {!isFirebaseConfigured && (
             <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 14, background: 'rgba(255,255,255,0.03)', padding: '6px 10px', borderRadius: 4, border: '1px solid var(--border)' }}>
-              ⚠️ Firebase Auth belum dikonfigurasi. Berjalan dalam mode database lokal.
+              {lang === 'id' 
+                ? '⚠️ Firebase Auth belum dikonfigurasi. Berjalan dalam mode database lokal.' 
+                : '⚠️ Firebase Auth is not configured. Running in local database mode.'}
             </div>
           )}
         </div>
@@ -321,8 +342,12 @@ export default function LoginScreen({ onLoginSuccess, usersList, addToast }) {
           <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 16, width: '100%', maxWidth: 400, maxHeight: '92vh', overflowY: 'auto' }}>
             <div style={{ padding: '18px 18px 14px', display: 'flex', alignItems: 'center', gap: 12, borderBottom: '1px solid var(--border)' }}>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)' }}>Daftar Akun Baru</div>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Buat profil untuk mulai latihan</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)' }}>
+                  {lang === 'id' ? 'Daftar Akun Baru' : 'Register New Account'}
+                </div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                  {lang === 'id' ? 'Buat profil untuk mulai latihan' : 'Create a profile to start training'}
+                </div>
               </div>
               <button onClick={() => setShowRegisterModal(false)}
                 style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 6, color: 'var(--text-muted)', cursor: 'pointer', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontFamily: 'inherit', flexShrink: 0 }}
@@ -331,11 +356,11 @@ export default function LoginScreen({ onLoginSuccess, usersList, addToast }) {
             <div style={{ padding: '18px', display: 'flex', flexDirection: 'column', gap: 16 }}>
               <form onSubmit={(e) => isFirebaseConfigured ? handleFirebaseAuth(e, true) : handleLocalAuth(e, true)} className="login-form">
                 <div className="form-group">
-                  <label className="form-label">Email Address</label>
+                  <label className="form-label">{lang === 'id' ? 'Alamat Email / Username' : 'Email Address / Username'}</label>
                   <input
-                    type="email"
+                    type="text"
                     className="form-input"
-                    placeholder="nama@email.com"
+                    placeholder={lang === 'id' ? 'nama@email.com atau username' : 'email@domain.com or username'}
                     value={email}
                     onChange={e => setEmail(e.target.value)}
                     autoFocus
@@ -349,7 +374,7 @@ export default function LoginScreen({ onLoginSuccess, usersList, addToast }) {
                     <input
                       type={showPassword ? 'text' : 'password'}
                       className="form-input"
-                      placeholder="Masukkan password..."
+                      placeholder={lang === 'id' ? 'Masukkan password...' : 'Enter password...'}
                       value={password}
                       onChange={e => setPassword(e.target.value)}
                       disabled={loading}
@@ -385,7 +410,7 @@ export default function LoginScreen({ onLoginSuccess, usersList, addToast }) {
                   </div>
                 </div>
                 <button type="submit" className="btn btn-primary" style={{ marginTop: 22, height: 42 }} disabled={loading}>
-                  {loading ? 'Memproses...' : 'Daftar & Masuk'}
+                  {loading ? (lang === 'id' ? 'Memproses...' : 'Processing...') : (lang === 'id' ? 'Daftar & Masuk' : 'Register & Sign In')}
                 </button>
               </form>
             </div>

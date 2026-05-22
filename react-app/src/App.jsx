@@ -13,6 +13,7 @@ import LoginScreen from './LoginScreen';
 import AICoach from './AICoach';
 import LandingPage from './LandingPage';
 import Logo from './Logo';
+import { translations } from './translations';
 import {
   auth,
   db,
@@ -117,6 +118,13 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => localStorage.getItem('smartcoach_sidebar_collapsed') === 'true');
   const fileInputRef = useRef(null);
+  const [lang, setLang] = useState(() => localStorage.getItem('smartcoach_lang') || 'id');
+
+  useEffect(() => {
+    localStorage.setItem('smartcoach_lang', lang);
+  }, [lang]);
+
+  const t = translations[lang] || translations.id;
 
   // ── State: profile ───────────────────────────────────────────────────────────
   const [age, setAge] = useState(() => data.profile?.age ?? null);
@@ -174,14 +182,14 @@ export default function App() {
   }, []);
 
   const allDays = useMemo(() => [
-    { key: 'Senin', label: 'Sen' },
-    { key: 'Selasa', label: 'Sel' },
-    { key: 'Rabu', label: 'Rab' },
-    { key: 'Kamis', label: 'Kam' },
-    { key: 'Jumat', label: 'Jum' },
-    { key: 'Sabtu', label: 'Sab' },
-    { key: 'Minggu', label: 'Min' }
-  ], []);
+    { key: 'Senin', label: translations[lang]?.daysShort[0] || 'Sen' },
+    { key: 'Selasa', label: translations[lang]?.daysShort[1] || 'Sel' },
+    { key: 'Rabu', label: translations[lang]?.daysShort[2] || 'Rab' },
+    { key: 'Kamis', label: translations[lang]?.daysShort[3] || 'Kam' },
+    { key: 'Jumat', label: translations[lang]?.daysShort[4] || 'Jum' },
+    { key: 'Sabtu', label: translations[lang]?.daysShort[5] || 'Sab' },
+    { key: 'Minggu', label: translations[lang]?.daysShort[6] || 'Min' }
+  ], [lang]);
 
   const toggleDay = useCallback((dayKey) => {
     setSelectedDays(prev => {
@@ -352,6 +360,45 @@ export default function App() {
   const sortedSleepDates = Object.keys(sleepRecs).sort().reverse();
   const latestSleepDate = sortedSleepDates[0] ?? null;
   const latestSleepScore = latestSleepDate ? sleepRecs[latestSleepDate].score : null;
+
+  // Calculate days since last run relative to the latestSleepDate
+  const daysSinceLastRun = useMemo(() => {
+    if (!latestSleepDate || !runActs || runActs.length === 0) return null;
+    const runDatesArray = runActs
+      .map(a => a.startTimeLocal ? msToDate(a.startTimeLocal) : null)
+      .filter(Boolean)
+      .filter(d => d <= latestSleepDate)
+      .sort()
+      .reverse();
+    if (runDatesArray.length === 0) return null;
+    const lastRunDate = runDatesArray[0];
+    const dSleep = new Date(latestSleepDate);
+    const dRun = new Date(lastRunDate);
+    const diffTime = dSleep - dRun;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    return Math.max(0, diffDays);
+  }, [latestSleepDate, runActs]);
+
+  // Adjust readiness score based on sleep score and running fatigue/rest
+  const trainingReadiness = useMemo(() => {
+    if (latestSleepScore === null) return null;
+    let score = latestSleepScore;
+    if (daysSinceLastRun === 0) {
+      score = Math.max(30, score - 20);
+    } else if (daysSinceLastRun === 1) {
+      score = Math.max(40, score - 10);
+    } else if (daysSinceLastRun === 2) {
+      score = score;
+    } else if (daysSinceLastRun === 3) {
+      score = Math.min(100, score + 10);
+    } else if (daysSinceLastRun >= 4 || daysSinceLastRun === null) {
+      score = Math.min(100, score + 15);
+      if (latestSleepScore >= 50) {
+        score = Math.max(80, score);
+      }
+    }
+    return Math.round(score);
+  }, [latestSleepScore, daysSinceLastRun]);
 
   const runDates = new Set(runActs.map(a => a.startTimeLocal ? msToDate(a.startTimeLocal) : null).filter(Boolean));
   const runDayScores = Object.entries(sleepRecs).filter(([d]) => runDates.has(d)).map(([, v]) => v.score);
@@ -542,7 +589,7 @@ export default function App() {
       ctx.fillText(athleteName.toUpperCase(), 80, panelY + 64);
       ctx.fillStyle = 'rgba(124, 74, 30, 0.7)';
       ctx.font = '500 28px Inter, sans-serif';
-      ctx.fillText('Performance Card', 80, panelY + 104);
+      ctx.fillText(lang === 'id' ? 'Kartu Performa' : 'Performance Card', 80, panelY + 104);
       // Panel divider
       ctx.strokeStyle = 'rgba(160, 82, 28, 0.15)';
       ctx.lineWidth = 1.5;
@@ -595,7 +642,7 @@ export default function App() {
         // Section label ── y=592
         ctx.fillStyle = textMuted;
         ctx.font = '600 30px Inter, sans-serif';
-        ctx.fillText('ESTIMASI VO2MAX', lx, 592);
+        ctx.fillText(lang === 'id' ? 'ESTIMASI VO2MAX' : 'ESTIMATED VO2MAX', lx, 592);
 
         // Big number (150px) ── baseline y=748, cap top ~598 → nice gap after label
         ctx.fillStyle = '#c0440a';
@@ -614,14 +661,27 @@ export default function App() {
         ctx.beginPath(); ctx.moveTo(lx, 828); ctx.lineTo(rx, 828); ctx.stroke();
 
         // Fitness level ── y=886
-        let fitnessLevel = 'Pemula';
-        let fitnessDesc = 'Fokus pada konsistensi latihan dasar.';
-        if (vo2max >= 62) { fitnessLevel = 'Elite / Profesional'; fitnessDesc = 'Performa puncak luar biasa.'; }
-        else if (vo2max >= 57) { fitnessLevel = 'Sangat Baik (Top 10%)'; fitnessDesc = 'Tingkat kebugaran setara pelari kompetitif.'; }
-        else if (vo2max >= 52) { fitnessLevel = 'Baik Sekali'; fitnessDesc = 'Kapasitas aerobik sangat kuat.'; }
-        else if (vo2max >= 46) { fitnessLevel = 'Di Atas Rata-Rata'; fitnessDesc = 'Performa lari solid dan stabil.'; }
-        else if (vo2max >= 38) { fitnessLevel = 'Rata-Rata'; fitnessDesc = 'Kondisi fisik sehat dan aktif.'; }
-        else if (vo2max >= 30) { fitnessLevel = 'Di Bawah Rata-Rata'; fitnessDesc = 'Potensi peningkatan masih sangat besar.'; }
+        let fitnessLevel = lang === 'id' ? 'Pemula' : 'Beginner';
+        let fitnessDesc = lang === 'id' ? 'Fokus pada konsistensi latihan dasar.' : 'Focus on basic training consistency.';
+        if (vo2max >= 62) {
+          fitnessLevel = lang === 'id' ? 'Elite / Profesional' : 'Elite / Professional';
+          fitnessDesc = lang === 'id' ? 'Performa puncak luar biasa.' : 'Exceptional peak performance.';
+        } else if (vo2max >= 57) {
+          fitnessLevel = lang === 'id' ? 'Sangat Baik (Top 10%)' : 'Very Good (Top 10%)';
+          fitnessDesc = lang === 'id' ? 'Tingkat kebugaran setara pelari kompetitif.' : 'Fitness level on par with competitive runners.';
+        } else if (vo2max >= 52) {
+          fitnessLevel = lang === 'id' ? 'Baik Sekali' : 'Excellent';
+          fitnessDesc = lang === 'id' ? 'Kapasitas aerobik sangat kuat.' : 'Very strong aerobic capacity.';
+        } else if (vo2max >= 46) {
+          fitnessLevel = lang === 'id' ? 'Di Atas Rata-Rata' : 'Above Average';
+          fitnessDesc = lang === 'id' ? 'Performa lari solid dan stabil.' : 'Solid and stable running performance.';
+        } else if (vo2max >= 38) {
+          fitnessLevel = lang === 'id' ? 'Rata-Rata' : 'Average';
+          fitnessDesc = lang === 'id' ? 'Kondisi fisik sehat dan aktif.' : 'Healthy and active physical condition.';
+        } else if (vo2max >= 30) {
+          fitnessLevel = lang === 'id' ? 'Di Bawah Rata-Rata' : 'Below Average';
+          fitnessDesc = lang === 'id' ? 'Potensi peningkatan masih sangat besar.' : 'Potential for improvement is still huge.';
+        }
 
         ctx.fillStyle = textPrimary;
         ctx.font = '700 48px Outfit, sans-serif';
@@ -636,7 +696,7 @@ export default function App() {
         // Section label ── y=592
         ctx.fillStyle = textMuted;
         ctx.font = '600 30px Inter, sans-serif';
-        ctx.fillText('RINGKASAN PERFORMA', lx, 592);
+        ctx.fillText(lang === 'id' ? 'RINGKASAN PERFORMA' : 'PERFORMANCE SUMMARY', lx, 592);
 
         const targetYear = (() => {
           let y = new Date().getFullYear();
@@ -668,16 +728,16 @@ export default function App() {
           ctx.font = '500 24px Inter, sans-serif';
           ctx.fillText(unit.toUpperCase(), x, y + 132);
         };
-        drawM(lx,  630, `Jarak (${targetYear})`,   yearlyDist.toFixed(1),                        'km',   '#c0440a');
-        drawM(580, 630, `Latihan (${targetYear})`, yearlySessions.toString(),                    'sesi', '#2a9d8f');
-        drawM(lx,  810, 'HR Rerata',               yearlyAvgHR ? Math.round(yearlyAvgHR).toString() : '–', 'bpm', '#0d626c');
-        drawM(580, 810, 'HR Maks',                 yearlyMaxHR ? yearlyMaxHR.toString() : '–',   'bpm', '#b45309');
+        drawM(lx,  630, lang === 'id' ? `Jarak (${targetYear})` : `Distance (${targetYear})`,   yearlyDist.toFixed(1),                        'km',   '#c0440a');
+        drawM(580, 630, lang === 'id' ? `Latihan (${targetYear})` : `Workouts (${targetYear})`, yearlySessions.toString(),                    lang === 'id' ? 'sesi' : 'sessions', '#2a9d8f');
+        drawM(lx,  810, lang === 'id' ? 'HR Rerata' : 'Avg HR',               yearlyAvgHR ? Math.round(yearlyAvgHR).toString() : '–', 'bpm', '#0d626c');
+        drawM(580, 810, lang === 'id' ? 'HR Maks' : 'Max HR',                 yearlyMaxHR ? yearlyMaxHR.toString() : '–',   'bpm', '#b45309');
 
       } else { // race predictions
         // Section label ── y=592
         ctx.fillStyle = textMuted;
         ctx.font = '600 30px Inter, sans-serif';
-        ctx.fillText('PREDIKSI WAKTU RACE', lx, 592);
+        ctx.fillText(lang === 'id' ? 'PREDIKSI WAKTU RACE' : 'RACE TIME PREDICTION', lx, 592);
 
         const RIEGEL = 1.06;
         const RACES = [
@@ -720,7 +780,7 @@ export default function App() {
       ctx.beginPath(); ctx.moveTo(lx, 962); ctx.lineTo(rx, 962); ctx.stroke();
       ctx.fillStyle = textMuted;
       ctx.font = '400 22px Inter, sans-serif';
-      ctx.fillText('Dibuat otomatis oleh EnduraUP AI Engine', lx, 994);
+      ctx.fillText(lang === 'id' ? 'Dibuat otomatis oleh EnduraUP AI Engine' : 'Generated automatically by EnduraUP AI Engine', lx, 994);
       ctx.fillStyle = '#c0440a';
       ctx.font = '600 26px Inter, sans-serif';
       ctx.fillText('enduraup.vercel.app', lx, 1034);
@@ -738,7 +798,7 @@ export default function App() {
         // Section label ── 24px (was 20px)
         ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
         ctx.font = '600 24px Inter, sans-serif';
-        ctx.fillText('ESTIMASI VO2MAX', px, p0 + 44);
+        ctx.fillText(lang === 'id' ? 'ESTIMASI VO2MAX' : 'ESTIMATED VO2MAX', px, p0 + 44);
 
         // Main number ── 160px (was 200px — too dominant)
         // Baseline at ~490, cap top ~360, nicely centred in upper half
@@ -758,14 +818,27 @@ export default function App() {
         ctx.beginPath(); ctx.moveTo(px, 565); ctx.lineTo(pw, 565); ctx.stroke();
 
         // Fitness level ── 44px (was 34px)
-        let fitnessLevel = 'Pemula';
-        let fitnessDesc = 'Fokus pada konsistensi latihan dasar.';
-        if (vo2max >= 62) { fitnessLevel = 'Elite / Profesional'; fitnessDesc = 'Performa puncak luar biasa.'; }
-        else if (vo2max >= 57) { fitnessLevel = 'Sangat Baik (Top 10%)'; fitnessDesc = 'Tingkat kebugaran setara pelari kompetitif.'; }
-        else if (vo2max >= 52) { fitnessLevel = 'Baik Sekali'; fitnessDesc = 'Kapasitas aerobik sangat kuat.'; }
-        else if (vo2max >= 46) { fitnessLevel = 'Di Atas Rata-Rata'; fitnessDesc = 'Performa lari solid dan stabil.'; }
-        else if (vo2max >= 38) { fitnessLevel = 'Rata-Rata'; fitnessDesc = 'Kondisi fisik sehat dan aktif.'; }
-        else if (vo2max >= 30) { fitnessLevel = 'Di Bawah Rata-Rata'; fitnessDesc = 'Potensi peningkatan masih sangat besar.'; }
+        let fitnessLevel = lang === 'id' ? 'Pemula' : 'Beginner';
+        let fitnessDesc = lang === 'id' ? 'Fokus pada konsistensi latihan dasar.' : 'Focus on basic training consistency.';
+        if (vo2max >= 62) {
+          fitnessLevel = lang === 'id' ? 'Elite / Profesional' : 'Elite / Professional';
+          fitnessDesc = lang === 'id' ? 'Performa puncak luar biasa.' : 'Exceptional peak performance.';
+        } else if (vo2max >= 57) {
+          fitnessLevel = lang === 'id' ? 'Sangat Baik (Top 10%)' : 'Very Good (Top 10%)';
+          fitnessDesc = lang === 'id' ? 'Tingkat kebugaran setara pelari kompetitif.' : 'Fitness level on par with competitive runners.';
+        } else if (vo2max >= 52) {
+          fitnessLevel = lang === 'id' ? 'Baik Sekali' : 'Excellent';
+          fitnessDesc = lang === 'id' ? 'Kapasitas aerobik sangat kuat.' : 'Very strong aerobic capacity.';
+        } else if (vo2max >= 46) {
+          fitnessLevel = lang === 'id' ? 'Di Atas Rata-Rata' : 'Above Average';
+          fitnessDesc = lang === 'id' ? 'Performa lari solid dan stabil.' : 'Solid and stable running performance.';
+        } else if (vo2max >= 38) {
+          fitnessLevel = lang === 'id' ? 'Rata-Rata' : 'Average';
+          fitnessDesc = lang === 'id' ? 'Kondisi fisik sehat dan aktif.' : 'Healthy and active physical condition.';
+        } else if (vo2max >= 30) {
+          fitnessLevel = lang === 'id' ? 'Di Bawah Rata-Rata' : 'Below Average';
+          fitnessDesc = lang === 'id' ? 'Potensi peningkatan masih sangat besar.' : 'Potential for improvement is still huge.';
+        }
 
         ctx.fillStyle = '#ffffff';
         ctx.font = '700 44px Outfit, sans-serif';
@@ -780,7 +853,7 @@ export default function App() {
         // Section label ── 24px (was 20px)
         ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
         ctx.font = '600 24px Inter, sans-serif';
-        ctx.fillText('RINGKASAN PERFORMA', px, p0 + 44);
+        ctx.fillText(lang === 'id' ? 'RINGKASAN PERFORMA' : 'PERFORMANCE SUMMARY', px, p0 + 44);
 
         const targetYear = (() => {
           let y = new Date().getFullYear();
@@ -813,16 +886,16 @@ export default function App() {
         };
 
         // 2×2 grid: row1 at p0+80=285, row2 at p0+345=550
-        drawMetric(px,  p0 + 80,  `Jarak (${targetYear})`,   yearlyDist.toFixed(1),                        'km',   '#818cf8');
-        drawMetric(560, p0 + 80,  `Latihan (${targetYear})`, yearlySessions.toString(),                    'sesi', '#fb7185');
-        drawMetric(px,  p0 + 345, 'HR Rerata',               yearlyAvgHR ? Math.round(yearlyAvgHR).toString() : '–', 'bpm', '#34d399');
-        drawMetric(560, p0 + 345, 'HR Maks',                 yearlyMaxHR ? yearlyMaxHR.toString() : '–',   'bpm', '#fbbf24');
+        drawMetric(px,  p0 + 80,  lang === 'id' ? `Jarak (${targetYear})` : `Distance (${targetYear})`,   yearlyDist.toFixed(1),                        'km',   '#818cf8');
+        drawMetric(560, p0 + 80,  lang === 'id' ? `Latihan (${targetYear})` : `Workouts (${targetYear})`, yearlySessions.toString(),                    lang === 'id' ? 'sesi' : 'sessions', '#fb7185');
+        drawMetric(px,  p0 + 345, lang === 'id' ? 'HR Rerata' : 'Avg HR',               yearlyAvgHR ? Math.round(yearlyAvgHR).toString() : '–', 'bpm', '#34d399');
+        drawMetric(560, p0 + 345, lang === 'id' ? 'HR Maks' : 'Max HR',                 yearlyMaxHR ? yearlyMaxHR.toString() : '–',   'bpm', '#fbbf24');
 
       } else { // race predictions
         // Section label ── 24px (was 20px)
         ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
         ctx.font = '600 24px Inter, sans-serif';
-        ctx.fillText('PREDIKSI WAKTU RACE', px, p0 + 44);
+        ctx.fillText(lang === 'id' ? 'PREDIKSI WAKTU RACE' : 'RACE TIME PREDICTION', px, p0 + 44);
 
         const RIEGEL = 1.06;
         const RACES = [
@@ -865,14 +938,14 @@ export default function App() {
       ctx.beginPath(); ctx.moveTo(px, 934); ctx.lineTo(pw, 934); ctx.stroke();
       ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
       ctx.font = '400 18px Inter, sans-serif';
-      ctx.fillText('Dibuat otomatis oleh EnduraUP AI Engine', px, 962);
+      ctx.fillText(lang === 'id' ? 'Dibuat otomatis oleh EnduraUP AI Engine' : 'Generated automatically by EnduraUP AI Engine', px, 962);
       ctx.fillStyle = shareTheme === 'cyber' ? '#06b6d4' : '#a78bfa';
       ctx.font = '600 22px Inter, sans-serif';
       ctx.fillText('enduraup.vercel.app', px, 996);
 
     } // end else (dark themes)
 
-  }, [showShareModal, shareTemplate, shareTheme, runActs, totalDist, totalSessions, avgHR, actualMaxHR, vo2max, targetPace, displayName, currentUser, avatar, retroImageLoaded]);
+  }, [showShareModal, shareTemplate, shareTheme, runActs, totalDist, totalSessions, avgHR, actualMaxHR, vo2max, targetPace, displayName, currentUser, avatar, retroImageLoaded, lang]);
 
 
   const shareOrDownloadImage = async () => {
@@ -887,8 +960,8 @@ export default function App() {
         if (navigator.canShare({ files: [file] })) {
           await navigator.share({
             files: [file],
-            title: 'EnduraUP Performance Card',
-            text: 'Lihat pencapaian lari gue di EnduraUP! Gabung yuk di enduraup.vercel.app 🏃‍♂️🔥',
+            title: lang === 'id' ? 'Kartu Performa EnduraUP' : 'EnduraUP Performance Card',
+            text: lang === 'id' ? 'Lihat pencapaian lari gue di EnduraUP! Gabung yuk di enduraup.vercel.app 🏃‍♂️🔥' : 'Check out my running stats on EnduraUP! Join me at enduraup.vercel.app 🏃‍♂️🔥',
           });
           addToast('Berhasil membuka menu bagikan!');
           return;
@@ -990,41 +1063,52 @@ export default function App() {
     try {
       const wb = XLSX.utils.book_new();
 
-      // Sheet 1: Riwayat Lari
-      const runHeaders = [
+      const isId = lang === 'id';
+
+      // Sheet 1: Riwayat Lari / Run History
+      const runHeaders = isId ? [
         ["Tanggal (YYYY-MM-DD)", "Nama Aktivitas", "Jarak (km)", "Durasi (menit)", "Avg HR (bpm)", "Max HR (bpm)"],
         ["2026-05-20", "Morning Run BSD", 5.2, 32, 142, 168],
         ["2026-05-18", "Easy Run Senayan", 8.0, 52, 138, 155]
+      ] : [
+        ["Date (YYYY-MM-DD)", "Activity Name", "Distance (km)", "Duration (minutes)", "Avg HR (bpm)", "Max HR (bpm)"],
+        ["2026-05-20", "BSD Morning Run", 5.2, 32, 142, 168],
+        ["2026-05-18", "Senayan Easy Run", 8.0, 52, 138, 155]
       ];
       const wsRuns = XLSX.utils.aoa_to_sheet(runHeaders);
 
       wsRuns['!cols'] = [
-        { wch: 22 }, // Tanggal
-        { wch: 25 }, // Nama Aktivitas
-        { wch: 12 }, // Jarak
-        { wch: 15 }, // Durasi
+        { wch: 22 }, // Tanggal / Date
+        { wch: 25 }, // Nama Aktivitas / Activity Name
+        { wch: 12 }, // Jarak / Distance
+        { wch: 15 }, // Durasi / Duration
         { wch: 14 }, // Avg HR
         { wch: 14 }  // Max HR
       ];
-      XLSX.utils.book_append_sheet(wb, wsRuns, "Riwayat Lari");
+      XLSX.utils.book_append_sheet(wb, wsRuns, isId ? "Riwayat Lari" : "Run History");
 
-      // Sheet 2: Kualitas Tidur
-      const sleepHeaders = [
+      // Sheet 2: Kualitas Tidur / Sleep Quality
+      const sleepHeaders = isId ? [
         ["Tanggal (YYYY-MM-DD)", "Skor/Kualitas (0-100 atau kata: pulas/cukup/kurang/begadang)", "Durasi Tidur (jam)"],
         ["2026-05-20", "pulas", 7.5],
         ["2026-05-19", "", 6.0], // Kosong = otomatis dihitung dari durasi
         ["2026-05-18", 85, 8.0]
+      ] : [
+        ["Date (YYYY-MM-DD)", "Score/Quality (0-100 or keyword: pulas/cukup/kurang/begadang)", "Sleep Duration (hours)"],
+        ["2026-05-20", "pulas", 7.5],
+        ["2026-05-19", "", 6.0], // Empty = automatically calculated from duration
+        ["2026-05-18", 85, 8.0]
       ];
       const wsSleep = XLSX.utils.aoa_to_sheet(sleepHeaders);
       wsSleep['!cols'] = [
-        { wch: 22 }, // Tanggal
-        { wch: 55 }, // Skor / Kualitas
-        { wch: 22 }  // Durasi
+        { wch: 22 }, // Tanggal / Date
+        { wch: 55 }, // Skor / Kualitas / Score or Quality
+        { wch: 22 }  // Durasi / Duration
       ];
-      XLSX.utils.book_append_sheet(wb, wsSleep, "Kualitas Tidur");
+      XLSX.utils.book_append_sheet(wb, wsSleep, isId ? "Kualitas Tidur" : "Sleep Quality");
 
-      // Sheet 3: Panduan Pengisian
-      const guideData = [
+      // Sheet 3: Panduan Pengisian / Instructions Guide
+      const guideData = isId ? [
         ["PANDUAN PENGISIAN TEMPLATE EXCEL ENDURAUP"],
         [""],
         ["1. SHEET RIWAYAT LARI:"],
@@ -1051,16 +1135,43 @@ export default function App() {
         ["          * Durasi di atas 9 jam (oversleep)      --> Otomatis diberi skor 75"],
         [""],
         ["*Catatan: Sistem tidak akan membaca baris panduan ini, Anda bebas mengunggah file Excel dengan sheet panduan ini tetap ada."]
+      ] : [
+        ["INSTRUCTIONS GUIDE FOR ENDURAUP EXCEL TEMPLATE"],
+        [""],
+        ["1. RUN HISTORY SHEET:"],
+        ["   - Date: Format must be YYYY-MM-DD (Example: 2026-05-20)."],
+        ["   - Distance: Write in kilometers (km), use dot for decimals (Example: 5.2)."],
+        ["   - Duration: Write in minutes (Example: 45)."],
+        ["   - Avg HR & Max HR: Average and maximum heart rate in bpm (optional)."],
+        [""],
+        ["2. SLEEP QUALITY SHEET:"],
+        ["   - Date: Format must be YYYY-MM-DD (Example: 2026-05-20)."],
+        ["   - Sleep Duration: Write sleep duration in hours (Example: 7.5 or 6)."],
+        ["   - Sleep Score/Quality: Can be filled in 3 ways:"],
+        ["       a) Using Numeric Value: Enter score 0-100 directly (e.g. from smartwatch)."],
+        ["       b) Using Quality Keywords:"],
+        ["          * 'pulas' / 'sangat baik' / 'nyenyak'  --> Automatically converted to score 90"],
+        ["          * 'cukup' / 'baik' / 'normal'           --> Automatically converted to score 75"],
+        ["          * 'kurang' / 'buruk' / 'lelah'          --> Automatically converted to score 55"],
+        ["          * 'begadang' / 'sangat kurang' / 'parah'--> Automatically converted to score 30"],
+        ["       c) Leave Empty (Auto-calculated based on sleep duration):"],
+        ["          * Duration 7 to 9 hours                 --> Automatically assigned score 85"],
+        ["          * Duration 6 to 7 hours                 --> Automatically assigned score 70"],
+        ["          * Duration 5 to 6 hours                 --> Automatically assigned score 55"],
+        ["          * Duration under 5 hours                --> Automatically assigned score 35"],
+        ["          * Duration over 9 hours (oversleep)     --> Automatically assigned score 75"],
+        [""],
+        ["*Note: The system ignores this guide sheet during upload. You can upload the Excel file with this instructions sheet intact."]
       ];
       const wsGuide = XLSX.utils.aoa_to_sheet(guideData);
       wsGuide['!cols'] = [{ wch: 100 }];
-      XLSX.utils.book_append_sheet(wb, wsGuide, "Panduan Pengisian");
+      XLSX.utils.book_append_sheet(wb, wsGuide, isId ? "Panduan Pengisian" : "Instructions Guide");
 
-      XLSX.writeFile(wb, "Template_Data_EnduraUP.xlsx");
-      addToast("Template Excel terunduh!");
+      XLSX.writeFile(wb, isId ? "Template_Data_EnduraUP.xlsx" : "EnduraUP_Data_Template.xlsx");
+      addToast(isId ? "Template Excel terunduh!" : "Excel template downloaded!");
     } catch (e) {
       console.error(e);
-      addToast("Gagal mengunduh template Excel", "error");
+      addToast(isId ? "Gagal mengunduh template Excel" : "Failed to download Excel template", "error");
     }
   };
 
@@ -1319,7 +1430,7 @@ export default function App() {
   // ─────────────────────────────────────────────────────────────────────────────
   if (!sessionUser) {
     if (showLanding) {
-      return <LandingPage onGetStarted={() => setShowLanding(false)} />;
+      return <LandingPage onGetStarted={() => setShowLanding(false)} lang={lang} setLang={setLang} />;
     }
     return (
       <>
@@ -1337,13 +1448,67 @@ export default function App() {
           }}
           usersList={usersList}
           addToast={addToast}
+          lang={lang}
         />
       </>
     );
   }
 
-  const rColor = latestSleepScore >= 80 ? '#10b981' : latestSleepScore >= 60 ? '#f59e0b' : '#ef4444';
-  const rBgColor = latestSleepScore >= 80 ? 'rgba(16, 185, 129, 0.08)' : latestSleepScore >= 60 ? 'rgba(245, 158, 11, 0.08)' : 'rgba(239, 68, 68, 0.08)';
+  const trainingReadinessScore = trainingReadiness ?? 100;
+  const rColor = trainingReadinessScore >= 80 ? '#10b981' : trainingReadinessScore >= 60 ? '#f59e0b' : '#ef4444';
+  const rBgColor = trainingReadinessScore >= 80 ? 'rgba(16, 185, 129, 0.08)' : trainingReadinessScore >= 60 ? 'rgba(245, 158, 11, 0.08)' : 'rgba(239, 68, 68, 0.08)';
+
+  const getReadinessDesc = () => {
+    const isId = lang === 'id';
+    const sleepPart = isId 
+      ? `Berdasarkan rekaman tidur terakhir (${latestSleepDate}), kualitas tidur lo berada di skor ${latestSleepScore}%. `
+      : `Based on your latest sleep record (${latestSleepDate}), your sleep quality score is ${latestSleepScore}%. `;
+
+    let restPart = '';
+    if (daysSinceLastRun === 0) {
+      restPart = isId
+        ? `Lo ada sesi lari hari ini, jadi kesiapan fisik disesuaikan karena faktor kelelahan otot aktif.`
+        : `You ran today, so physical readiness is adjusted due to active muscle fatigue.`;
+    } else if (daysSinceLastRun === 1) {
+      restPart = isId
+        ? `Lo baru lari kemarin, ada sedikit penyesuaian skor karena sisa kelelahan.`
+        : `You ran yesterday, with a minor score adjustment for residual fatigue.`;
+    } else if (daysSinceLastRun === 2) {
+      restPart = isId
+        ? `Masa pemulihan lo seimbang (2 hari sejak sesi lari terakhir).`
+        : `Your recovery duration is balanced (2 days since your last run).`;
+    } else if (daysSinceLastRun === 3) {
+      restPart = isId
+        ? `Lo udah istirahat 3 hari. Kesiapan naik (+10%) karena capek lari sebelumnya sudah pulih sepenuhnya.`
+        : `You have rested for 3 days. Readiness is boosted (+10%) as training fatigue has fully cleared.`;
+    } else if (daysSinceLastRun >= 4 || daysSinceLastRun === null) {
+      const dayText = daysSinceLastRun === null 
+        ? (isId ? 'beberapa hari' : 'several days') 
+        : `${daysSinceLastRun} hari`;
+      restPart = isId
+        ? `Lo udah istirahat ${dayText}. Kesiapan fisik pulih maksimal (+15% bonus, minimal 80%) karena tidak ada kelelahan lari aktif.`
+        : `You have rested for ${dayText}. Physical readiness is fully restored (+15% bonus, minimum 80%) as there is zero active fatigue from running.`;
+    }
+
+    let actionPart = '';
+    if (trainingReadinessScore >= 80) {
+      actionPart = isId
+        ? ' Tubuh lo fit banget dan siap nerima latihan intensitas tinggi hari ini!'
+        : ' Your body is in prime condition and ready for high-intensity training today!';
+    } else if (trainingReadinessScore >= 60) {
+      actionPart = isId
+        ? ' Pemulihan lo cukup. Silakan latihan, tapi hindari memaksakan diri terlalu keras (overpush).'
+        : ' Your recovery is fair. You can train, but avoid pushing yourself too hard (overpush).';
+    } else {
+      actionPart = isId
+        ? ' Pemulihan rendah. Sangat disarankan untuk rest, fokus hidrasi, dan pemulihan hari ini.'
+        : ' Low recovery level. We highly recommend prioritizing rest, hydration, and recovery today.';
+    }
+
+    return { sleepPart, restPart, actionPart };
+  };
+
+  const readinessDesc = getReadinessDesc();
 
   return (
     <div className="app-layout">
@@ -1633,9 +1798,15 @@ export default function App() {
             <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>AI Coach</div>
           </div>
         </div>
-        <button className="mobile-toggle-btn" onClick={() => setSidebarOpen(true)}>
-          Profil &amp; Data
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div className="lang-switcher">
+            <button className={`lang-btn ${lang === 'id' ? 'active' : ''}`} onClick={() => setLang('id')}>ID</button>
+            <button className={`lang-btn ${lang === 'en' ? 'active' : ''}`} onClick={() => setLang('en')}>EN</button>
+          </div>
+          <button className="mobile-toggle-btn" onClick={() => setSidebarOpen(true)}>
+            {lang === 'id' ? 'Profil & Data' : 'Profile & Data'}
+          </button>
+        </div>
       </header>
 
       {/* Sidebar Backdrop Overlay for Mobile */}
@@ -1663,17 +1834,22 @@ export default function App() {
               <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>AI Coach</div>
             </div>
           </div>
-          {/* Collapse sidebar button (desktop only) */}
-          <button
-            className="sidebar-toggle-btn-desktop"
-            style={{ width: 28, height: 28 }}
-            onClick={() => {
-              setSidebarCollapsed(true);
-              localStorage.setItem('smartcoach_sidebar_collapsed', 'true');
-            }}
-            title="Sembunyikan Panel"
-            aria-label="Collapse Sidebar"
-          >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div className="lang-switcher" style={{ marginRight: 2 }}>
+              <button className={`lang-btn ${lang === 'id' ? 'active' : ''}`} onClick={() => setLang('id')}>ID</button>
+              <button className={`lang-btn ${lang === 'en' ? 'active' : ''}`} onClick={() => setLang('en')}>EN</button>
+            </div>
+            {/* Collapse sidebar button (desktop only) */}
+            <button
+              className="sidebar-toggle-btn-desktop"
+              style={{ width: 28, height: 28 }}
+              onClick={() => {
+                setSidebarCollapsed(true);
+                localStorage.setItem('smartcoach_sidebar_collapsed', 'true');
+              }}
+              title={lang === 'id' ? 'Sembunyikan Panel' : 'Collapse Panel'}
+              aria-label="Collapse Sidebar"
+            >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <rect width="18" height="18" x="3" y="3" rx="2" />
               <path d="M9 3v16" />
@@ -1682,12 +1858,13 @@ export default function App() {
           </button>
           <button className="mobile-close-btn" onClick={() => setSidebarOpen(false)}>×</button>
         </div>
+      </div>
 
         <div className="sidebar-divider" />
 
         {/* Active Account Info */}
         <div>
-          <div className="sidebar-section-title" style={{ marginBottom: 8 }}>Akun Aktif</div>
+          <div className="sidebar-section-title" style={{ marginBottom: 8 }}>{t.activeAccount}</div>
           <button
             type="button"
             onClick={() => { setEditDraft({}); setProfileEditMode(false); setShowProfileModal(true); }}
@@ -1714,7 +1891,7 @@ export default function App() {
             )}
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 13, fontWeight: 600, color: displayName ? 'var(--text-primary)' : 'var(--text-muted)', fontStyle: displayName ? 'normal' : 'italic', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {displayName || 'Isi nama profil...'}
+                {displayName || t.fillProfileName}
               </div>
               <div style={{ fontSize: 10, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{currentUser}</div>
             </div>
@@ -1725,12 +1902,12 @@ export default function App() {
 
         {/* Profile */}
         <div>
-          <div className="sidebar-section-title">User Profile</div>
+          <div className="sidebar-section-title">{t.userProfile}</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
 
             {/* Age — empty/grey placeholder when not set */}
             <div className="form-group" style={{ opacity: age === null ? 0.75 : 1 }}>
-              <label className="form-label">Umur</label>
+              <label className="form-label">{t.age}</label>
               <div className="number-input-group" style={{ border: age === null ? '1px dashed var(--border)' : '1px solid var(--border)' }}>
                 <button type="button" onClick={() => setAge(prev => Math.max(10, (prev ?? 25) - 1))}>−</button>
                 <input
@@ -1750,32 +1927,34 @@ export default function App() {
             </div>
 
             <div className="form-group">
-              <label className="form-label">Goal Utama</label>
+              <label className="form-label">{t.mainGoal}</label>
               <select className="form-select" value={goal} onChange={e => setGoal(e.target.value)}>
-                <option value="maintenance">Maintenance</option>
-                <option value="weightloss">Weight Loss</option>
-                <option value="10k">10K Race</option>
-                <option value="marathon">Marathon</option>
-                <option value="turun-hr">Turun Detak Jantung (HR)</option>
-                <option value="health">General Health</option>
+                <option value="maintenance">{t.maintenance}</option>
+                <option value="weightloss">{lang === 'id' ? 'Kurus / Turun Berat Badan' : 'Weight Loss'}</option>
+                <option value="10k">{t.improve10k}</option>
+                <option value="marathon">{t.improveFull}</option>
+                <option value="turun-hr">{lang === 'id' ? 'Turun Detak Jantung (HR)' : 'Lower Heart Rate (HR)'}</option>
+                <option value="health">{lang === 'id' ? 'Kesehatan Umum' : 'General Health'}</option>
               </select>
             </div>
 
             <div className="form-group">
-              <label className="form-label">Target Program</label>
+              <label className="form-label">{t.programStyle}</label>
               <select className="form-select" value={programStyle} onChange={e => setProgramStyle(e.target.value)}>
-                <option value="ngepush">Ngepush — Target Dekat</option>
-                <option value="sedang">Sedang — Bertahap</option>
-                <option value="santai">Santai — Jangka Panjang</option>
+                <option value="ngepush">{t.ngepush}</option>
+                <option value="sedang">{t.sedang}</option>
+                <option value="santai">{t.santai}</option>
               </select>
             </div>
 
-            <PaceInput label="Target Pace (min/km)" value={targetPace} onChange={setTargetPace} />
+            <PaceInput label={t.targetPace} value={targetPace} onChange={setTargetPace} />
 
             <div className="form-group">
               <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span>Hari Latihan</span>
-                <span style={{ color: 'var(--accent-purple)', fontWeight: 700 }}>{selectedDays.length === 0 ? 'Auto (Disarankan)' : `${selectedDays.length}x Seminggu`}</span>
+                <span>{t.trainingDays}</span>
+                <span style={{ color: 'var(--accent-purple)', fontWeight: 700 }}>
+                  {selectedDays.length === 0 ? (lang === 'id' ? 'Auto (Disarankan)' : 'Auto (Recommended)') : `${selectedDays.length}x ${lang === 'id' ? 'Seminggu' : 'Weekly'}`}
+                </span>
               </label>
               <div className="day-selector-container">
                 <div className="day-selector-grid">
@@ -1804,7 +1983,7 @@ export default function App() {
             style={{ marginTop: 16 }}
             onClick={applyProfileChanges}
           >
-            Terapkan &amp; Analisis
+            {t.applyAnalyze}
           </button>
         </div>
 
@@ -1812,7 +1991,7 @@ export default function App() {
 
         {/* Import Data */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <div className="sidebar-section-title" style={{ marginBottom: 0 }}>Impor / Tambah Data</div>
+          <div className="sidebar-section-title" style={{ marginBottom: 0 }}>{t.importAddData}</div>
 
           {/* Unified Upload Area */}
           <div>
@@ -1827,7 +2006,7 @@ export default function App() {
                 } else if (name.endsWith('.xlsx') || name.endsWith('.xls') || name.endsWith('.csv')) {
                   handleExcelUpload(file);
                 } else {
-                  addToast('Format file tidak didukung', 'error');
+                  addToast(lang === 'id' ? 'Format file tidak didukung' : 'File format not supported', 'error');
                 }
               }}
             />
@@ -1839,13 +2018,13 @@ export default function App() {
               {isUploading ? (
                 <div>
                   <div className="loading-bar" style={{ marginBottom: 8 }} />
-                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Memproses data…</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t.loading}</div>
                 </div>
               ) : (
                 <>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)' }}>Upload data lari / tidur</div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)' }}>{t.uploadAreaTitle}</div>
                   <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
-                    Format: .zip, .gpx, .xlsx, .csv (maks 200MB)
+                    {t.uploadAreaDesc}
                   </div>
                   <div style={{ marginTop: 6 }}>
                     <span
@@ -1861,7 +2040,7 @@ export default function App() {
                         cursor: 'pointer'
                       }}
                     >
-                      Unduh template Excel / CSV
+                      {t.downloadExcelTemplate}
                     </span>
                   </div>
                 </>
@@ -1870,45 +2049,45 @@ export default function App() {
           </div>
 
           {/* Manual Run */}
-          <Collapsible title="Tambah Sesi Lari Manual">
+          <Collapsible title={lang === 'id' ? 'Tambah Sesi Lari Manual' : 'Add Run Session Manually'}>
             <div className="form-group">
-              <label className="form-label">Judul / Nama Lari</label>
+              <label className="form-label">{lang === 'id' ? 'Judul / Nama Lari' : 'Activity Name'}</label>
               <input
                 className="form-input"
                 type="text"
-                placeholder="cth: Morning Run, Senayan Loop..."
+                placeholder={lang === 'id' ? 'cth: Morning Run, Senayan Loop...' : 'e.g. Morning Run, Central Park...'}
                 value={manualRun.name}
                 onChange={e => setManualRun(r => ({ ...r, name: e.target.value }))}
               />
             </div>
             <div className="form-group">
-              <label className="form-label">Tanggal</label>
+              <label className="form-label">{lang === 'id' ? 'Tanggal' : 'Date'}</label>
               <input className="form-input" type="date" value={manualRun.date} onChange={e => setManualRun(r => ({ ...r, date: e.target.value }))} />
             </div>
-            <NumberInput label="Jarak (km)" value={manualRun.distance} onChange={v => setManualRun(r => ({ ...r, distance: v }))} min={0.1} step={0.1} />
-            <NumberInput label="Durasi (menit)" value={manualRun.duration} onChange={v => setManualRun(r => ({ ...r, duration: v }))} min={1} />
+            <NumberInput label={lang === 'id' ? 'Jarak (km)' : 'Distance (km)'} value={manualRun.distance} onChange={v => setManualRun(r => ({ ...r, distance: v }))} min={0.1} step={0.1} />
+            <NumberInput label={lang === 'id' ? 'Durasi (menit)' : 'Duration (mins)'} value={manualRun.duration} onChange={v => setManualRun(r => ({ ...r, duration: v }))} min={1} />
             <NumberInput label="Avg HR (bpm)" value={manualRun.avgHr} onChange={v => setManualRun(r => ({ ...r, avgHr: v }))} min={40} max={220} />
             <NumberInput label="Max HR (bpm)" value={manualRun.maxHr} onChange={v => setManualRun(r => ({ ...r, maxHr: v }))} min={100} max={250} />
-            <button className="btn btn-primary" onClick={saveManualRun}>Simpan Lari</button>
+            <button className="btn btn-primary" onClick={saveManualRun}>{lang === 'id' ? 'Simpan Lari' : 'Save Run'}</button>
           </Collapsible>
 
           {/* Manual Sleep */}
-          <Collapsible title="Catat Tidur Semalam">
+          <Collapsible title={lang === 'id' ? 'Catat Tidur Semalam' : 'Log Night Sleep'}>
             <div className="form-group">
-              <label className="form-label">Tanggal</label>
+              <label className="form-label">{lang === 'id' ? 'Tanggal' : 'Date'}</label>
               <input className="form-input" type="date" value={manualSleep.date} onChange={e => setManualSleep(s => ({ ...s, date: e.target.value }))} />
             </div>
             <div className="form-group">
-              <label className="form-label">Kualitas Tidur</label>
+              <label className="form-label">{t.sleepQuality}</label>
               <select className="form-select" value={manualSleep.quality} onChange={e => setManualSleep(s => ({ ...s, quality: e.target.value }))}>
-                <option value="pulas">Sangat Pulas & Segar</option>
-                <option value="cukup">Cukup Baik</option>
-                <option value="kurang">Kurang Nyenyak</option>
-                <option value="begadang">Begadang / Sangat Kurang</option>
+                <option value="pulas">{lang === 'id' ? 'Sangat Pulas & Segar' : 'Deep Sleep & Refreshed'}</option>
+                <option value="cukup">{lang === 'id' ? 'Cukup Baik' : 'Okay / Normal'}</option>
+                <option value="kurang">{lang === 'id' ? 'Kurang Nyenyak' : 'Poor / Interrupted'}</option>
+                <option value="begadang">{lang === 'id' ? 'Begadang / Sangat Kurang' : 'Restless / Too Short'}</option>
               </select>
             </div>
-            <NumberInput label="Durasi Tidur (jam)" value={manualSleep.duration} onChange={v => setManualSleep(s => ({ ...s, duration: v }))} min={1} max={24} step={0.5} />
-            <button className="btn btn-primary" onClick={saveManualSleep}>Simpan Tidur</button>
+            <NumberInput label={lang === 'id' ? 'Durasi Tidur (jam)' : 'Sleep Duration (hrs)'} value={manualSleep.duration} onChange={v => setManualSleep(s => ({ ...s, duration: v }))} min={1} max={24} step={0.5} />
+            <button className="btn btn-primary" onClick={saveManualSleep}>{lang === 'id' ? 'Simpan Tidur' : 'Save Sleep'}</button>
           </Collapsible>
         </div>
 
@@ -1920,12 +2099,12 @@ export default function App() {
             className="btn btn-danger"
             onClick={() => setConfirmReset(true)}
           >
-            Reset &amp; Hapus Semua Data
+            {lang === 'id' ? 'Reset & Hapus Semua Data' : 'Reset & Clear All Data'}
           </button>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <div style={{ fontSize: 12, color: '#fb7185', fontWeight: 600, textAlign: 'center' }}>
-              Hapus semua data? Tidak bisa di-undo.
+              {lang === 'id' ? 'Hapus semua data? Tidak bisa di-undo.' : 'Delete all data? Cannot be undone.'}
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
               <button
@@ -1933,14 +2112,14 @@ export default function App() {
                 style={{ flex: 1 }}
                 onClick={handleReset}
               >
-                Ya, Hapus
+                {lang === 'id' ? 'Ya, Hapus' : 'Yes, Delete'}
               </button>
               <button
                 className="btn btn-secondary"
                 style={{ flex: 1 }}
                 onClick={() => setConfirmReset(false)}
               >
-                Batal
+                {lang === 'id' ? 'Batal' : 'Cancel'}
               </button>
             </div>
           </div>
@@ -1948,7 +2127,9 @@ export default function App() {
 
         {hasData && (
           <div style={{ fontSize: 11, color: 'var(--text-muted)', textAlign: 'center', marginBottom: 6 }}>
-            {totalSessions} sesi lari · {Object.keys(sleepRecs).length} malam tidur tersimpan
+            {lang === 'id'
+              ? `${totalSessions} sesi lari · ${Object.keys(sleepRecs).length} malam tidur`
+              : `${totalSessions} runs · ${Object.keys(sleepRecs).length} sleep logs`}
           </div>
         )}
 
@@ -1966,10 +2147,10 @@ export default function App() {
             }
             setSessionUser(null);
             sessionStorage.removeItem('smartcoach_session');
-            addToast('Berhasil keluar.');
+            addToast(lang === 'id' ? 'Berhasil keluar.' : 'Logged out successfully.');
           }}
         >
-          Logout / Keluar
+          {t.logout}
         </button>
         <div style={{ fontSize: 10, color: 'var(--text-muted)', textAlign: 'center', marginTop: 12, opacity: 0.7 }}>
           v2.0.0
@@ -2328,14 +2509,14 @@ export default function App() {
             {/* Tabs */}
             <div className="tabs">
               {[
-                { key: 'dashboard', label: 'Dashboard' },
-                { key: 'training', label: 'Rencana Latihan' },
-                { key: 'race', label: 'Race Prediction' },
-                { key: 'history', label: 'Riwayat Lari' },
-                { key: 'sleep', label: 'Analisis Tidur' },
-              ].map(t => (
-                <button key={t.key} className={`tab ${tab === t.key ? 'active' : ''}`} onClick={() => setTab(t.key)}>
-                  {t.label}
+                { key: 'dashboard', label: t.tabDashboard },
+                { key: 'training', label: t.tabTrainingPlan },
+                { key: 'race', label: t.tabRacePrediction },
+                { key: 'history', label: t.tabRunHistory },
+                { key: 'sleep', label: t.tabSleepAnalysis },
+              ].map(item => (
+                <button key={item.key} className={`tab ${tab === item.key ? 'active' : ''}`} onClick={() => setTab(item.key)}>
+                  {item.label}
                 </button>
               ))}
             </div>
@@ -2351,10 +2532,10 @@ export default function App() {
                         borderTopColor: rColor,
                         borderRightColor: rColor,
                       }}>
-                        <div className="readiness-dial-value">{latestSleepScore}%</div>
+                        <div className="readiness-dial-value">{trainingReadinessScore}%</div>
                       </div>
                       <div className="readiness-dial-label" style={{ color: rColor }}>
-                        {latestSleepScore >= 80 ? 'Prima' : latestSleepScore >= 60 ? 'Cukup' : 'Rendah'}
+                        {trainingReadinessScore >= 80 ? (lang === 'id' ? 'Prima' : 'Prime') : trainingReadinessScore >= 60 ? (lang === 'id' ? 'Cukup' : 'Fair') : (lang === 'id' ? 'Rendah' : 'Low')}
                       </div>
                     </div>
                     <div style={{ flex: 1 }}>
@@ -2362,16 +2543,12 @@ export default function App() {
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: rColor }}>
                           <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
                         </svg>
-                        Kesiapan Latihan Terkini
+                        {lang === 'id' ? 'Kesiapan Latihan Terkini' : 'Current Training Readiness'}
                       </h3>
                       <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.6', margin: 0 }}>
-                        Berdasarkan rekaman tidur terakhir tanggal <strong>{latestSleepDate}</strong>, kesiapan fisik Anda berada di tingkat <strong>{latestSleepScore}%</strong>.{' '}
-                        {latestSleepScore >= 80 
-                          ? 'Tubuh Anda dalam kondisi prima dan siap untuk menerima latihan berintensitas tinggi hari ini.' 
-                          : latestSleepScore >= 60 
-                            ? 'Pemulihan Anda cukup baik. Silakan latihan, namun hindari memaksakan diri terlalu keras (overpush).' 
-                            : 'Tingkat pemulihan rendah. Kami sangat menyarankan untuk memprioritaskan istirahat, hidrasi, dan pemulihan hari ini.'
-                        }
+                        {readinessDesc.sleepPart}
+                        {readinessDesc.restPart}
+                        {readinessDesc.actionPart}
                       </p>
                     </div>
                   </div>
@@ -2380,10 +2557,10 @@ export default function App() {
                 {/* Metrics */}
                 <div className="metrics-grid">
                   {[
-                    { label: 'Total Jarak', value: totalDist.toFixed(1), unit: 'km', color: '#818cf8' },
-                    { label: 'Total Sesi', value: totalSessions, unit: 'kali', color: '#fb7185' },
+                    { label: t.totalDistance, value: totalDist.toFixed(1), unit: 'km', color: '#818cf8' },
+                    { label: lang === 'id' ? 'Total Sesi' : 'Total Sessions', value: totalSessions, unit: lang === 'id' ? 'kali' : 'times', color: '#fb7185' },
                     { label: 'Avg Heart Rate', value: avgHR ? Math.round(avgHR) : '–', unit: 'bpm', color: '#34d399' },
-                    { label: 'Actual Max HR', value: actualMaxHR || '–', unit: 'bpm', color: '#fbbf24' },
+                    { label: lang === 'id' ? 'Max HR Aktual' : 'Actual Max HR', value: actualMaxHR || '–', unit: 'bpm', color: '#fbbf24' },
                   ].map((m, i) => (
                     <div className="metric-card animate-fade-in" key={i} style={{ '--accent-color': m.color, animationDelay: `${i * 0.06}s` }}>
                       <div className="metric-label">{m.label}</div>
@@ -2398,46 +2575,62 @@ export default function App() {
                 {actualMaxHR > 0 && (
                   <div className="info-card purple" style={{ marginBottom: 20 }}>
                     <div style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.7 }}>
-                      <strong style={{ color: 'var(--text-primary)' }}>Detak Jantung:</strong>{' '}
-                      Estimasi Max HR berdasarkan umur ({age} tahun) adalah <strong>{220 - age} bpm</strong>,
-                      tapi data mencatat hingga <strong style={{ color: '#fbbf24' }}>{actualMaxHR} bpm</strong>.
-                      Zona latihan lo dikalkulasi pakai data aktual yang lebih akurat.
+                      <strong style={{ color: 'var(--text-primary)' }}>{lang === 'id' ? 'Detak Jantung:' : 'Heart Rate:'}</strong>{' '}
+                      {lang === 'id' ? (
+                        <>
+                          Estimasi Max HR berdasarkan umur ({age} tahun) adalah <strong>{220 - age} bpm</strong>,
+                          tapi data mencatat hingga <strong style={{ color: '#fbbf24' }}>{actualMaxHR} bpm</strong>.
+                          Zona latihan lo dikalkulasi pakai data aktual yang lebih akurat.
+                        </>
+                      ) : (
+                        <>
+                          Estimated Max HR based on age ({age} years) is <strong>{220 - age} bpm</strong>,
+                          but your data recorded up to <strong style={{ color: '#fbbf24' }}>{actualMaxHR} bpm</strong>.
+                          Your training zones are calculated using your more accurate actual data.
+                        </>
+                      )}
                     </div>
                   </div>
                 )}
 
                 {/* Charts */}
-                <TrendChart activities={runActs} />
+                <TrendChart activities={runActs} lang={lang} />
 
                 {actualMaxHR > 0 && (
-                  <HRZoneChart zones={hrZones} avgHr={avgHR ? Math.round(avgHR) : 0} />
+                  <HRZoneChart zones={hrZones} avgHr={avgHR ? Math.round(avgHR) : 0} lang={lang} />
                 )}
 
-                <AICoach activities={data.running_activities} profile={{ age, goal, targetPace }} />
+                <AICoach activities={data.running_activities} profile={{ age, goal, targetPace }} lang={lang} />
 
                 {/* Sleep correlation summary */}
                 {avgRunSleep && avgNonRunSleep && (
                   <div>
                     <div className="section-header">
-                      <h2 className="section-title">Korelasi Tidur &amp; Lari</h2>
+                      <h2 className="section-title">{lang === 'id' ? 'Korelasi Tidur & Lari' : 'Sleep & Run Correlation'}</h2>
                     </div>
                     <div className="sleep-grid">
                       <div className="sleep-card">
-                        <div className="sleep-card-label" style={{ color: '#818cf8' }}>Tidur Setelah Lari</div>
+                        <div className="sleep-card-label" style={{ color: '#818cf8' }}>{lang === 'id' ? 'Tidur Setelah Lari' : 'Sleep After Run'}</div>
                         <div className="sleep-card-value">{avgRunSleep}<span className="metric-unit">/100</span></div>
                       </div>
                       <div className="sleep-card">
-                        <div className="sleep-card-label" style={{ color: '#94a3b8' }}>Tidur Tanpa Lari</div>
+                        <div className="sleep-card-label" style={{ color: '#94a3b8' }}>{lang === 'id' ? 'Tidur Tanpa Lari' : 'Sleep Without Run'}</div>
                         <div className="sleep-card-value">{avgNonRunSleep}<span className="metric-unit">/100</span></div>
                       </div>
                     </div>
                     {parseFloat(avgRunSleep) > parseFloat(avgNonRunSleep) ? (
                       <div className="alert alert-success">
-                        Lari meningkatkan kualitas tidur lo sebesar <strong>{(parseFloat(avgRunSleep) - parseFloat(avgNonRunSleep)).toFixed(1)} poin</strong>.
+                        {lang === 'id' 
+                          ? <>Lari meningkatkan kualitas tidur lo sebesar <strong>{(parseFloat(avgRunSleep) - parseFloat(avgNonRunSleep)).toFixed(1)} poin</strong>.</>
+                          : <>Running improves your sleep quality by <strong>{(parseFloat(avgRunSleep) - parseFloat(avgNonRunSleep)).toFixed(1)} points</strong>.</>
+                        }
                       </div>
                     ) : (
                       <div className="alert alert-info">
-                        Tidur lo cenderung lebih baik di hari tidak lari (selisih {(parseFloat(avgNonRunSleep) - parseFloat(avgRunSleep)).toFixed(1)} poin). Coba evaluasi recovery-mu.
+                        {lang === 'id'
+                          ? <>Tidur lo cenderung lebih baik di hari tidak lari (selisih {(parseFloat(avgNonRunSleep) - parseFloat(avgRunSleep)).toFixed(1)} poin). Coba evaluasi recovery-mu.</>
+                          : <>Your sleep tends to be better on rest days (difference of {(parseFloat(avgNonRunSleep) - parseFloat(avgRunSleep)).toFixed(1)} points). Assess your recovery routines.</>
+                        }
                       </div>
                     )}
                   </div>
@@ -2449,7 +2642,7 @@ export default function App() {
             {tab === 'training' && (
               <div className="animate-fade-in">
                 <div className="section-header">
-                  <h2 className="section-title">Rekomendasi Jadwal Mingguan</h2>
+                  <h2 className="section-title">{lang === 'id' ? 'Rekomendasi Jadwal Mingguan' : 'Recommended Weekly Schedule'}</h2>
                 </div>
                 <TrainingPlan
                   activities={data.running_activities}
@@ -2460,13 +2653,25 @@ export default function App() {
                   actualBestPace={actualBestPace}
                   targetPace={targetPace}
                   selectedDays={selectedDays}
+                  lang={lang}
                 />
 
                 <div className="info-card purple" style={{ marginTop: 20 }}>
                   <div style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.7 }}>
-                    <strong style={{ color: 'var(--text-primary)' }}>Tips:</strong> Naikkan volume maksimal <strong>10% per minggu</strong>.
-                    Jangan "balas dendam" lari jauh tiba-tiba setelah beberapa hari off — cedera bisa menghancurkan progress berbulan-bulan.
-                    Konsistensi jauh lebih valuable dari satu sesi epic!
+                    <strong style={{ color: 'var(--text-primary)' }}>Tips:</strong>{' '}
+                    {lang === 'id' ? (
+                      <>
+                        Naikkan volume maksimal <strong>10% per minggu</strong>.
+                        Jangan "balas dendam" lari jauh tiba-tiba setelah beberapa hari off — cedera bisa menghancurkan progress berbulan-bulan.
+                        Konsistensi jauh lebih valuable dari satu sesi epic!
+                      </>
+                    ) : (
+                      <>
+                        Increase training volume by a maximum of <strong>10% weekly</strong>.
+                        Do not run excessive recovery distances suddenly after off-days — injuries can undo months of hard progress.
+                        Consistency is far more valuable than one epic session!
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
@@ -2476,9 +2681,9 @@ export default function App() {
             {tab === 'race' && (
               <div className="animate-fade-in">
                 <div className="section-header">
-                  <h2 className="section-title">Race Prediction</h2>
+                  <h2 className="section-title">{t.tabRacePrediction}</h2>
                 </div>
-                <RacePrediction activities={runActs} targetPace={targetPace} />
+                <RacePrediction activities={runActs} targetPace={targetPace} lang={lang} />
               </div>
             )}
 
@@ -2486,9 +2691,11 @@ export default function App() {
             {tab === 'history' && (
               <div className="animate-fade-in">
                 <div className="section-header">
-                  <h2 className="section-title">Riwayat Sesi Lari ({totalSessions})</h2>
+                  <h2 className="section-title">
+                    {lang === 'id' ? `Riwayat Sesi Lari (${totalSessions})` : `Run Session History (${totalSessions})`}
+                  </h2>
                 </div>
-                <RunHistory activities={runActs} />
+                <RunHistory activities={runActs} lang={lang} />
               </div>
             )}
 
@@ -2496,12 +2703,16 @@ export default function App() {
             {tab === 'sleep' && (
               <div className="animate-fade-in">
                 <div className="section-header">
-                  <h2 className="section-title">Analisis Tidur</h2>
+                  <h2 className="section-title">{t.tabSleepAnalysis}</h2>
                 </div>
 
                 {Object.keys(sleepRecs).length === 0 ? (
                   <div className="info-card">
-                    <p style={{ fontSize: 14, color: 'var(--text-secondary)' }}>Belum ada data tidur. Catat tidur lo via sidebar atau upload file Garmin.</p>
+                    <p style={{ fontSize: 14, color: 'var(--text-secondary)' }}>
+                      {lang === 'id' 
+                        ? 'Belum ada data tidur. Catat tidur lo via sidebar atau upload file Garmin.' 
+                        : 'No sleep data recorded yet. Log your sleep using the sidebar or upload a Garmin file.'}
+                    </p>
                   </div>
                 ) : (
                   <>
@@ -2513,10 +2724,10 @@ export default function App() {
                             borderTopColor: rColor,
                             borderRightColor: rColor,
                           }}>
-                            <div className="readiness-dial-value">{latestSleepScore}%</div>
+                            <div className="readiness-dial-value">{trainingReadinessScore}%</div>
                           </div>
                           <div className="readiness-dial-label" style={{ color: rColor }}>
-                            {latestSleepScore >= 80 ? 'Prima' : latestSleepScore >= 60 ? 'Cukup' : 'Rendah'}
+                            {trainingReadinessScore >= 80 ? (lang === 'id' ? 'Prima' : 'Prime') : trainingReadinessScore >= 60 ? (lang === 'id' ? 'Cukup' : 'Fair') : (lang === 'id' ? 'Rendah' : 'Low')}
                           </div>
                         </div>
                         <div style={{ flex: 1 }}>
@@ -2524,16 +2735,12 @@ export default function App() {
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: rColor }}>
                               <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
                             </svg>
-                            Kesiapan Latihan Terkini
+                            {lang === 'id' ? 'Kesiapan Latihan Terkini' : 'Current Training Readiness'}
                           </h3>
                           <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.6', margin: 0 }}>
-                            Berdasarkan rekaman tidur terakhir tanggal <strong>{latestSleepDate}</strong>, kesiapan fisik Anda berada di tingkat <strong>{latestSleepScore}%</strong>.{' '}
-                            {latestSleepScore >= 80 
-                              ? 'Tubuh Anda dalam kondisi prima dan siap untuk menerima latihan berintensitas tinggi hari ini.' 
-                              : latestSleepScore >= 60 
-                                ? 'Pemulihan Anda cukup baik. Silakan latihan, namun hindari memaksakan diri terlalu keras (overpush).' 
-                                : 'Tingkat pemulihan rendah. Kami sangat menyarankan untuk memprioritaskan istirahat, hidrasi, dan pemulihan hari ini.'
-                            }
+                            {readinessDesc.sleepPart}
+                            {readinessDesc.restPart}
+                            {readinessDesc.actionPart}
                           </p>
                         </div>
                       </div>
@@ -2547,11 +2754,11 @@ export default function App() {
                           <div className="sleep-history-card" key={date}>
                             <div className="sleep-card-left">
                               <div className="sleep-card-date">
-                                {new Date(date).toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
-                                {runDates.has(date) && <span className="badge badge-easy" style={{ marginLeft: 8, padding: '1px 6px', fontSize: 10 }}>Lari</span>}
+                                {new Date(date).toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-US', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
+                                {runDates.has(date) && <span className="badge badge-easy" style={{ marginLeft: 8, padding: '1px 6px', fontSize: 10 }}>{lang === 'id' ? 'Lari' : 'Ran'}</span>}
                               </div>
                               {rec.duration && (
-                                <div className="sleep-card-dur">{rec.duration.toFixed(1)} jam tidur</div>
+                                <div className="sleep-card-dur">{rec.duration.toFixed(1)} {lang === 'id' ? 'jam tidur' : 'hrs sleep'}</div>
                               )}
                             </div>
                             <div className="sleep-card-right" style={{ color }}>
