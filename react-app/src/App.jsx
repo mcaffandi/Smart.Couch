@@ -429,14 +429,32 @@ export default function App() {
       // Cream base
       ctx.fillStyle = '#fdf8f0';
       ctx.fillRect(0, 0, 1080, 1080);
-      // TOP IMAGE ZONE: retro image in top 38% (golden ratio minor = 1080*0.382=413px)
+      // TOP IMAGE ZONE: retro image in top 38% — COVER (no stretch, crop center)
       if (retroImageRef.current) {
+        const img = retroImageRef.current;
+        const tW = 1080, tH = 420;
+        const imgAspect = img.naturalWidth / img.naturalHeight;
+        const tAspect   = tW / tH;
+        let srcX, srcY, srcW, srcH;
+        if (imgAspect > tAspect) {
+          // image wider → crop left/right
+          srcH = img.naturalHeight;
+          srcW = img.naturalHeight * tAspect;
+          srcX = (img.naturalWidth - srcW) / 2;
+          srcY = 0;
+        } else {
+          // image taller → crop top/bottom
+          srcW = img.naturalWidth;
+          srcH = img.naturalWidth / tAspect;
+          srcX = 0;
+          srcY = (img.naturalHeight - srcH) / 2;
+        }
         ctx.save();
         ctx.beginPath();
-        if (ctx.roundRect) { ctx.roundRect(0, 0, 1080, 420, [24, 24, 0, 0]); }
-        else { ctx.rect(0, 0, 1080, 420); }
+        if (ctx.roundRect) { ctx.roundRect(0, 0, tW, tH, [24, 24, 0, 0]); }
+        else { ctx.rect(0, 0, tW, tH); }
         ctx.clip();
-        ctx.drawImage(retroImageRef.current, 0, 0, 1080, 420);
+        ctx.drawImage(img, srcX, srcY, srcW, srcH, 0, 0, tW, tH);
         ctx.restore();
       }
     } else { // purple theme
@@ -489,20 +507,20 @@ export default function App() {
 
     if (isLight) {
       // ── SUNRISE SPLIT LAYOUT ──────────────────────────────────────────────────
-      // Brand in image zone (top-right, like Taskello reference)
+      // Brand in image zone (top-right) — larger for 1080px canvas
       ctx.textAlign = 'right';
       ctx.fillStyle = 'rgba(255,255,255,0.95)';
-      ctx.font = '800 30px Outfit, sans-serif';
-      ctx.fillText('EnduraUP', 1000, 100);
-      ctx.fillStyle = 'rgba(255,255,255,0.75)';
-      ctx.font = '500 16px Inter, sans-serif';
-      ctx.fillText('AI Running & Recovery Coach', 1000, 126);
+      ctx.font = '800 52px Outfit, sans-serif';
+      ctx.fillText('EnduraUP', 1030, 110);
+      ctx.fillStyle = 'rgba(255,255,255,0.78)';
+      ctx.font = '500 26px Inter, sans-serif';
+      ctx.fillText('AI Running & Recovery Coach', 1030, 152);
       ctx.textAlign = 'left';
 
       // WHITE GLASS PANEL: bottom 62% (golden ratio major), rounded top
-      const panelY = 375;
+      const panelY = 420;
       ctx.beginPath();
-      const pr = 40;
+      const pr = 48;
       ctx.moveTo(0, panelY + pr);
       ctx.arcTo(0, panelY, pr, panelY, pr);
       ctx.lineTo(1080 - pr, panelY);
@@ -513,23 +531,23 @@ export default function App() {
       ctx.fill();
       // Panel top border accent
       ctx.strokeStyle = 'rgba(192, 68, 10, 0.25)';
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 3;
       ctx.beginPath();
       ctx.moveTo(pr, panelY); ctx.lineTo(1080 - pr, panelY);
       ctx.stroke();
 
-      // Athlete name at panel top
+      // Athlete name at panel top — bigger
       ctx.fillStyle = '#1a120a';
-      ctx.font = '700 26px Outfit, sans-serif';
-      ctx.fillText(athleteName.toUpperCase(), 80, panelY + 52);
+      ctx.font = '700 46px Outfit, sans-serif';
+      ctx.fillText(athleteName.toUpperCase(), 80, panelY + 64);
       ctx.fillStyle = 'rgba(124, 74, 30, 0.7)';
-      ctx.font = '500 16px Inter, sans-serif';
-      ctx.fillText('Performance Card', 80, panelY + 78);
+      ctx.font = '500 28px Inter, sans-serif';
+      ctx.fillText('Performance Card', 80, panelY + 104);
       // Panel divider
       ctx.strokeStyle = 'rgba(160, 82, 28, 0.15)';
-      ctx.lineWidth = 1;
+      ctx.lineWidth = 1.5;
       ctx.beginPath();
-      ctx.moveTo(80, panelY + 100); ctx.lineTo(1000, panelY + 100);
+      ctx.moveTo(80, panelY + 128); ctx.lineTo(1000, panelY + 128);
       ctx.stroke();
 
     } else {
@@ -563,30 +581,30 @@ export default function App() {
 
     // ── TEMPLATE CONTENT ──────────────────────────────────────────────────────
     // p0 = content start Y | px = content left X | pw = content right X
-    const p0 = isLight ? 475 : 205; // panel content start (after divider)
+    const p0 = isLight ? 548 : 205; // panelY(420) + header(128) = 548
     const px = isLight ? 80 : 100;
     const pw = isLight ? 1000 : 980;
 
     if (shareTemplate === 'vo2') {
-      // Label: p0+34 (lg gap) — φ spacing from divider
+      // Label: section title
       ctx.fillStyle = textMuted;
-      ctx.font = '600 20px Inter, sans-serif';
-      ctx.fillText('ESTIMASI VO2MAX', px, p0 + 34);
+      ctx.font = `600 ${isLight ? 32 : 20}px Inter, sans-serif`;
+      ctx.fillText('ESTIMASI VO2MAX', px, p0 + (isLight ? 44 : 34));
 
-      // Big VO2Max number
+      // Big VO2Max number (200px on dark, 210px on sunrise)
       ctx.fillStyle = isLight ? '#c0440a' : (shareTheme === 'cyber' ? '#06b6d4' : '#818cf8');
       ctx.font = '700 200px Outfit, sans-serif';
       const textVal = vo2max ? vo2max.toFixed(0) : '–';
-      const numY = isLight ? p0 + 197 : 510;
+      const numY = isLight ? p0 + 230 : 510;
       ctx.fillText(textVal, px - (isLight ? 0 : 12), numY);
 
       ctx.fillStyle = textSecondary;
-      ctx.font = '500 22px Inter, sans-serif';
-      ctx.fillText('ml/kg/min', px, numY + 34);
+      ctx.font = `500 ${isLight ? 36 : 22}px Inter, sans-serif`;
+      ctx.fillText('ml/kg/min', px, numY + (isLight ? 50 : 34));
 
-      const sepY = numY + 34 + 21;
+      const sepY = numY + (isLight ? 50 : 34) + (isLight ? 34 : 21);
       ctx.strokeStyle = isLight ? 'rgba(160, 82, 28, 0.15)' : 'rgba(255,255,255,0.06)';
-      ctx.lineWidth = 1;
+      ctx.lineWidth = 1.5;
       ctx.beginPath(); ctx.moveTo(px, sepY); ctx.lineTo(pw, sepY); ctx.stroke();
 
       let fitnessLevel = 'Pemula';
@@ -599,17 +617,17 @@ export default function App() {
       else if (vo2max >= 30) { fitnessLevel = 'Di Bawah Rata-Rata'; fitnessDesc = 'Potensi peningkatan masih sangat besar.'; }
 
       ctx.fillStyle = textPrimary;
-      ctx.font = '700 34px Outfit, sans-serif';
-      ctx.fillText(fitnessLevel, px, sepY + 83);
+      ctx.font = `700 ${isLight ? 52 : 34}px Outfit, sans-serif`;
+      ctx.fillText(fitnessLevel, px, sepY + (isLight ? 72 : 83));
 
       ctx.fillStyle = textSecondary;
-      ctx.font = '400 22px Inter, sans-serif';
-      ctx.fillText(fitnessDesc, px, sepY + 83 + 34);
+      ctx.font = `400 ${isLight ? 34 : 22}px Inter, sans-serif`;
+      ctx.fillText(fitnessDesc, px, sepY + (isLight ? 72 : 83) + (isLight ? 50 : 34));
 
     } else if (shareTemplate === 'stats') {
       ctx.fillStyle = textMuted;
-      ctx.font = '600 20px Inter, sans-serif';
-      ctx.fillText('RINGKASAN PERFORMA', px, p0 + 34);
+      ctx.font = `600 ${isLight ? 32 : 20}px Inter, sans-serif`;
+      ctx.fillText('RINGKASAN PERFORMA', px, p0 + (isLight ? 44 : 34));
 
       const targetYear = (() => {
         let y = new Date().getFullYear();
@@ -630,19 +648,19 @@ export default function App() {
 
       const drawMetric = (x, y, label, val, unit, color) => {
         ctx.fillStyle = textMuted;
-        ctx.font = '600 18px Inter, sans-serif';
+        ctx.font = `600 ${isLight ? 28 : 18}px Inter, sans-serif`;
         ctx.fillText(label.toUpperCase(), x, y);
         ctx.fillStyle = color;
-        ctx.font = '700 82px Outfit, sans-serif';
-        ctx.fillText(val, x, y + 95);
+        ctx.font = `700 ${isLight ? 110 : 82}px Outfit, sans-serif`;
+        ctx.fillText(val, x, y + (isLight ? 128 : 95));
         ctx.fillStyle = textSecondary;
-        ctx.font = '500 18px Inter, sans-serif';
-        ctx.fillText(unit.toUpperCase(), x, y + 124);
+        ctx.font = `500 ${isLight ? 28 : 18}px Inter, sans-serif`;
+        ctx.fillText(unit.toUpperCase(), x, y + (isLight ? 168 : 124));
       };
 
       const col2 = isLight ? 580 : 560;
-      const r1y = p0 + 80;
-      const r2y = r1y + 270;
+      const r1y = p0 + (isLight ? 60 : 80);
+      const r2y = r1y + (isLight ? 300 : 270);
       drawMetric(px,   r1y, `Jarak (${targetYear})`,   yearlyDist.toFixed(1),                        'km',   isLight ? '#c0440a' : '#818cf8');
       drawMetric(col2, r1y, `Latihan (${targetYear})`, yearlySessions.toString(),                    'sesi', isLight ? '#2a9d8f' : '#fb7185');
       drawMetric(px,   r2y, 'HR Rerata',               yearlyAvgHR ? Math.round(yearlyAvgHR).toString() : '–', 'bpm', isLight ? '#0d626c' : '#34d399');
@@ -650,8 +668,8 @@ export default function App() {
 
     } else { // race predictions
       ctx.fillStyle = textMuted;
-      ctx.font = '600 20px Inter, sans-serif';
-      ctx.fillText('PREDIKSI WAKTU RACE', px, p0 + 34);
+      ctx.font = `600 ${isLight ? 32 : 20}px Inter, sans-serif`;
+      ctx.fillText('PREDIKSI WAKTU RACE', px, p0 + (isLight ? 44 : 34));
 
       const RIEGEL = 1.06;
       const RACES = [
@@ -673,30 +691,30 @@ export default function App() {
           const m = Math.floor((predSec % 3600) / 60);
           const sec = Math.round(predSec % 60);
           const timeStr = h > 0 ? `${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}` : `${m}:${String(sec).padStart(2,'0')}`;
-          const rowY = (p0 + 75) + idx * (isLight ? 118 : 162);
+          const rowY = (p0 + 60) + idx * (isLight ? 130 : 162);
           ctx.fillStyle = r.color;
-          ctx.fillRect(px, rowY - 4, 8, isLight ? 100 : 130);
+          ctx.fillRect(px, rowY - 4, isLight ? 10 : 8, isLight ? 118 : 130);
           ctx.fillStyle = textMuted;
-          ctx.font = `600 ${isLight ? 17 : 19}px Inter, sans-serif`;
-          ctx.fillText(r.label, px + 20, rowY + (isLight ? 18 : 22));
+          ctx.font = `600 ${isLight ? 28 : 19}px Inter, sans-serif`;
+          ctx.fillText(r.label, px + 24, rowY + (isLight ? 28 : 22));
           ctx.fillStyle = textPrimary;
-          ctx.font = `700 ${isLight ? 48 : 56}px Outfit, sans-serif`;
-          ctx.fillText(timeStr, px + 20, rowY + (isLight ? 78 : 92));
+          ctx.font = `700 ${isLight ? 64 : 56}px Outfit, sans-serif`;
+          ctx.fillText(timeStr, px + 24, rowY + (isLight ? 104 : 92));
         });
       }
     }
 
     // ── Footer ────────────────────────────────────────────────────────────────
-    const footerY = isLight ? 970 : 930;
+    const footerY = isLight ? 960 : 930;
     ctx.strokeStyle = isLight ? 'rgba(160, 82, 28, 0.15)' : 'rgba(255,255,255,0.06)';
-    ctx.lineWidth = 1;
+    ctx.lineWidth = 1.5;
     ctx.beginPath(); ctx.moveTo(px, footerY); ctx.lineTo(pw, footerY); ctx.stroke();
     ctx.fillStyle = textMuted;
-    ctx.font = '400 16px Inter, sans-serif';
-    ctx.fillText('Dibuat otomatis oleh EnduraUP AI Engine', px, footerY + 28);
+    ctx.font = `400 ${isLight ? 24 : 16}px Inter, sans-serif`;
+    ctx.fillText('Dibuat otomatis oleh EnduraUP AI Engine', px, footerY + (isLight ? 36 : 28));
     ctx.fillStyle = isLight ? '#c0440a' : (shareTheme === 'cyber' ? '#06b6d4' : '#a78bfa');
-    ctx.font = '600 18px Inter, sans-serif';
-    ctx.fillText('enduraup.vercel.app', px, footerY + 58);
+    ctx.font = `600 ${isLight ? 28 : 18}px Inter, sans-serif`;
+    ctx.fillText('enduraup.vercel.app', px, footerY + (isLight ? 80 : 58));
 
   }, [showShareModal, shareTemplate, shareTheme, runActs, totalDist, totalSessions, avgHR, actualMaxHR, vo2max, targetPace, displayName, currentUser, avatar, retroImageLoaded]);
 
