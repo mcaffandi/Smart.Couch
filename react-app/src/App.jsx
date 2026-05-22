@@ -1794,6 +1794,24 @@ export default function App() {
 
       {/* ═══════════════════════════════ SIDEBAR ═══════════════════════════════ */}
       <aside className={`sidebar ${sidebarOpen ? 'open' : ''} ${sidebarCollapsed ? 'collapsed' : ''}`}>
+        {/* Collapsed strip: only visible when sidebar is collapsed */}
+        <div className="sidebar-collapsed-strip">
+          <button
+            className="sidebar-toggle-btn-desktop"
+            onClick={() => {
+              setSidebarCollapsed(false);
+              localStorage.setItem('smartcoach_sidebar_collapsed', 'false');
+            }}
+            title={lang === 'id' ? 'Tampilkan Panel' : 'Expand Panel'}
+            aria-label="Expand Sidebar"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="4" x2="20" y1="12" y2="12" />
+              <line x1="4" x2="20" y1="6" y2="6" />
+              <line x1="4" x2="20" y1="18" y2="18" />
+            </svg>
+          </button>
+        </div>
         {/* Logo */}
         <div className="sidebar-logo" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -2456,23 +2474,7 @@ export default function App() {
         {/* Header */}
         <div className="page-header" style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            {sidebarCollapsed && (
-              <button
-                className="sidebar-toggle-btn-desktop"
-                onClick={() => {
-                  setSidebarCollapsed(false);
-                  localStorage.setItem('smartcoach_sidebar_collapsed', 'false');
-                }}
-                title="Tampilkan Panel"
-                aria-label="Expand Sidebar"
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="4" x2="20" y1="12" y2="12" />
-                  <line x1="4" x2="20" y1="6" y2="6" />
-                  <line x1="4" x2="20" y1="18" y2="18" />
-                </svg>
-              </button>
-            )}
+
             <h1 className="page-title" style={{ margin: 0 }}>EnduraUP</h1>
             {hasData && (
               <button
