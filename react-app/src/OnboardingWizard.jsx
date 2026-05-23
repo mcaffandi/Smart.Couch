@@ -56,43 +56,45 @@ export default function OnboardingWizard({ initialProfile, onComplete, onSkip, l
   };
 
   return (
-    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'var(--bg-base)', zIndex: 99999, display: 'flex' }}>
+    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'var(--bg-base)', zIndex: 99999, display: 'flex', flexDirection: window.innerWidth < 768 ? 'column' : 'row' }}>
       
       {/* Left Sidebar (Steps) */}
-      <div style={{ width: 280, background: 'var(--bg-surface)', borderRight: '1px solid var(--border)', padding: '32px 24px', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 48 }}>
-          <Logo size={32} />
+      <div style={{ width: window.innerWidth < 768 ? '100%' : 280, background: 'var(--bg-surface)', borderRight: window.innerWidth < 768 ? 'none' : '1px solid var(--border)', borderBottom: window.innerWidth < 768 ? '1px solid var(--border)' : 'none', padding: window.innerWidth < 768 ? '16px 20px' : '32px 24px', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: window.innerWidth < 768 ? 16 : 48 }}>
+          <Logo size={window.innerWidth < 768 ? 24 : 32} />
           <div>
-            <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>EnduraUP</div>
-            <div style={{ fontSize: 11, color: 'var(--accent-purple)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Setup Profile</div>
+            <div style={{ fontSize: window.innerWidth < 768 ? 16 : 20, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>EnduraUP</div>
+            <div style={{ fontSize: 10, color: 'var(--accent-purple)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Setup Profile</div>
           </div>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 24, flex: 1 }}>
+        <div style={{ display: 'flex', flexDirection: window.innerWidth < 768 ? 'row' : 'column', gap: window.innerWidth < 768 ? 12 : 24, flex: window.innerWidth < 768 ? 'none' : 1, overflowX: window.innerWidth < 768 ? 'auto' : 'visible' }}>
           {steps.map(s => {
             const active = step === s.id;
             const completed = step > s.id;
             return (
-              <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 14, opacity: (active || completed) ? 1 : 0.4, transition: 'all 0.3s' }}>
-                <div style={{ width: 32, height: 32, borderRadius: '50%', background: active ? 'var(--accent-purple)' : completed ? 'rgba(167, 139, 250, 0.15)' : 'var(--bg-card)', border: `1px solid ${active || completed ? 'var(--accent-purple)' : 'var(--border)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: active ? '#fff' : completed ? 'var(--accent-purple)' : 'var(--text-muted)', fontSize: 14, fontWeight: 700 }}>
+              <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: window.innerWidth < 768 ? 8 : 14, opacity: (active || completed) ? 1 : 0.4, transition: 'all 0.3s', minWidth: window.innerWidth < 768 ? 'max-content' : 'auto' }}>
+                <div style={{ width: window.innerWidth < 768 ? 24 : 32, height: window.innerWidth < 768 ? 24 : 32, borderRadius: '50%', background: active ? 'var(--accent-purple)' : completed ? 'rgba(167, 139, 250, 0.15)' : 'var(--bg-card)', border: `1px solid ${active || completed ? 'var(--accent-purple)' : 'var(--border)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: active ? '#fff' : completed ? 'var(--accent-purple)' : 'var(--text-muted)', fontSize: window.innerWidth < 768 ? 12 : 14, fontWeight: 700 }}>
                   {completed ? '✓' : s.id}
                 </div>
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: active ? 'var(--text-primary)' : 'var(--text-secondary)' }}>{s.title}</div>
-                  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{s.desc}</div>
+                  <div style={{ fontSize: window.innerWidth < 768 ? 12 : 14, fontWeight: 700, color: active ? 'var(--text-primary)' : 'var(--text-secondary)' }}>{s.title}</div>
+                  {window.innerWidth >= 768 && <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{s.desc}</div>}
                 </div>
               </div>
             );
           })}
         </div>
         
-        <button onClick={onSkip} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 13, fontWeight: 600, cursor: 'pointer', textAlign: 'left', padding: '10px 0', textDecoration: 'underline' }}>
-          {lang === 'id' ? 'Lewati Pengaturan Ini' : 'Skip this setup'}
-        </button>
+        {window.innerWidth >= 768 && (
+          <button onClick={onSkip} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 13, fontWeight: 600, cursor: 'pointer', textAlign: 'left', padding: '10px 0', textDecoration: 'underline' }}>
+            {lang === 'id' ? 'Lewati Pengaturan Ini' : 'Skip this setup'}
+          </button>
+        )}
       </div>
 
       {/* Right Content Area */}
-      <div style={{ flex: 1, padding: '48px 64px', overflowY: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <div style={{ flex: 1, padding: window.innerWidth < 768 ? '24px' : '48px 64px', overflowY: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <div style={{ maxWidth: 500, width: '100%', marginTop: '4vh' }}>
           
           <h1 style={{ fontSize: 32, fontWeight: 800, marginBottom: 8 }}>{steps[step - 1].title}</h1>
@@ -240,6 +242,14 @@ export default function OnboardingWizard({ initialProfile, onComplete, onSkip, l
               {step < 3 && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>}
             </button>
           </div>
+
+          {window.innerWidth < 768 && (
+            <div style={{ marginTop: 24, textAlign: 'center' }}>
+              <button onClick={onSkip} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 13, fontWeight: 600, cursor: 'pointer', padding: '10px 0', textDecoration: 'underline' }}>
+                {lang === 'id' ? 'Lewati Pengaturan Ini' : 'Skip this setup'}
+              </button>
+            </div>
+          )}
 
         </div>
       </div>

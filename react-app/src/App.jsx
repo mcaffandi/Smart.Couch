@@ -1475,7 +1475,7 @@ export default function App() {
   }
 
   // ── Onboarding Wizard ────────────────────────────────────────────────────────
-  if (data && !data.profile?.isOnboardingComplete) {
+  if (data && !data.profile?.isOnboardingComplete && (data.profile?.age === null || data.profile?.age === undefined)) {
     return (
       <OnboardingWizard
         initialProfile={{ age, displayName, weight, height, gender, goal, programStyle, targetPace, selectedDays }}
