@@ -2844,9 +2844,7 @@ export default function App() {
                       <div className="readiness-card animate-fade-in">
                         <div className="readiness-dial-wrapper">
                           <div className="readiness-dial" style={{ 
-                            borderColor: rBgColor,
-                            borderTopColor: rColor,
-                            borderRightColor: rColor,
+                            background: `conic-gradient(${rColor} ${trainingReadinessScore}%, ${rBgColor} ${trainingReadinessScore}%)`
                           }}>
                             <div className="readiness-dial-value">{trainingReadinessScore}%</div>
                           </div>
