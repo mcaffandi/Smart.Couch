@@ -4,12 +4,45 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>EnduraUP - AI Coach</title>
-    <meta name="description" content="Ubah data lari dan tidur Garmin lo menjadi rencana latihan personal yang cerdas dengan EnduraUP." />
+    
+    <!-- Primary Meta Tags -->
+    <title>EnduraUP - AI Running Coach & Adaptive Training Plan</title>
+    <meta name="title" content="EnduraUP - AI Running Coach & Adaptive Training Plan" />
+    <meta name="description" content="Ubah data Garmin & Strava lo jadi rencana lari personal. Analisis kesiapan latihan harian (recovery & sleep) dan dapatkan prediksi waktu race dengan AI Coach." />
+    <meta name="keywords" content="EnduraUP, AI Running Coach, Rencana Latihan Lari, Garmin Recovery, Strava GPX Import, Pete Riegel Race Predictor, Pelatih Lari AI" />
+    <meta name="robots" content="index, follow" />
+    <meta name="language" content="Indonesian" />
+    <meta name="author" content="EnduraUP" />
+    <link rel="canonical" href="https://enduraup.vercel.app/" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://enduraup.vercel.app/" />
+    <meta property="og:title" content="EnduraUP - AI Running Coach & Adaptive Training Plan" />
+    <meta property="og:description" content="Ubah data Garmin & Strava lo jadi rencana lari personal. Analisis kesiapan latihan harian (recovery & sleep) dan dapatkan prediksi waktu race dengan AI Coach." />
+    <meta property="og:image" content="https://enduraup.vercel.app/og-preview.jpg" />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://enduraup.vercel.app/" />
+    <meta property="twitter:title" content="EnduraUP - AI Running Coach & Adaptive Training Plan" />
+    <meta property="twitter:description" content="Ubah data Garmin & Strava lo jadi rencana lari personal. Analisis kesiapan latihan harian (recovery & sleep) dan dapatkan prediksi waktu race dengan AI Coach." />
+    <meta property="twitter:image" content="https://enduraup.vercel.app/og-preview.jpg" />
+
+    <meta name="theme-color" content="#1a1a1f" />
+    <link rel="apple-touch-icon" href="/favicon.svg" />
+    <link rel="manifest" href="/manifest.json" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch(err => console.error('SW registration failed:', err));
+        });
+      }
+    </script>
   </body>
 </html>

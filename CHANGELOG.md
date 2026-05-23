@@ -2,6 +2,25 @@
 
 ---
 
+## [Uncommitted] — 2026-05-23 · Sidebar UX Simplification & Profile Settings Centricity
+
+### 🎨 UI / UX
+
+#### Pembersihan Sidebar Utama
+- Memindahkan semua pengaturan target dan rutinitas (Goal Utama, Program Style, Target Pace, dan Hari Latihan) yang sebelumnya menumpuk di sidebar kiri (menyebabkan clutter visual) ke dalam **Modal Edit Profil**.
+- Sidebar kini tampil lebih rapi, minimalis, dan difokuskan murni untuk navigasi, informasi akun aktif, serta fungsionalitas impor data (upload ZIP/GPX/Excel).
+- Tombol aksi "Apply & Analyze" di sidebar dihapus, perannya kini digantikan secara otomatis oleh tombol "✓ Simpan" pada modal profil.
+
+#### Profil Modal yang Lebih Komprehensif
+- **View Mode**: Modal profil kini tidak hanya menampilkan data fisik (Umur, Berat, dll), melainkan juga merangkum metrik **Target & Latihan** dalam bentuk grid Stat Card yang rapi.
+- **Edit Mode**: Memasukkan opsi dropdown dan slider premium (range slider untuk target pace) untuk pengaturan jadwal latihan ke dalam form edit profil.
+- Perubahan setting segera di-apply dan disinkronisasikan ke Firebase / local storage secara instan saat pengguna menekan tombol Simpan di dalam modal profil.
+
+#### Redesain Dashboard Performance Cards
+- Menyempurnakan tampilan kartu performa di Dashboard agar terlihat lebih premium dan terstruktur.
+
+---
+
 ## [Uncommitted] — 2026-05-22 · Bilingual Support, Sidebar UX Overhaul & Sports-Science Training Readiness
 
 ### ✨ Fitur Baru

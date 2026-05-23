@@ -1,0 +1,17 @@
+{
+  "name": "EnduraUP Smart Coach",
+  "short_name": "EnduraUP",
+  "description": "AI Running Coach & Adaptive Training Plan",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#121214",
+  "theme_color": "#1a1a1f",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

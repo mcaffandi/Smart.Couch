@@ -161,118 +161,123 @@ Keep the answer to 1-2 paragraphs max, direct, and without fluff.`;
     setLoading(false);
   };
 
+  const handleResetKey = () => {
+    setSavedKey(false);
+    setUseServer(false);
+    setAnalysis('');
+  };
+
   return (
-    <div className="animate-fade-in" style={{ marginTop: 20 }}>
+    <div className="chart-container animate-fade-in" style={{ 
+      marginTop: 20, 
+      background: analysis ? 'rgba(139, 92, 246, 0.03)' : undefined,
+      borderColor: analysis ? 'rgba(167, 139, 250, 0.3)' : undefined
+    }}>
+      {/* Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+        <div>
+          <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--accent-purple)' }}>
+              <path d="M12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" fill="currentColor" fillOpacity="0.2"/>
+            </svg>
+            {lang === 'id' ? 'AI Coach Personal' : 'AI Personal Coach'}
+          </h3>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+            {lang === 'id' ? 'Analisis data lari & rekomendasi berbasis AI' : 'AI-driven run analysis & training tips'}
+          </div>
+        </div>
+
+        {/* Top Right Actions */}
+        {analysis && !loading && (
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+            {(savedKey || !useServer) && (
+              <button className="login-link-btn" style={{ fontSize: 12, color: 'var(--text-muted)', textDecoration: 'none' }} onClick={handleResetKey}>
+                {lang === 'id' ? 'Ganti Key' : 'Change Key'}
+              </button>
+            )}
+            <button className="login-link-btn" style={{ fontSize: 12, color: 'var(--accent-purple)', fontWeight: 700, textDecoration: 'none' }} onClick={getAIAnalysis}>
+              {lang === 'id' ? 'Analisis Ulang' : 'Regenerate'}
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Main Content */}
       {(!savedKey && !useServer) ? (
-        <div className="info-card purple" style={{ borderColor: errorMsg ? '#fb7185' : undefined }}>
-          <label className="form-label" style={{ color: errorMsg ? '#fb7185' : 'var(--accent-purple)', fontWeight: 700 }}>
-            {errorMsg 
-              ? (lang === 'id' ? 'API Key Ditolak / Gagal' : 'API Key Rejected / Failed') 
-              : (lang === 'id' ? 'Konfigurasi Groq API Key' : 'Configure Groq API Key')}
-          </label>
-          <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
+        /* Configuration Needed */
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0 }}>
+            {lang === 'id'
+              ? 'Masukkan Groq API Key lo untuk mengaktifkan AI Coach. AI akan menganalisis 5 aktivitas lari terakhir serta profil lo untuk memberikan rekomendasi latihan.'
+              : 'Enter your Groq API Key to enable the AI Coach. It will analyze your last 5 runs and runner profile to provide training feedback.'}
+          </p>
+          <div style={{ display: 'flex', gap: 10, marginTop: 6, flexWrap: 'wrap' }}>
             <input
               type="password"
               className="form-input"
               value={apiKey}
               onChange={e => { setApiKey(e.target.value); setErrorMsg(''); }}
               placeholder="gsk_..."
-              style={{ flex: 1, background: 'rgba(0,0,0,0.2)', borderColor: errorMsg ? 'rgba(251,113,133,0.5)' : undefined }}
+              style={{ flex: 1, minWidth: 200 }}
             />
             <button className="btn btn-primary" style={{ width: 'auto' }} onClick={saveKey}>
-              {lang === 'id' ? 'Simpan Konfigurasi' : 'Save Configuration'}
+              {lang === 'id' ? 'Simpan' : 'Save'}
             </button>
           </div>
           {errorMsg && (
-            <div style={{ fontSize: 12, color: '#fb7185', marginTop: 10, fontWeight: 600 }}>{errorMsg}</div>
+            <div style={{ fontSize: 12, color: '#fb7185', fontWeight: 600 }}>{errorMsg}</div>
           )}
-          <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8 }}>
-            {lang === 'id' 
-              ? 'Kunci API disimpan secara lokal di browser untuk keamanan.' 
-              : 'API Key is stored locally in your browser for security.'}
+        </div>
+      ) : loading ? (
+        /* Loading state */
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px 0', gap: 12 }}>
+          <svg className="spinner-rotate" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--accent-purple)' }}>
+            <line x1="12" y1="2" x2="12" y2="6"></line>
+            <line x1="12" y1="18" x2="12" y2="22"></line>
+            <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line>
+            <line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line>
+            <line x1="2" y1="12" x2="6" y2="12"></line>
+            <line x1="18" y1="12" x2="22" y2="12"></line>
+            <line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line>
+            <line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line>
+          </svg>
+          <div style={{ fontSize: 13, color: 'var(--text-secondary)', fontWeight: 600 }}>
+            {lang === 'id' ? 'AI Coach sedang menganalisis datamu...' : 'AI Coach is analyzing your data...'}
+          </div>
+        </div>
+      ) : !analysis ? (
+        /* Configured but no analysis yet (Call-to-Action) */
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0 }}>
+            {lang === 'id'
+              ? 'Dapatkan ulasan performa instan dan tips latihan spesifik berdasarkan riwayat larimu dari AI Coach.'
+              : 'Get instant performance insights and custom running recommendations from your AI Coach.'}
           </p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 6, flexWrap: 'wrap', gap: 12 }}>
+            {(savedKey || !useServer) ? (
+              <button className="login-link-btn" style={{ fontSize: 12, color: 'var(--text-muted)', textDecoration: 'none' }} onClick={handleResetKey}>
+                {lang === 'id' ? 'Ganti API Key' : 'Change API Key'}
+              </button>
+            ) : (
+              <div />
+            )}
+            <button
+              className="btn btn-primary"
+              onClick={getAIAnalysis}
+              disabled={activities.length === 0}
+              style={{ width: 'auto', background: 'var(--accent-purple)', borderColor: 'var(--accent-purple)' }}
+            >
+              {lang === 'id' ? 'Mulai Analisis AI' : 'Start AI Analysis'}
+            </button>
+          </div>
+          {errorMsg && (
+            <div style={{ fontSize: 12, color: '#fb7185', fontWeight: 600, marginTop: 4 }}>{errorMsg}</div>
+          )}
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-           {!analysis && (
-             <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 16 }}>
-               {(savedKey || !useServer) && (
-                 <button
-                    className="login-link-btn"
-                    style={{ fontSize: 12, color: 'var(--text-muted)' }}
-                    onClick={() => { setSavedKey(false); setUseServer(false); }}
-                  >
-                   {lang === 'id' ? 'Ganti API Key' : 'Change API Key'}
-                 </button>
-               )}
-               <button
-                  className="btn btn-primary"
-                  onClick={getAIAnalysis}
-                  disabled={loading || activities.length === 0}
-                  style={{
-                    background: 'var(--accent-purple)',
-                    borderColor: 'var(--accent-purple)',
-                    width: 'auto',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 6
-                  }}
-                >
-                 {loading ? (
-                   <svg className="spinner-rotate" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                     <line x1="12" y1="2" x2="12" y2="6"></line>
-                     <line x1="12" y1="18" x2="12" y2="22"></line>
-                     <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line>
-                     <line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line>
-                     <line x1="2" y1="12" x2="6" y2="12"></line>
-                     <line x1="18" y1="12" x2="22" y2="12"></line>
-                     <line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line>
-                     <line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line>
-                   </svg>
-                 ) : (
-                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                     <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" fill="currentColor" fillOpacity="0.3"/>
-                   </svg>
-                 )}
-                 {loading 
-                   ? (lang === 'id' ? 'Sedang Menganalisis Data...' : 'Analyzing Data...') 
-                   : (lang === 'id' ? 'Analisis AI Coach' : 'AI Coach Analysis')}
-               </button>
-             </div>
-           )}
-           {errorMsg && (
-             <div style={{ fontSize: 12, color: '#fb7185', marginTop: 4, fontWeight: 600 }}>{errorMsg}</div>
-           )}
-        </div>
-      )}
-
-      {analysis && (
-        <div className="chart-container animate-fade-in" style={{ marginTop: 16, background: 'rgba(124, 58, 237, 0.08)', borderColor: 'rgba(167, 139, 250, 0.4)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-            <div>
-              <h3 style={{ margin: 0, fontSize: 16, color: 'var(--text-primary)' }}>
-                {lang === 'id' ? 'Analisis AI Coach' : 'AI Coach Analysis'}
-              </h3>
-              <div style={{ fontSize: 11, color: 'var(--accent-purple)', marginTop: 2 }}>
-                {lang === 'id' ? 'Didukung oleh Groq LLaMA-3' : 'Powered by Groq LLaMA-3'}
-              </div>
-            </div>
-            <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-              {(savedKey || !useServer) ? (
-                <button className="login-link-btn" style={{ fontSize: 12, color: 'var(--text-muted)' }} onClick={() => { setAnalysis(''); setSavedKey(false); setUseServer(false); }}>
-                  {lang === 'id' ? 'Ganti Key' : 'Change Key'}
-                </button>
-              ) : (
-                <button className="login-link-btn" style={{ fontSize: 12, color: 'var(--text-muted)' }} onClick={() => { setAnalysis(''); setSavedKey(false); setUseServer(false); }}>
-                  {lang === 'id' ? 'Gunakan API Key Sendiri' : 'Use Own API Key'}
-                </button>
-              )}
-              <button className="login-link-btn" style={{ fontSize: 12 }} onClick={getAIAnalysis}>
-                {lang === 'id' ? 'Analisis Ulang' : 'Regenerate'}
-              </button>
-            </div>
-          </div>
-          <div style={{ fontSize: 14, lineHeight: 1.8, color: 'var(--text-secondary)', whiteSpace: 'pre-wrap' }}>
+        /* Analysis Output */
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={{ fontSize: 13.5, lineHeight: 1.8, color: 'var(--text-secondary)', whiteSpace: 'pre-wrap', borderLeft: '3px solid var(--accent-purple)', paddingLeft: 12 }}>
             {analysis}
           </div>
         </div>

@@ -114,6 +114,59 @@ export default function LandingPage({ onGetStarted, lang, setLang }) {
         </div>
       </section>
 
+      {/* Brand / Device Ticker Section */}
+      <section className="brand-ticker-section animate-fade-in" style={{ animationDelay: '0.15s' }}>
+        <p className="brand-ticker-title">{t.syncsWithDevices}</p>
+        <div className="brand-ticker-wrapper">
+          <div className="brand-logos-container">
+            {[
+              { name: 'Garmin', icon: (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                  <path d="M12 9v3l2 1"/>
+                </svg>
+              )},
+              { name: 'Strava', icon: (
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-3.828L5.19 19.928h3.065L13.43 10l-5.15-10.172-5.15 10.172h3.065" />
+                </svg>
+              )},
+              { name: 'Polar', icon: (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/>
+                  <line x1="12" y1="2" x2="12" y2="22"/>
+                </svg>
+              )},
+              { name: 'Coros', icon: (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"/>
+                  <path d="M12 6V12h6"/>
+                </svg>
+              )},
+              { name: 'Apple Watch', icon: (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="5" y="5" width="14" height="14" rx="4" />
+                  <path d="M9 2h6M9 22h6M12 9v6" />
+                </svg>
+              )},
+              { name: 'Suunto', icon: (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <ellipse cx="12" cy="5" rx="9" ry="3"/>
+                  <ellipse cx="12" cy="12" rx="9" ry="3"/>
+                  <ellipse cx="12" cy="19" rx="9" ry="3"/>
+                </svg>
+              )}
+            ].map((brand, idx) => (
+              <div key={idx} className="brand-logo-item" title={brand.name}>
+                <div className="brand-icon">{brand.icon}</div>
+                <span className="brand-name">{brand.name}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Bento Grid Features Section */}
       <section id="features" className="features-section">
         <div className="section-header">

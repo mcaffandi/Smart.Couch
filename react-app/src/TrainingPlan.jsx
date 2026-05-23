@@ -79,7 +79,7 @@ const getBadgeClass = (jenis) => {
   return 'badge-recovery';
 };
 
-export default function TrainingPlan({ activities, programStyle, goal, paces, latestSleepScore, actualBestPace, targetPace, selectedDays, lang = 'id' }) {
+export default function TrainingPlan({ activities, programStyle, goal, paces, latestSleepScore, actualBestPace, targetPace, selectedDays, gender, weight, height, lang = 'id' }) {
   const [aiLoading, setAiLoading] = useState(false);
   const [aiPlan, setAiPlan] = useState(() => {
     try {
@@ -115,7 +115,7 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
           </>
         ) : (
           <>
-            <strong>Poor Sleep:</strong> Your sleep score is {latestSleepScore} — insufficient rest. If today's scheduled run is an interval or tempo, <strong>it is highly recommended to switch to an Easy Run or Rest</strong> to prevent injury.
+            <strong>Poor Sleep:</strong> Your sleep score is {latestSleepScore} — insufficient rest. If today's scheduled run is an interval or tempo, <strong>it is highly recommended to switch to an Easy Run atau Rest</strong> to prevent injury.
           </>
         )}
       </div>
@@ -166,16 +166,41 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
 
       const daysInstruction = selectedDays && selectedDays.length > 0
         ? (lang === 'id' 
-            ? `Hari Lari yang DIREQUEST: ${selectedDays.join(', ')}.\nSANGAT PENTING: Hanya jadwalkan lari pada hari yang direquest tersebut. Untuk hari selain itu, WAJIB diisi dengan "Total Rest" atau "Cross-Training/Recovery".`
-            : `REQUESTED Running Days: ${selectedDays.join(', ')}.\nVERY IMPORTANT: Only schedule running workouts on these specific requested days. For all other days, write "Total Rest" or "Cross-Training/Recovery".`)
+            ? `Hari Lari yang DIREQUEST: ${selectedDays.join(', ')}.\nSANGAT PENTING: Hanya jadwalkan lari pada hari yang direquest tersebut. Untuk hari selain itu, WAJIB diisi dengan "Total Rest" atau latihan silang/pemulihan aktif seperti "Core & Leg Stabilizer" (durasi: "15-20 menit", tujuan: "Melatih otot inti (Plank/Bridge) & stabilitas kaki"), "Yoga / Mobility" (durasi: "20-30 menit"), atau "Breathing / Relaksasi" (durasi: "10-15 menit"). Selang-selingkan latihan ini di hari istirahat agar tidak membosankan.`
+            : `REQUESTED Running Days: ${selectedDays.join(', ')}.\nVERY IMPORTANT: Only schedule running workouts on these specific requested days. For other days, write "Total Rest" or active recovery/cross-training like "Core & Leg Stabilizer" (duration: "15-20 mins", purpose: "Core (Plank/Bridge) & ankle stabilization"), "Yoga / Mobility" (duration: "20-30 mins"), or "Breathing / Relaxation" (duration: "10-15 mins"). Alternate these workouts on rest days.`)
         : (lang === 'id'
-            ? `Hari Lari: Pelari menyerahkan jadwal kepadamu. Atur hari lari yang optimal (3-5 hari seminggu sesuai target). Untuk hari istirahat, WAJIB diisi dengan "Total Rest" atau "Cross-Training/Recovery".`
-            : `Running Days: The runner lets you decide. Optimize running days (3-5 days/week based on the target). For rest days, write "Total Rest" or "Cross-Training/Recovery".`);
+            ? `Hari Lari: Pelari menyerahkan jadwal kepadamu. Atur hari lari yang optimal (3-5 hari seminggu sesuai target). Untuk hari selain itu (hari istirahat), WAJIB diisi dengan "Total Rest" atau latihan silang/pemulihan aktif seperti "Core & Leg Stabilizer" (durasi: "15-20 menit", tujuan: "Melatih otot inti (Plank/Bridge) & stabilitas kaki"), "Yoga / Mobility" (durasi: "20-30 menit"), atau "Breathing / Relaksasi" (durasi: "10-15 menit").`
+            : `Running Days: The runner lets you decide. Optimize running days (3-5 days/week based on the target). For all other days (rest days), write "Total Rest" or active recovery/cross-training like "Core & Leg Stabilizer" (duration: "15-20 mins", purpose: "Core (Plank/Bridge) & ankle stabilization"), "Yoga / Mobility" (duration: "20-30 mins"), or "Breathing / Relaxation" (duration: "10-15 mins").`);
+
+      const genderInstruction = gender === 'wanita' 
+        ? (lang === 'id' 
+            ? `Atlet ini adalah seorang wanita. Secara fisiologis, penyesuaian volume latihan (jarak/waktu) disarankan sedikit lebih efisien (sekitar 90-95% dari volume standar pria) untuk pace yang sama guna mengoptimalkan pemulihan dan adaptasi sendi.` 
+            : `This athlete is female. Physiologically, training volume (distance/time) is recommended to be slightly more efficient (around 90-95% of standard male volume) for the same pace to optimize recovery and joint adaptation.`)
+        : '';
+
+      let bmiInstruction = '';
+      if (weight && height) {
+        const bmi = weight / ((height / 100) ** 2);
+        if (bmi >= 28) {
+          bmiInstruction = lang === 'id'
+            ? `\nPERHATIAN MEDIS (Berat: ${weight}kg, BMI: ${bmi.toFixed(1)}): Atlet ini memiliki BMI di atas 28 (Overweight/Obese). Tulang dan sendi menanggung beban ekstra yang sangat besar saat lari. WAJIB kurangi volume lari! Perbanyak "Walk-Run Intervals" (contoh: Lari 1 menit, Jalan 2 menit), durasi maksimal 30-40 menit per sesi, dan WAJIB tambahkan hari "Low-Impact Cardio" (sepeda/renang) atau Rest untuk mencegah cedera lutut/shin splint.`
+            : `\nMEDICAL ATTENTION (Weight: ${weight}kg, BMI: ${bmi.toFixed(1)}): This athlete has a BMI over 28 (Overweight/Obese). Joints and bones bear immense extra load during running. YOU MUST reduce running volume! Prioritize "Walk-Run Intervals" (e.g., Run 1 min, Walk 2 min), max 30-40 mins per session, and MANDATORY "Low-Impact Cardio" (cycling/swimming) or Rest days to prevent knee/shin injuries.`;
+        } else if (bmi < 18.5) {
+          bmiInstruction = lang === 'id'
+            ? `\nPERHATIAN (Berat: ${weight}kg, BMI: ${bmi.toFixed(1)}): Atlet ini memiliki BMI di bawah 18.5 (Underweight). Kurangi intensitas interval panjang, fokus pada repetisi pendek yang ringan, dan dorong kalori surplus serta latihan kekuatan ringan.`
+            : `\nATTENTION (Weight: ${weight}kg, BMI: ${bmi.toFixed(1)}): This athlete is underweight (BMI < 18.5). Reduce long interval intensity, focus on short light reps, and encourage light strength training.`;
+        } else {
+          bmiInstruction = lang === 'id' 
+            ? `\nBerat: ${weight}kg, Tinggi: ${height}cm (BMI Normal). Jadwalkan porsi lari standar sesuai target.`
+            : `\nWeight: ${weight}kg, Height: ${height}cm (Normal BMI). Schedule standard running load based on target.`;
+        }
+      }
 
       const prompt = lang === 'id'
         ? `Lo adalah pelatih lari elit (EnduraUP). Buatkan jadwal lari 1 minggu (Senin-Minggu) dalam format JSON array yang ketat.
 Atlet ini punya target utama: ${goal}.
 ${daysInstruction}
+${genderInstruction}${bmiInstruction}
 
 Target Pace: ${formatPace(targetPace) || targetPace} min/km.
 Data lari terakhir mereka (jadikan referensi penyesuaian beban):
@@ -183,11 +208,12 @@ ${recentRuns || "Belum ada riwayat lari."}
 Tidur semalam: skor ${latestSleepScore || "Tidak ada data"}.
 
 Sesuaikan intensitas! Jika HR kemarin tinggi atau tidur kurang, tambahkan rest/recovery.
-Output harus STRICTLY JSON array of objects dengan keys persis: "hari" (Senin-Minggu), "jenis" (contoh: "Easy Run", "Interval", "Total Rest"), "durasi" (contoh: "30 menit", "5x400m", "–"), "tujuan" (alasan logis). Pastikan urutan dari Senin sampai Minggu (7 item).
+Output harus STRICTLY JSON array of objects dengan keys persis: "hari" (Senin-Minggu), "jenis" (contoh: "Easy Run", "Interval", "Core & Leg Stabilizer", "Total Rest"), "durasi" (contoh: "30 menit", "5x400m", "15-20 menit", "–"), "tujuan" (alasan logis). Pastikan urutan dari Senin sampai Minggu (7 item).
 Return ONLY the raw JSON array.`
         : `You are an elite running coach (EnduraUP). Create a strict 1-week training plan (Monday-Sunday) in JSON array format.
 This athlete's main goal: ${goal}.
 ${daysInstruction}
+${genderInstruction}${bmiInstruction}
 
 Target Pace: ${formatPace(targetPace) || targetPace} min/km.
 Their latest run data (use as reference to adjust load):
@@ -195,7 +221,7 @@ ${recentRuns || "No running history yet."}
 Sleep last night: score ${latestSleepScore || "No data"}.
 
 Adjust intensity! If heart rate was high or sleep was insufficient, add rest/recovery.
-Output must be a STRICTLY JSON array of objects with keys exactly: "hari" (Monday-Sunday, e.g., "Monday", "Tuesday", etc.), "jenis" (e.g. "Easy Run", "Interval", "Total Rest"), "durasi" (e.g. "30 minutes", "5x400m", "–"), "tujuan" (logical reasoning). Ensure the order goes Monday to Sunday (7 items).
+Output must be a STRICTLY JSON array of objects with keys exactly: "hari" (Monday-Sunday, e.g., "Monday", "Tuesday", etc.), "jenis" (e.g. "Easy Run", "Interval", "Core & Leg Stabilizer", "Total Rest"), "durasi" (e.g. "30 minutes", "5x400m", "15-20 minutes", "–"), "tujuan" (logical reasoning). Ensure the order goes Monday to Sunday (7 items).
 Return ONLY the raw JSON array.`;
 
       let content = '';
@@ -429,13 +455,12 @@ Return ONLY the raw JSON array.`;
 
       {/* Sync banner: actual vs target pace */}
       {showSyncBanner && (
-        <div style={{
-          background: 'rgba(251,191,36,0.07)', border: '1px solid rgba(251,191,36,0.2)',
-          borderRadius: 12, padding: '14px 16px', marginBottom: 18,
+        <div className="alert alert-warning" style={{
+          padding: '14px 16px', marginBottom: 18,
           display: 'flex', alignItems: 'flex-start', gap: 12
         }}>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: '#fbbf24', marginBottom: 4 }}>{lang === 'id' ? 'SINKRONISASI DATA' : 'DATA SYNCHRONIZATION'}</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--alert-warning-text)', marginBottom: 4 }}>{lang === 'id' ? 'SINKRONISASI DATA' : 'DATA SYNCHRONIZATION'}</div>
             <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
               {lang === 'id' ? (
                 <>

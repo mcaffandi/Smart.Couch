@@ -12,6 +12,8 @@ import RacePrediction from './RacePrediction';
 import LoginScreen from './LoginScreen';
 import AICoach from './AICoach';
 import LandingPage from './LandingPage';
+import OnboardingWizard from './OnboardingWizard';
+import AdminDashboard from './AdminDashboard';
 import Logo from './Logo';
 import { translations } from './translations';
 import {
@@ -105,12 +107,17 @@ export default function App() {
   const [gender, setGender] = useState(() => data.profile?.gender ?? '');
   const [avatar, setAvatar] = useState(() => data.profile?.avatar ?? null);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showAddRunModal, setShowAddRunModal] = useState(false);
+  const [showSleepModal, setShowSleepModal] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showAdmin, setShowAdmin] = useState(window.location.hash === '#admin');
   const [editDraft, setEditDraft] = useState({});
   const [profileEditMode, setProfileEditMode] = useState(false);
   const [goal, setGoal] = useState(() => data.profile?.goal ?? 'maintenance');
   const [programStyle, setProgramStyle] = useState(() => data.profile?.programStyle ?? 'sedang');
   const [targetPace, setTargetPace] = useState(() => data.profile?.targetPace ?? null);
   const [selectedDays, setSelectedDays] = useState(() => data.profile?.selectedDays ?? ['Selasa', 'Kamis', 'Sabtu']);
+
 
   useEffect(() => {
     if (!isFirebaseConfigured) return;
@@ -198,6 +205,23 @@ export default function App() {
   const [customCaption, setCustomCaption] = useState('Lihat pencapaian lari gue di EnduraUP! Gabung yuk di enduraup.vercel.app 🏃‍♂️🔥');
   const [retroImageLoaded, setRetroImageLoaded] = useState(false);
   const retroImageRef = useRef(null);
+
+  const [customImageVer, setCustomImageVer] = useState(0);
+  const customImageRef = useRef(null);
+  const [customColor1, setCustomColor1] = useState('#fff1f2');
+  const [customColor2, setCustomColor2] = useState('#ffedd5');
+
+  const handleCustomImageUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.src = url;
+    img.onload = () => {
+      customImageRef.current = img;
+      setCustomImageVer(v => v + 1);
+    };
+  };
 
   useEffect(() => {
     const img = new Image();
@@ -474,6 +498,38 @@ export default function App() {
         else { ctx.rect(0, 0, tW, tH); }
         ctx.clip();
         ctx.drawImage(img, srcX, srcY, srcW, srcH, 0, 0, tW, tH);
+        ctx.restore();
+      }
+    } else if (shareTheme === 'custom') {
+      const grad = ctx.createLinearGradient(0, 0, 1080, 1080);
+      grad.addColorStop(0, customColor1);
+      grad.addColorStop(1, customColor2);
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 1080, 1080);
+      
+      const imgTarget = customImageRef.current || retroImageRef.current;
+      if (imgTarget) {
+        const tW = 1080, tH = 420;
+        const imgAspect = imgTarget.naturalWidth / imgTarget.naturalHeight;
+        const tAspect   = tW / tH;
+        let srcX, srcY, srcW, srcH;
+        if (imgAspect > tAspect) {
+          srcH = imgTarget.naturalHeight;
+          srcW = imgTarget.naturalHeight * tAspect;
+          srcX = (imgTarget.naturalWidth - srcW) / 2;
+          srcY = 0;
+        } else {
+          srcW = imgTarget.naturalWidth;
+          srcH = imgTarget.naturalWidth / tAspect;
+          srcX = 0;
+          srcY = (imgTarget.naturalHeight - srcH) / 2;
+        }
+        ctx.save();
+        ctx.beginPath();
+        if (ctx.roundRect) { ctx.roundRect(0, 0, tW, tH, [24, 24, 0, 0]); }
+        else { ctx.rect(0, 0, tW, tH); }
+        ctx.clip();
+        ctx.drawImage(imgTarget, srcX, srcY, srcW, srcH, 0, 0, tW, tH);
         ctx.restore();
       }
     } else { // purple theme
@@ -1389,22 +1445,6 @@ export default function App() {
     setSidebarOpen(false);
   };
 
-  // ── Apply profile changes ─────────────────────────────────────────────────────
-  const applyProfileChanges = () => {
-    if (age !== null && age !== undefined && age < 10) {
-      addToast('Umur tidak boleh kurang dari 10 tahun.', 'error');
-      return;
-    }
-    const updated = {
-      ...data,
-      profile: { age, displayName, weight, height, gender, avatar, goal, programStyle, targetPace, selectedDays }
-    };
-    saveAndSyncData(updated);
-    addToast('Profil diperbarui & disimpan.');
-    setTab('dashboard');
-    setSidebarOpen(false);
-  };
-
   const hasData = runActs.length > 0 || Object.keys(sleepRecs || {}).length > 0;
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -1431,6 +1471,48 @@ export default function App() {
           lang={lang}
         />
       </>
+    );
+  }
+
+  // ── Onboarding Wizard ────────────────────────────────────────────────────────
+  if (data && !data.profile?.isOnboardingComplete) {
+    return (
+      <OnboardingWizard
+        initialProfile={{ age, displayName, weight, height, gender, goal, programStyle, targetPace, selectedDays }}
+        lang={lang}
+        currentUser={currentUser}
+        onComplete={(draft) => {
+          setDisplayName(draft.displayName);
+          setAge(draft.age);
+          setWeight(draft.weight);
+          setHeight(draft.height);
+          setGender(draft.gender);
+          setGoal(draft.goal);
+          setProgramStyle(draft.programStyle);
+          setTargetPace(draft.targetPace);
+          setSelectedDays(draft.selectedDays);
+          
+          const updated = {
+            ...data,
+            profile: {
+              ...(data.profile || {}),
+              ...draft,
+              isOnboardingComplete: true
+            }
+          };
+          saveAndSyncData(updated);
+        }}
+        onSkip={() => {
+          const updated = {
+            ...data,
+            profile: {
+              ...(data.profile || {}),
+              isOnboardingComplete: true
+            }
+          };
+          saveAndSyncData(updated);
+        }}
+      />
     );
   }
 
@@ -1490,6 +1572,10 @@ export default function App() {
 
   const readinessDesc = getReadinessDesc();
 
+  if (showAdmin) {
+    return <AdminDashboard onBack={() => { setShowAdmin(false); window.location.hash = ''; }} />;
+  }
+
   return (
     <div className="app-layout">
 
@@ -1513,14 +1599,21 @@ export default function App() {
         const closeModal = () => { setEditDraft({}); setProfileEditMode(false); setShowProfileModal(false); };
 
         // ── Stat chip (view mode) ────────────────────────────────────────────────
-        const Stat = ({ label, value, unit }) => (
-          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 8, padding: '10px 12px' }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 4 }}>{label}</div>
-            <div style={{ fontSize: 16, fontWeight: 700, color: value ? 'var(--text-primary)' : 'var(--text-muted)', fontStyle: value ? 'normal' : 'italic' }}>
-              {value ? <>{value}<span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-muted)', marginLeft: 2 }}>{unit}</span></> : '—'}
+        const Stat = ({ label, value, unit, icon, color = 'var(--accent-purple)' }) => (
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, padding: '12px 14px', display: 'flex', gap: 12, alignItems: 'center' }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: `${color}15`, color: color, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              {icon}
+            </div>
+            <div style={{ overflow: 'hidden' }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>{label}</div>
+              <div style={{ fontSize: 15, fontWeight: 800, color: value ? 'var(--text-primary)' : 'var(--text-muted)', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
+                {value ? <>{value} <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)' }}>{unit}</span></> : '—'}
+              </div>
             </div>
           </div>
         );
+
+        const iconProps = { width: 18, height: 18, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" };
 
         return (
           <div className="profile-modal-backdrop" onClick={e => { if (e.target === e.currentTarget) closeModal(); }}>
@@ -1549,11 +1642,27 @@ export default function App() {
                 {/* ── VIEW MODE ── */}
                 {!profileEditMode ? (<>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                    <Stat label="Umur" value={curAge} unit="thn" />
-                    <Stat label="Kelamin" value={curGender === 'pria' ? 'Pria' : curGender === 'wanita' ? 'Wanita' : null} unit="" />
-                    <Stat label="Berat" value={curWeight} unit="kg" />
-                    <Stat label="Tinggi" value={curHeight} unit="cm" />
+                    <Stat label="Umur" value={curAge} unit="thn" color="#3b82f6" icon={<svg {...iconProps}><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>} />
+                    <Stat label="Kelamin" value={curGender === 'pria' ? 'Pria' : curGender === 'wanita' ? 'Wanita' : null} unit="" color={curGender === 'wanita' ? '#ec4899' : '#8b5cf6'} icon={curGender === 'wanita' ? <svg {...iconProps}><circle cx="12" cy="9" r="5"></circle><line x1="12" y1="14" x2="12" y2="21"></line><line x1="9" y1="18" x2="15" y2="18"></line></svg> : <svg {...iconProps}><circle cx="10" cy="14" r="5"></circle><line x1="13.5" y1="10.5" x2="21" y2="3"></line><line x1="16" y1="3" x2="21" y2="3"></line><line x1="21" y1="3" x2="21" y2="8"></line></svg>} />
+                    <Stat label="Berat" value={curWeight} unit="kg" color="#10b981" icon={<svg {...iconProps}><path d="M6 10h12"></path><path d="M6 10l3-6h6l3 6"></path><rect x="4" y="10" width="16" height="10" rx="2"></rect><path d="M12 10v4"></path></svg>} />
+                    <Stat label="Tinggi" value={curHeight} unit="cm" color="#f59e0b" icon={<svg {...iconProps}><path d="M8 2v20"></path><path d="M8 6h4"></path><path d="M8 10h2"></path><path d="M8 14h2"></path><path d="M8 18h4"></path><path d="M16 8l4 4-4 4"></path></svg>} />
                   </div>
+
+                  <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent-purple)', letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 14, marginBottom: 4 }}>Target & Latihan</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                    <Stat label="Goal" value={
+                      goal === 'maintenance' ? 'Maintenance' :
+                      goal === 'weightloss' ? 'Turun BB' :
+                      goal === '10k' ? '10K' :
+                      goal === 'marathon' ? 'Marathon' :
+                      goal === 'turun-hr' ? 'Turun HR' :
+                      goal === 'health' ? 'Kesehatan' : goal
+                    } unit="" color="#ef4444" icon={<svg {...iconProps}><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>} />
+                    <Stat label="Style" value={programStyle === 'ngepush' ? 'Ngepush' : programStyle === 'sedang' ? 'Sedang' : programStyle === 'santai' ? 'Santai' : programStyle} unit="" color="#f97316" icon={<svg {...iconProps}><path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 2.5z"></path></svg>} />
+                    <Stat label="Pace" value={targetPace ? `${Math.floor(targetPace)}:${String(Math.round((targetPace % 1) * 60)).padStart(2, '0')}` : null} unit="/km" color="#0ea5e9" icon={<svg {...iconProps}><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>} />
+                    <Stat label="Hari" value={selectedDays.length === 0 ? 'Auto' : selectedDays.length} unit={selectedDays.length === 0 ? '' : 'x / mgg'} color="#8b5cf6" icon={<svg {...iconProps}><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>} />
+                  </div>
+
                   {bmiCat && (
                     <div style={{ background: `${bmiCat.c}12`, border: `1px solid ${bmiCat.c}40`, borderRadius: 8, padding: '10px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>BMI</span>
@@ -1620,7 +1729,7 @@ export default function App() {
                       </button>
                     </div>
                   )}
-                  <button onClick={() => { setEditDraft({ displayName: curName, age: curAge, gender: curGender, weight: curWeight, height: curHeight, avatar: avatar }); setProfileEditMode(true); }}
+                  <button onClick={() => { setEditDraft({ displayName: curName, age: curAge, gender: curGender, weight: curWeight, height: curHeight, avatar: avatar, goal: goal, programStyle: programStyle, targetPace: targetPace, selectedDays: selectedDays }); setProfileEditMode(true); }}
                     style={{ padding: '10px', borderRadius: 8, background: 'var(--accent-purple)', border: 'none', color: '#fff', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13, fontWeight: 700, width: '100%' }}
                   >Edit Profil</button>
                 </>) : (<>
@@ -1684,13 +1793,18 @@ export default function App() {
                       <input type="number" min={10} max={100} placeholder="—" style={inp}
                         value={d.age ?? ''} onChange={e => { const v = e.target.value; setEditDraft(p => ({ ...p, age: v === '' ? null : parseInt(v) || null })); }} onFocus={onF} onBlur={onB} />
                     </div>
-                    <div>
+                    <div style={{ gridColumn: '1 / -1' }}>
                       <label style={lbl}>Jenis Kelamin</label>
-                      <select style={{ ...inp, cursor: 'pointer' }} value={d.gender ?? ''} onChange={e => setEditDraft(p => ({ ...p, gender: e.target.value }))} onFocus={onF} onBlur={onB}>
-                        <option value="">— Pilih —</option>
-                        <option value="pria">Pria</option>
-                        <option value="wanita">Wanita</option>
-                      </select>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                        <button type="button" onClick={() => setEditDraft(p => ({ ...p, gender: 'pria' }))} style={{ ...inp, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer', border: d.gender === 'pria' ? '1.5px solid var(--accent-purple)' : '1px solid var(--border)', background: d.gender === 'pria' ? 'rgba(167, 139, 250, 0.1)' : 'var(--bg-card)', color: d.gender === 'pria' ? 'var(--accent-purple)' : 'var(--text-secondary)', padding: '11px 14px' }}>
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="10" cy="14" r="5"></circle><line x1="13.5" y1="10.5" x2="21" y2="3"></line><line x1="16" y1="3" x2="21" y2="3"></line><line x1="21" y1="3" x2="21" y2="8"></line></svg>
+                          Pria
+                        </button>
+                        <button type="button" onClick={() => setEditDraft(p => ({ ...p, gender: 'wanita' }))} style={{ ...inp, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer', border: d.gender === 'wanita' ? '1.5px solid #ec4899' : '1px solid var(--border)', background: d.gender === 'wanita' ? 'rgba(236, 72, 153, 0.1)' : 'var(--bg-card)', color: d.gender === 'wanita' ? '#ec4899' : 'var(--text-secondary)', padding: '11px 14px' }}>
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="9" r="5"></circle><line x1="12" y1="14" x2="12" y2="21"></line><line x1="9" y1="18" x2="15" y2="18"></line></svg>
+                          Wanita
+                        </button>
+                      </div>
                     </div>
                     <div>
                       <label style={lbl}>Berat (kg)</label>
@@ -1701,6 +1815,104 @@ export default function App() {
                       <label style={lbl}>Tinggi (cm)</label>
                       <input type="number" min={100} max={250} placeholder="—" style={inp}
                         value={d.height ?? ''} onChange={e => { const v = e.target.value; setEditDraft(p => ({ ...p, height: v === '' ? null : parseInt(v) || null })); }} onFocus={onF} onBlur={onB} />
+                    </div>
+                  </div>
+
+                  <div style={{ height: 1, background: 'var(--border)', margin: '14px 0' }} />
+                  <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent-purple)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10 }}>Target & Latihan</div>
+                  
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                    <div>
+                      <label style={lbl}>{t.mainGoal}</label>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                        {[
+                          { val: 'maintenance', label: t.maintenance },
+                          { val: 'weightloss', label: lang === 'id' ? 'Turun Berat' : 'Weight Loss' },
+                          { val: '10k', label: '10K / 5K' },
+                          { val: 'marathon', label: 'Marathon' },
+                          { val: 'turun-hr', label: lang === 'id' ? 'Turun HR' : 'Lower HR' },
+                          { val: 'health', label: lang === 'id' ? 'Kesehatan' : 'Health' }
+                        ].map(g => (
+                          <button key={g.val} type="button" onClick={() => setEditDraft(p => ({ ...p, goal: g.val }))}
+                            style={{ ...inp, cursor: 'pointer', textAlign: 'center', padding: '10px 6px', fontSize: 12, border: (d.goal ?? 'maintenance') === g.val ? '1.5px solid var(--accent-purple)' : '1px solid var(--border)', background: (d.goal ?? 'maintenance') === g.val ? 'rgba(167, 139, 250, 0.1)' : 'var(--bg-card)', color: (d.goal ?? 'maintenance') === g.val ? 'var(--accent-purple)' : 'var(--text-secondary)' }}>
+                            {g.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label style={lbl}>{t.programStyle}</label>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+                        {[
+                          { val: 'ngepush', label: t.ngepush },
+                          { val: 'sedang', label: t.sedang },
+                          { val: 'santai', label: t.santai }
+                        ].map(s => (
+                          <button key={s.val} type="button" onClick={() => setEditDraft(p => ({ ...p, programStyle: s.val }))}
+                            style={{ ...inp, cursor: 'pointer', textAlign: 'center', padding: '10px 4px', fontSize: 12, border: (d.programStyle ?? 'sedang') === s.val ? '1.5px solid #f97316' : '1px solid var(--border)', background: (d.programStyle ?? 'sedang') === s.val ? 'rgba(249, 115, 22, 0.1)' : 'var(--bg-card)', color: (d.programStyle ?? 'sedang') === s.val ? '#f97316' : 'var(--text-secondary)' }}>
+                            {s.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                        <label style={{ ...lbl, marginBottom: 0 }}>{t.targetPace}</label>
+                        <span style={{ 
+                          fontSize: '11px', fontWeight: 700, 
+                          color: d.targetPace === null ? 'var(--text-muted)' : 'var(--accent-purple)',
+                          background: d.targetPace === null ? 'rgba(255,255,255,0.03)' : 'rgba(167, 139, 250, 0.12)',
+                          padding: '2px 8px', borderRadius: '6px',
+                          border: d.targetPace === null ? '1px dashed var(--border)' : '1px solid rgba(167, 139, 250, 0.2)'
+                        }}>
+                          {(() => {
+                            const p = d.targetPace ?? 5.5;
+                            const mins = Math.floor(p);
+                            const secs = Math.round((p - mins) * 60);
+                            const finalMins = secs >= 60 ? mins + 1 : mins;
+                            const finalSecs = secs >= 60 ? 0 : secs;
+                            return `${finalMins}:${String(finalSecs).padStart(2, '0')} /km`;
+                          })()}
+                        </span>
+                      </div>
+                      <input
+                        type="range" min="3.0" max="10.0" step="0.083333"
+                        value={d.targetPace ?? 5.5}
+                        onChange={e => setEditDraft(p => ({ ...p, targetPace: parseFloat(e.target.value) }))}
+                        style={{ width: '100%', cursor: 'pointer' }} className="app-slider"
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ ...lbl, display: 'flex', justifyContent: 'space-between' }}>
+                        <span>{t.trainingDays}</span>
+                        <span style={{ color: 'var(--accent-purple)', fontWeight: 700 }}>
+                          {(d.selectedDays || []).length === 0 ? (lang === 'id' ? 'Auto (Disarankan)' : 'Auto (Recommended)') : `${(d.selectedDays || []).length}x ${lang === 'id' ? 'Seminggu' : 'Weekly'}`}
+                        </span>
+                      </label>
+                      <div className="day-selector-container">
+                        <div className="day-selector-grid">
+                          {allDays.map(dayItem => {
+                            const isActive = (d.selectedDays || []).includes(dayItem.key);
+                            return (
+                              <button
+                                key={dayItem.key} type="button"
+                                className={`day-btn ${isActive ? 'active' : ''}`}
+                                onClick={() => {
+                                  setEditDraft(p => {
+                                    const current = p.selectedDays || [];
+                                    return { ...p, selectedDays: current.includes(dayItem.key) ? current.filter(x => x !== dayItem.key) : [...current, dayItem.key] };
+                                  });
+                                }}
+                              >
+                                {dayItem.label}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
                     </div>
                   </div>
 
@@ -1718,6 +1930,10 @@ export default function App() {
                       const finalHeight = d.height !== undefined ? d.height : height;
                       const finalGender = d.gender !== undefined ? d.gender : gender;
                       const finalAvatar = d.avatar !== undefined ? d.avatar : avatar;
+                      const finalGoal = d.goal !== undefined ? d.goal : goal;
+                      const finalProgramStyle = d.programStyle !== undefined ? d.programStyle : programStyle;
+                      const finalTargetPace = d.targetPace !== undefined ? d.targetPace : targetPace;
+                      const finalSelectedDays = d.selectedDays !== undefined ? d.selectedDays : selectedDays;
 
                       if (finalAge !== null && finalAge !== undefined && finalAge < 10) {
                         addToast('Umur tidak boleh kurang dari 10 tahun.', 'error');
@@ -1734,6 +1950,11 @@ export default function App() {
                       if (d.height !== undefined) setHeight(finalHeight);
                       if (d.gender !== undefined) setGender(finalGender);
                       setAvatar(finalAvatar);
+                      
+                      setGoal(finalGoal);
+                      setProgramStyle(finalProgramStyle);
+                      setTargetPace(finalTargetPace);
+                      setSelectedDays(finalSelectedDays);
 
                       const updated = {
                         ...data,
@@ -1745,10 +1966,10 @@ export default function App() {
                           height: finalHeight,
                           gender: finalGender,
                           avatar: finalAvatar,
-                          goal: data.profile?.goal ?? goal,
-                          programStyle: data.profile?.programStyle ?? programStyle,
-                          targetPace: data.profile?.targetPace ?? targetPace,
-                          selectedDays: data.profile?.selectedDays ?? selectedDays
+                          goal: finalGoal,
+                          programStyle: finalProgramStyle,
+                          targetPace: finalTargetPace,
+                          selectedDays: finalSelectedDays
                         }
                       };
                       saveAndSyncData(updated);
@@ -1915,151 +2136,7 @@ export default function App() {
 
         <div className="sidebar-divider" />
 
-        {/* Profile */}
-        <div>
-          <div className="sidebar-section-title">{t.userProfile}</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
 
-            {/* Age — premium Range Slider */}
-            <div className="form-group">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                <label className="form-label" style={{ margin: 0 }}>{t.age}</label>
-                <span style={{ 
-                  fontSize: '11px', 
-                  fontWeight: 700, 
-                  color: age === null ? 'var(--text-muted)' : 'var(--accent-purple)',
-                  background: age === null ? 'rgba(255,255,255,0.03)' : 'rgba(167, 139, 250, 0.12)',
-                  padding: '2px 8px',
-                  borderRadius: '6px',
-                  border: age === null ? '1px dashed var(--border)' : '1px solid rgba(167, 139, 250, 0.2)'
-                }}>
-                  {age === null ? (lang === 'id' ? 'Belum diatur' : 'Not set') : `${age} ${lang === 'id' ? 'Tahun' : 'Years'}`}
-                </span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <input
-                  type="range"
-                  min="10"
-                  max="100"
-                  value={age ?? 30}
-                  onChange={e => setAge(parseInt(e.target.value))}
-                  style={{
-                    width: '100%',
-                    cursor: 'pointer'
-                  }}
-                  className="app-slider"
-                />
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: 'var(--text-muted)', fontWeight: 600, marginTop: 2 }}>
-                <span>10</span>
-                <span>100</span>
-              </div>
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">{t.mainGoal}</label>
-              <select className="form-select" value={goal} onChange={e => setGoal(e.target.value)}>
-                <option value="maintenance">{t.maintenance}</option>
-                <option value="weightloss">{lang === 'id' ? 'Kurus / Turun Berat Badan' : 'Weight Loss'}</option>
-                <option value="10k">{t.improve10k}</option>
-                <option value="marathon">{t.improveFull}</option>
-                <option value="turun-hr">{lang === 'id' ? 'Turun Detak Jantung (HR)' : 'Lower Heart Rate (HR)'}</option>
-                <option value="health">{lang === 'id' ? 'Kesehatan Umum' : 'General Health'}</option>
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">{t.programStyle}</label>
-              <select className="form-select" value={programStyle} onChange={e => setProgramStyle(e.target.value)}>
-                <option value="ngepush">{t.ngepush}</option>
-                <option value="sedang">{t.sedang}</option>
-                <option value="santai">{t.santai}</option>
-              </select>
-            </div>
-
-            {/* Target Pace — premium Range Slider */}
-            <div className="form-group">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                <label className="form-label" style={{ margin: 0 }}>{t.targetPace}</label>
-                <span style={{ 
-                  fontSize: '11px', 
-                  fontWeight: 700, 
-                  color: targetPace === null ? 'var(--text-muted)' : 'var(--accent-purple)',
-                  background: targetPace === null ? 'rgba(255,255,255,0.03)' : 'rgba(167, 139, 250, 0.12)',
-                  padding: '2px 8px',
-                  borderRadius: '6px',
-                  border: targetPace === null ? '1px dashed var(--border)' : '1px solid rgba(167, 139, 250, 0.2)'
-                }}>
-                  {(() => {
-                    if (!targetPace) return lang === 'id' ? 'Belum diatur' : 'Not set';
-                    const mins = Math.floor(targetPace);
-                    const secs = Math.round((targetPace - mins) * 60);
-                    const finalMins = secs >= 60 ? mins + 1 : mins;
-                    const finalSecs = secs >= 60 ? 0 : secs;
-                    return `${finalMins}:${String(finalSecs).padStart(2, '0')} /km`;
-                  })()}
-                </span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <input
-                  type="range"
-                  min="3.0"
-                  max="10.0"
-                  step="0.083333"
-                  value={targetPace ?? 5.5}
-                  onChange={e => setTargetPace(parseFloat(e.target.value))}
-                  style={{
-                    width: '100%',
-                    cursor: 'pointer'
-                  }}
-                  className="app-slider"
-                />
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: 'var(--text-muted)', fontWeight: 600, marginTop: 2 }}>
-                <span>3:00 /km</span>
-                <span>10:00 /km</span>
-              </div>
-            </div>
-
-            <div className="form-group">
-              <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span>{t.trainingDays}</span>
-                <span style={{ color: 'var(--accent-purple)', fontWeight: 700 }}>
-                  {selectedDays.length === 0 ? (lang === 'id' ? 'Auto (Disarankan)' : 'Auto (Recommended)') : `${selectedDays.length}x ${lang === 'id' ? 'Seminggu' : 'Weekly'}`}
-                </span>
-              </label>
-              <div className="day-selector-container">
-                <div className="day-selector-grid">
-                  {allDays.map(d => {
-                    const isActive = selectedDays.includes(d.key);
-                    return (
-                      <button
-                        key={d.key}
-                        type="button"
-                        className={`day-btn ${isActive ? 'active' : ''}`}
-                        title={d.key}
-                        onClick={() => toggleDay(d.key)}
-                      >
-                        {d.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Analisis button */}
-          <button
-            className="btn btn-primary"
-            style={{ marginTop: 16 }}
-            onClick={applyProfileChanges}
-          >
-            {t.applyAnalyze}
-          </button>
-        </div>
-
-        <div className="sidebar-divider" />
 
         {/* Import Data */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -2067,100 +2144,23 @@ export default function App() {
 
           {/* Unified Upload Area */}
           <div>
-            <input
-              ref={fileInputRef} type="file" accept=".zip,.gpx,.xlsx,.xls,.csv" style={{ display: 'none' }}
-              onChange={e => {
-                const file = e.target.files[0];
-                if (!file) return;
-                const name = file.name.toLowerCase();
-                if (name.endsWith('.zip') || name.endsWith('.gpx')) {
-                  handleFileUpload(file);
-                } else if (name.endsWith('.xlsx') || name.endsWith('.xls') || name.endsWith('.csv')) {
-                  handleExcelUpload(file);
-                } else {
-                  addToast(lang === 'id' ? 'Format file tidak didukung' : 'File format not supported', 'error');
-                }
-              }}
-            />
-            <div
-              className={`file-upload-area ${isUploading ? 'has-file' : ''}`}
-              onClick={() => fileInputRef.current?.click()}
-              style={{ cursor: 'pointer' }}
-            >
-              {isUploading ? (
-                <div>
-                  <div className="loading-bar" style={{ marginBottom: 8 }} />
-                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t.loading}</div>
-                </div>
-              ) : (
-                <>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)' }}>{t.uploadAreaTitle}</div>
-                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
-                    {t.uploadAreaDesc}
-                  </div>
-                  <div style={{ marginTop: 6 }}>
-                    <span
-                      onClick={e => {
-                        e.stopPropagation();
-                        downloadExcelTemplate();
-                      }}
-                      style={{
-                        fontSize: 11,
-                        color: '#60a5fa',
-                        textDecoration: 'underline',
-                        fontWeight: 600,
-                        cursor: 'pointer'
-                      }}
-                    >
-                      {t.downloadExcelTemplate}
-                    </span>
-                  </div>
-                </>
-              )}
-            </div>
+            <button className="btn btn-secondary" onClick={() => setShowUploadModal(true)} style={{ width: '100%', justifyContent: 'center', padding: '12px 16px', background: 'var(--bg-card)', borderRadius: 10, border: '1px solid var(--border)' }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--text-secondary)' }}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+              {t.uploadAreaTitle}
+            </button>
           </div>
 
           {/* Manual Run */}
-          <Collapsible title={lang === 'id' ? 'Tambah Sesi Lari Manual' : 'Add Run Session Manually'}>
-            <div className="form-group">
-              <label className="form-label">{lang === 'id' ? 'Judul / Nama Lari' : 'Activity Name'}</label>
-              <input
-                className="form-input"
-                type="text"
-                placeholder={lang === 'id' ? 'cth: Morning Run, Senayan Loop...' : 'e.g. Morning Run, Central Park...'}
-                value={manualRun.name}
-                onChange={e => setManualRun(r => ({ ...r, name: e.target.value }))}
-              />
-            </div>
-            <div className="form-group">
-              <label className="form-label">{lang === 'id' ? 'Tanggal' : 'Date'}</label>
-              <input className="form-input" type="date" value={manualRun.date} onChange={e => setManualRun(r => ({ ...r, date: e.target.value }))} />
-            </div>
-            <NumberInput label={lang === 'id' ? 'Jarak (km)' : 'Distance (km)'} value={manualRun.distance} onChange={v => setManualRun(r => ({ ...r, distance: v }))} min={0.1} step={0.1} />
-            <NumberInput label={lang === 'id' ? 'Durasi (menit)' : 'Duration (mins)'} value={manualRun.duration} onChange={v => setManualRun(r => ({ ...r, duration: v }))} min={1} />
-            <NumberInput label="Avg HR (bpm)" value={manualRun.avgHr} onChange={v => setManualRun(r => ({ ...r, avgHr: v }))} min={40} max={220} />
-            <NumberInput label="Max HR (bpm)" value={manualRun.maxHr} onChange={v => setManualRun(r => ({ ...r, maxHr: v }))} min={100} max={250} />
-            <button className="btn btn-primary" onClick={saveManualRun}>{lang === 'id' ? 'Simpan Lari' : 'Save Run'}</button>
-          </Collapsible>
-
-          {/* Manual Sleep */}
-          <Collapsible title={lang === 'id' ? 'Catat Tidur Semalam' : 'Log Night Sleep'}>
-            <div className="form-group">
-              <label className="form-label">{lang === 'id' ? 'Tanggal' : 'Date'}</label>
-              <input className="form-input" type="date" value={manualSleep.date} onChange={e => setManualSleep(s => ({ ...s, date: e.target.value }))} />
-            </div>
-            <div className="form-group">
-              <label className="form-label">{t.sleepQuality}</label>
-              <select className="form-select" value={manualSleep.quality} onChange={e => setManualSleep(s => ({ ...s, quality: e.target.value }))}>
-                <option value="pulas">{lang === 'id' ? 'Sangat Pulas & Segar' : 'Deep Sleep & Refreshed'}</option>
-                <option value="cukup">{lang === 'id' ? 'Cukup Baik' : 'Okay / Normal'}</option>
-                <option value="kurang">{lang === 'id' ? 'Kurang Nyenyak' : 'Poor / Interrupted'}</option>
-                <option value="begadang">{lang === 'id' ? 'Begadang / Sangat Kurang' : 'Restless / Too Short'}</option>
-              </select>
-            </div>
-            <NumberInput label={lang === 'id' ? 'Durasi Tidur (jam)' : 'Sleep Duration (hrs)'} value={manualSleep.duration} onChange={v => setManualSleep(s => ({ ...s, duration: v }))} min={1} max={24} step={0.5} />
-            <button className="btn btn-primary" onClick={saveManualSleep}>{lang === 'id' ? 'Simpan Tidur' : 'Save Sleep'}</button>
-          </Collapsible>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <button className="btn btn-secondary" onClick={() => setShowAddRunModal(true)} style={{ justifyContent: 'flex-start', padding: '12px 16px', background: 'var(--bg-card)', borderRadius: 10 }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--accent-purple)' }}><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              {lang === 'id' ? 'Tambah Lari Manual' : 'Add Run Session'}
+            </button>
+            <button className="btn btn-secondary" onClick={() => setShowSleepModal(true)} style={{ justifyContent: 'flex-start', padding: '12px 16px', background: 'var(--bg-card)', borderRadius: 10 }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#38bdf8' }}><path d="M2 4v16"></path><path d="M2 8h18a2 2 0 0 1 2 2v10"></path><path d="M2 17h20"></path><path d="M6 8v9"></path></svg>
+              {lang === 'id' ? 'Catat Tidur Semalam' : 'Log Night Sleep'}
+            </button>
+          </div>
         </div>
 
         <div className="sidebar-divider" style={{ marginTop: 'auto' }} />
@@ -2314,23 +2314,24 @@ export default function App() {
                   { key: 'dark', label: 'Sleek Dark', color: 'linear-gradient(135deg, #09090b, #18181b)' },
                   { key: 'cyber', label: 'Cyberpunk', color: 'linear-gradient(135deg, #020617, #0f172a)' },
                   { key: 'purple', label: 'Amethyst', color: 'linear-gradient(135deg, #1e1b4b, #311042)' },
-                  { key: 'sunrise', label: 'Sunrise Fun', color: 'linear-gradient(135deg, #fff1f2, #ffedd5)' }
+                  { key: 'sunrise', label: 'Sunrise Fun', color: 'linear-gradient(135deg, #fff1f2, #ffedd5)' },
+                  { key: 'custom', label: 'Custom', color: `linear-gradient(135deg, ${customColor1}, ${customColor2})` }
                 ].map(th => (
                   <button
                     key={th.key}
                     onClick={() => setShareTheme(th.key)}
                     style={{
                       flex: 1,
-                      padding: '10px 8px',
+                      padding: '10px 4px',
                       borderRadius: 8,
-                      border: '1px solid ' + (shareTheme === th.key ? (th.key === 'sunrise' ? '#e11d48' : '#ffffff') : 'var(--border)'),
+                      border: '1px solid ' + (shareTheme === th.key ? (th.key === 'sunrise' || th.key === 'custom' ? '#e11d48' : '#ffffff') : 'var(--border)'),
                       background: th.color,
-                      color: th.key === 'sunrise' ? '#be123c' : '#ffffff',
+                      color: (th.key === 'sunrise' || th.key === 'custom') ? '#be123c' : '#ffffff',
                       fontSize: 11,
                       fontWeight: 600,
                       cursor: 'pointer',
                       fontFamily: 'inherit',
-                      boxShadow: shareTheme === th.key ? (th.key === 'sunrise' ? '0 0 10px rgba(225, 29, 72, 0.4)' : '0 0 10px rgba(167, 139, 250, 0.4)') : 'none',
+                      boxShadow: shareTheme === th.key ? ((th.key === 'sunrise' || th.key === 'custom') ? '0 0 10px rgba(225, 29, 72, 0.4)' : '0 0 10px rgba(167, 139, 250, 0.4)') : 'none',
                       transition: 'all 0.15s'
                     }}
                   >
@@ -2338,6 +2339,23 @@ export default function App() {
                   </button>
                 ))}
               </div>
+              
+              {shareTheme === 'custom' && (
+                <div className="animate-fade-in" style={{ display: 'flex', gap: 12, marginTop: 12, background: 'rgba(255,255,255,0.03)', padding: 12, borderRadius: 8, border: '1px dashed var(--border)' }}>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ fontSize: 10, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>Warna 1 (Gradient)</label>
+                    <input type="color" value={customColor1} onChange={e => setCustomColor1(e.target.value)} style={{ width: '100%', height: 28, cursor: 'pointer', padding: 0, border: 'none', background: 'transparent' }} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ fontSize: 10, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>Warna 2 (Gradient)</label>
+                    <input type="color" value={customColor2} onChange={e => setCustomColor2(e.target.value)} style={{ width: '100%', height: 28, cursor: 'pointer', padding: 0, border: 'none', background: 'transparent' }} />
+                  </div>
+                  <div style={{ flex: 2 }}>
+                    <label style={{ fontSize: 10, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>Upload Foto (Rasio Bebas)</label>
+                    <input type="file" accept="image/*" onChange={handleCustomImageUpload} style={{ width: '100%', fontSize: 11, color: 'var(--text-primary)' }} />
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Live Canvas Preview */}
@@ -2550,10 +2568,9 @@ export default function App() {
               </button>
             )}
           </div>
-          <p className="page-subtitle">
-            {lang === 'id' 
-              ? "Ubah Data Lari & Tidur lo Jadi Rencana Latihan Personal" 
-              : "Transform your run & sleep data into a personalized training plan"}
+          <p className="page-subtitle" style={{ fontSize: 14, color: 'var(--text-secondary)', marginTop: 8 }}>
+            {data.profile?.displayName ? (lang === 'id' ? `Halo, ${data.profile.displayName} 👋 — ` : `Hello, ${data.profile.displayName} 👋 — `) : ''}
+            {new Date().toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
           </p>
         </div>
 
@@ -2643,12 +2660,15 @@ export default function App() {
                     {latestSleepDate && (
                       <div className="readiness-card animate-fade-in">
                         <div className="readiness-dial-wrapper">
-                          <div className="readiness-dial" style={{ 
-                            borderColor: rBgColor,
-                            borderTopColor: rColor,
-                            borderRightColor: rColor,
-                          }}>
-                            <div className="readiness-dial-value">{trainingReadinessScore}%</div>
+                          <div className="readiness-dial" style={{ position: 'relative', border: 'none', background: 'transparent', boxShadow: 'none' }}>
+                            <svg width="68" height="68" viewBox="0 0 68 68" style={{ transform: 'rotate(-90deg)', position: 'absolute', top: 0, left: 0 }}>
+                              <circle cx="34" cy="34" r="30" fill="none" stroke={rBgColor} strokeWidth="4" />
+                              <circle cx="34" cy="34" r="30" fill="none" stroke={rColor} strokeWidth="4" strokeLinecap="round" 
+                                      strokeDasharray={188.5} 
+                                      strokeDashoffset={188.5 - (trainingReadinessScore / 100) * 188.5} 
+                                      style={{ transition: 'stroke-dashoffset 1s ease-in-out' }} />
+                            </svg>
+                            <div className="readiness-dial-value" style={{ position: 'relative', zIndex: 1 }}>{trainingReadinessScore}%</div>
                           </div>
                           <div className="readiness-dial-label" style={{ color: rColor }}>
                             {trainingReadinessScore >= 80 ? (lang === 'id' ? 'Prima' : 'Prime') : trainingReadinessScore >= 60 ? (lang === 'id' ? 'Cukup' : 'Fair') : (lang === 'id' ? 'Rendah' : 'Low')}
@@ -2754,6 +2774,9 @@ export default function App() {
                   actualBestPace={actualBestPace}
                   targetPace={targetPace}
                   selectedDays={selectedDays}
+                  gender={data.profile?.gender}
+                  weight={data.profile?.weight}
+                  height={data.profile?.height}
                   lang={lang}
                 />
 
@@ -2877,6 +2900,166 @@ export default function App() {
           </>
         )}
       </main>
+
+      {/* ═══════════════════════════════ ADD RUN MODAL ═══════════════════════════════ */}
+      {showAddRunModal && (
+        <div className="profile-modal-backdrop" onClick={e => { if (e.target === e.currentTarget) setShowAddRunModal(false); }}>
+          <div className="animate-fade-in" style={{ background: 'var(--bg-surface)', padding: 24, borderRadius: 16, width: '100%', maxWidth: 400, boxShadow: 'var(--shadow-premium)' }}>
+            <h3 style={{ marginBottom: 16 }}>{lang === 'id' ? 'Tambah Sesi Lari Manual' : 'Add Run Session Manually'}</h3>
+            <div className="form-group" style={{ marginBottom: 12 }}>
+              <label className="form-label">{lang === 'id' ? 'Judul / Nama Lari' : 'Activity Name'}</label>
+              <input
+                className="form-input"
+                type="text"
+                placeholder={lang === 'id' ? 'cth: Morning Run, Senayan Loop...' : 'e.g. Morning Run, Central Park...'}
+                value={manualRun.name}
+                onChange={e => setManualRun(r => ({ ...r, name: e.target.value }))}
+              />
+            </div>
+            <div className="form-group" style={{ marginBottom: 12 }}>
+              <label className="form-label">{lang === 'id' ? 'Tanggal' : 'Date'}</label>
+              <input className="form-input" type="date" value={manualRun.date} onChange={e => setManualRun(r => ({ ...r, date: e.target.value }))} />
+            </div>
+            <div style={{ marginBottom: 12 }}>
+              <NumberInput label={lang === 'id' ? 'Jarak (km)' : 'Distance (km)'} value={manualRun.distance} onChange={v => setManualRun(r => ({ ...r, distance: v }))} min={0.1} step={0.1} />
+            </div>
+            <div style={{ marginBottom: 12 }}>
+              <NumberInput label={lang === 'id' ? 'Durasi (menit)' : 'Duration (mins)'} value={manualRun.duration} onChange={v => setManualRun(r => ({ ...r, duration: v }))} min={1} />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 24 }}>
+              <NumberInput label="Avg HR" value={manualRun.avgHr} onChange={v => setManualRun(r => ({ ...r, avgHr: v }))} min={40} max={220} />
+              <NumberInput label="Max HR" value={manualRun.maxHr} onChange={v => setManualRun(r => ({ ...r, maxHr: v }))} min={100} max={250} />
+            </div>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button className="btn btn-secondary" onClick={() => setShowAddRunModal(false)}>{lang === 'id' ? 'Batal' : 'Cancel'}</button>
+              <button className="btn btn-primary" onClick={() => { saveManualRun(); setShowAddRunModal(false); }}>{lang === 'id' ? 'Simpan Lari' : 'Save Run'}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══════════════════════════════ LOG TIDUR MODAL ═══════════════════════════════ */}
+      {showSleepModal && (
+        <div className="profile-modal-backdrop" onClick={e => { if (e.target === e.currentTarget) setShowSleepModal(false); }}>
+          <div className="animate-fade-in" style={{ background: 'var(--bg-surface)', padding: 24, borderRadius: 16, width: '100%', maxWidth: 400, boxShadow: 'var(--shadow-premium)' }}>
+            <h3 style={{ marginBottom: 16 }}>{lang === 'id' ? 'Catat Tidur Semalam' : 'Log Night Sleep'}</h3>
+            <div className="form-group" style={{ marginBottom: 12 }}>
+              <label className="form-label">{lang === 'id' ? 'Tanggal' : 'Date'}</label>
+              <input className="form-input" type="date" value={manualSleep.date} onChange={e => setManualSleep(s => ({ ...s, date: e.target.value }))} />
+            </div>
+            <div className="form-group" style={{ marginBottom: 12 }}>
+              <label className="form-label">{t.sleepQuality}</label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 8 }}>
+                {[
+                  { val: 'pulas', label: lang === 'id' ? '😴 Sangat Pulas & Segar' : '😴 Deep Sleep & Refreshed', col: '#10b981' },
+                  { val: 'cukup', label: lang === 'id' ? '🙂 Cukup Baik' : '🙂 Okay / Normal', col: '#38bdf8' },
+                  { val: 'kurang', label: lang === 'id' ? '🥱 Kurang Nyenyak' : '🥱 Poor / Interrupted', col: '#f59e0b' },
+                  { val: 'begadang', label: lang === 'id' ? '😫 Begadang / Sangat Kurang' : '😫 Restless / Too Short', col: '#f43f5e' }
+                ].map(q => (
+                  <button key={q.val} type="button" onClick={() => setManualSleep(s => ({ ...s, quality: q.val }))}
+                    style={{ background: manualSleep.quality === q.val ? `${q.col}15` : 'var(--bg-card)', border: `1.5px solid ${manualSleep.quality === q.val ? q.col : 'var(--border)'}`, color: manualSleep.quality === q.val ? q.col : 'var(--text-secondary)', padding: '12px', borderRadius: 8, textAlign: 'left', fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s' }}>
+                    {q.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div style={{ marginBottom: 24 }}>
+              <NumberInput label={lang === 'id' ? 'Durasi Tidur (jam)' : 'Sleep Duration (hrs)'} value={manualSleep.duration} onChange={v => setManualSleep(s => ({ ...s, duration: v }))} min={1} max={24} step={0.5} />
+            </div>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button className="btn btn-secondary" onClick={() => setShowSleepModal(false)}>{lang === 'id' ? 'Batal' : 'Cancel'}</button>
+              <button className="btn btn-primary" onClick={() => { saveManualSleep(); setShowSleepModal(false); }}>{lang === 'id' ? 'Simpan Tidur' : 'Save Sleep'}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══════════════════════════════ UPLOAD DATA MODAL ═══════════════════════════════ */}
+      {showUploadModal && (
+        <div className="profile-modal-backdrop" onClick={e => { if (e.target === e.currentTarget) setShowUploadModal(false); }}>
+          <div className="animate-fade-in" style={{ background: 'var(--bg-surface)', padding: 24, borderRadius: 16, width: '100%', maxWidth: 400, boxShadow: 'var(--shadow-premium)' }}>
+
+            
+            <input 
+              ref={fileInputRef} type="file" accept=".zip,.gpx,.xlsx,.xls,.csv" style={{ display: 'none' }}
+              onChange={e => {
+                const file = e.target.files[0];
+                if (!file) return;
+                setShowUploadModal(false); // Close modal when a file is selected
+                const name = file.name.toLowerCase();
+                if (name.endsWith('.zip') || name.endsWith('.gpx')) {
+                  handleFileUpload(file);
+                } else if (name.endsWith('.xlsx') || name.endsWith('.xls') || name.endsWith('.csv')) {
+                  handleExcelUpload(file);
+                } else {
+                  addToast(lang === 'id' ? 'Format file tidak didukung' : 'File format not supported', 'error');
+                }
+              }}
+            />
+
+            <div
+              className={`file-upload-area ${isUploading ? 'has-file' : ''}`}
+              onClick={() => fileInputRef.current?.click()}
+              style={{ cursor: 'pointer', marginBottom: 16 }}
+            >
+              {isUploading ? (
+                <div>
+                  <div className="loading-bar" style={{ marginBottom: 8 }} />
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t.loading}</div>
+                </div>
+              ) : (
+                <>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)' }}>{t.uploadAreaTitle}</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+                    {t.uploadAreaDesc}
+                  </div>
+                  <div style={{ marginTop: 12 }}>
+                    <span
+                      onClick={e => {
+                        e.stopPropagation();
+                        downloadExcelTemplate();
+                      }}
+                      style={{ fontSize: 11, color: '#60a5fa', textDecoration: 'underline', fontWeight: 600, cursor: 'pointer', display: 'block', marginBottom: 8 }}
+                    >
+                      {t.downloadExcelTemplate}
+                    </span>
+                    <a 
+                      href="https://support.garmin.com/en-US/?faq=W1TvTPW8JZ6LfJSfK512Q8" 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      onClick={e => e.stopPropagation()}
+                      style={{ fontSize: 11, color: '#60a5fa', textDecoration: 'underline', fontWeight: 600, cursor: 'pointer' }}
+                    >
+                      Panduan Export Data dari Garmin
+                    </a>
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, margin: '16px 0' }}>
+              <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+              <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>ATAU</span>
+              <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+            </div>
+
+            <button 
+              className="btn btn-primary" 
+              onClick={() => {
+                alert("Strava OAuth flow akan segera diimplementasikan!\n\nNantinya lo butuh:\n1. Bikin App di API Strava\n2. Masukin STRAVA_CLIENT_ID & SECRET ke .env\n3. Web ini bakal nyedot data otomatis!");
+              }} 
+              style={{ width: '100%', background: '#fc4c02', color: '#fff', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: 14 }}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169" />
+              </svg>
+              Connect with Strava
+            </button>
+
+            <button className="btn btn-secondary" onClick={() => setShowUploadModal(false)} style={{ width: '100%', marginTop: 20 }}>Tutup</button>
+          </div>
+        </div>
+      )}
 
       <Toast toasts={toasts} />
     </div>

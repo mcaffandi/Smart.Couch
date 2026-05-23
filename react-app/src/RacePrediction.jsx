@@ -102,25 +102,33 @@ function estimateVO2Max(paceMinKm) {
 // ─── Goal Input sub-component ─────────────────────────────────────────────────
 function GoalTimeInput({ value, onChange, lang = 'id' }) {
   return (
-    <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+    <div style={{ display: 'flex', gap: 6, alignItems: 'center', width: 'fit-content' }}>
       {[
         { key: 'h', label: lang === 'id' ? 'jam' : 'hr', max: 9 },
         { key: 'm', label: lang === 'id' ? 'menit' : 'min', max: 59 },
         { key: 's', label: lang === 'id' ? 'detik' : 'sec', max: 59 },
-      ].map(({ key, label, max }) => (
-        <div key={key} style={{ display: 'flex', flexDirection: 'column', gap: 3, flex: 1 }}>
-          <label style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>{label}</label>
-          <input
-            type="number" min={0} max={max}
-            value={value[key]}
-            onChange={e => onChange({ ...value, [key]: Math.min(max, Math.max(0, parseInt(e.target.value) || 0)) })}
-            style={{
-              background: 'var(--bg-base)', border: '1px solid var(--border)', borderRadius: 8,
-              color: 'var(--text-primary)', fontFamily: 'Outfit, sans-serif',
-              fontSize: 18, fontWeight: 700, padding: '8px 6px', textAlign: 'center', outline: 'none',
-              width: '100%'
-            }}
-          />
+      ].map(({ key, label, max }, index) => (
+        <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 3, alignItems: 'center' }}>
+            <span style={{ fontSize: 9, color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</span>
+            <input
+              type="number" min={0} max={max}
+              value={value[key]}
+              onChange={e => onChange({ ...value, [key]: Math.min(max, Math.max(0, parseInt(e.target.value) || 0)) })}
+              style={{
+                background: 'var(--bg-base)', border: '1px solid var(--border)', borderRadius: 8,
+                color: 'var(--text-primary)', fontFamily: 'Outfit, sans-serif',
+                fontSize: 20, fontWeight: 800, padding: '8px 4px', textAlign: 'center', outline: 'none',
+                width: '56px',
+                transition: 'border-color 0.15s'
+              }}
+              onFocus={e => e.target.style.borderColor = 'var(--accent-purple)'}
+              onBlur={e => e.target.style.borderColor = 'var(--border)'}
+            />
+          </div>
+          {index < 2 && (
+            <span style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-muted)', marginTop: 14 }}>:</span>
+          )}
         </div>
       ))}
     </div>
