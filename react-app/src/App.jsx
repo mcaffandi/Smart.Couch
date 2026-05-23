@@ -3037,6 +3037,7 @@ export default function App() {
               )}
             </div>
 
+            {/*
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, margin: '16px 0' }}>
               <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
               <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>ATAU</span>
@@ -3061,6 +3062,7 @@ export default function App() {
               </svg>
               Connect with Strava
             </button>
+            */}
 
             <button className="btn btn-secondary" onClick={() => setShowUploadModal(false)} style={{ width: '100%', marginTop: 20 }}>Tutup</button>
           </div>
