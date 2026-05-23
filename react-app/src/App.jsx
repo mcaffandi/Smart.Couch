@@ -3046,7 +3046,13 @@ export default function App() {
             <button 
               className="btn btn-primary" 
               onClick={() => {
-                alert("Strava OAuth flow akan segera diimplementasikan!\n\nNantinya lo butuh:\n1. Bikin App di API Strava\n2. Masukin STRAVA_CLIENT_ID & SECRET ke .env\n3. Web ini bakal nyedot data otomatis!");
+                const clientId = import.meta.env.VITE_STRAVA_CLIENT_ID;
+                if (!clientId) {
+                  alert('Strava Client ID belum dikonfigurasi di Environment Variables!');
+                  return;
+                }
+                const redirectUri = window.location.origin;
+                window.location.href = `https://www.strava.com/oauth/authorize?client_id=${clientId}&response_type=code&redirect_uri=${redirectUri}&approval_prompt=force&scope=activity:read_all`;
               }} 
               style={{ width: '100%', background: '#fc4c02', color: '#fff', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: 14 }}
             >
