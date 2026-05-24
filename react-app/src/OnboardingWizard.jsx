@@ -116,11 +116,23 @@ export default function OnboardingWizard({ initialProfile, onComplete, onSkip, l
             )}
 
             {step === 2 && (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                <div>
-                  <label style={lbl}>{lang === 'id' ? 'Umur (Tahun)' : 'Age (Years)'}</label>
-                  <input autoFocus type="number" min={10} max={100} placeholder="—" style={inp}
-                    value={draft.age ?? ''} onChange={e => { const v = e.target.value; setDraft(p => ({ ...p, age: v === '' ? null : parseInt(v) || null })); }} onFocus={onF} onBlur={onB} />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
+                  <div>
+                    <label style={lbl}>{lang === 'id' ? 'Umur' : 'Age'}</label>
+                    <input autoFocus type="number" min={10} max={100} placeholder="—" style={inp}
+                      value={draft.age ?? ''} onChange={e => { const v = e.target.value; setDraft(p => ({ ...p, age: v === '' ? null : parseInt(v) || null })); }} onFocus={onF} onBlur={onB} />
+                  </div>
+                  <div>
+                    <label style={lbl}>{lang === 'id' ? 'Berat (kg)' : 'Weight (kg)'}</label>
+                    <input type="number" min={30} max={200} step={0.5} placeholder="—" style={inp}
+                      value={draft.weight ?? ''} onChange={e => { const v = e.target.value; setDraft(p => ({ ...p, weight: v === '' ? null : parseFloat(v) || null })); }} onFocus={onF} onBlur={onB} />
+                  </div>
+                  <div>
+                    <label style={lbl}>{lang === 'id' ? 'Tinggi (cm)' : 'Height (cm)'}</label>
+                    <input type="number" min={100} max={250} placeholder="—" style={inp}
+                      value={draft.height ?? ''} onChange={e => { const v = e.target.value; setDraft(p => ({ ...p, height: v === '' ? null : parseInt(v) || null })); }} onFocus={onF} onBlur={onB} />
+                  </div>
                 </div>
                 <div>
                   <label style={lbl}>{lang === 'id' ? 'Jenis Kelamin' : 'Gender'}</label>
@@ -134,16 +146,6 @@ export default function OnboardingWizard({ initialProfile, onComplete, onSkip, l
                       {lang === 'id' ? 'Wanita' : 'Female'}
                     </button>
                   </div>
-                </div>
-                <div>
-                  <label style={lbl}>{lang === 'id' ? 'Berat (kg)' : 'Weight (kg)'}</label>
-                  <input type="number" min={30} max={200} step={0.5} placeholder="—" style={inp}
-                    value={draft.weight ?? ''} onChange={e => { const v = e.target.value; setDraft(p => ({ ...p, weight: v === '' ? null : parseFloat(v) || null })); }} onFocus={onF} onBlur={onB} />
-                </div>
-                <div>
-                  <label style={lbl}>{lang === 'id' ? 'Tinggi (cm)' : 'Height (cm)'}</label>
-                  <input type="number" min={100} max={250} placeholder="—" style={inp}
-                    value={draft.height ?? ''} onChange={e => { const v = e.target.value; setDraft(p => ({ ...p, height: v === '' ? null : parseInt(v) || null })); }} onFocus={onF} onBlur={onB} />
                 </div>
               </div>
             )}

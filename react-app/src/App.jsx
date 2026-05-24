@@ -1617,7 +1617,7 @@ export default function App() {
 
         return (
           <div className="profile-modal-backdrop" onClick={e => { if (e.target === e.currentTarget) closeModal(); }}>
-            <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 16, width: '100%', maxWidth: 400, maxHeight: '92vh', overflowY: 'auto' }}>
+            <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 16, width: '100%', maxWidth: window.innerWidth < 768 ? 400 : 750, maxHeight: '92vh', overflowY: 'auto' }}>
 
               {/* Header */}
               <div style={{ padding: '18px 18px 14px', display: 'flex', alignItems: 'center', gap: 12, borderBottom: '1px solid var(--border)' }}>
@@ -1641,15 +1641,15 @@ export default function App() {
 
                 {/* ── VIEW MODE ── */}
                 {!profileEditMode ? (<>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth < 768 ? '1fr 1fr' : '1fr 1fr 1fr 1fr', gap: 10 }}>
                     <Stat label="Umur" value={curAge} unit="thn" color="#3b82f6" icon={<svg {...iconProps}><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>} />
                     <Stat label="Kelamin" value={curGender === 'pria' ? 'Pria' : curGender === 'wanita' ? 'Wanita' : null} unit="" color={curGender === 'wanita' ? '#ec4899' : '#8b5cf6'} icon={curGender === 'wanita' ? <svg {...iconProps}><circle cx="12" cy="9" r="5"></circle><line x1="12" y1="14" x2="12" y2="21"></line><line x1="9" y1="18" x2="15" y2="18"></line></svg> : <svg {...iconProps}><circle cx="10" cy="14" r="5"></circle><line x1="13.5" y1="10.5" x2="21" y2="3"></line><line x1="16" y1="3" x2="21" y2="3"></line><line x1="21" y1="3" x2="21" y2="8"></line></svg>} />
                     <Stat label="Berat" value={curWeight} unit="kg" color="#10b981" icon={<svg {...iconProps}><path d="M6 10h12"></path><path d="M6 10l3-6h6l3 6"></path><rect x="4" y="10" width="16" height="10" rx="2"></rect><path d="M12 10v4"></path></svg>} />
                     <Stat label="Tinggi" value={curHeight} unit="cm" color="#f59e0b" icon={<svg {...iconProps}><path d="M8 2v20"></path><path d="M8 6h4"></path><path d="M8 10h2"></path><path d="M8 14h2"></path><path d="M8 18h4"></path><path d="M16 8l4 4-4 4"></path></svg>} />
                   </div>
 
-                  <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent-purple)', letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 14, marginBottom: 4 }}>Target & Latihan</div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent-purple)', letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: window.innerWidth < 768 ? 14 : 0, marginBottom: 4 }}>Target & Latihan</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth < 768 ? '1fr 1fr' : '1fr 1fr 1fr 1fr', gap: 10 }}>
                     <Stat label="Goal" value={
                       goal === 'maintenance' ? 'Maintenance' :
                       goal === 'weightloss' ? 'Turun BB' :
@@ -1735,93 +1735,103 @@ export default function App() {
                 </>) : (<>
 
                 {/* ── EDIT MODE ── */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: 10 }}>
-                    <div style={{ position: 'relative', width: 52, height: 52, flexShrink: 0 }}>
-                      {d.avatar ? (
-                        <img src={d.avatar} alt="Avatar" style={{ width: 52, height: 52, borderRadius: 10, objectFit: 'cover', border: '1.5px solid var(--accent-purple)' }} />
-                      ) : (
-                        <div style={{ width: 52, height: 52, borderRadius: 10, background: 'linear-gradient(135deg,#818cf8,#a78bfa)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 800, color: '#fff' }}>
-                          {initials}
-                        </div>
-                      )}
-                      <label htmlFor="avatar-upload" style={{ position: 'absolute', bottom: -4, right: -4, background: 'var(--accent-purple)', borderRadius: '50%', width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', border: '1.5px solid var(--bg-surface)' }}>
-                        <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M12 5v14M5 12h14"/>
-                        </svg>
-                      </label>
-                      <input id="avatar-upload" type="file" accept="image/*" style={{ display: 'none' }} onChange={e => {
-                        const file = e.target.files?.[0];
-                        if (!file) return;
-                        if (file.size > 200 * 1024) {
-                          addToast('Ukuran foto terlalu besar. Maksimal 200 KB.', 'error');
-                          return;
-                        }
-                        const reader = new FileReader();
-                        reader.onloadend = () => {
-                          setEditDraft(prev => ({ ...prev, avatar: reader.result }));
-                        };
-                        reader.readAsDataURL(file);
-                      }} />
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-primary)' }}>Foto Profil</div>
-                      <div style={{ fontSize: 9, color: 'var(--text-muted)' }}>Maksimal 200 KB (JPEG/PNG)</div>
-                      {d.avatar && (
-                        <button onClick={() => setEditDraft(prev => ({ ...prev, avatar: null }))} style={{ background: 'none', border: 'none', color: '#fb7185', fontSize: 9, padding: 0, marginTop: 2, cursor: 'pointer', textDecoration: 'underline', fontFamily: 'inherit', fontWeight: 600 }}>Hapus Foto</button>
-                      )}
-                    </div>
-                  </div>
-
-                  <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent-purple)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Identitas</div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    <div>
-                      <label style={lbl}>Nama Tampilan</label>
-                      <input autoFocus type="text" placeholder="Nama kamu..." style={inp}
-                        value={d.displayName ?? ''} onChange={e => setEditDraft(p => ({ ...p, displayName: e.target.value }))} onFocus={onF} onBlur={onB} />
-                    </div>
-                    <div>
-                      <label style={lbl}>Akun / Email</label>
-                      <input type="text" style={{ ...inp, color: 'var(--text-muted)', cursor: 'not-allowed' }} value={currentUser} readOnly />
-                    </div>
-                  </div>
-
-                  <div style={{ height: 1, background: 'var(--border)' }} />
-                  <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent-purple)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Data Fisik</div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                    <div>
-                      <label style={lbl}>Umur (tahun)</label>
-                      <input type="number" min={10} max={100} placeholder="—" style={inp}
-                        value={d.age ?? ''} onChange={e => { const v = e.target.value; setEditDraft(p => ({ ...p, age: v === '' ? null : parseInt(v) || null })); }} onFocus={onF} onBlur={onB} />
-                    </div>
-                    <div style={{ gridColumn: '1 / -1' }}>
-                      <label style={lbl}>Jenis Kelamin</label>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                        <button type="button" onClick={() => setEditDraft(p => ({ ...p, gender: 'pria' }))} style={{ ...inp, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer', border: d.gender === 'pria' ? '1.5px solid var(--accent-purple)' : '1px solid var(--border)', background: d.gender === 'pria' ? 'rgba(167, 139, 250, 0.1)' : 'var(--bg-card)', color: d.gender === 'pria' ? 'var(--accent-purple)' : 'var(--text-secondary)', padding: '11px 14px' }}>
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="10" cy="14" r="5"></circle><line x1="13.5" y1="10.5" x2="21" y2="3"></line><line x1="16" y1="3" x2="21" y2="3"></line><line x1="21" y1="3" x2="21" y2="8"></line></svg>
-                          Pria
-                        </button>
-                        <button type="button" onClick={() => setEditDraft(p => ({ ...p, gender: 'wanita' }))} style={{ ...inp, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer', border: d.gender === 'wanita' ? '1.5px solid #ec4899' : '1px solid var(--border)', background: d.gender === 'wanita' ? 'rgba(236, 72, 153, 0.1)' : 'var(--bg-card)', color: d.gender === 'wanita' ? '#ec4899' : 'var(--text-secondary)', padding: '11px 14px' }}>
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="9" r="5"></circle><line x1="12" y1="14" x2="12" y2="21"></line><line x1="9" y1="18" x2="15" y2="18"></line></svg>
-                          Wanita
-                        </button>
+                <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth < 768 ? '1fr' : '1fr 1fr', gap: 24 }}>
+                  {/* Left Column (Identitas & Data Fisik) */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 0, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: 10 }}>
+                      <div style={{ position: 'relative', width: 52, height: 52, flexShrink: 0 }}>
+                        {d.avatar ? (
+                          <img src={d.avatar} alt="Avatar" style={{ width: 52, height: 52, borderRadius: 10, objectFit: 'cover', border: '1.5px solid var(--accent-purple)' }} />
+                        ) : (
+                          <div style={{ width: 52, height: 52, borderRadius: 10, background: 'linear-gradient(135deg,#818cf8,#a78bfa)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 800, color: '#fff' }}>
+                            {initials}
+                          </div>
+                        )}
+                        <label htmlFor="avatar-upload" style={{ position: 'absolute', bottom: -4, right: -4, background: 'var(--accent-purple)', borderRadius: '50%', width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', border: '1.5px solid var(--bg-surface)' }}>
+                          <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M12 5v14M5 12h14"/>
+                          </svg>
+                        </label>
+                        <input id="avatar-upload" type="file" accept="image/*" style={{ display: 'none' }} onChange={e => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          if (file.size > 200 * 1024) {
+                            addToast('Ukuran foto terlalu besar. Maksimal 200 KB.', 'error');
+                            return;
+                          }
+                          const reader = new FileReader();
+                          reader.onloadend = () => {
+                            setEditDraft(prev => ({ ...prev, avatar: reader.result }));
+                          };
+                          reader.readAsDataURL(file);
+                        }} />
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-primary)' }}>Foto Profil</div>
+                        <div style={{ fontSize: 9, color: 'var(--text-muted)' }}>Maksimal 200 KB (JPEG/PNG)</div>
+                        {d.avatar && (
+                          <button onClick={() => setEditDraft(prev => ({ ...prev, avatar: null }))} style={{ background: 'none', border: 'none', color: '#fb7185', fontSize: 9, padding: 0, marginTop: 2, cursor: 'pointer', textDecoration: 'underline', fontFamily: 'inherit', fontWeight: 600 }}>Hapus Foto</button>
+                        )}
                       </div>
                     </div>
+
                     <div>
-                      <label style={lbl}>Berat (kg)</label>
-                      <input type="number" min={30} max={200} step={0.5} placeholder="—" style={inp}
-                        value={d.weight ?? ''} onChange={e => { const v = e.target.value; setEditDraft(p => ({ ...p, weight: v === '' ? null : parseFloat(v) || null })); }} onFocus={onF} onBlur={onB} />
+                      <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent-purple)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10 }}>Identitas</div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        <div>
+                          <label style={lbl}>Nama Tampilan</label>
+                          <input autoFocus type="text" placeholder="Nama kamu..." style={inp}
+                            value={d.displayName ?? ''} onChange={e => setEditDraft(p => ({ ...p, displayName: e.target.value }))} onFocus={onF} onBlur={onB} />
+                        </div>
+                        <div>
+                          <label style={lbl}>Akun / Email</label>
+                          <input type="text" style={{ ...inp, color: 'var(--text-muted)', cursor: 'not-allowed' }} value={currentUser} readOnly />
+                        </div>
+                      </div>
                     </div>
+
                     <div>
-                      <label style={lbl}>Tinggi (cm)</label>
-                      <input type="number" min={100} max={250} placeholder="—" style={inp}
-                        value={d.height ?? ''} onChange={e => { const v = e.target.value; setEditDraft(p => ({ ...p, height: v === '' ? null : parseInt(v) || null })); }} onFocus={onF} onBlur={onB} />
+                      <div style={{ height: window.innerWidth < 768 ? 1 : 0, background: 'var(--border)', margin: window.innerWidth < 768 ? '14px 0' : '0' }} />
+                      <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent-purple)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10 }}>Data Fisik</div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
+                        <div>
+                          <label style={lbl}>Umur</label>
+                          <input type="number" min={10} max={100} placeholder="—" style={inp}
+                            value={d.age ?? ''} onChange={e => { const v = e.target.value; setEditDraft(p => ({ ...p, age: v === '' ? null : parseInt(v) || null })); }} onFocus={onF} onBlur={onB} />
+                        </div>
+                        <div>
+                          <label style={lbl}>Berat (kg)</label>
+                          <input type="number" min={30} max={200} step={0.5} placeholder="—" style={inp}
+                            value={d.weight ?? ''} onChange={e => { const v = e.target.value; setEditDraft(p => ({ ...p, weight: v === '' ? null : parseFloat(v) || null })); }} onFocus={onF} onBlur={onB} />
+                        </div>
+                        <div>
+                          <label style={lbl}>Tinggi (cm)</label>
+                          <input type="number" min={100} max={250} placeholder="—" style={inp}
+                            value={d.height ?? ''} onChange={e => { const v = e.target.value; setEditDraft(p => ({ ...p, height: v === '' ? null : parseInt(v) || null })); }} onFocus={onF} onBlur={onB} />
+                        </div>
+                      </div>
+                      <div style={{ marginTop: 10 }}>
+                        <label style={lbl}>Jenis Kelamin</label>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                          <button type="button" onClick={() => setEditDraft(p => ({ ...p, gender: 'pria' }))} style={{ ...inp, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer', border: d.gender === 'pria' ? '1.5px solid var(--accent-purple)' : '1px solid var(--border)', background: d.gender === 'pria' ? 'rgba(167, 139, 250, 0.1)' : 'var(--bg-card)', color: d.gender === 'pria' ? 'var(--accent-purple)' : 'var(--text-secondary)', padding: '11px 14px' }}>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="10" cy="14" r="5"></circle><line x1="13.5" y1="10.5" x2="21" y2="3"></line><line x1="16" y1="3" x2="21" y2="3"></line><line x1="21" y1="3" x2="21" y2="8"></line></svg>
+                            Pria
+                          </button>
+                          <button type="button" onClick={() => setEditDraft(p => ({ ...p, gender: 'wanita' }))} style={{ ...inp, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer', border: d.gender === 'wanita' ? '1.5px solid #ec4899' : '1px solid var(--border)', background: d.gender === 'wanita' ? 'rgba(236, 72, 153, 0.1)' : 'var(--bg-card)', color: d.gender === 'wanita' ? '#ec4899' : 'var(--text-secondary)', padding: '11px 14px' }}>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="9" r="5"></circle><line x1="12" y1="14" x2="12" y2="21"></line><line x1="9" y1="18" x2="15" y2="18"></line></svg>
+                            Wanita
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
-                  <div style={{ height: 1, background: 'var(--border)', margin: '14px 0' }} />
-                  <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent-purple)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10 }}>Target & Latihan</div>
-                  
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  {/* Right Column (Target & Latihan) */}
+                  <div>
+                    <div style={{ height: window.innerWidth < 768 ? 1 : 0, background: 'var(--border)', margin: window.innerWidth < 768 ? '14px 0' : '0' }} />
+                    <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent-purple)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10 }}>Target & Latihan</div>
+                    
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                     <div>
                       <label style={lbl}>{t.mainGoal}</label>
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
@@ -1914,10 +1924,12 @@ export default function App() {
                         </div>
                       </div>
                     </div>
+                    </div>
                   </div>
+                </div>
 
                   {/* Live BMI in edit mode */}
-                  {(() => { const ew = d.weight; const eh = d.height; if (!ew || !eh) return null; const eb = (ew / ((eh / 100) ** 2)).toFixed(1); const ec = eb < 18.5 ? { l: 'Underweight', c: '#60a5fa' } : eb < 25 ? { l: 'Normal', c: '#34d399' } : eb < 30 ? { l: 'Overweight', c: '#fbbf24' } : { l: 'Obese', c: '#fb7185' }; return <div style={{ background: `${ec.c}12`, border: `1px solid ${ec.c}40`, borderRadius: 8, padding: '10px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>BMI</span><span style={{ fontSize: 15, fontWeight: 800, color: ec.c }}>{eb} <span style={{ fontSize: 11, fontWeight: 600 }}>— {ec.l}</span></span></div>; })()}
+                  {(() => { const ew = d.weight; const eh = d.height; if (!ew || !eh) return null; const eb = (ew / ((eh / 100) ** 2)).toFixed(1); const ec = eb < 18.5 ? { l: 'Underweight', c: '#60a5fa' } : eb < 25 ? { l: 'Normal', c: '#34d399' } : eb < 30 ? { l: 'Overweight', c: '#fbbf24' } : { l: 'Obese', c: '#fb7185' }; return <div style={{ background: `${ec.c}12`, border: `1px solid ${ec.c}40`, borderRadius: 8, padding: '10px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 14 }}><span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>BMI</span><span style={{ fontSize: 15, fontWeight: 800, color: ec.c }}>{eb} <span style={{ fontSize: 11, fontWeight: 600 }}>— {ec.l}</span></span></div>; })()}
 
                   <div style={{ display: 'flex', gap: 8 }}>
                     <button onClick={() => { setEditDraft({}); setProfileEditMode(false); }}
