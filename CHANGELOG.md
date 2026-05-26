@@ -2,6 +2,46 @@
 
 ---
 
+## [Uncommitted] — 2026-05-26 · AI Coach Training, Privacy Policy, & UI Enhancements
+
+### ✨ Fitur Baru
+
+#### "Ajari AI" (Train Bot ala SimSimi)
+- Menambahkan fitur tersembunyi/kustom untuk melatih respons AI Coach.
+- Menggunakan `customDictionary` yang terhubung langsung dengan koleksi `bot_settings/dictionary` di Firebase Firestore.
+- Menyediakan UI *form* yang rapi untuk memasukkan kata kunci (trigger) dan jawaban kustom.
+
+#### Kebijakan Privasi (Privacy Policy)
+- Menambahkan tautan dan *modal pop-up* Kebijakan Privasi di layar Login.
+- Memenuhi standar *compliance* untuk OAuth dan keamanan aplikasi publik dengan merinci pengumpulan, penggunaan, penyimpanan, dan hak penghapusan data.
+
+#### Penghapusan Akun Permanen (Account Deletion)
+- Menambahkan tombol "Hapus Akun" dengan peringatan merah di menu Profil.
+- Secara otomatis mencabut otentikasi Firebase Auth (`deleteUser`) dan membersihkan seluruh rekam jejak aktivitas di Firestore serta `localStorage`.
+
+#### Tombol Donasi Neon
+- Menambahkan tombol "Traktir Kopi" di *sidebar* yang mengarah ke Saweria.
+- Memberikan kelas CSS animasi kustom `neon-donate` dengan efek *pulsing glow* dan *hover* yang elegan bergaya *gold/amber*.
+
+### 🎨 UI / UX
+
+#### Konsistensi Sistem Icon (Lucide-React)
+- Menghapus penggunaan emoji robot (🤖) dan *inline SVG* bawaan yang terkesan jadul/murah.
+- Mengganti seluruh *icon* AI Coach dengan *vector icon* premium dari pustaka `lucide-react` (`Bot`, `MessageSquare`, `Send`, `X`, `Brain`, `Sparkles`).
+
+#### Penyederhanaan Toggle Tema
+- Menghapus opsi tema "System" (💻) untuk meminimalisir beban kognitif pengguna.
+- Mengganti emoji (☀️/🌙) dengan *icon* modern (`Sun`/`Moon`).
+- Menghapus emoji lambaian tangan (👋) pada sapaan *dashboard* agar teks lebih bersih.
+
+### 🐛 Bug Fix
+
+#### Kalender Adaptif & Parsing Waktu
+- **Masalah**: Fitur Kalender gagal memuat (blank) jika data `startTimeLocal` dari API Garmin masuk dalam format Date Object alih-alih string murni.
+- **Fix**: Mengamankan *parsing* di `utils.js` agar mampu memproses format Date, angka *timestamp*, maupun *string* sehingga tidak lagi *error* saat *rendering*.
+
+---
+
 ## [Uncommitted] — 2026-05-23 · Sidebar UX Simplification & Profile Settings Centricity
 
 ### 🎨 UI / UX
