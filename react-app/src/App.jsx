@@ -2194,8 +2194,8 @@ export default function App() {
           href="https://saweria.co/afnstudio" 
           target="_blank" 
           rel="noopener noreferrer"
-          className="btn btn-secondary" 
-          style={{ background: 'rgba(245, 158, 11, 0.05)', border: '1px solid rgba(245, 158, 11, 0.3)', color: '#f59e0b', display: 'flex', gap: 8, justifyContent: 'center', alignItems: 'center', textDecoration: 'none', marginBottom: 8 }}
+          className="btn btn-secondary neon-donate" 
+          style={{ display: 'flex', gap: 8, justifyContent: 'center', alignItems: 'center', textDecoration: 'none', marginBottom: 8 }}
         >
           <Coffee size={16} />
           {lang === 'id' ? 'Traktir Kopi' : 'Buy me a coffee'}

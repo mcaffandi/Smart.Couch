@@ -1976,3 +1976,34 @@ html, body {
   transform: scale(1.15);
   background: var(--accent-purple);
 }
+
+/* Neon Donate Button */
+.neon-donate {
+  position: relative;
+  overflow: hidden;
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.05);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.2), inset 0 0 8px rgba(245, 158, 11, 0.1);
+  animation: neon-pulse 2s infinite alternate;
+  text-shadow: 0 0 2px rgba(245, 158, 11, 0.5);
+  transition: all 0.3s ease;
+}
+
+.neon-donate:hover {
+  box-shadow: 0 0 15px rgba(245, 158, 11, 0.6), inset 0 0 10px rgba(245, 158, 11, 0.3);
+  text-shadow: 0 0 6px rgba(245, 158, 11, 0.8);
+  background: rgba(245, 158, 11, 0.15) !important;
+  color: #fbbf24;
+  border-color: rgba(245, 158, 11, 0.6);
+  transform: translateY(-1px);
+}
+
+@keyframes neon-pulse {
+  from {
+    box-shadow: 0 0 8px rgba(245, 158, 11, 0.2), inset 0 0 4px rgba(245, 158, 11, 0.1);
+  }
+  to {
+    box-shadow: 0 0 12px rgba(245, 158, 11, 0.5), inset 0 0 8px rgba(245, 158, 11, 0.2);
+  }
+}
