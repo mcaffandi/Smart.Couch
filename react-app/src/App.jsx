@@ -22,6 +22,7 @@ import {
   auth,
   db,
   signOut,
+  deleteUser,
   onAuthStateChanged,
   isConfigured as isFirebaseConfigured
 } from './firebase';
@@ -1700,9 +1701,36 @@ export default function App() {
                       </button>
                     </div>
                   )}
-                  <button onClick={() => { setEditDraft({ displayName: curName, age: curAge, gender: curGender, weight: curWeight, height: curHeight, avatar: avatar, goal: goal, programStyle: programStyle, targetPace: targetPace, selectedDays: selectedDays }); setProfileEditMode(true); }}
-                    style={{ padding: '10px', borderRadius: 8, background: 'var(--accent-purple)', border: 'none', color: '#fff', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13, fontWeight: 700, width: '100%' }}
-                  >Edit Profil</button>
+                  <div style={{ display: 'flex', gap: 8, width: '100%' }}>
+                    <button onClick={() => { setEditDraft({ displayName: curName, age: curAge, gender: curGender, weight: curWeight, height: curHeight, avatar: avatar, goal: goal, programStyle: programStyle, targetPace: targetPace, selectedDays: selectedDays }); setProfileEditMode(true); }}
+                      style={{ flex: 1, padding: '10px', borderRadius: 8, background: 'var(--accent-purple)', border: 'none', color: '#fff', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13, fontWeight: 700 }}
+                    >Edit Profil</button>
+                    {!currentUser?.startsWith('Anonim-') && (
+                      <button 
+                        onClick={async () => {
+                          if (window.confirm(lang === 'id' ? 'Apakah kamu yakin ingin menghapus akun ini secara permanen? Seluruh data akan hilang dan tidak dapat dikembalikan.' : 'Are you sure you want to permanently delete your account? All data will be lost.')) {
+                            try {
+                              if (isFirebaseConfigured && auth.currentUser) {
+                                await deleteUser(auth.currentUser);
+                              }
+                              deleteUserData();
+                              setSessionUser(null);
+                              sessionStorage.removeItem('smartcoach_session');
+                              setShowProfileModal(false);
+                              addToast(lang === 'id' ? 'Akun berhasil dihapus permanen.' : 'Account permanently deleted.', 'error');
+                            } catch (err) {
+                              if (err.code === 'auth/requires-recent-login') {
+                                alert(lang === 'id' ? 'Gagal: Silakan logout dan login kembali untuk memverifikasi penghapusan akun.' : 'Failed: Please logout and login again to verify account deletion.');
+                              } else {
+                                alert("Gagal: " + err.message);
+                              }
+                            }
+                          }
+                        }}
+                        style={{ padding: '10px 16px', borderRadius: 8, background: 'var(--bg-surface)', border: '1px solid #ef4444', color: '#ef4444', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                      >Hapus Akun</button>
+                    )}
+                  </div>
                 </>) : (<>
 
                 {/* ── EDIT MODE ── */}

@@ -12,6 +12,7 @@ import {
 
 export default function LoginScreen({ onLoginSuccess, usersList, addToast, lang = 'id' }) {
   const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -305,29 +306,32 @@ export default function LoginScreen({ onLoginSuccess, usersList, addToast, lang 
             </button>
           </p>
 
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '8px',
-            fontSize: '11px',
-            color: 'var(--text-muted)',
-            marginTop: '16px',
-            background: 'var(--bg-card)',
-            padding: '8px 12px',
-            borderRadius: '8px',
-            border: '1px solid var(--border)'
-          }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#10b981', flexShrink: 0 }}>
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-            </svg>
-            <span style={{ textAlign: 'left' }}>
-              {lang === 'id' 
-                ? 'Privasi Terjamin: Data aktivitas & profil Anda aman bersama kami.' 
-                : 'Privacy Guaranteed: Your activity & profile data are secure with us.'}
-            </span>
-          </div>
+            <div 
+              onClick={() => setShowPrivacyModal(true)}
+              style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              fontSize: '11px',
+              color: 'var(--text-muted)',
+              marginTop: '16px',
+              background: 'var(--bg-card)',
+              padding: '8px 12px',
+              borderRadius: '8px',
+              border: '1px solid var(--border)',
+              cursor: 'pointer'
+            }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#10b981', flexShrink: 0 }}>
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+              <span style={{ textAlign: 'left', textDecoration: 'underline' }}>
+                {lang === 'id' 
+                  ? 'Kebijakan Privasi (Privacy Policy)' 
+                  : 'Privacy Policy (Read details)'}
+              </span>
+            </div>
 
           {!isFirebaseConfigured && (
             <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 14, background: 'var(--hover-overlay)', padding: '6px 10px', borderRadius: 4, border: '1px solid var(--border)' }}>
@@ -415,6 +419,31 @@ export default function LoginScreen({ onLoginSuccess, usersList, addToast, lang 
                   {loading ? (lang === 'id' ? 'Memproses...' : 'Processing...') : (lang === 'id' ? 'Daftar & Masuk' : 'Register & Sign In')}
                 </button>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showPrivacyModal && (
+        <div className="profile-modal-backdrop" onClick={e => { if (e.target === e.currentTarget) setShowPrivacyModal(false); }} style={{ zIndex: 10000 }}>
+          <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 16, width: '100%', maxWidth: 500, maxHeight: '92vh', overflowY: 'auto' }}>
+            <div style={{ padding: '18px 18px 14px', display: 'flex', alignItems: 'center', gap: 12, borderBottom: '1px solid var(--border)' }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)' }}>
+                  Privacy Policy
+                </div>
+              </div>
+              <button onClick={() => setShowPrivacyModal(false)}
+                style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 6, color: 'var(--text-muted)', cursor: 'pointer', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}
+              >×</button>
+            </div>
+            <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: 14, fontSize: 13, lineHeight: 1.6, color: 'var(--text-secondary)' }}>
+              <p><strong>1. Data Collection:</strong> We collect your basic profile information (email/username) and fitness data (runs, sleep, heart rate) provided via file uploads or manual entry.</p>
+              <p><strong>2. Usage:</strong> Your data is used exclusively to generate personalized training plans, adaptive calendars, and AI-driven insights.</p>
+              <p><strong>3. Data Storage & Security:</strong> We use industry-standard cloud infrastructure (Firebase) to securely store your information. Your AI Chat interactions may be processed by third-party LLM providers (e.g., Groq) depending on your settings.</p>
+              <p><strong>4. Third-Party Sharing:</strong> We <strong>do not</strong> sell, rent, or trade your personal data to any third parties.</p>
+              <p><strong>5. User Rights:</strong> You have the right to request deletion of your account and all associated fitness data at any time through the application dashboard.</p>
+              <button className="btn btn-primary" onClick={() => setShowPrivacyModal(false)} style={{ marginTop: 10 }}>Mengerti / Got it</button>
             </div>
           </div>
         </div>
