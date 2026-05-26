@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { motion } from 'framer-motion';
+import { Star, Flame, Medal, Crown, Zap, Trophy } from 'lucide-react';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -60,8 +62,68 @@ export default function RunHistory({ activities, lang = 'id' }) {
     );
   };
 
+  const calculateBadges = (acts) => {
+    const badges = [];
+    if (acts.length >= 1) badges.push({ id: 'first', icon: <Star size={28} color="#eab308" />, title: lang === 'id' ? 'Langkah Pertama' : 'First Step', desc: lang === 'id' ? 'Menyelesaikan lari pertama.' : 'Completed first run.', color: 'rgba(234, 179, 8, 0.15)', border: '#eab308' });
+    if (acts.length >= 5) badges.push({ id: 'streak', icon: <Flame size={28} color="#ef4444" />, title: 'On Fire', desc: lang === 'id' ? '5+ sesi lari terselesaikan.' : '5+ sessions completed.', color: 'rgba(239, 68, 68, 0.15)', border: '#ef4444' });
+    if (acts.some(a => a.distance >= 500000)) badges.push({ id: '5k', icon: <Trophy size={28} color="#3b82f6" />, title: '5K Finisher', desc: lang === 'id' ? 'Berhasil lari 5km+.' : 'Completed 5km+ run.', color: 'rgba(59, 130, 246, 0.15)', border: '#3b82f6' });
+    if (acts.some(a => a.distance >= 1000000)) badges.push({ id: '10k', icon: <Medal size={28} color="#10b981" />, title: '10K Finisher', desc: lang === 'id' ? 'Berhasil lari 10km+.' : 'Completed 10km+ run.', color: 'rgba(16, 185, 129, 0.15)', border: '#10b981' });
+    if (acts.some(a => a.distance >= 2109700)) badges.push({ id: 'hm', icon: <Crown size={28} color="#a78bfa" />, title: 'Half Marathon', desc: lang === 'id' ? 'Menyelesaikan jarak HM.' : 'Completed HM distance.', color: 'rgba(167, 139, 250, 0.15)', border: '#a78bfa' });
+    
+    const hasSpeedy = acts.some(a => {
+      if(!a.duration || !a.distance || a.distance < 300000) return false;
+      const pace = (a.duration / 60000) / (a.distance / 100000);
+      return pace <= 5.5;
+    });
+    if (hasSpeedy) badges.push({ id: 'speed', icon: <Zap size={28} color="#06b6d4" />, title: 'Speed Demon', desc: lang === 'id' ? 'Pace lari sub 5:30/km.' : 'Sub 5:30/km pace.', color: 'rgba(6, 182, 212, 0.15)', border: '#06b6d4' });
+
+    return badges;
+  };
+
+  const earnedBadges = calculateBadges(activities);
+
   return (
     <div>
+      {earnedBadges.length > 0 && (
+        <div style={{ marginBottom: 32 }}>
+          <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+            Achievements
+            <span style={{ fontSize: 12, fontWeight: 700, background: 'var(--accent-purple)', color: '#fff', padding: '2px 8px', borderRadius: 12 }}>{earnedBadges.length}</span>
+          </h3>
+          <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 8, scrollbarWidth: 'none', msOverflowStyle: 'none' }} className="hide-scrollbar">
+            {earnedBadges.map((b, idx) => (
+              <motion.div
+                key={b.id}
+                initial={{ opacity: 0, scale: 0.8, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: idx * 0.1, type: 'spring', bounce: 0.5 }}
+                style={{
+                  minWidth: 160,
+                  flex: '0 0 auto',
+                  background: 'var(--bg-card)',
+                  border: `1px solid ${b.border}`,
+                  boxShadow: `0 4px 12px ${b.color}`,
+                  borderRadius: 16,
+                  padding: 16,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 8,
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}
+              >
+                <div style={{ position: 'absolute', top: -10, right: -10, opacity: 0.1, filter: 'grayscale(100%)', transform: 'scale(2.5)' }}>{b.icon}</div>
+                <div>{b.icon}</div>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>{b.title}</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.4, mt: 4 }}>{b.desc}</div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="history-list">
         {paged.map((act, i) => {
           const distKm = ((act.distance ?? 0) / 100000).toFixed(2);

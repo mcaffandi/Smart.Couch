@@ -16,6 +16,7 @@ import LandingPage from './LandingPage';
 import OnboardingWizard from './OnboardingWizard';
 import AdminDashboard from './AdminDashboard';
 import Logo from './Logo';
+import { Sun, Moon } from 'lucide-react';
 import { translations } from './translations';
 import {
   auth,
@@ -201,28 +202,23 @@ export default function App() {
 
   // ── State: share performance card modal ──────────────────────────────────────
   const [showShareModal, setShowShareModal] = useState(false);
+
+  useEffect(() => {
+    if (showShareModal || showProfileModal || showAddRunModal || showSleepModal || showUploadModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [showShareModal, showProfileModal, showAddRunModal, showSleepModal, showUploadModal]);
   const [shareTemplate, setShareTemplate] = useState('vo2');
   const [shareTheme, setShareTheme] = useState('dark');
   const [customCaption, setCustomCaption] = useState('Lihat pencapaian lari gue di EnduraUP! Gabung yuk di enduraup.vercel.app 🏃‍♂️🔥');
   const [retroImageLoaded, setRetroImageLoaded] = useState(false);
   const retroImageRef = useRef(null);
 
-  const [customImageVer, setCustomImageVer] = useState(0);
-  const customImageRef = useRef(null);
   const [customColor1, setCustomColor1] = useState('#fff1f2');
   const [customColor2, setCustomColor2] = useState('#ffedd5');
-
-  const handleCustomImageUpload = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const url = URL.createObjectURL(file);
-    const img = new Image();
-    img.src = url;
-    img.onload = () => {
-      customImageRef.current = img;
-      setCustomImageVer(v => v + 1);
-    };
-  };
 
   useEffect(() => {
     const img = new Image();
@@ -507,32 +503,6 @@ export default function App() {
       grad.addColorStop(1, customColor2);
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, 1080, 1080);
-      
-      const imgTarget = customImageRef.current || retroImageRef.current;
-      if (imgTarget) {
-        const tW = 1080, tH = 420;
-        const imgAspect = imgTarget.naturalWidth / imgTarget.naturalHeight;
-        const tAspect   = tW / tH;
-        let srcX, srcY, srcW, srcH;
-        if (imgAspect > tAspect) {
-          srcH = imgTarget.naturalHeight;
-          srcW = imgTarget.naturalHeight * tAspect;
-          srcX = (imgTarget.naturalWidth - srcW) / 2;
-          srcY = 0;
-        } else {
-          srcW = imgTarget.naturalWidth;
-          srcH = imgTarget.naturalWidth / tAspect;
-          srcX = 0;
-          srcY = (imgTarget.naturalHeight - srcH) / 2;
-        }
-        ctx.save();
-        ctx.beginPath();
-        if (ctx.roundRect) { ctx.roundRect(0, 0, tW, tH, [24, 24, 0, 0]); }
-        else { ctx.rect(0, 0, tW, tH); }
-        ctx.clip();
-        ctx.drawImage(imgTarget, srcX, srcY, srcW, srcH, 0, 0, tW, tH);
-        ctx.restore();
-      }
     } else { // purple theme
       const grad = ctx.createLinearGradient(0, 0, 1080, 1080);
       grad.addColorStop(0, '#1e1b4b');
@@ -560,7 +530,7 @@ export default function App() {
     // Sunrise → warm white frosted glass; others → dark
     const glassStyle = isLight
       ? 'rgba(255, 248, 235, 0.84)'
-      : (shareTheme === 'cyber' ? 'rgba(2, 6, 23, 0.85)' : (shareTheme === 'dark' ? 'rgba(9, 9, 11, 0.85)' : 'rgba(30, 27, 75, 0.85)'));
+      : (shareTheme === 'cyber' ? 'rgba(2, 6, 23, 0.85)' : (shareTheme === 'dark' ? 'rgba(9, 9, 11, 0.85)' : (shareTheme === 'custom' ? 'rgba(0, 0, 0, 0.7)' : 'rgba(30, 27, 75, 0.85)')));
 
     const fillRoundedRect = (cCtx, x, y, width, height, radius, fillStyle) => {
       cCtx.fillStyle = fillStyle;
@@ -982,7 +952,7 @@ export default function App() {
 
     } // end else (dark themes)
 
-  }, [showShareModal, shareTemplate, shareTheme, runActs, totalDist, totalSessions, avgHR, actualMaxHR, vo2max, targetPace, displayName, currentUser, avatar, retroImageLoaded, lang]);
+  }, [showShareModal, shareTemplate, shareTheme, runActs, totalDist, totalSessions, avgHR, actualMaxHR, vo2max, targetPace, displayName, currentUser, avatar, retroImageLoaded, lang, customColor1, customColor2]);
 
 
   const shareOrDownloadImage = async () => {
@@ -2243,9 +2213,8 @@ export default function App() {
             <button className={`lang-btn ${lang === 'en' ? 'active' : ''}`} onClick={() => setLang('en')} title="English">EN</button>
           </div>
           <div className="lang-switcher">
-            <button className={`lang-btn ${theme === 'light' ? 'active' : ''}`} onClick={() => setTheme('light')} title="Light Mode">☀️</button>
-            <button className={`lang-btn ${theme === 'dark' ? 'active' : ''}`} onClick={() => setTheme('dark')} title="Dark Mode">🌙</button>
-            <button className={`lang-btn ${theme === 'system' ? 'active' : ''}`} onClick={() => setTheme('system')} title="System Default">💻</button>
+            <button className={`lang-btn ${theme === 'light' ? 'active' : ''}`} onClick={() => setTheme('light')} title="Light Mode" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Sun size={14} /></button>
+            <button className={`lang-btn ${theme === 'dark' ? 'active' : ''}`} onClick={() => setTheme('dark')} title="Dark Mode" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Moon size={14} /></button>
           </div>
         </div>
         <div style={{ fontSize: 10, color: 'var(--text-muted)', textAlign: 'center', marginTop: 12, opacity: 0.7 }}>
@@ -2265,12 +2234,12 @@ export default function App() {
             borderRadius: 16, 
             width: '100%', 
             maxWidth: 500, 
-            maxHeight: '95vh', 
+            maxHeight: '90vh', 
             overflowY: 'auto',
-            padding: 24,
+            padding: '16px 20px',
             display: 'flex',
             flexDirection: 'column',
-            gap: 20
+            gap: 16
           }}>
             {/* Modal Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border)', paddingBottom: 12 }}>
@@ -2325,8 +2294,6 @@ export default function App() {
               <div style={{ display: 'flex', gap: 8 }}>
                 {[
                   { key: 'dark', label: 'Sleek Dark', color: 'linear-gradient(135deg, #09090b, #18181b)' },
-                  { key: 'cyber', label: 'Cyberpunk', color: 'linear-gradient(135deg, #020617, #0f172a)' },
-                  { key: 'purple', label: 'Amethyst', color: 'linear-gradient(135deg, #1e1b4b, #311042)' },
                   { key: 'sunrise', label: 'Sunrise Fun', color: 'linear-gradient(135deg, #fff1f2, #ffedd5)' },
                   { key: 'custom', label: 'Custom', color: `linear-gradient(135deg, ${customColor1}, ${customColor2})` }
                 ].map(th => (
@@ -2363,17 +2330,13 @@ export default function App() {
                     <label style={{ fontSize: 10, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>Warna 2 (Gradient)</label>
                     <input type="color" value={customColor2} onChange={e => setCustomColor2(e.target.value)} style={{ width: '100%', height: 28, cursor: 'pointer', padding: 0, border: 'none', background: 'transparent' }} />
                   </div>
-                  <div style={{ flex: 2 }}>
-                    <label style={{ fontSize: 10, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>Upload Foto (Rasio Bebas)</label>
-                    <input type="file" accept="image/*" onChange={handleCustomImageUpload} style={{ width: '100%', fontSize: 11, color: 'var(--text-primary)' }} />
-                  </div>
                 </div>
               )}
             </div>
 
             {/* Live Canvas Preview */}
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-              <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', alignSelf: 'flex-start' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+              <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', alignSelf: 'flex-start' }}>
                 Preview Gambar (Kotak 1:1)
               </label>
               <div style={{ 
@@ -2393,10 +2356,10 @@ export default function App() {
             </div>
 
             {/* Download / Share Buttons */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {/* Custom Caption Input */}
               <div>
-                <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>
+                <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 4 }}>
                   Caption Sosmed (Bisa Diedit)
                 </label>
                 <textarea
@@ -2582,7 +2545,7 @@ export default function App() {
             )}
           </div>
           <p className="page-subtitle" style={{ fontSize: 14, color: 'var(--text-secondary)', marginTop: 8 }}>
-            {data.profile?.displayName ? (lang === 'id' ? `Halo, ${data.profile.displayName} 👋 — ` : `Hello, ${data.profile.displayName} 👋 — `) : ''}
+            {data.profile?.displayName ? (lang === 'id' ? `Halo, ${data.profile.displayName} — ` : `Hello, ${data.profile.displayName} — `) : ''}
             {new Date().toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
           </p>
         </div>

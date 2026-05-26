@@ -412,13 +412,25 @@ export const buildAdaptiveCalendar = (weeklyPlan, activities = [], isPaused = fa
   const activityMap = {};
   activities.forEach(a => {
     if (a.startTimeLocal) {
-      const dateStr = a.startTimeLocal.split('T')[0];
-      activityMap[dateStr] = true;
+      let dateStr = '';
+      if (typeof a.startTimeLocal === 'string') {
+        dateStr = a.startTimeLocal.split('T')[0].split(' ')[0];
+      } else {
+        try {
+          const dObj = new Date(a.startTimeLocal);
+          if (!isNaN(dObj.getTime())) {
+            const y = dObj.getFullYear();
+            const m = String(dObj.getMonth() + 1).padStart(2, '0');
+            const d = String(dObj.getDate()).padStart(2, '0');
+            dateStr = `${y}-${m}-${d}`;
+          }
+        } catch (e) {}
+      }
+      if (dateStr) activityMap[dateStr] = true;
     }
   });
 
   const calendar = [];
-  const missedWorkouts = [];
 
   for (let i = 0; i < 28; i++) { // 4 weeks
     const current = new Date(startDate);
@@ -448,24 +460,8 @@ export const buildAdaptiveCalendar = (weeklyPlan, activities = [], isPaused = fa
         tujuan: 'Recovery & Pause Mode'
       };
     } else {
-      if (isPast) {
-        if (hasRun) {
-          workout.completed = true;
-        } else if (workout.jenis && !workout.jenis.includes('Rest') && !workout.jenis.includes('Recovery') && !workout.jenis.includes('Core') && !workout.jenis.includes('Yoga') && !workout.jenis.includes('Breathing') && !workout.jenis.includes('Total') && !isPaused) {
-          // If paused, we don't accumulate missed workouts to prevent piling up
-          missedWorkouts.push(workout);
-          workout.missed = true;
-        }
-      } else {
-        if (missedWorkouts.length > 0 && workout.jenis && (workout.jenis.includes('Rest') || workout.jenis.includes('Recovery') || workout.jenis.includes('Core') || workout.jenis.includes('Yoga') || workout.jenis.includes('Breathing') || workout.jenis.includes('Total'))) {
-          const rescheduled = missedWorkouts.shift();
-          workout = {
-            ...rescheduled,
-            rescheduled: true,
-            originalHari: rescheduled.hari,
-            hari: workout.hari
-          };
-        }
+      if (isPast && hasRun) {
+        workout.completed = true;
       }
     }
 

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Sparkles } from 'lucide-react';
 
 export default function AICoach({ activities, profile, lang = 'id' }) {
   const [loading, setLoading] = useState(false);
@@ -177,9 +178,7 @@ Keep the answer to 1-2 paragraphs max, direct, and without fluff.`;
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
         <div>
           <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--accent-purple)' }}>
-              <path d="M12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" fill="currentColor" fillOpacity="0.2"/>
-            </svg>
+            <Sparkles size={18} color="var(--accent-purple)" />
             {lang === 'id' ? 'AI Coach Personal' : 'AI Personal Coach'}
           </h3>
           <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
