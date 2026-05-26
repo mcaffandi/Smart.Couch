@@ -10,6 +10,7 @@ import RunHistory from './RunHistory';
 import TrainingPlan from './TrainingPlan';
 import RacePrediction from './RacePrediction';
 import LoginScreen from './LoginScreen';
+import AICoachChat from './AICoachChat';
 import AICoach from './AICoach';
 import LandingPage from './LandingPage';
 import OnboardingWizard from './OnboardingWizard';
@@ -1617,7 +1618,7 @@ export default function App() {
 
         return (
           <div className="profile-modal-backdrop" onClick={e => { if (e.target === e.currentTarget) closeModal(); }}>
-            <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 16, width: '100%', maxWidth: window.innerWidth < 768 ? 400 : 750, maxHeight: '92vh', overflowY: 'auto' }}>
+            <div className="profile-modal-container">
 
               {/* Header */}
               <div style={{ padding: '18px 18px 14px', display: 'flex', alignItems: 'center', gap: 12, borderBottom: '1px solid var(--border)' }}>
@@ -1641,7 +1642,7 @@ export default function App() {
 
                 {/* ── VIEW MODE ── */}
                 {!profileEditMode ? (<>
-                  <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth < 768 ? '1fr 1fr' : '1fr 1fr 1fr 1fr', gap: 10 }}>
+                  <div className="profile-view-grid">
                     <Stat label="Umur" value={curAge} unit="thn" color="#3b82f6" icon={<svg {...iconProps}><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>} />
                     <Stat label="Kelamin" value={curGender === 'pria' ? 'Pria' : curGender === 'wanita' ? 'Wanita' : null} unit="" color={curGender === 'wanita' ? '#ec4899' : '#8b5cf6'} icon={curGender === 'wanita' ? <svg {...iconProps}><circle cx="12" cy="9" r="5"></circle><line x1="12" y1="14" x2="12" y2="21"></line><line x1="9" y1="18" x2="15" y2="18"></line></svg> : <svg {...iconProps}><circle cx="10" cy="14" r="5"></circle><line x1="13.5" y1="10.5" x2="21" y2="3"></line><line x1="16" y1="3" x2="21" y2="3"></line><line x1="21" y1="3" x2="21" y2="8"></line></svg>} />
                     <Stat label="Berat" value={curWeight} unit="kg" color="#10b981" icon={<svg {...iconProps}><path d="M6 10h12"></path><path d="M6 10l3-6h6l3 6"></path><rect x="4" y="10" width="16" height="10" rx="2"></rect><path d="M12 10v4"></path></svg>} />
@@ -1649,7 +1650,7 @@ export default function App() {
                   </div>
 
                   <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent-purple)', letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: window.innerWidth < 768 ? 14 : 0, marginBottom: 4 }}>Target & Latihan</div>
-                  <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth < 768 ? '1fr 1fr' : '1fr 1fr 1fr 1fr', gap: 10 }}>
+                  <div className="profile-view-grid">
                     <Stat label="Goal" value={
                       goal === 'maintenance' ? 'Maintenance' :
                       goal === 'weightloss' ? 'Turun BB' :
@@ -1735,7 +1736,7 @@ export default function App() {
                 </>) : (<>
 
                 {/* ── EDIT MODE ── */}
-                <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth < 768 ? '1fr' : '1fr 1fr', gap: 24 }}>
+                <div className="profile-edit-grid">
                   {/* Left Column (Identitas & Data Fisik) */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 0, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: 10 }}>
@@ -3079,6 +3080,7 @@ export default function App() {
         </div>
       )}
 
+      <AICoachChat lang={lang} goal={goal} programStyle={programStyle} targetPace={targetPace} currentUser={data?.profile?.displayName || currentUser} />
       <Toast toasts={toasts} />
     </div>
   );

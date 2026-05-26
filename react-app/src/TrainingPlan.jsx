@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { buildTrainingPlan } from './utils';
+import { buildTrainingPlan, buildAdaptiveCalendar } from './utils';
 
 const dayTranslations = {
   'Senin': 'Monday',
@@ -88,7 +88,13 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
     } catch { return null; }
   });
   const [aiError, setAiError] = useState('');
+  const [isPaused, setIsPaused] = useState(() => localStorage.getItem('smartcoach_paused') === 'true');
 
+  const togglePause = () => {
+    const newState = !isPaused;
+    setIsPaused(newState);
+    localStorage.setItem('smartcoach_paused', newState.toString());
+  };
   const defaultPlan = buildTrainingPlan(programStyle, goal, paces, selectedDays);
   const plan = aiPlan || defaultPlan;
 
@@ -427,7 +433,31 @@ Return ONLY the raw JSON array.`;
           )}
         </div>
 
-        <button
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button
+            onClick={togglePause}
+            style={{
+              background: isPaused ? 'rgba(251,113,133,0.1)' : 'var(--bg-card)', 
+              color: isPaused ? '#fb7185' : 'var(--text-primary)', 
+              border: `1px solid ${isPaused ? 'rgba(251,113,133,0.3)' : 'var(--border)'}`,
+              padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 700,
+              cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, transition: 'all 0.2s'
+            }}
+          >
+            {isPaused ? (
+              <>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                {lang === 'id' ? 'Resume Plan' : 'Resume Plan'}
+              </>
+            ) : (
+              <>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+                {lang === 'id' ? 'Pause Plan' : 'Pause Plan'}
+              </>
+            )}
+          </button>
+          
+          <button
           onClick={handleExportICS}
           style={{
             background: 'var(--accent-purple)', color: '#fff', border: 'none',
@@ -447,6 +477,7 @@ Return ONLY the raw JSON array.`;
           </svg>
           {lang === 'id' ? 'Export ke Calendar' : 'Export to Calendar'}
         </button>
+        </div>
       </div>
 
       {aiError && (
@@ -501,6 +532,72 @@ Return ONLY the raw JSON array.`;
           <div className="pace-unit">min/km</div>
         </div>
       </div>
+
+      {/* ── ADAPTIVE CALENDAR SECTION ── */}
+      {(() => {
+        const adaptiveCalendar = buildAdaptiveCalendar(plan, activities, isPaused);
+        // Only show from yesterday to next 6 days (8 days total) for a concise view
+        const todayIdx = adaptiveCalendar.findIndex(d => d.isToday);
+        const startIdx = Math.max(0, todayIdx - 2);
+        const displayDays = adaptiveCalendar.slice(startIdx, startIdx + 8);
+        
+        return (
+          <div style={{ marginBottom: 30 }}>
+            <h3 style={{ fontSize: 15, fontWeight: 800, marginBottom: 12, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
+              📅 {lang === 'id' ? 'Kalender Berjalan' : 'Running Calendar'}
+            </h3>
+            <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 10, msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
+              {displayDays.map((dItem, i) => {
+                const dateObj = new Date(dItem.date);
+                const dayName = dateObj.toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-US', { weekday: 'short' });
+                const dateNum = dateObj.getDate();
+                const monthStr = dateObj.toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-US', { month: 'short' });
+                
+                const isMissed = dItem.workout.missed;
+                const isCompleted = dItem.hasRun;
+                const isRescheduled = dItem.workout.rescheduled;
+                
+                let borderColor = 'var(--border)';
+                let bg = 'var(--bg-card)';
+                if (dItem.isToday) { borderColor = 'var(--accent-purple)'; bg = 'rgba(167, 139, 250, 0.05)'; }
+                if (isCompleted) { borderColor = '#10b981'; bg = 'rgba(16, 185, 129, 0.05)'; }
+                if (isMissed) { borderColor = '#fb7185'; bg = 'rgba(251, 113, 133, 0.05)'; }
+
+                return (
+                  <div key={i} style={{ minWidth: 160, maxWidth: 180, flex: '0 0 auto', background: bg, border: `1.5px solid ${borderColor}`, borderRadius: 12, padding: 12, display: 'flex', flexDirection: 'column', opacity: dItem.isPast && !dItem.isToday ? 0.6 : 1 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                      <div>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: dItem.isToday ? 'var(--accent-purple)' : 'var(--text-muted)' }}>{dayName.toUpperCase()}</div>
+                        <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--text-primary)' }}>{dateNum} <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)' }}>{monthStr}</span></div>
+                      </div>
+                      {isCompleted && <div style={{ color: '#10b981' }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>}
+                      {isMissed && <div style={{ color: '#fb7185' }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></div>}
+                      {dItem.isToday && !isCompleted && <div style={{ background: 'var(--accent-purple)', color: '#fff', fontSize: 9, fontWeight: 800, padding: '2px 6px', borderRadius: 4 }}>TODAY</div>}
+                    </div>
+
+                    <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 4, lineHeight: 1.2 }}>
+                      {getJenis(dItem.workout.jenis)}
+                    </div>
+                    
+                    {isRescheduled && (
+                      <div style={{ fontSize: 9, fontWeight: 700, color: '#fbbf24', background: 'rgba(251, 191, 36, 0.1)', padding: '2px 6px', borderRadius: 4, display: 'inline-block', marginBottom: 4 }}>
+                        {lang === 'id' ? `🔄 Geseran dari ${dItem.workout.originalHari}` : `🔄 Moved from ${dItem.workout.originalHari}`}
+                      </div>
+                    )}
+                    
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{getDurasi(dItem.workout.durasi)}</div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
+
+      <h3 style={{ fontSize: 15, fontWeight: 800, marginBottom: 12, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
+        📑 {lang === 'id' ? 'Template Rencana Mingguan' : 'Weekly Blueprint Template'}
+      </h3>
+
 
       {/* Desktop Table View */}
       <div className="training-table-desktop" style={{ overflowX: 'auto', borderRadius: 14, border: '1px solid var(--border)' }}>

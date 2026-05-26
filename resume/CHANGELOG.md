@@ -101,3 +101,20 @@ Dokumen ini berisi rangkuman fitur dan perubahan yang telah diimplementasikan pa
 - **Deskripsi**: Melokalisasi penamaan berkas `.xlsx` dan sheet ekspor Excel. Selain itu, menyelesaikan sejumlah perbaikan (*bug fixes*) termasuk tag HTML yang tidak tertutup, penyelaras pewarnaan dial kesiapan latihan, serta *drop shadow* pada teks kanvas hasil ekspor.
 - **Status**: Selesai
 - **Waktu Selesai**: 2026-05-22 18:51:00 WIB
+
+### 📅 23 Mei 2026
+
+#### **Step 15: Redesain Dashboard Performance Cards**
+- **Deskripsi**: Mendesain ulang dan menyempurnakan tampilan kartu performa di Dashboard (seperti jarak, durasi, hr, dsb) agar terlihat lebih elegan, rapi, dan terstruktur.
+- **Status**: Selesai
+- **Waktu Selesai**: 2026-05-23 10:45:00 WIB
+
+#### **Step 16: Pembersihan Sidebar Utama & Pemindahan Pengaturan Target**
+- **Deskripsi**: Memindahkan seluruh input pengaturan *Goal* Latihan (Goal, Program Style, Target Pace, Hari Latihan) yang sebelumnya berada di sidebar utama, kini digabungkan ke dalam **Modal Edit Profil**.
+- **Status**: Selesai
+- **Waktu Selesai**: 2026-05-23 18:22:00 WIB
+
+#### **Step 17: Peningkatan UX Profil Modal**
+- **Deskripsi**: Membagi Profil Modal menjadi View Mode dan Edit Mode dengan lebih lengkap. *View Mode* kini merangkum metrik **Target & Latihan** dalam bentuk grid Stat Card rapi. Pada saat *Edit Mode*, pilihan drop down dan *range slider* langsung tersedia, dan saat tombol Simpan ditekan, profil sekaligus disinkronkan tanpa memerlukan tombol "Apply & Analyze" dari sidebar lagi.
+- **Status**: Selesai
+- **Waktu Selesai**: 2026-05-23 18:22:00 WIB

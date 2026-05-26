@@ -1865,6 +1865,40 @@ html, body {
   }
 }
 
+.profile-modal-container {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 750px;
+  max-height: 92vh;
+  overflow-y: auto;
+}
+
+.profile-view-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.profile-edit-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+@media (max-width: 768px) {
+  .profile-modal-container {
+    max-width: 400px;
+  }
+  .profile-view-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .profile-edit-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Language Switcher */
 .lang-switcher {
   display: flex;

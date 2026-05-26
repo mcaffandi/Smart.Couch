@@ -395,6 +395,95 @@ export const buildTrainingPlan = (programStyle, goal, paces, selectedDays = ['Se
 };
 
 // ──────────────────────────────────────────────
+// Adaptive Calendar Builder
+// ──────────────────────────────────────────────
+export const buildAdaptiveCalendar = (weeklyPlan, activities = [], isPaused = false) => {
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  
+  const dayOfWeek = today.getDay();
+  const diffToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+  const startOfThisWeek = new Date(today);
+  startOfThisWeek.setDate(today.getDate() - diffToMonday);
+  
+  const startDate = new Date(startOfThisWeek);
+  startDate.setDate(startDate.getDate() - 7); // Start 1 week ago
+
+  const activityMap = {};
+  activities.forEach(a => {
+    if (a.startTimeLocal) {
+      const dateStr = a.startTimeLocal.split('T')[0];
+      activityMap[dateStr] = true;
+    }
+  });
+
+  const calendar = [];
+  const missedWorkouts = [];
+
+  for (let i = 0; i < 28; i++) { // 4 weeks
+    const current = new Date(startDate);
+    current.setDate(startDate.getDate() + i);
+    
+    // Format YYYY-MM-DD safely
+    const y = current.getFullYear();
+    const m = String(current.getMonth() + 1).padStart(2, '0');
+    const d = String(current.getDate()).padStart(2, '0');
+    const dateStr = `${y}-${m}-${d}`;
+    
+    const wDay = current.getDay();
+    const idx = wDay === 0 ? 6 : wDay - 1;
+    
+    let workout = { ...weeklyPlan[idx] };
+    
+    const isPast = current < today;
+    const isToday = current.getTime() === today.getTime();
+    const hasRun = !!activityMap[dateStr];
+
+    if (isPaused && !isPast) {
+      // If paused, today and future days are marked as Paused/Rest
+      workout = {
+        hari: workout.hari,
+        jenis: 'Total Rest',
+        durasi: '-',
+        tujuan: 'Recovery & Pause Mode'
+      };
+    } else {
+      if (isPast) {
+        if (hasRun) {
+          workout.completed = true;
+        } else if (workout.jenis && !workout.jenis.includes('Rest') && !workout.jenis.includes('Recovery') && !workout.jenis.includes('Core') && !workout.jenis.includes('Yoga') && !workout.jenis.includes('Breathing') && !workout.jenis.includes('Total') && !isPaused) {
+          // If paused, we don't accumulate missed workouts to prevent piling up
+          missedWorkouts.push(workout);
+          workout.missed = true;
+        }
+      } else {
+        if (missedWorkouts.length > 0 && workout.jenis && (workout.jenis.includes('Rest') || workout.jenis.includes('Recovery') || workout.jenis.includes('Core') || workout.jenis.includes('Yoga') || workout.jenis.includes('Breathing') || workout.jenis.includes('Total'))) {
+          const rescheduled = missedWorkouts.shift();
+          workout = {
+            ...rescheduled,
+            rescheduled: true,
+            originalHari: rescheduled.hari,
+            hari: workout.hari
+          };
+        }
+      }
+    }
+
+    calendar.push({
+      date: dateStr,
+      dateObj: current,
+      isToday,
+      isPast,
+      hasRun,
+      isPaused,
+      workout
+    });
+  }
+
+  return calendar;
+};
+
+// ──────────────────────────────────────────────
 // Garmin ZIP Parser (via JSZip)
 // ──────────────────────────────────────────────
 export const parseGarminZip = async (file, JSZip) => {
