@@ -16,7 +16,7 @@ import LandingPage from './LandingPage';
 import OnboardingWizard from './OnboardingWizard';
 import AdminDashboard from './AdminDashboard';
 import Logo from './Logo';
-import { Sun, Moon } from 'lucide-react';
+import { Sun, Moon, Coffee } from 'lucide-react';
 import { translations } from './translations';
 import {
   auth,
@@ -2189,6 +2189,17 @@ export default function App() {
         )}
 
         <div className="sidebar-divider" style={{ margin: '8px 0' }} />
+
+        <a 
+          href="https://saweria.co/afnstudio" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="btn btn-secondary" 
+          style={{ background: 'rgba(245, 158, 11, 0.05)', border: '1px solid rgba(245, 158, 11, 0.3)', color: '#f59e0b', display: 'flex', gap: 8, justifyContent: 'center', alignItems: 'center', textDecoration: 'none', marginBottom: 8 }}
+        >
+          <Coffee size={16} />
+          {lang === 'id' ? 'Traktir Kopi' : 'Buy me a coffee'}
+        </a>
 
         <button
           className="btn btn-secondary"
