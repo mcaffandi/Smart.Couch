@@ -81,13 +81,19 @@ const getBadgeClass = (jenis) => {
 
 export default function TrainingPlan({ activities, programStyle, goal, paces, latestSleepScore, actualBestPace, targetPace, selectedDays, gender, weight, height, lang = 'id' }) {
   const [isPaused, setIsPaused] = useState(() => localStorage.getItem('smartcoach_paused') === 'true');
+  const [aiPlan, setAiPlan] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('smartcoach_ai_plan')) || null; } catch { return null; }
+  });
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState('');
 
   const togglePause = () => {
     const newState = !isPaused;
     setIsPaused(newState);
     localStorage.setItem('smartcoach_paused', newState.toString());
   };
-  const plan = buildTrainingPlan(programStyle, goal, paces, selectedDays);
+  const basePlan = buildTrainingPlan(programStyle, goal, paces, selectedDays);
+  const plan = aiPlan || basePlan;
 
   const formatPace = (minKm) => {
     if (!minKm) return null;
@@ -146,6 +152,119 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
   };
 
 
+
+  const generateAIPlan = async () => {
+    const apiKey = localStorage.getItem('groq_api_key');
+    const useServer = localStorage.getItem('smartcoach_use_server') === 'true';
+    if (!apiKey && !useServer) {
+      setAiError(lang === 'id' ? 'API Key Groq belum disetting di Dashboard.' : 'Groq API Key has not been set in the Dashboard.');
+      return;
+    }
+    setAiLoading(true);
+    setAiError('');
+
+    try {
+      const recentRuns = (activities || []).slice(0, 5).map(a => {
+        const dist = ((a.distance || 0) / 100000).toFixed(2);
+        const dur = Math.round((a.duration || 0) / 60000);
+        return lang === 'id' 
+          ? `Jarak: ${dist}km, Waktu: ${dur}m, HR: ${a.avgHr || 0}bpm`
+          : `Distance: ${dist}km, Duration: ${dur}m, HR: ${a.avgHr || 0}bpm`;
+      }).join('\n');
+
+      const daysInstruction = selectedDays && selectedDays.length > 0
+        ? (lang === 'id' 
+            ? `Hari Lari yang DIREQUEST: ${selectedDays.join(', ')}.\nSANGAT PENTING: Hanya jadwalkan lari pada hari yang direquest tersebut. Untuk hari selain itu, WAJIB diisi dengan "Total Rest" atau latihan silang/pemulihan aktif seperti "Core & Leg Stabilizer".`
+            : `REQUESTED Running Days: ${selectedDays.join(', ')}.\nVERY IMPORTANT: Only schedule running workouts on these specific requested days. For other days, write "Total Rest" or active recovery/cross-training like "Core & Leg Stabilizer".`)
+        : (lang === 'id'
+            ? `Hari Lari: Pelari menyerahkan jadwal kepadamu. Atur hari lari yang optimal (3-5 hari seminggu sesuai target). Untuk hari selain itu, WAJIB diisi dengan "Total Rest" atau "Core & Leg Stabilizer".`
+            : `Running Days: The runner lets you decide. Optimize running days (3-5 days/week based on the target). For other days, write "Total Rest" or "Core & Leg Stabilizer".`);
+
+      const genderInstruction = gender ? `Jenis Kelamin: ${gender === 'Pria' ? 'Laki-laki' : 'Perempuan'}. ` : '';
+      const bmiInstruction = weight && height ? `Berat: ${weight}kg, Tinggi: ${height}cm. ` : '';
+
+      const prompt = lang === 'id'
+        ? `Lo adalah pelatih lari elit (EnduraUP). Buatkan jadwal lari 1 minggu (Senin-Minggu) dalam format JSON array yang ketat.
+Atlet ini punya target utama: ${goal}.
+${daysInstruction}
+${genderInstruction}${bmiInstruction}
+
+Target Pace: ${formatPace(targetPace) || targetPace} min/km.
+Data lari terakhir mereka (jadikan referensi penyesuaian beban):
+${recentRuns || "Belum ada riwayat lari."}
+Tidur semalam: skor ${latestSleepScore || "Tidak ada data"}.
+
+Sesuaikan intensitas! Jika HR kemarin tinggi atau tidur kurang, tambahkan rest/recovery.
+Output harus STRICTLY JSON array of objects dengan keys persis: "hari" (Senin-Minggu), "jenis" (contoh: "Easy Run", "Interval", "Total Rest"), "durasi" (contoh: "30 menit", "5x400m", "–"), "tujuan" (alasan logis). Pastikan urutan dari Senin sampai Minggu (7 item).
+Return ONLY the raw JSON array.`
+        : `You are an elite running coach (EnduraUP). Create a strict 1-week training plan (Monday-Sunday) in JSON array format.
+This athlete's main goal: ${goal}.
+${daysInstruction}
+${genderInstruction}${bmiInstruction}
+
+Target Pace: ${formatPace(targetPace) || targetPace} min/km.
+Their latest run data (use as reference to adjust load):
+${recentRuns || "No running history yet."}
+Sleep last night: score ${latestSleepScore || "No data"}.
+
+Adjust intensity! If heart rate was high or sleep was insufficient, add rest/recovery.
+Output must be a STRICTLY JSON array of objects with keys exactly: "hari" (Monday-Sunday, e.g., "Monday", "Tuesday", etc.), "jenis" (e.g. "Easy Run", "Interval", "Total Rest"), "durasi" (e.g. "30 minutes", "5x400m", "–"), "tujuan" (logical reasoning). Ensure the order goes Monday to Sunday (7 items).
+Return ONLY the raw JSON array.`;
+
+      let content = '';
+
+      if (useServer) {
+        const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${import.meta.env.VITE_GROQ_API_KEY}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            model: "llama-3.1-8b-instant",
+            messages: [{ role: "user", content: prompt }],
+            temperature: 0.5,
+          })
+        });
+        const data = await res.json();
+        if (data.error) throw new Error(data.error.message);
+        content = data.choices[0].message.content;
+      } else {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+        const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          signal: controller.signal,
+          headers: {
+            'Authorization': `Bearer ${apiKey.trim()}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            model: "llama-3.1-8b-instant",
+            messages: [{ role: "user", content: prompt }],
+            temperature: 0.5,
+          })
+        });
+        clearTimeout(timeoutId);
+        const data = await res.json();
+        if (data.error) throw new Error(data.error.message);
+        content = data.choices[0].message.content;
+      }
+
+      content = content.replace(/```json/gi, '').replace(/```/g, '').trim();
+      const parsed = JSON.parse(content);
+      if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].hari) {
+        setAiPlan(parsed);
+        localStorage.setItem('smartcoach_ai_plan', JSON.stringify(parsed));
+      } else {
+        throw new Error(lang === 'id' ? 'Format JSON dari AI tidak sesuai.' : 'JSON format from AI is invalid.');
+      }
+    } catch (e) {
+      setAiError((lang === 'id' ? 'Gagal men-generate jadwal dari AI: ' : 'Failed to generate training plan from AI: ') + e.message);
+    }
+    setAiLoading(false);
+  };
 
   const handleExportICS = () => {
     const today = new Date();
@@ -256,6 +375,47 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
       <div className="training-header-controls" style={{ marginBottom: 16 }}>
 
 
+        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+          <button
+            onClick={generateAIPlan}
+            disabled={aiLoading}
+            style={{
+              background: aiPlan ? 'var(--bg-card)' : 'var(--accent-purple)',
+              color: aiPlan ? 'var(--accent-purple)' : '#fff',
+              border: aiPlan ? '1px solid var(--accent-purple)' : 'none',
+              padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 700,
+              cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+            }}
+          >
+            {aiLoading ? (
+              <svg className="spinner-rotate" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="2" x2="12" y2="6"></line>
+                <line x1="12" y1="18" x2="12" y2="22"></line>
+                <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line>
+                <line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line>
+                <line x1="2" y1="12" x2="6" y2="12"></line>
+                <line x1="18" y1="12" x2="22" y2="12"></line>
+                <line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line>
+                <line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line>
+              </svg>
+            ) : (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" fill="currentColor" fillOpacity="0.3"/>
+              </svg>
+            )}
+            {aiLoading ? (lang === 'id' ? 'Menganalisis...' : 'Analyzing...') : (aiPlan ? (lang === 'id' ? 'Regenerate AI Plan' : 'Regenerate AI Plan') : (lang === 'id' ? 'AI: Buatkan Jadwal Dinamis' : 'AI: Generate Dynamic Plan'))}
+          </button>
+          {aiPlan && (
+            <button
+              className="login-link-btn"
+              onClick={() => { setAiPlan(null); localStorage.removeItem('smartcoach_ai_plan'); }}
+              style={{ fontSize: 12, color: 'var(--text-muted)' }}
+            >
+              {lang === 'id' ? 'Kembali ke Default' : 'Back to Default'}
+            </button>
+          )}
+        </div>
+
         <div style={{ display: 'flex', gap: 8 }}>
           <button
             onClick={togglePause}
@@ -304,6 +464,10 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
       </div>
 
 
+
+      {aiError && (
+        <div style={{ fontSize: 12, color: '#fb7185', fontWeight: 600, marginBottom: 16 }}>{aiError}</div>
+      )}
 
       {/* Sync banner: actual vs target pace */}
       {showSyncBanner && (
@@ -399,6 +563,11 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
                     <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 4, lineHeight: 1.2 }}>
                       {getJenis(dItem.workout.jenis)}
                     </div>
+                    {isRescheduled && (
+                      <div style={{ fontSize: 9, fontWeight: 700, color: '#fbbf24', background: 'rgba(251, 191, 36, 0.1)', padding: '2px 6px', borderRadius: 4, display: 'inline-block', marginBottom: 4 }}>
+                        {lang === 'id' ? `🔄 Geseran dari ${dItem.workout.originalHari}` : `🔄 Moved from ${dItem.workout.originalHari}`}
+                      </div>
+                    )}
 
                     
                     <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{getDurasi(dItem.workout.durasi)}</div>
