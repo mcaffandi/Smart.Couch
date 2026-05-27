@@ -1,56 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Bot, MessageSquare, Send, X, Brain } from 'lucide-react';
-import { db } from './firebase';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { Bot, MessageSquare, Send, X } from 'lucide-react';
 
 export default function AICoachChat({ lang, goal, programStyle, targetPace, currentUser }) {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const [customDictionary, setCustomDictionary] = useState([]);
-  const [isTraining, setIsTraining] = useState(false);
-  const [trainKeyword, setTrainKeyword] = useState('');
-  const [trainResponse, setTrainResponse] = useState('');
-  const [isSaving, setIsSaving] = useState(false);
   const endRef = useRef(null);
-
-  useEffect(() => {
-    // Load custom dictionary from firestore
-    const loadCustomDict = async () => {
-      try {
-        const docRef = doc(db, 'bot_settings', 'dictionary');
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists() && docSnap.data().entries) {
-          setCustomDictionary(docSnap.data().entries);
-        }
-      } catch (err) {
-        console.warn("Failed to load custom dictionary", err);
-      }
-    };
-    loadCustomDict();
-  }, []);
-
-  const handleSaveTraining = async () => {
-    if (!trainKeyword.trim() || !trainResponse.trim()) return;
-    setIsSaving(true);
-    try {
-      const newEntry = { match: trainKeyword.trim().toLowerCase(), response: trainResponse.trim() };
-      const updatedDict = [...customDictionary, newEntry];
-      
-      const docRef = doc(db, 'bot_settings', 'dictionary');
-      await setDoc(docRef, { entries: updatedDict }, { merge: true });
-      
-      setCustomDictionary(updatedDict);
-      setTrainKeyword('');
-      setTrainResponse('');
-      setIsTraining(false);
-      setMessages(p => [...p, { role: 'assistant', content: lang === 'id' ? `Sip! Kata kunci "${newEntry.match}" udah gua pelajarin. Coba aja tes chat!` : `Got it! I learned "${newEntry.match}". Try asking me!` }]);
-    } catch (err) {
-      alert("Gagal menyimpan ke Firebase: " + err.message);
-    }
-    setIsSaving(false);
-  };
 
   useEffect(() => {
     if (isOpen && messages.length === 0) {
@@ -158,24 +114,6 @@ export default function AICoachChat({ lang, goal, programStyle, targetPace, curr
     setIsTyping(true);
 
     const msgLower = userMsg.toLowerCase();
-    
-    // 0. Check Custom Dictionary First
-    let matchedCustom = null;
-    for (const rule of customDictionary) {
-      if (msgLower.includes(rule.match)) {
-        matchedCustom = rule;
-        break;
-      }
-    }
-
-    if (matchedCustom) {
-      setTimeout(() => {
-        setMessages(p => [...p, { role: 'assistant', content: matchedCustom.response }]);
-        setIsTyping(false);
-      }, 800);
-      return;
-    }
-    
     // 1. Check Local Dictionary First (Instant Response)
     let matchedRule = null;
     for (const rule of localDictionary) {
@@ -283,51 +221,13 @@ export default function AICoachChat({ lang, goal, programStyle, targetPace, curr
               </div>
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
-              <button onClick={() => setIsTraining(!isTraining)} style={{ background: isTraining ? 'var(--accent-purple)' : 'none', border: '1px solid var(--accent-purple)', color: isTraining ? '#fff' : 'var(--accent-purple)', cursor: 'pointer', padding: '4px 10px', display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 700, borderRadius: 12, transition: 'all 0.2s' }}>
-                <Brain size={14} /> {lang === 'id' ? 'Ajari AI' : 'Train AI'}
-              </button>
               <button onClick={() => setIsOpen(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--hover-overlay)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>
                 <X size={20} />
               </button>
             </div>
           </div>
-          {isTraining ? (
-            <div style={{ flex: 1, padding: '20px', display: 'flex', flexDirection: 'column', gap: 16, overflowY: 'auto' }}>
-              <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>Ajari Coach AI (Ala SimSimi)</div>
-              <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: 0, lineHeight: 1.5 }}>
-                {lang === 'id' ? 'Masukkan kata kunci dan berikan jawaban. Data disimpan di database dan berlaku untuk semua.' : 'Add a keyword and response. Data is saved to database.'}
-              </p>
-              
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)' }}>{lang === 'id' ? 'Kata Kunci (Trigger)' : 'Keyword'}</label>
-                <input 
-                  value={trainKeyword} onChange={e => setTrainKeyword(e.target.value)}
-                  placeholder={lang === 'id' ? "Contoh: sepatu" : "Example: shoes"}
-                  style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-primary)', borderRadius: 8, padding: '10px 12px', fontSize: 13, outline: 'none' }}
-                />
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)' }}>{lang === 'id' ? 'Jawaban Bot' : 'Bot Response'}</label>
-                <textarea 
-                  value={trainResponse} onChange={e => setTrainResponse(e.target.value)}
-                  placeholder={lang === 'id' ? "Contoh: Kalau lari santai pakai sepatu empuk aja!" : "Example: Wear cushioned shoes!"}
-                  rows={4}
-                  style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-primary)', borderRadius: 8, padding: '10px 12px', fontSize: 13, outline: 'none', resize: 'none' }}
-                />
-              </div>
-
-              <button 
-                onClick={handleSaveTraining} 
-                disabled={!trainKeyword.trim() || !trainResponse.trim() || isSaving}
-                style={{ marginTop: 'auto', background: 'var(--accent-purple)', color: '#fff', border: 'none', padding: '12px', borderRadius: 8, fontWeight: 700, cursor: (!trainKeyword.trim() || !trainResponse.trim() || isSaving) ? 'not-allowed' : 'pointer', opacity: (!trainKeyword.trim() || !trainResponse.trim() || isSaving) ? 0.6 : 1 }}
-              >
-                {isSaving ? (lang === 'id' ? 'Menyimpan...' : 'Saving...') : (lang === 'id' ? 'Simpan ke Database' : 'Save to Database')}
-              </button>
-            </div>
-          ) : (
-            <>
-              <div style={{ flex: 1, overflowY: 'auto', padding: '20px 16px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          
+          <div style={{ flex: 1, overflowY: 'auto', padding: '20px 16px', display: 'flex', flexDirection: 'column', gap: 14 }}>
             {messages.map((m, i) => (
               <div key={i} style={{ alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start', maxWidth: '85%' }}>
                 <div style={{ 
@@ -369,8 +269,6 @@ export default function AICoachChat({ lang, goal, programStyle, targetPace, curr
               <Send size={18} />
             </button>
           </div>
-            </>
-          )}
         </div>
       )}
       <style dangerouslySetInnerHTML={{__html:`
