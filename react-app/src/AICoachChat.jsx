@@ -160,19 +160,7 @@ export default function AICoachChat({ lang, goal, programStyle, targetPace, curr
 
     // 2. Fallback to Real AI (Groq API)
     try {
-      const apiKey = localStorage.getItem('groq_api_key');
-      
-      if (!apiKey) {
-        // Soft fallback if no API key is set
-        setTimeout(() => {
-          setMessages(p => [...p, { role: 'assistant', content: lang === 'id' 
-            ? 'Pertanyaan lo spesifik nih! Sayangnya otak AI gua belum disambungin ke internet. Tolong masukin API Key Groq/Gemini lo di setting Training Plan supaya gua bisa jawab pertanyaan kayak ChatGPT beneran! ✨'
-            : 'That is a very specific question! My true AI brain is not connected yet. Please provide a Groq API Key in the Training Plan settings so I can answer like ChatGPT! ✨' 
-          }]);
-          setIsTyping(false);
-        }, 1000);
-        return;
-      }
+      let apiKey = localStorage.getItem('groq_api_key');
 
       // Prepare conversation history for LLM
       const chatHistory = newMessages.map(m => ({
@@ -184,12 +172,13 @@ export default function AICoachChat({ lang, goal, programStyle, targetPace, curr
         ? `Lo adalah Coach AI EnduraUP, pelatih lari profesional yang friendly, suportif, dan asik (pake bahasa gaul lo/gue). User saat ini punya goal: ${goal}, style program: ${programStyle}, dan target pace: ${targetPace} min/km. Jawab pertanyaan user dengan singkat, padat, dan pakai emoji. Kasih tips lari yang praktis dan aman secara medis.`
         : `You are EnduraUP Coach AI, a professional, friendly, and supportive running coach. The user's current goal: ${goal}, program style: ${programStyle}, target pace: ${targetPace} min/km. Answer concisely with emojis. Provide practical and medically safe running tips.`;
 
-      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      const endpoint = apiKey ? 'https://api.groq.com/openai/v1/chat/completions' : '/api/coach';
+      const headers = { 'Content-Type': 'application/json' };
+      if (apiKey) headers['Authorization'] = `Bearer ${apiKey.trim()}`;
+
+      const res = await fetch(endpoint, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiKey.trim()}`,
-          'Content-Type': 'application/json'
-        },
+        headers,
         body: JSON.stringify({
           model: "llama-3.1-8b-instant",
           messages: [{ role: "system", content: systemPrompt }, ...chatHistory],
@@ -199,7 +188,19 @@ export default function AICoachChat({ lang, goal, programStyle, targetPace, curr
       });
 
       const data = await res.json();
-      if (data.error) throw new Error(data.error.message);
+      if (!res.ok || data.error) {
+        if (!apiKey && res.status === 404) {
+          setTimeout(() => {
+            setMessages(p => [...p, { role: 'assistant', content: lang === 'id' 
+              ? 'Pertanyaan lo spesifik nih! Sayangnya proxy Vercel ga jalan dan API Key lo belum diset. Tolong masukin API Key Groq di tab AI Coach supaya gua bisa jawab pertanyaan kayak ChatGPT beneran! ✨'
+              : 'That is a very specific question! My Vercel proxy is down and your API key is not set. Please provide a Groq API Key in the AI Coach tab so I can answer like ChatGPT! ✨' 
+            }]);
+            setIsTyping(false);
+          }, 1000);
+          return;
+        }
+        throw new Error(data.error?.message || data.error || 'API Error');
+      }
       
       const aiReply = data.choices[0].message.content;
       setMessages(p => [...p, { role: 'assistant', content: aiReply }]);

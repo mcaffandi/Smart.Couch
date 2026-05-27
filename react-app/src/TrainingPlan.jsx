@@ -86,6 +86,7 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
   });
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState('');
+  const [tempApiKey, setTempApiKey] = useState('');
 
   const togglePause = () => {
     const newState = !isPaused;
@@ -154,12 +155,9 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
 
 
   const generateAIPlan = async () => {
-    const apiKey = localStorage.getItem('groq_api_key');
-    const useServer = localStorage.getItem('smartcoach_use_server') === 'true';
-    if (!apiKey && !useServer) {
-      setAiError(lang === 'id' ? 'API Key Groq belum disetting di Dashboard.' : 'Groq API Key has not been set in the Dashboard.');
-      return;
-    }
+    let apiKey = localStorage.getItem('groq_api_key');
+    // Will attempt to use server proxy if apiKey is not set.
+    
     setAiLoading(true);
     setAiError('');
 
@@ -213,44 +211,34 @@ Return ONLY the raw JSON array.`;
 
       let content = '';
 
-      if (useServer) {
-        const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${import.meta.env.VITE_GROQ_API_KEY}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            model: "llama-3.1-8b-instant",
-            messages: [{ role: "user", content: prompt }],
-            temperature: 0.5,
-          })
-        });
-        const data = await res.json();
-        if (data.error) throw new Error(data.error.message);
-        content = data.choices[0].message.content;
-      } else {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 15000);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
 
-        const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-          method: 'POST',
-          signal: controller.signal,
-          headers: {
-            'Authorization': `Bearer ${apiKey.trim()}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            model: "llama-3.1-8b-instant",
-            messages: [{ role: "user", content: prompt }],
-            temperature: 0.5,
-          })
-        });
-        clearTimeout(timeoutId);
-        const data = await res.json();
-        if (data.error) throw new Error(data.error.message);
-        content = data.choices[0].message.content;
+      const endpoint = apiKey ? 'https://api.groq.com/openai/v1/chat/completions' : '/api/coach';
+      const headers = { 'Content-Type': 'application/json' };
+      if (apiKey) headers['Authorization'] = `Bearer ${apiKey.trim()}`;
+
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        signal: controller.signal,
+        headers,
+        body: JSON.stringify({
+          prompt: prompt,
+          model: "llama-3.1-8b-instant",
+          messages: [{ role: "user", content: prompt }],
+          temperature: 0.5,
+        })
+      });
+      clearTimeout(timeoutId);
+      
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        if (!apiKey && res.status === 404) {
+          throw new Error("MISSING_API_KEY");
+        }
+        throw new Error(data.error?.message || data.error || 'API Error');
       }
+      content = data.choices[0].message.content;
 
       content = content.replace(/```json/gi, '').replace(/```/g, '').trim();
       const parsed = JSON.parse(content);
@@ -261,7 +249,11 @@ Return ONLY the raw JSON array.`;
         throw new Error(lang === 'id' ? 'Format JSON dari AI tidak sesuai.' : 'JSON format from AI is invalid.');
       }
     } catch (e) {
-      setAiError((lang === 'id' ? 'Gagal men-generate jadwal dari AI: ' : 'Failed to generate training plan from AI: ') + e.message);
+      if (e.message === 'MISSING_API_KEY') {
+        setAiError('MISSING_API_KEY');
+      } else {
+        setAiError((lang === 'id' ? 'Gagal men-generate jadwal dari AI: ' : 'Failed to generate training plan from AI: ') + e.message);
+      }
     }
     setAiLoading(false);
   };
@@ -465,9 +457,38 @@ Return ONLY the raw JSON array.`;
 
 
 
-      {aiError && (
+      {aiError === 'MISSING_API_KEY' ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16, background: 'rgba(251,113,133,0.1)', padding: 16, borderRadius: 12, border: '1px solid rgba(251,113,133,0.3)' }}>
+          <p style={{ fontSize: 13, color: '#fb7185', fontWeight: 600, margin: 0 }}>
+            {lang === 'id' ? 'API Key Groq belum disetting. Masukkan API Key untuk menggunakan AI Coach.' : 'Groq API Key has not been set. Please enter it to use the AI Coach.'}
+          </p>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            <input
+              type="password"
+              className="form-input"
+              value={tempApiKey}
+              onChange={e => { setTempApiKey(e.target.value); }}
+              placeholder="gsk_..."
+              style={{ flex: 1, minWidth: 200, padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-surface)', color: 'var(--text-primary)' }}
+            />
+            <button
+              className="btn btn-primary"
+              style={{ padding: '8px 16px', borderRadius: 8, width: 'auto' }}
+              onClick={() => {
+                if (tempApiKey.trim()) {
+                  localStorage.setItem('groq_api_key', tempApiKey.trim());
+                  setAiError('');
+                  generateAIPlan();
+                }
+              }}
+            >
+              {lang === 'id' ? 'Simpan & Generate' : 'Save & Generate'}
+            </button>
+          </div>
+        </div>
+      ) : aiError ? (
         <div style={{ fontSize: 12, color: '#fb7185', fontWeight: 600, marginBottom: 16 }}>{aiError}</div>
-      )}
+      ) : null}
 
       {/* Sync banner: actual vs target pace */}
       {showSyncBanner && (
