@@ -16,6 +16,8 @@ import LandingPage from './LandingPage';
 import OnboardingWizard from './OnboardingWizard';
 import AdminDashboard from './AdminDashboard';
 import Logo from './Logo';
+import ExportGuideModal from './ExportGuideModal';
+import FeedbackModal from './FeedbackModal';
 import { Sun, Moon, Coffee } from 'lucide-react';
 import { translations } from './translations';
 import {
@@ -26,7 +28,7 @@ import {
   onAuthStateChanged,
   isConfigured as isFirebaseConfigured
 } from './firebase';
-import { doc, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, deleteDoc, increment } from 'firebase/firestore';
 
 // ─── Toast component ──────────────────────────────────────────────────────────
 function Toast({ toasts }) {
@@ -113,7 +115,10 @@ export default function App() {
   const [showAddRunModal, setShowAddRunModal] = useState(false);
   const [showSleepModal, setShowSleepModal] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showExportGuide, setShowExportGuide] = useState(false);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [showAdmin, setShowAdmin] = useState(window.location.hash === '#admin');
+  const [visitorCount, setVisitorCount] = useState(null);
   const [editDraft, setEditDraft] = useState({});
   const [profileEditMode, setProfileEditMode] = useState(false);
   const [goal, setGoal] = useState(() => data.profile?.goal ?? 'maintenance');
@@ -124,6 +129,25 @@ export default function App() {
 
   useEffect(() => {
     if (!isFirebaseConfigured) return;
+
+    // Visitor Counter
+    const updateVisitorCount = async () => {
+      try {
+        const docRef = doc(db, 'stats', 'visitors');
+        const hasVisited = sessionStorage.getItem('enduraup_visited');
+        if (!hasVisited) {
+          await setDoc(docRef, { count: increment(1) }, { merge: true });
+          sessionStorage.setItem('enduraup_visited', 'true');
+        }
+        const snap = await getDoc(docRef);
+        if (snap.exists()) {
+          setVisitorCount(snap.data().count);
+        }
+      } catch (e) {
+        console.error("Visitor count error", e);
+      }
+    };
+    updateVisitorCount();
 
     const unsubscribe = onAuthStateChanged(auth, (fbUser) => {
       if (fbUser) {
@@ -237,7 +261,7 @@ export default function App() {
     if (username !== userIdentifier) return;
 
     try {
-      const userDocRef = doc(db, 'users', username);
+      const userDocRef = doc(db, 'users', auth.currentUser.uid);
       const userDocSnap = await getDoc(userDocRef);
       if (userDocSnap.exists()) {
         const cloudData = userDocSnap.data();
@@ -268,7 +292,7 @@ export default function App() {
     if (isFirebaseConfigured && auth.currentUser) {
       const userIdentifier = auth.currentUser.email || auth.currentUser.displayName || `Anonim-${auth.currentUser.uid.substring(0, 4)}`;
       if (currentUser === userIdentifier) {
-        const userDocRef = doc(db, 'users', userIdentifier);
+        const userDocRef = doc(db, 'users', auth.currentUser.uid);
         setDoc(userDocRef, updatedData).catch(e => {
           console.error('Failed to sync save to Firestore:', e);
         });
@@ -324,7 +348,7 @@ export default function App() {
     if (isFirebaseConfigured && auth.currentUser) {
       const userIdentifier = auth.currentUser.email || auth.currentUser.displayName || `Anonim-${auth.currentUser.uid.substring(0, 4)}`;
       if (currentUser === userIdentifier) {
-        deleteDoc(doc(db, 'users', currentUser)).catch(e => {
+        deleteDoc(doc(db, 'users', auth.currentUser.uid)).catch(e => {
           console.error('Failed to delete doc from Firestore:', e);
         });
       }
@@ -1422,7 +1446,7 @@ export default function App() {
   // ─────────────────────────────────────────────────────────────────────────────
   if (!sessionUser) {
     if (showLanding) {
-      return <LandingPage onGetStarted={() => setShowLanding(false)} lang={lang} setLang={setLang} />;
+      return <LandingPage onGetStarted={() => setShowLanding(false)} lang={lang} setLang={setLang} visitorCount={visitorCount} />;
     }
     return (
       <>
@@ -2176,88 +2200,116 @@ export default function App() {
 
         <div className="sidebar-divider" style={{ marginTop: 'auto' }} />
 
-        {/* Reset */}
-        {!confirmReset ? (
-          <button
-            className="btn btn-danger"
-            onClick={() => setConfirmReset(true)}
+        {/* Footer Actions Group */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {/* Reset */}
+          {!confirmReset ? (
+            <button
+              className="btn btn-danger"
+              onClick={() => setConfirmReset(true)}
+            >
+              {lang === 'id' ? 'Reset & Hapus Semua Data' : 'Reset & Clear All Data'}
+            </button>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ fontSize: 12, color: '#fb7185', fontWeight: 600, textAlign: 'center' }}>
+                {lang === 'id' ? 'Hapus semua data? Tidak bisa di-undo.' : 'Delete all data? Cannot be undone.'}
+              </div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button
+                  className="btn btn-danger"
+                  style={{ flex: 1 }}
+                  onClick={handleReset}
+                >
+                  {lang === 'id' ? 'Ya, Hapus' : 'Yes, Delete'}
+                </button>
+                <button
+                  className="btn btn-secondary"
+                  style={{ flex: 1 }}
+                  onClick={() => setConfirmReset(false)}
+                >
+                  {lang === 'id' ? 'Batal' : 'Cancel'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {hasData && (
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', textAlign: 'center' }}>
+              {lang === 'id'
+                ? `${totalSessions} sesi lari · ${Object.keys(sleepRecs).length} malam tidur`
+                : `${totalSessions} runs · ${Object.keys(sleepRecs).length} sleep logs`}
+            </div>
+          )}
+
+          <a 
+            href="https://saweria.co/afnstudio" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="btn btn-secondary neon-donate" 
+            style={{ display: 'flex', gap: 8, justifyContent: 'center', alignItems: 'center', textDecoration: 'none' }}
           >
-            {lang === 'id' ? 'Reset & Hapus Semua Data' : 'Reset & Clear All Data'}
-          </button>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <div style={{ fontSize: 12, color: '#fb7185', fontWeight: 600, textAlign: 'center' }}>
-              {lang === 'id' ? 'Hapus semua data? Tidak bisa di-undo.' : 'Delete all data? Cannot be undone.'}
-            </div>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button
-                className="btn btn-danger"
-                style={{ flex: 1 }}
-                onClick={handleReset}
-              >
-                {lang === 'id' ? 'Ya, Hapus' : 'Yes, Delete'}
-              </button>
-              <button
-                className="btn btn-secondary"
-                style={{ flex: 1 }}
-                onClick={() => setConfirmReset(false)}
-              >
-                {lang === 'id' ? 'Batal' : 'Cancel'}
-              </button>
-            </div>
-          </div>
-        )}
+            <Coffee size={16} />
+            {lang === 'id' ? 'Traktir Kopi' : 'Buy me a coffee'}
+          </a>
 
-        {hasData && (
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', textAlign: 'center', marginBottom: 6 }}>
-            {lang === 'id'
-              ? `${totalSessions} sesi lari · ${Object.keys(sleepRecs).length} malam tidur`
-              : `${totalSessions} runs · ${Object.keys(sleepRecs).length} sleep logs`}
-          </div>
-        )}
-
-        <div className="sidebar-divider" style={{ margin: '8px 0' }} />
-
-        <a 
-          href="https://saweria.co/afnstudio" 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="btn btn-secondary neon-donate" 
-          style={{ display: 'flex', gap: 8, justifyContent: 'center', alignItems: 'center', textDecoration: 'none', marginBottom: 8 }}
-        >
-          <Coffee size={16} />
-          {lang === 'id' ? 'Traktir Kopi' : 'Buy me a coffee'}
-        </a>
-
-        <button
-          className="btn btn-secondary"
-          onClick={async () => {
-            if (isFirebaseConfigured && auth.currentUser) {
-              try {
-                await signOut(auth);
-              } catch (e) {
-                console.error("Signout error", e);
+          <button
+            className="btn btn-secondary"
+            onClick={async () => {
+              if (isFirebaseConfigured && auth.currentUser) {
+                try {
+                  await signOut(auth);
+                } catch (e) {
+                  console.error("Signout error", e);
+                }
               }
-            }
-            setSessionUser(null);
-            sessionStorage.removeItem('smartcoach_session');
-            addToast(lang === 'id' ? 'Berhasil keluar.' : 'Logged out successfully.');
-          }}
-        >
-          {t.logout}
-        </button>
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 12, marginTop: 24 }}>
-          <div className="lang-switcher">
-            <button className={`lang-btn ${lang === 'id' ? 'active' : ''}`} onClick={() => setLang('id')} title="Bahasa Indonesia">ID</button>
-            <button className={`lang-btn ${lang === 'en' ? 'active' : ''}`} onClick={() => setLang('en')} title="English">EN</button>
+              setSessionUser(null);
+              sessionStorage.removeItem('smartcoach_session');
+              addToast(lang === 'id' ? 'Berhasil keluar.' : 'Logged out successfully.');
+            }}
+          >
+            {t.logout}
+          </button>
+
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 12, marginTop: 8 }}>
+            <div className="lang-switcher">
+              <button className={`lang-btn ${lang === 'id' ? 'active' : ''}`} onClick={() => setLang('id')} title="Bahasa Indonesia">ID</button>
+              <button className={`lang-btn ${lang === 'en' ? 'active' : ''}`} onClick={() => setLang('en')} title="English">EN</button>
+            </div>
+            <div className="lang-switcher">
+              <button className={`lang-btn ${theme === 'light' ? 'active' : ''}`} onClick={() => setTheme('light')} title="Light Mode" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Sun size={14} /></button>
+              <button className={`lang-btn ${theme === 'dark' ? 'active' : ''}`} onClick={() => setTheme('dark')} title="Dark Mode" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Moon size={14} /></button>
+            </div>
           </div>
-          <div className="lang-switcher">
-            <button className={`lang-btn ${theme === 'light' ? 'active' : ''}`} onClick={() => setTheme('light')} title="Light Mode" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Sun size={14} /></button>
-            <button className={`lang-btn ${theme === 'dark' ? 'active' : ''}`} onClick={() => setTheme('dark')} title="Dark Mode" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Moon size={14} /></button>
+
+          {/* Subtle Feedback Link */}
+          <button
+            onClick={() => setShowFeedbackModal(true)}
+            style={{ 
+              background: 'transparent', border: 'none', color: 'var(--text-muted)', 
+              fontSize: 11, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+              opacity: 0.7, transition: 'all 0.2s', fontFamily: 'inherit',
+              textDecoration: 'underline'
+            }}
+            onMouseEnter={e => { e.currentTarget.style.opacity = 1; e.currentTarget.style.color = 'var(--accent-purple)' }}
+            onMouseLeave={e => { e.currentTarget.style.opacity = 0.7; e.currentTarget.style.color = 'var(--text-muted)' }}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+            {lang === 'id' ? 'Beri Masukan / Testimoni' : 'Send Feedback'}
+          </button>
+
+          <div style={{ fontSize: 10, color: 'var(--text-muted)', textAlign: 'center', opacity: 0.5, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+            <span>Pre-Release (Beta)</span>
+            {visitorCount !== null && (
+              <>
+                <span>•</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                  {visitorCount > 9999 ? (visitorCount / 1000).toFixed(1).replace('.0', '') + 'k' : visitorCount}
+                </span>
+              </>
+            )}
           </div>
-        </div>
-        <div style={{ fontSize: 10, color: 'var(--text-muted)', textAlign: 'center', marginTop: 12, opacity: 0.7 }}>
-          v2.0.0
         </div>
       </aside>
 
@@ -2545,48 +2597,14 @@ export default function App() {
         {/* Header */}
         <div className="page-header" style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-
             <h1 className="page-title" style={{ margin: 0 }}>EnduraUP</h1>
-            {hasData && (
-              <button
-                onClick={() => setShowShareModal(true)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: 'var(--text-muted)',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  padding: 6,
-                  borderRadius: '50%',
-                  transition: 'all 0.15s',
-                  width: 30,
-                  height: 30,
-                  marginTop: 2
-                }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.background = 'var(--bg-surface)';
-                  e.currentTarget.style.color = 'var(--accent-purple)';
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.background = 'none';
-                  e.currentTarget.style.color = 'var(--text-muted)';
-                }}
-                title={lang === 'id' ? "Bagikan Kartu Performa (PNG)" : "Share Performance Card (PNG)"}
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
-                  <polyline points="16 6 12 2 8 6"/>
-                  <line x1="12" y1="2" x2="12" y2="15"/>
-                </svg>
-              </button>
-            )}
           </div>
-          <p className="page-subtitle" style={{ fontSize: 14, color: 'var(--text-secondary)', marginTop: 8 }}>
-            {data.profile?.displayName ? (lang === 'id' ? `Halo, ${data.profile.displayName} — ` : `Hello, ${data.profile.displayName} — `) : ''}
-            {new Date().toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-          </p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
+            <p className="page-subtitle" style={{ fontSize: 14, color: 'var(--text-secondary)', margin: 0 }}>
+              {data.profile?.displayName ? (lang === 'id' ? `Halo, ${data.profile.displayName} — ` : `Hello, ${data.profile.displayName} — `) : ''}
+              {new Date().toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+            </p>
+          </div>
         </div>
 
         {!hasData ? (
@@ -2646,6 +2664,23 @@ export default function App() {
                   {item.label}
                 </button>
               ))}
+
+              <button
+                onClick={() => setShowShareModal(true)}
+                title={lang === 'id' ? "Bagikan Kartu Performa (PNG)" : "Share Performance Card (PNG)"}
+                className="tab"
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  color: 'var(--accent-purple)', fontWeight: 700,
+                }}
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+                  <polyline points="16 6 12 2 8 6"/>
+                  <line x1="12" y1="2" x2="12" y2="15"/>
+                </svg>
+                Share
+              </button>
             </div>
 
             {/* ─────────────────── DASHBOARD ─────────────────── */}
@@ -3036,15 +3071,15 @@ export default function App() {
                     >
                       {t.downloadExcelTemplate}
                     </span>
-                    <a 
-                      href="https://support.garmin.com/en-US/?faq=W1TvTPW8JZ6LfJSfK512Q8" 
-                      target="_blank" 
-                      rel="noopener noreferrer" 
-                      onClick={e => e.stopPropagation()}
+                    <span 
+                      onClick={e => {
+                        e.stopPropagation();
+                        setShowExportGuide(true);
+                      }}
                       style={{ fontSize: 11, color: '#60a5fa', textDecoration: 'underline', fontWeight: 600, cursor: 'pointer' }}
                     >
-                      Panduan Export Data dari Garmin
-                    </a>
+                      {lang === 'id' ? 'Cara Export Data Smartwatch' : 'How to Export Watch Data'}
+                    </span>
                   </div>
                 </>
               )}
@@ -3081,6 +3116,9 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {showExportGuide && <ExportGuideModal onClose={() => setShowExportGuide(false)} lang={lang} />}
+      {showFeedbackModal && <FeedbackModal onClose={() => setShowFeedbackModal(false)} lang={lang} addToast={addToast} />}
 
       <AICoachChat lang={lang} goal={goal} programStyle={programStyle} targetPace={targetPace} currentUser={data?.profile?.displayName || currentUser} />
       <Toast toasts={toasts} />

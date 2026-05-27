@@ -318,8 +318,8 @@ Return ONLY the raw JSON array.`;
   };
 
   const guides = {
-    title: lang === 'id' ? '▶ Panduan Cross-Training (Core, Yoga, Breathing)' : '▶ Cross-Training Guide (Core, Yoga, Breathing)',
-    coreTitle: lang === 'id' ? '💪 1. Core & Leg Stabilizer (Tanpa Squat / Lunges)' : '💪 1. Core & Leg Stabilizer (No Squats / Lunges)',
+    title: lang === 'id' ? 'Panduan Cross-Training (Core, Yoga, Breathing)' : 'Cross-Training Guide (Core, Yoga, Breathing)',
+    coreTitle: lang === 'id' ? '1. Core & Leg Stabilizer (Tanpa Squat / Lunges)' : '1. Core & Leg Stabilizer (No Squats / Lunges)',
     coreDesc: lang === 'id' ? 'Fokus stabilitas pinggul, gluteus, & engkel. 100% bodyweight. Lakukan 3 set x 10-15 repetisi.' : 'Focus on hip, glutes, & ankle stability. 100% bodyweight. Perform 3 sets x 10-15 reps.',
     coreList: lang === 'id' ? [
       { name: 'Glute Bridges', desc: 'Rebahan, tekuk lutut, angkat pinggul sejajar paha. Tahan pantat 2 detik di atas. (Fokus Hamstring & Bokong)' },
@@ -334,7 +334,7 @@ Return ONLY the raw JSON array.`;
       { name: 'Fire Hydrants', desc: 'On all fours, lift knee out to the side. (Opens hip joint mobility)' },
       { name: 'Calf Raises', desc: 'Rise slowly on toes, lower down below stair edge. (Prevents shin splints / Achilles injury)' }
     ],
-    yogaTitle: lang === 'id' ? '🧘‍♀️ 2. Yoga / Mobility Matras' : '🧘‍♀️ 2. Yoga / Mat Mobility',
+    yogaTitle: lang === 'id' ? '2. Yoga / Mobility Matras' : '2. Yoga / Mat Mobility',
     yogaDesc: lang === 'id' ? 'Fokus memanjangkan otot yang tegang dan membuka mobilitas pinggul. Tahan pose 30-45 detik.' : 'Focus on lengthening tight muscles and opening hip mobility. Hold pose for 30-45 seconds.',
     yogaList: lang === 'id' ? [
       { name: 'Downward Dog', desc: 'Tangan & kaki di lantai (V terbalik). Tarik tumit ke lantai untuk peregangan achilles.' },
@@ -345,7 +345,7 @@ Return ONLY the raw JSON array.`;
       { name: 'Pigeon Pose', desc: 'Fold one leg in front on the mat, back leg straight. Extremely effective for glutes/piriformis.' },
       { name: 'Cat-Cow', desc: 'On all fours. Arch spine up, then flex down. Lubricates the spine.' }
     ],
-    breathTitle: lang === 'id' ? '🫁 3. Breathing & Relaksasi' : '🫁 3. Breathing & Relaxation',
+    breathTitle: lang === 'id' ? '3. Breathing & Relaksasi' : '3. Breathing & Relaxation',
     breathDesc: lang === 'id' ? 'Fokus melatih kapasitas oksigen dan menurunkan resting heart rate secara pasif.' : 'Focus on training oxygen capacity and lowering resting heart rate passively.',
     breathList: lang === 'id' ? [
       { name: 'Box Breathing (4-4-4-4)', desc: 'Tarik napas 4 detik, tahan 4d, buang 4d, tahan 4d (tanpa napas). Ulangi 5-10 menit.' },
@@ -521,6 +521,26 @@ Return ONLY the raw JSON array.`;
         </div>
       )}
 
+      {!targetPace && (
+        <div className="alert alert-info" style={{ marginBottom: 18, borderLeft: '4px solid #0ea5e9', display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, color: '#0ea5e9', marginTop: 2 }}>
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="16" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+          </svg>
+          <div>
+            <div style={{ fontWeight: 700, marginBottom: 4, color: '#0369a1' }}>
+              {lang === 'id' ? 'Target Pace Belum Diatur' : 'Target Pace Not Set'}
+            </div>
+            <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+              {lang === 'id' 
+                ? 'Rekomendasi pace saat ini masih kosong. Silakan lengkapi Target Pace pada menu Edit Profil agar sistem dapat mengkalkulasi zona latihan.'
+                : 'Pace recommendations are currently empty. Please set your Target Pace in Edit Profile so the system can calculate your training zones.'}
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="pace-grid" style={{ marginBottom: 20 }}>
         <div className="pace-card" style={{ background: 'rgba(251,113,133,0.07)', border: '1px solid rgba(251,113,133,0.2)' }}>
           <div className="pace-label" style={{ color: '#fb7185' }}>{lang === 'id' ? 'Ngepush' : 'Push'}</div>
@@ -550,7 +570,8 @@ Return ONLY the raw JSON array.`;
         return (
           <div style={{ marginBottom: 30 }}>
             <h3 style={{ fontSize: 15, fontWeight: 800, marginBottom: 12, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
-              📅 {lang === 'id' ? 'Kalender Berjalan' : 'Running Calendar'}
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+              {lang === 'id' ? 'Kalender Berjalan' : 'Running Calendar'}
             </h3>
             <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 10, msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
               {displayDays.map((dItem, i) => {
@@ -601,7 +622,8 @@ Return ONLY the raw JSON array.`;
       })()}
 
       <h3 style={{ fontSize: 15, fontWeight: 800, marginBottom: 12, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
-        📑 {lang === 'id' ? 'Template Rencana Mingguan' : 'Weekly Blueprint Template'}
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+        {lang === 'id' ? 'Template Rencana Mingguan' : 'Weekly Blueprint Template'}
       </h3>
 
 
@@ -654,7 +676,10 @@ Return ONLY the raw JSON array.`;
           fontWeight: 600, color: 'var(--text-secondary)', userSelect: 'none',
           transition: 'all 0.2s', outline: 'none'
         }}>
-          {guides.title}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>
+            {guides.title}
+          </div>
         </summary>
         <div style={{
           marginTop: 8, padding: '18px 20px', background: 'var(--bg-card)',

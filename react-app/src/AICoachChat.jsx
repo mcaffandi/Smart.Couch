@@ -91,7 +91,7 @@ export default function AICoachChat({ lang, goal, programStyle, targetPace, curr
       en: 'For Easy Runs, use a cushioned Daily Trainer. Save the responsive carbon-plated shoes for Interval days or Race Day.'
     },
     {
-      match: /halo|hi|hai|pagi|siang|malam|woy|bro/,
+      match: /halo|hi|hai|pagi|siang|malam|woy|bro|test|tes/,
       id: `Halo juga! Siap buat nge-crush target lari lo hari ini? 💪`,
       en: `Hello! Ready to crush your running goals today? 💪`
     },
@@ -101,14 +101,49 @@ export default function AICoachChat({ lang, goal, programStyle, targetPace, curr
       en: `Check the "Training Plan" tab! I've set up an Adaptive Calendar for you. If you miss a run, I'll automatically reschedule it!`
     },
     {
-      match: /makan|minum|nutrisi|gel|sarapan|lapar/,
-      id: `Makan berat wajib jeda 2-3 jam sebelum lari, bro! Kalau lari pagi dan laper, cukup makan pisang atau roti tawar + madu 30 menit sebelum jalan. Jangan lupa minum air putih secukupnya biar gak kram perut.`,
-      en: `Wait 2-3 hours after a heavy meal before running! If it's a morning run, a banana or toast with honey 30 mins prior is enough. Stay hydrated to avoid stomach cramps.`
+      match: /makan|minum|nutrisi|gel|sarapan|lapar|haus|air/,
+      id: `Makan berat wajib jeda 2-3 jam sebelum lari, bro! Kalau lari pagi dan laper, cukup makan pisang atau roti tawar + madu 30 menit sebelum jalan. Jangan lupa minum 200ml tiap 2-3km biar gak kram perut.`,
+      en: `Wait 2-3 hours after a heavy meal before running! If it's a morning run, a banana or toast with honey 30 mins prior is enough. Drink 200ml every 2-3km to avoid cramps.`
     },
     {
       match: /geser|ubah|ganti|rubah|edit/,
       id: `Kalau lo mau ngubah jumlah hari latihan (misal dari 3x seminggu jadi 2x), lo bisa klik tombol "Edit Profil" di sidebar kiri. Kalau soal jadwal lari yang kelewat, tenang aja, kalender *Adaptive* otomatis ngegeser jadwal lo ke hari kosong berikutnya!`,
       en: `If you want to change your training frequency, edit your profile on the left sidebar. As for missed runs, my Adaptive Calendar will automatically shift them to your next available rest day!`
+    },
+    {
+      match: /makasih|terima kasih|thanks|thx|tq/,
+      id: `Sama-sama bro! Santai aja, kalau ada yang bingung soal lari langsung tanya ke gua ya. Keep running! 🏃‍♂️🔥`,
+      en: `You're welcome! Feel free to ask if you need anything else. Keep running! 🏃‍♂️🔥`
+    },
+    {
+      match: /vo2max|vo2 max|vo2/,
+      id: `VO2Max itu ibarat cc mesin mobil, bro. Semakin gede, semakin banyak oksigen yang bisa diolah otot. Cara ningkatinnya? Perbanyak porsi lari santai (Zone 2) dan selipin 1x latihan interval/speed per minggu. Konsistensi kuncinya!`,
+      en: `VO2Max is like your engine size. The bigger it is, the more oxygen your muscles can use. To increase it: do mostly easy runs (Zone 2) and add 1x speed/interval session per week. Consistency is key!`
+    },
+    {
+      match: /stretching|pemanasan|pendinginan|warming up|cool down/,
+      id: `Penting banget! **Sebelum lari:** Lakuin *Dynamic Stretching* (ayun kaki, lari di tempat, jumping jack) biar otot panas. **Sesudah lari:** Lakuin *Static Stretching* (tahan peregangan 15-20 detik) biar otot gak kaku besoknya.`,
+      en: `Crucial! **Before run:** Do *Dynamic Stretching* (leg swings, high knees) to warm up. **After run:** Do *Static Stretching* (hold stretches 15-20s) to prevent stiffness.`
+    },
+    {
+      match: /zone 2|zona 2|z2|maf|detak jantung/,
+      id: `Zone 2 (atau MAF) itu lari santai yang HR-nya dijaga di kisaran 60-70% dari Max HR. Cirinya: lo masih bisa lari sambil ngobrol lancar tanpa ngos-ngosan. Ini penting buat ngebangun "fondasi" aerobik lo biar gak gampang capek.`,
+      en: `Zone 2 is an easy run where your HR is at 60-70% of your Max HR. You should be able to hold a conversation without gasping. It builds your aerobic base so you don't tire easily.`
+    },
+    {
+      match: /cadence|langkah|spm/,
+      id: `Cadence itu jumlah langkah per menit (SPM). Target ideal buat kebanyakan pelari itu di atas **170 SPM**. Langkah yang lebih pendek dan cepat itu ngurangin beban di lutut lo dibanding langkah yang panjang-panjang (overstriding).`,
+      en: `Cadence is your steps per minute (SPM). A good target is above **170 SPM**. Taking shorter, quicker steps reduces impact on your knees compared to overstriding.`
+    },
+    {
+      match: /interval|sprint|kecepatan|ngebut/,
+      id: `Latihan Interval itu lari ngebut (Zone 4/5) diselingi istirahat/jogging pelan. Fungsinya buat ngelatih VO2Max dan bikin lari santai lo kerasa makin gampang. Lakuin cukup 1x seminggu aja, sisanya fokus lari santai ya!`,
+      en: `Interval training is running fast (Zone 4/5) alternated with slow recovery jogs. It improves VO2Max and makes your easy pace feel even easier. Limit this to 1x a week!`
+    },
+    {
+      match: /siapa kamu|fungsi|bot|ai/,
+      id: `Gua Coach AI bawaan dari EnduraUP! Gua dirancang buat jadi asisten lari pribadi lo. Gua bakal bantu jawab seputar jadwal, tips lari, sepatu, sampe keluhan cedera.`,
+      en: `I am the EnduraUP Coach AI! Designed to be your personal running assistant. I can help with schedules, running tips, gear, and minor injury advice.`
     }
   ];
 

@@ -142,6 +142,8 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  padding-bottom: 0.15em; /* Prevent descenders from getting clipped */
+  display: inline-block;
 }
 
 .hero-subtitle {
@@ -657,16 +659,28 @@
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  border: 4px solid rgba(167, 139, 250, 0.04);
-  border-top-color: #a78bfa;
-  border-right-color: #a78bfa;
-  box-shadow: 0 0 15px rgba(167, 139, 250, 0.05);
+  position: relative;
+}
+
+.sleep-score-dial::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  /* Use conic gradient to precisely represent 85% */
+  background: conic-gradient(#a78bfa 0% 85%, rgba(167, 139, 250, 0.1) 85% 100%);
+  /* Hollow out the center */
+  -webkit-mask: radial-gradient(closest-side, transparent 80%, black 81%);
+  mask: radial-gradient(closest-side, transparent 80%, black 81%);
+  pointer-events: none;
 }
 
 .dial-value {
   font-size: 15px;
   font-weight: 800;
   color: #ffffff;
+  position: relative;
+  z-index: 2;
 }
 
 .dial-label {
@@ -829,10 +843,10 @@
 }
 
 .brand-logo-item .brand-name {
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  opacity: 0.6;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  opacity: 0.65;
   transition: all 0.3s ease;
 }
 

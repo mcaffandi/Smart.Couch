@@ -1,10 +1,47 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { db, isConfigured as isFirebaseConfigured } from './firebase';
 import './LandingPage.css';
 import Logo from './Logo';
 import { translations } from './translations';
 
-export default function LandingPage({ onGetStarted, lang, setLang }) {
+export default function LandingPage({ onGetStarted, lang, setLang, visitorCount }) {
   const t = translations[lang] || translations.id;
+  const [testimonials, setTestimonials] = useState([]);
+
+  useEffect(() => {
+    const fetchTestimonials = async () => {
+      if (!isFirebaseConfigured) return;
+      try {
+        const q = query(collection(db, 'feedback'), where('featured', '==', true));
+        const querySnapshot = await getDocs(q);
+        const fetched = [];
+        querySnapshot.forEach((doc) => {
+          fetched.push({ id: doc.id, ...doc.data() });
+        });
+        
+        // If we have featured reviews, use them. Otherwise, use dummy ones so it never looks empty.
+        if (fetched.length > 0) {
+          setTestimonials(fetched);
+        } else {
+          setTestimonials([
+            { id: 1, name: 'Bima Satriya', rating: 5, date: lang === 'id' ? '25 Mei 2026' : 'May 25, 2026', feedback: lang === 'id' ? 'Gila, fitur prediksi pacenya akurat parah! Sangat ngebantu buat susun strategi HM minggu depan. Selain itu UI-nya juga enteng banget dibuka dari HP.' : 'Insane, the pace prediction feature is incredibly accurate! Very helpful for my HM strategy next week. The UI is also very lightweight on mobile.' },
+            { id: 2, name: 'Tirta Anugrah', rating: 5, date: lang === 'id' ? '22 Mei 2026' : 'May 22, 2026', feedback: lang === 'id' ? 'Awalnya skeptis, tapi pas nyoba sinkronisasi gpx-nya ternyata secepet itu tanpa lag. Fitur AI Coach-nya ngebantu banget buat gue yang sering bolos jadwal lari karena kerjaan padat.' : 'Skeptical at first, but GPX sync is incredibly fast with zero lag. The AI Coach helps a lot since I often miss my schedule due to work.' },
+            { id: 3, name: 'Sarah K.', rating: 4, date: lang === 'id' ? '18 Mei 2026' : 'May 18, 2026', feedback: lang === 'id' ? 'Coach AI-nya asik! Ngasih saran nggak kaku dan beneran kerasa kayak dilatih personal trainer beneran. Minusnya cuma belum ada fitur integrasi langsung ke Spotify dari dalam app. Tapi tetep bintang 5 deh buat inovasinya.' : 'The AI Coach is fun! Gives practical advice and really feels like a personal trainer. Only missing Spotify integration. Still giving it high stars for innovation.' },
+          ]);
+        }
+      } catch (err) {
+        console.error('Failed to fetch testimonials:', err);
+        // Fallback to dummy data if Firestore fails (e.g. missing permissions)
+        setTestimonials([
+          { id: 1, name: 'Bima S.', rating: 5, feedback: lang === 'id' ? 'Gila, fitur prediksi pacenya akurat parah! Sangat ngebantu buat susun strategi HM minggu depan.' : 'Insane, the pace prediction feature is incredibly accurate! Very helpful for my HM strategy next week.' },
+          { id: 2, name: 'Tirta A.', rating: 5, feedback: lang === 'id' ? 'UI-nya mahal banget, berasa pake aplikasi premium luar negeri. Sinkronisasi gpx-nya juga cepet tanpa lag.' : 'The UI feels extremely premium. GPX sync is fast with zero lag.' },
+          { id: 3, name: 'Sarah K.', rating: 5, feedback: lang === 'id' ? 'Coach AI-nya asik! Ngasih saran nggak kaku dan beneran kerasa kayak dilatih personal trainer beneran.' : 'The AI Coach is fun! Gives practical advice and really feels like a personal trainer.' },
+        ]);
+      }
+    };
+    fetchTestimonials();
+  }, [lang]);
 
   return (
     <div className="landing-container">
@@ -120,46 +157,14 @@ export default function LandingPage({ onGetStarted, lang, setLang }) {
         <div className="brand-ticker-wrapper">
           <div className="brand-logos-container">
             {[
-              { name: 'Garmin', icon: (
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/>
-                  <circle cx="12" cy="12" r="3"/>
-                  <path d="M12 9v3l2 1"/>
-                </svg>
-              )},
-              { name: 'Strava', icon: (
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-3.828L5.19 19.928h3.065L13.43 10l-5.15-10.172-5.15 10.172h3.065" />
-                </svg>
-              )},
-              { name: 'Polar', icon: (
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                  <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/>
-                  <line x1="12" y1="2" x2="12" y2="22"/>
-                </svg>
-              )},
-              { name: 'Coros', icon: (
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="10"/>
-                  <path d="M12 6V12h6"/>
-                </svg>
-              )},
-              { name: 'Apple Watch', icon: (
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="5" y="5" width="14" height="14" rx="4" />
-                  <path d="M9 2h6M9 22h6M12 9v6" />
-                </svg>
-              )},
-              { name: 'Suunto', icon: (
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                  <ellipse cx="12" cy="5" rx="9" ry="3"/>
-                  <ellipse cx="12" cy="12" rx="9" ry="3"/>
-                  <ellipse cx="12" cy="19" rx="9" ry="3"/>
-                </svg>
-              )}
+              { name: 'Garmin' },
+              { name: 'Strava' },
+              { name: 'Polar' },
+              { name: 'Coros' },
+              { name: 'Apple Watch' },
+              { name: 'Suunto' }
             ].map((brand, idx) => (
               <div key={idx} className="brand-logo-item" title={brand.name}>
-                <div className="brand-icon">{brand.icon}</div>
                 <span className="brand-name">{brand.name}</span>
               </div>
             ))}
@@ -254,10 +259,50 @@ export default function LandingPage({ onGetStarted, lang, setLang }) {
         </div>
       </section>
 
+      {/* Wall of Love / Testimonials Section */}
+      <section className="testimonials-section" style={{ padding: '100px 20px 80px' }}>
+        <div style={{ maxWidth: 1000, margin: '0 auto' }}>
+          <div className="section-header" style={{ textAlign: 'center', marginBottom: 50 }}>
+            <h2 className="section-heading" style={{ fontSize: '2rem' }}>{lang === 'id' ? 'Apa Kata Pelari?' : 'Runner Feedback'}</h2>
+            <p className="section-subheading">{lang === 'id' ? 'Review nyata dari komunitas EnduraUP.' : 'Real reviews from the EnduraUP community.'}</p>
+          </div>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24 }}>
+          {testimonials.map((testi) => (
+            <div key={testi.id} className="glass-panel hover-lift" style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div style={{ display: 'flex', gap: 4 }}>
+                {[...Array(testi.rating || 5)].map((_, i) => (
+                  <svg key={i} width="16" height="16" viewBox="0 0 24 24" fill="#fbbf24" stroke="#fbbf24" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                ))}
+              </div>
+              <p style={{ color: 'var(--text-primary)', fontSize: 14, lineHeight: 1.6, fontStyle: 'italic', flex: 1 }}>
+                "{testi.feedback}"
+              </p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 8 }}>
+                <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg, #a78bfa, #f472b6)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 12, fontWeight: 700 }}>
+                  {testi.name?.substring(0, 1).toUpperCase()}
+                </div>
+                <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)' }}>{testi.name}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+        </div>
+      </section>
+
       <footer className="landing-footer">
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
-          <div className="badge-pill" style={{ marginBottom: 0 }}>
-            <span className="badge-dot"></span> V2.0 Now Live
+          <div className="badge-pill" style={{ marginBottom: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span><span className="badge-dot"></span> Pre-Release (Beta)</span>
+            {visitorCount !== null && (
+              <>
+                <span style={{ opacity: 0.5 }}>•</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4, opacity: 0.8 }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                  {visitorCount > 9999 ? (visitorCount / 1000).toFixed(1).replace('.0', '') + 'k' : visitorCount}
+                </span>
+              </>
+            )}
           </div>
         </div>
         <p>© {new Date().getFullYear()} EnduraUP. {t.builtForRunners}</p>

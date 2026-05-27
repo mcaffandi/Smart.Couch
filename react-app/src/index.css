@@ -1903,7 +1903,7 @@ html, body {
 .lang-switcher {
   display: flex;
   background: var(--hover-overlay);
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 2px;
   gap: 2px;
@@ -1977,33 +1977,28 @@ html, body {
   background: var(--accent-purple);
 }
 
-/* Neon Donate Button */
+/* Subtle Donate Button */
 .neon-donate {
   position: relative;
   overflow: hidden;
-  color: #f59e0b;
+  color: #d97706; /* Darker amber for light mode */
   background: rgba(245, 158, 11, 0.05);
-  border: 1px solid rgba(245, 158, 11, 0.3);
-  box-shadow: 0 0 8px rgba(245, 158, 11, 0.2), inset 0 0 8px rgba(245, 158, 11, 0.1);
-  animation: neon-pulse 2s infinite alternate;
-  text-shadow: 0 0 2px rgba(245, 158, 11, 0.5);
-  transition: all 0.3s ease;
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  transition: all 0.2s ease;
+}
+
+html[data-theme="dark"] .neon-donate {
+  color: #fbbf24; /* Lighter amber for dark mode */
 }
 
 .neon-donate:hover {
-  box-shadow: 0 0 15px rgba(245, 158, 11, 0.6), inset 0 0 10px rgba(245, 158, 11, 0.3);
-  text-shadow: 0 0 6px rgba(245, 158, 11, 0.8);
-  background: rgba(245, 158, 11, 0.15) !important;
-  color: #fbbf24;
-  border-color: rgba(245, 158, 11, 0.6);
+  background: rgba(245, 158, 11, 0.1) !important;
+  color: #b45309; /* Even darker on hover in light mode */
+  border-color: rgba(245, 158, 11, 0.4);
   transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.1);
 }
 
-@keyframes neon-pulse {
-  from {
-    box-shadow: 0 0 8px rgba(245, 158, 11, 0.2), inset 0 0 4px rgba(245, 158, 11, 0.1);
-  }
-  to {
-    box-shadow: 0 0 12px rgba(245, 158, 11, 0.5), inset 0 0 8px rgba(245, 158, 11, 0.2);
-  }
+html[data-theme="dark"] .neon-donate:hover {
+  color: #fcd34d; /* Bright yellow on hover in dark mode */
 }
