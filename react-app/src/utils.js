@@ -491,9 +491,22 @@ export const parseGarminZip = async (file, JSZip) => {
       try {
         const text = await zipEntry.async('text');
         const data = JSON.parse(text);
-        const acts = Array.isArray(data) ? data[0]?.summarizedActivitiesExport ?? [] : [];
+        let acts = [];
+        if (Array.isArray(data)) {
+          data.forEach(item => {
+            if (item && item.summarizedActivitiesExport) {
+              acts = acts.concat(item.summarizedActivitiesExport);
+            } else if (item && item.activityType) {
+              // Fallback in case it's a direct array of activities
+              acts.push(item);
+            }
+          });
+        } else if (data && data.summarizedActivitiesExport) {
+          acts = acts.concat(data.summarizedActivitiesExport);
+        }
+
         for (const a of acts) {
-          if (a.activityType === 'running') {
+          if (a.activityType && a.activityType.includes('running')) {
             result.running_activities.push({
               startTimeLocal: a.startTimeLocal,
               distance: a.distance,

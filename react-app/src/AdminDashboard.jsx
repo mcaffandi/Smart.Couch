@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, deleteDoc, doc } from 'firebase/firestore';
 import { db } from './firebase';
 
 export default function AdminDashboard({ onBack }) {
@@ -40,6 +40,18 @@ export default function AdminDashboard({ onBack }) {
     } else {
       alert("PIN Salah!");
       setPin('');
+    }
+  };
+
+  const handleDeleteUser = async (userId) => {
+    if (!window.confirm("Yakin ingin menghapus user ini? Datanya tidak bisa dikembalikan.")) return;
+    try {
+      await deleteDoc(doc(db, "users", userId));
+      setUsers(users.filter(u => u.id !== userId));
+      alert("User berhasil dihapus.");
+    } catch (err) {
+      console.error("Gagal menghapus user:", err);
+      alert("Gagal menghapus user. Pastikan aturan keamanan Firebase (Security Rules) mengizinkan delete.");
     }
   };
 
@@ -108,6 +120,7 @@ export default function AdminDashboard({ onBack }) {
                 <th style={{ padding: '12px 16px' }}>Tujuan Latihan</th>
                 <th style={{ padding: '12px 16px' }}>Target Pace</th>
                 <th style={{ padding: '12px 16px' }}>Aktivitas Lari</th>
+                <th style={{ padding: '12px 16px', textAlign: 'center' }}>Aksi</th>
               </tr>
             </thead>
             <tbody>
@@ -126,6 +139,14 @@ export default function AdminDashboard({ onBack }) {
                   </td>
                   <td style={{ padding: '16px', fontSize: 14 }}>{u.data?.profile?.targetPace ? u.data.profile.targetPace + ' /km' : '-'}</td>
                   <td style={{ padding: '16px', fontSize: 14, fontWeight: 600, color: 'var(--accent-purple)' }}>{u.data?.running_activities?.length || 0} sesi</td>
+                  <td style={{ padding: '16px', textAlign: 'center' }}>
+                    <button 
+                      onClick={() => handleDeleteUser(u.id)}
+                      style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
+                    >
+                      Hapus
+                    </button>
+                  </td>
                 </tr>
               ))}
               {users.length === 0 && (
