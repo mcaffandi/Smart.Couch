@@ -80,7 +80,7 @@ export default function App() {
   // ── State: data ─────────────────────────────────────────────────────────────
   const [sessionUser, setSessionUser] = useState(() => sessionStorage.getItem('smartcoach_session') || null);
   const [currentUser, setCurrentUser] = useState(() => getCurrentUser());
-  const isAdmin = ADMIN_EMAILS.includes(currentUser);
+  const isAdmin = Boolean(currentUser && ADMIN_EMAILS.some(e => e.toLowerCase() === currentUser.trim().toLowerCase()));
   const [usersList, setUsersList] = useState(() => loadUsersList());
   const [data, setData] = useState(() => loadUserData(getCurrentUser()));
   const [toasts, setToasts] = useState([]);
