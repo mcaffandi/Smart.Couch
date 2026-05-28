@@ -70,7 +70,7 @@ export default function AdminDashboard({ onBack }) {
 
   const totalUsers = users.length;
   const totalRuns = users.reduce((acc, user) => acc + (user.data?.running_activities?.length || 0), 0);
-  const totalSleepLogs = users.reduce((acc, user) => acc + Object.keys(user.data?.sleepHistory || {}).length, 0);
+  const totalSleepLogs = users.reduce((acc, user) => acc + Object.keys(user.data?.sleep_records || {}).length, 0);
 
   return (
     <div style={{ padding: '40px 20px', maxWidth: 900, margin: '0 auto', color: 'var(--text-primary)' }}>
