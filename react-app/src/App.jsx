@@ -560,19 +560,28 @@ export default function App() {
       ctx.fillRect(0, 0, 1080, 1080);
     }
 
+    const getBrightness = (hex) => {
+      if (!hex) return 0;
+      hex = hex.replace('#', '');
+      if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
+      const r = parseInt(hex.substring(0, 2), 16);
+      const g = parseInt(hex.substring(2, 4), 16);
+      const b = parseInt(hex.substring(4, 6), 16);
+      return (r * 299 + g * 587 + b * 114) / 1000;
+    };
+    const isCustomLight = shareTheme === 'custom' && ((getBrightness(customColor1) + getBrightness(customColor2)) / 2 > 135);
     const isLight = shareTheme === 'sunrise';
     
-    // Core text colors — sunrise: dark warm text on white glass
-    const textPrimary   = isLight ? '#1a120a' : '#ffffff';
-    const textSecondary = isLight ? '#7c4a1e' : 'rgba(255, 255, 255, 0.5)';
-    const textMuted     = isLight ? 'rgba(60, 35, 10, 0.55)' : 'rgba(255, 255, 255, 0.25)';
-    const borderStroke  = isLight ? 'rgba(200, 120, 40, 0.35)' : (shareTheme === 'cyber' ? 'rgba(6, 182, 212, 0.3)' : 'rgba(167, 139, 250, 0.2)');
+    // Core text colors
+    const textPrimary   = isLight ? '#1a120a' : (isCustomLight ? '#1a1a1a' : '#ffffff');
+    const textSecondary = isLight ? '#7c4a1e' : (isCustomLight ? 'rgba(0, 0, 0, 0.6)' : 'rgba(255, 255, 255, 0.5)');
+    const textMuted     = isLight ? 'rgba(60, 35, 10, 0.55)' : (isCustomLight ? 'rgba(0, 0, 0, 0.4)' : 'rgba(255, 255, 255, 0.25)');
+    const borderStroke  = isLight ? 'rgba(200, 120, 40, 0.35)' : (isCustomLight ? 'rgba(0, 0, 0, 0.15)' : (shareTheme === 'cyber' ? 'rgba(6, 182, 212, 0.3)' : 'rgba(167, 139, 250, 0.2)'));
 
     // 1. Draw Glassmorphic Card Backing
-    // Sunrise → warm white frosted glass; others → dark
     const glassStyle = isLight
       ? 'rgba(255, 248, 235, 0.84)'
-      : (shareTheme === 'cyber' ? 'rgba(2, 6, 23, 0.85)' : (shareTheme === 'dark' ? 'rgba(9, 9, 11, 0.85)' : (shareTheme === 'custom' ? 'rgba(0, 0, 0, 0.7)' : 'rgba(30, 27, 75, 0.85)')));
+      : (shareTheme === 'cyber' ? 'rgba(2, 6, 23, 0.85)' : (shareTheme === 'dark' ? 'rgba(9, 9, 11, 0.85)' : (shareTheme === 'custom' ? (isCustomLight ? 'rgba(255, 255, 255, 0.75)' : 'rgba(0, 0, 0, 0.7)') : 'rgba(30, 27, 75, 0.85)')));
 
     const fillRoundedRect = (cCtx, x, y, width, height, radius, fillStyle) => {
       cCtx.fillStyle = fillStyle;
@@ -661,16 +670,16 @@ export default function App() {
       else { ctx.strokeRect(60, 60, 960, 960); }
 
       // Dark theme header
-      ctx.fillStyle = '#ffffff';
+      ctx.fillStyle = textPrimary;
       ctx.font = '700 34px Outfit, sans-serif';
       ctx.fillText('EnduraUP', 100, 115);
       ctx.fillStyle = textSecondary;
       ctx.font = '500 17px Inter, sans-serif';
       ctx.fillText('AI Running & Recovery Coach', 100, 150);
-      ctx.fillStyle = shareTheme === 'cyber' ? '#22d3ee' : '#a78bfa';
+      ctx.fillStyle = shareTheme === 'cyber' ? '#22d3ee' : (isCustomLight ? textPrimary : '#a78bfa');
       ctx.font = '700 20px Inter, sans-serif';
       ctx.fillText(athleteName.toUpperCase(), 100, 182);
-      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+      ctx.strokeStyle = borderStroke;
       ctx.lineWidth = 1.5;
       ctx.beginPath(); ctx.moveTo(100, 205); ctx.lineTo(980, 205); ctx.stroke();
     }
@@ -845,7 +854,7 @@ export default function App() {
 
       if (shareTemplate === 'vo2') {
         // Section label ── 24px (was 20px)
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+        ctx.fillStyle = textMuted;
         ctx.font = '600 24px Inter, sans-serif';
         ctx.fillText(lang === 'id' ? 'ESTIMASI VO2MAX' : 'ESTIMATED VO2MAX', px, p0 + 44);
 
@@ -857,12 +866,12 @@ export default function App() {
         ctx.fillText(textVal, px, 490);
 
         // Unit ── 28px (was 22px)
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
+        ctx.fillStyle = textSecondary;
         ctx.font = '500 28px Inter, sans-serif';
         ctx.fillText('ml/kg/min', px, 530);
 
         // Separator
-        ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+        ctx.strokeStyle = borderStroke;
         ctx.lineWidth = 1.5;
         ctx.beginPath(); ctx.moveTo(px, 565); ctx.lineTo(pw, 565); ctx.stroke();
 
@@ -889,18 +898,18 @@ export default function App() {
           fitnessDesc = lang === 'id' ? 'Potensi peningkatan masih sangat besar.' : 'Potential for improvement is still huge.';
         }
 
-        ctx.fillStyle = '#ffffff';
+        ctx.fillStyle = textPrimary;
         ctx.font = '700 44px Outfit, sans-serif';
         ctx.fillText(fitnessLevel, px, 632);
 
         // Desc ── 26px (was 22px)
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
+        ctx.fillStyle = textSecondary;
         ctx.font = '400 26px Inter, sans-serif';
         ctx.fillText(fitnessDesc, px, 672);
 
       } else if (shareTemplate === 'stats') {
         // Section label ── 24px (was 20px)
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+        ctx.fillStyle = textMuted;
         ctx.font = '600 24px Inter, sans-serif';
         ctx.fillText(lang === 'id' ? 'RINGKASAN PERFORMA' : 'PERFORMANCE SUMMARY', px, p0 + 44);
 
@@ -923,13 +932,13 @@ export default function App() {
 
         // drawMetric: label 22px, value 90px, unit 22px — more balanced
         const drawMetric = (x, y, label, val, unit, color) => {
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+          ctx.fillStyle = textMuted;
           ctx.font = '600 22px Inter, sans-serif';
           ctx.fillText(label.toUpperCase(), x, y);
           ctx.fillStyle = color;
           ctx.font = '700 90px Outfit, sans-serif';
           ctx.fillText(val, x, y + 108);
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
+          ctx.fillStyle = textSecondary;
           ctx.font = '500 22px Inter, sans-serif';
           ctx.fillText(unit.toUpperCase(), x, y + 140);
         };
@@ -942,7 +951,7 @@ export default function App() {
 
       } else { // race predictions
         // Section label ── 24px (was 20px)
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+        ctx.fillStyle = textMuted;
         ctx.font = '600 24px Inter, sans-serif';
         ctx.fillText(lang === 'id' ? 'PREDIKSI WAKTU RACE' : 'RACE TIME PREDICTION', px, p0 + 44);
 
@@ -971,10 +980,10 @@ export default function App() {
             const rowY = (p0 + 80) + idx * 142;
             ctx.fillStyle = r.color;
             ctx.fillRect(px, rowY, 6, 108);
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+            ctx.fillStyle = textMuted;
             ctx.font = '600 20px Inter, sans-serif';
             ctx.fillText(r.label, px + 20, rowY + 22);
-            ctx.fillStyle = '#ffffff';
+            ctx.fillStyle = textPrimary;
             ctx.font = '700 58px Outfit, sans-serif';
             ctx.fillText(timeStr, px + 20, rowY + 90);
           });
@@ -982,13 +991,13 @@ export default function App() {
       }
 
       // ── DARK FOOTER ── y=934
-      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+      ctx.strokeStyle = borderStroke;
       ctx.lineWidth = 1.5;
       ctx.beginPath(); ctx.moveTo(px, 934); ctx.lineTo(pw, 934); ctx.stroke();
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+      ctx.fillStyle = textMuted;
       ctx.font = '400 18px Inter, sans-serif';
       ctx.fillText(lang === 'id' ? 'Dibuat otomatis oleh EnduraUP AI Engine' : 'Generated automatically by EnduraUP AI Engine', px, 962);
-      ctx.fillStyle = shareTheme === 'cyber' ? '#06b6d4' : '#a78bfa';
+      ctx.fillStyle = shareTheme === 'cyber' ? '#06b6d4' : (isCustomLight ? textPrimary : '#a78bfa');
       ctx.font = '600 22px Inter, sans-serif';
       ctx.fillText('enduraup.vercel.app', px, 996);
 
