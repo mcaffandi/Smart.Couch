@@ -2852,6 +2852,7 @@ export default function App() {
                   gender={data.profile?.gender}
                   weight={data.profile?.weight}
                   height={data.profile?.height}
+                  age={data.profile?.age}
                   lang={lang}
                 />
 

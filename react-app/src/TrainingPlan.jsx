@@ -79,7 +79,7 @@ const getBadgeClass = (jenis) => {
   return 'badge-recovery';
 };
 
-export default function TrainingPlan({ activities, programStyle, goal, paces, latestSleepScore, actualBestPace, targetPace, selectedDays, gender, weight, height, lang = 'id' }) {
+export default function TrainingPlan({ activities, programStyle, goal, paces, latestSleepScore, actualBestPace, targetPace, selectedDays, gender, weight, height, age, lang = 'id' }) {
   const [isPaused, setIsPaused] = useState(() => localStorage.getItem('smartcoach_paused') === 'true');
   const [aiPlan, setAiPlan] = useState(() => {
     try { return JSON.parse(localStorage.getItem('smartcoach_ai_plan')) || null; } catch { return null; }
@@ -101,6 +101,12 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
     const m = Math.floor(minKm);
     const s = Math.round((minKm - m) * 60);
     return `${m}:${String(s).padStart(2, '0')}`;
+  };
+
+  const getHRForZone = (minPct, maxPct) => {
+    if (!age) return null;
+    const maxHR = 211 - (0.64 * age);
+    return `${Math.round(maxHR * minPct)}–${Math.round(maxHR * maxPct)} BPM`;
   };
 
   // Gap between current ability and target
@@ -546,16 +552,19 @@ Return ONLY the raw JSON array.`;
           <div className="pace-label" style={{ color: '#fb7185' }}>{lang === 'id' ? 'Ngepush' : 'Push'}</div>
           <div className="pace-value">{paces.ngepush}</div>
           <div className="pace-unit">min/km</div>
+          {age && <div style={{ fontSize: 11, color: '#fb7185', marginTop: 4, fontWeight: 600 }}>❤️ {getHRForZone(0.8, 0.9)}</div>}
         </div>
         <div className="pace-card" style={{ background: 'rgba(56,189,248,0.07)', border: '1px solid rgba(56,189,248,0.2)' }}>
           <div className="pace-label" style={{ color: '#38bdf8' }}>{lang === 'id' ? 'Sedang' : 'Moderate'}</div>
           <div className="pace-value">{paces.sedang}</div>
           <div className="pace-unit">min/km</div>
+          {age && <div style={{ fontSize: 11, color: '#38bdf8', marginTop: 4, fontWeight: 600 }}>❤️ {getHRForZone(0.7, 0.8)}</div>}
         </div>
         <div className="pace-card" style={{ background: 'rgba(52,211,153,0.07)', border: '1px solid rgba(52,211,153,0.2)' }}>
           <div className="pace-label" style={{ color: '#34d399' }}>{lang === 'id' ? 'Santai' : 'Easy'}</div>
           <div className="pace-value">{paces.santai}</div>
           <div className="pace-unit">min/km</div>
+          {age && <div style={{ fontSize: 11, color: '#34d399', marginTop: 4, fontWeight: 600 }}>❤️ {getHRForZone(0.6, 0.7)}</div>}
         </div>
       </div>
 
