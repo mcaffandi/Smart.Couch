@@ -200,7 +200,7 @@ ${recentRuns || "Belum ada riwayat lari."}
 Tidur semalam: skor ${latestSleepScore || "Tidak ada data"}.
 
 Sesuaikan intensitas! Jika HR kemarin tinggi atau tidur kurang, tambahkan rest/recovery.
-Output harus STRICTLY JSON array of objects dengan keys persis: "hari" (Senin-Minggu), "jenis" (contoh: "Easy Run", "Interval", "Total Rest"), "durasi" (contoh: "30 menit", "5x400m", "–"), "tujuan" (alasan logis). Pastikan urutan dari Senin sampai Minggu (7 item).
+Output harus STRICTLY JSON array of objects dengan keys persis: "hari" (Senin, Selasa, Rabu, Kamis, Jumat, Sabtu, Minggu), "jenis" (HANYA BOLEH ISI DENGAN: "Total Rest", "Easy Run", "Interval", "Long Run", "Core & Leg Stabilizer", atau "Active Recovery"), "durasi" (contoh: "30 menit", "5x400m", "–"), "tujuan" (alasan logis). Pastikan urutan dari Senin sampai Minggu (7 item).
 Return ONLY the raw JSON array.`
         : `You are an elite running coach (EnduraUP). Create a strict 1-week training plan (Monday-Sunday) in JSON array format.
 This athlete's main goal: ${goal}.
@@ -213,7 +213,7 @@ ${recentRuns || "No running history yet."}
 Sleep last night: score ${latestSleepScore || "No data"}.
 
 Adjust intensity! If heart rate was high or sleep was insufficient, add rest/recovery.
-Output must be a STRICTLY JSON array of objects with keys exactly: "hari" (Monday-Sunday, e.g., "Monday", "Tuesday", etc.), "jenis" (e.g. "Easy Run", "Interval", "Total Rest"), "durasi" (e.g. "30 minutes", "5x400m", "–"), "tujuan" (logical reasoning). Ensure the order goes Monday to Sunday (7 items).
+Output must be a STRICTLY JSON array of objects with keys exactly: "hari" (Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday), "jenis" (MUST BE ONE OF: "Total Rest", "Easy Run", "Interval", "Long Run", "Core & Leg Stabilizer", or "Active Recovery"), "durasi" (e.g. "30 minutes", "5x400m", "–"), "tujuan" (logical reasoning). Ensure the order goes Monday to Sunday (7 items).
 Return ONLY the raw JSON array.`;
 
       let content = '';
