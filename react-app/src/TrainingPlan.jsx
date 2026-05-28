@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { HeartPulse } from 'lucide-react';
 import { buildTrainingPlan, buildAdaptiveCalendar } from './utils';
 
 const dayTranslations = {
@@ -553,19 +552,19 @@ Return ONLY the raw JSON array.`;
           <div className="pace-label" style={{ color: '#fb7185' }}>{lang === 'id' ? 'Ngepush' : 'Push'}</div>
           <div className="pace-value">{paces.ngepush}</div>
           <div className="pace-unit">min/km</div>
-          {age && <div style={{ fontSize: 11, color: '#fb7185', marginTop: 4, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}><HeartPulse size={12} /> {getHRForZone(0.8, 0.9)}</div>}
+          {age && <div style={{ fontSize: 11, color: '#fb7185', marginTop: 4, fontWeight: 600 }}>HR {getHRForZone(0.8, 0.9)}</div>}
         </div>
         <div className="pace-card" style={{ background: 'rgba(56,189,248,0.07)', border: '1px solid rgba(56,189,248,0.2)' }}>
           <div className="pace-label" style={{ color: '#38bdf8' }}>{lang === 'id' ? 'Sedang' : 'Moderate'}</div>
           <div className="pace-value">{paces.sedang}</div>
           <div className="pace-unit">min/km</div>
-          {age && <div style={{ fontSize: 11, color: '#38bdf8', marginTop: 4, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}><HeartPulse size={12} /> {getHRForZone(0.7, 0.8)}</div>}
+          {age && <div style={{ fontSize: 11, color: '#38bdf8', marginTop: 4, fontWeight: 600 }}>HR {getHRForZone(0.7, 0.8)}</div>}
         </div>
         <div className="pace-card" style={{ background: 'rgba(52,211,153,0.07)', border: '1px solid rgba(52,211,153,0.2)' }}>
           <div className="pace-label" style={{ color: '#34d399' }}>{lang === 'id' ? 'Santai' : 'Easy'}</div>
           <div className="pace-value">{paces.santai}</div>
           <div className="pace-unit">min/km</div>
-          {age && <div style={{ fontSize: 11, color: '#34d399', marginTop: 4, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}><HeartPulse size={12} /> {getHRForZone(0.6, 0.7)}</div>}
+          {age && <div style={{ fontSize: 11, color: '#34d399', marginTop: 4, fontWeight: 600 }}>HR {getHRForZone(0.6, 0.7)}</div>}
         </div>
       </div>
 
