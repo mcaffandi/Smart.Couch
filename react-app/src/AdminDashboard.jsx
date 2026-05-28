@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Lock } from 'lucide-react';
 import { collection, getDocs, deleteDoc, doc } from 'firebase/firestore';
 import { db } from './firebase';
 
@@ -59,7 +60,9 @@ export default function AdminDashboard({ onBack }) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', color: 'var(--text-primary)' }}>
         <div style={{ background: 'var(--bg-card)', padding: 40, borderRadius: 16, border: '1px solid var(--border)', width: 320, textAlign: 'center' }}>
-          <h2 style={{ marginBottom: 10 }}>🔒 Admin Area</h2>
+          <h2 style={{ marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+            <Lock size={24} style={{ color: 'var(--accent-purple)' }} /> Admin Area
+          </h2>
           <p style={{ color: 'var(--text-secondary)', marginBottom: 20, fontSize: 14 }}>Masukkan PIN untuk mengakses data.</p>
           <form onSubmit={handlePinSubmit}>
             <input 
