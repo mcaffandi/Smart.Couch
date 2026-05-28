@@ -73,11 +73,14 @@ function NumberInput({ value, onChange, min, max, step = 1, label }) {
     </div>
   );
 }
+const ADMIN_EMAILS = ['m.c.affandi@gmail.com', 'affanbelajar@gmail.com'];
+
 // ─── Main App ─────────────────────────────────────────────────────────────────
 export default function App() {
   // ── State: data ─────────────────────────────────────────────────────────────
   const [sessionUser, setSessionUser] = useState(() => sessionStorage.getItem('smartcoach_session') || null);
   const [currentUser, setCurrentUser] = useState(() => getCurrentUser());
+  const isAdmin = ADMIN_EMAILS.includes(currentUser);
   const [usersList, setUsersList] = useState(() => loadUsersList());
   const [data, setData] = useState(() => loadUserData(getCurrentUser()));
   const [toasts, setToasts] = useState([]);
@@ -117,7 +120,7 @@ export default function App() {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showExportGuide, setShowExportGuide] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
-  const [showAdmin, setShowAdmin] = useState(window.location.hash === '#admin');
+  const [showAdmin, setShowAdmin] = useState(window.location.hash.toLowerCase() === '#admin');
   const [visitorCount, setVisitorCount] = useState(null);
   const [editDraft, setEditDraft] = useState({});
   const [profileEditMode, setProfileEditMode] = useState(false);
@@ -126,6 +129,13 @@ export default function App() {
   const [targetPace, setTargetPace] = useState(() => data.profile?.targetPace ?? null);
   const [selectedDays, setSelectedDays] = useState(() => data.profile?.selectedDays ?? ['Selasa', 'Kamis', 'Sabtu']);
 
+  useEffect(() => {
+    const handleHashChange = () => {
+      setShowAdmin(window.location.hash.toLowerCase() === '#admin');
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
 
   useEffect(() => {
     if (!isFirebaseConfigured) return;
@@ -292,8 +302,15 @@ export default function App() {
     if (isFirebaseConfigured && auth.currentUser) {
       const userIdentifier = auth.currentUser.email || auth.currentUser.displayName || `Anonim-${auth.currentUser.uid.substring(0, 4)}`;
       if (currentUser === userIdentifier) {
+        const dataToSave = {
+          ...updatedData,
+          email: auth.currentUser.email || '',
+          displayName: updatedData.profile?.displayName || auth.currentUser.displayName || `Anonim-${auth.currentUser.uid.substring(0, 4)}`,
+          isAnonymous: auth.currentUser.isAnonymous,
+          uid: auth.currentUser.uid
+        };
         const userDocRef = doc(db, 'users', auth.currentUser.uid);
-        setDoc(userDocRef, updatedData).catch(e => {
+        setDoc(userDocRef, dataToSave).catch(e => {
           console.error('Failed to sync save to Firestore:', e);
         });
       }
@@ -1444,6 +1461,10 @@ export default function App() {
   const hasData = runActs.length > 0 || Object.keys(sleepRecs || {}).length > 0;
 
   // ─────────────────────────────────────────────────────────────────────────────
+  if (showAdmin) {
+    return <AdminDashboard onBack={() => { setShowAdmin(false); window.location.hash = ''; }} />;
+  }
+
   if (!sessionUser) {
     if (showLanding) {
       return <LandingPage onGetStarted={() => setShowLanding(false)} lang={lang} setLang={setLang} visitorCount={visitorCount} />;
@@ -1567,10 +1588,6 @@ export default function App() {
   };
 
   const readinessDesc = getReadinessDesc();
-
-  if (showAdmin) {
-    return <AdminDashboard onBack={() => { setShowAdmin(false); window.location.hash = ''; }} />;
-  }
 
   return (
     <div className="app-layout">
@@ -2171,7 +2188,15 @@ export default function App() {
 
         <div className="sidebar-divider" />
 
-
+        {isAdmin && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 16 }}>
+            <div className="sidebar-section-title" style={{ marginBottom: 0 }}>Admin Area</div>
+            <button className="btn btn-primary" onClick={() => { setShowAdmin(true); window.location.hash = '#admin'; setSidebarOpen(false); }} style={{ width: '100%', justifyContent: 'center', padding: '12px 16px', borderRadius: 10 }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 8 }}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+              Dashboard Admin
+            </button>
+          </div>
+        )}
 
         {/* Import Data */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>

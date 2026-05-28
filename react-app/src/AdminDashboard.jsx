@@ -104,6 +104,7 @@ export default function AdminDashboard({ onBack }) {
             <thead>
               <tr style={{ borderBottom: '1px solid var(--border)', color: 'var(--text-secondary)', fontSize: 13 }}>
                 <th style={{ padding: '12px 16px' }}>Email / ID</th>
+                <th style={{ padding: '12px 16px' }}>Nama</th>
                 <th style={{ padding: '12px 16px' }}>Tujuan Latihan</th>
                 <th style={{ padding: '12px 16px' }}>Target Pace</th>
                 <th style={{ padding: '12px 16px' }}>Aktivitas Lari</th>
@@ -112,7 +113,12 @@ export default function AdminDashboard({ onBack }) {
             <tbody>
               {users.map(u => (
                 <tr key={u.id} style={{ borderBottom: '1px dashed rgba(255,255,255,0.05)' }}>
-                  <td style={{ padding: '16px', fontSize: 14 }}>{u.id}</td>
+                  <td style={{ padding: '16px', fontSize: 14, wordBreak: 'break-all' }}>
+                    {u.data?.email || (u.id.substring(0, 10) + '...')}
+                  </td>
+                  <td style={{ padding: '16px', fontSize: 14 }}>
+                    {u.data?.displayName || u.data?.profile?.displayName || 'Anonim'}
+                  </td>
                   <td style={{ padding: '16px', fontSize: 14 }}>
                     <span style={{ background: 'rgba(255,255,255,0.05)', padding: '4px 8px', borderRadius: 4 }}>
                       {u.data?.profile?.goal || '-'}
@@ -124,7 +130,7 @@ export default function AdminDashboard({ onBack }) {
               ))}
               {users.length === 0 && (
                 <tr>
-                  <td colSpan="4" style={{ padding: 20, textAlign: 'center', color: 'var(--text-muted)' }}>Belum ada data atau tidak ada akses Firebase.</td>
+                  <td colSpan="5" style={{ padding: 20, textAlign: 'center', color: 'var(--text-muted)' }}>Belum ada data atau tidak ada akses Firebase.</td>
                 </tr>
               )}
             </tbody>

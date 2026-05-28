@@ -2,6 +2,28 @@
 
 ---
 
+## [Uncommitted] — 2026-05-27 · Pre-Release Polish & Architecture Simplification
+
+### ✨ UI / UX Enhancements
+
+#### Landing Page Redesign & Bento Grid
+- Mengembalikan desain ulasan pelari (Testimonials) dari gaya Play Store *list* vertikal kembali ke tata letak **Bento Grid (Glassmorphism)** yang jauh lebih profesional dan elegan untuk Landing Page.
+- Mengganti deretan *brand icon* yang terlihat kurang menyatu menjadi **Logotype bersih berbasis teks** (Garmin, Strava, Polar, Coros, Apple Watch, Suunto) dengan peningkatan `font-weight` dan presisi *letter-spacing*.
+- Menyesuaikan proporsi *margin* dan *padding* antar-seksi agar transisi antar komponen (Fitur, Wall of Love, Footer) terlihat jauh lebih mengalir (*seamless*).
+
+#### Sidebar & Feedback Modal
+- Merapatkan jarak bawah (*footer gap*) pada sidebar (tombol Reset, Traktir, Logout) agar tidak ada kekosongan berlebih yang dihasilkan oleh *gap* bawaan sidebar.
+- Menambahkan tombol interaktif **"Lihat Semua"** pada Feedback Modal. Modal akan memanjang secara mulus (*smooth expand*) dan langsung menampilkan seluruh *featured reviews* dari Firebase saat diklik.
+
+### 🏗️ Perubahan Teknis & Refactoring
+
+#### Penghapusan Fitur "Ajari AI"
+- Mengembalikan AI Coach murni sebagai sistem **Hybrid Chatbot** tanpa campur tangan *user-generated rules* untuk menjaga keprofesionalan bot.
+- Menghapus fitur "Ajari AI" sepenuhnya, termasuk elemen antarmuka (*form* input, tombol *toggle*), struktur *state* React terkait, hingga fungsi sinkronisasi *database* `bot_settings` di Firestore.
+- Penanganan percakapan murni ditangani otomatis melalui kombinasi Regex *Local Dictionary* (instan) dan Groq LLM API (dinamis).
+
+---
+
 ## [Uncommitted] — 2026-05-26 · AI Coach Training, Privacy Policy, & UI Enhancements
 
 ### ✨ Fitur Baru
