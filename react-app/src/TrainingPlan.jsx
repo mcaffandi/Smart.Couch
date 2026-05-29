@@ -158,7 +158,35 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
     );
   };
 
+  // ── Consistency Logic ──
+  const planRunDays = plan.filter(p => p.jenis.includes('Run') || p.jenis.includes('Interval') || p.jenis.includes('HIIT') || p.jenis.includes('Jog') || p.jenis.includes('Tempo')).length;
+  const targetWeeklyRuns = planRunDays > 0 ? planRunDays : (selectedDays?.length || 3);
+  
+  const now = new Date();
+  const last7DaysRuns = (activities || []).filter(a => {
+    if (!a.startTimeLocal) return false;
+    const d = new Date(a.startTimeLocal);
+    const diffDays = (now - d) / (1000 * 60 * 60 * 24);
+    return diffDays >= 0 && diffDays <= 7 && (a.distance > 0 || a.duration > 0);
+  }).length;
 
+  const consistencyScore = Math.min(100, Math.round((last7DaysRuns / Math.max(1, targetWeeklyRuns)) * 100));
+  
+  let consistencyMsg = '';
+  let consistencyColor = '';
+  if (consistencyScore >= 100) {
+    consistencyMsg = lang === 'id' ? 'Luar biasa! Konsisten 100% 🔥' : 'Outstanding! 100% Consistent 🔥';
+    consistencyColor = '#10b981'; // green
+  } else if (consistencyScore >= 50) {
+    consistencyMsg = lang === 'id' ? 'On track, selesaikan sisa minggu ini! 💪' : 'On track, finish the week! 💪';
+    consistencyColor = '#f59e0b'; // yellow/amber
+  } else if (consistencyScore > 0) {
+    consistencyMsg = lang === 'id' ? 'Bolong-bolong nih jadwalnya, ayo kejar! 🏃‍♂️' : 'Falling behind, time to catch up! 🏃‍♂️';
+    consistencyColor = '#f97316'; // orange
+  } else {
+    consistencyMsg = lang === 'id' ? 'Belum lari sama sekali minggu ini 😴' : 'No runs yet this week 😴';
+    consistencyColor = '#fb7185'; // red
+  }
 
   const generateAIPlan = async () => {
     let apiKey = localStorage.getItem('groq_api_key');
@@ -198,6 +226,10 @@ Data lari terakhir mereka (jadikan referensi penyesuaian beban):
 ${recentRuns || "Belum ada riwayat lari."}
 Tidur semalam: skor ${latestSleepScore || "Tidak ada data"}.
 
+PERHATIAN (KONSISTENSI): Skor konsistensi 7 hari terakhir atlet ini adalah ${consistencyScore}%. 
+Jika konsistensi rendah (<50%), berikan jadwal adaptasi (Easy Run) lebih banyak agar memotivasi dan tidak cedera. JANGAN jadwalkan interval berat jika skornya di bawah 50%.
+Jika konsistensi >80%, lo boleh ngasih jadwal progresif (Tempo/Interval/Long Run) yang menantang!
+
 Sesuaikan intensitas! Jika HR kemarin tinggi atau tidur kurang, tambahkan rest/recovery.
 Output harus STRICTLY JSON array of objects dengan keys persis: "hari" (Senin, Selasa, Rabu, Kamis, Jumat, Sabtu, Minggu), "jenis" (HANYA BOLEH ISI DENGAN: "Total Rest", "Easy Run", "Interval", "Long Run", "Core & Leg Stabilizer", atau "Active Recovery"), "durasi" (contoh: "30 menit", "5x400m", "–"), "tujuan" (alasan logis). Pastikan urutan dari Senin sampai Minggu (7 item).
 Return ONLY the raw JSON array.`
@@ -210,6 +242,10 @@ Target Pace: ${formatPace(targetPace) || targetPace} min/km.
 Their latest run data (use as reference to adjust load):
 ${recentRuns || "No running history yet."}
 Sleep last night: score ${latestSleepScore || "No data"}.
+
+ATTENTION (CONSISTENCY): This athlete's 7-day consistency score is ${consistencyScore}%. 
+If consistency is low (<50%), provide more adaptation runs (Easy Runs) to motivate them without causing injury. DO NOT schedule heavy intervals if the score is below 50%.
+If consistency is >80%, feel free to give them challenging progressive runs (Tempo/Interval/Long Run)!
 
 Adjust intensity! If heart rate was high or sleep was insufficient, add rest/recovery.
 Output must be a STRICTLY JSON array of objects with keys exactly: "hari" (Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday), "jenis" (MUST BE ONE OF: "Total Rest", "Easy Run", "Interval", "Long Run", "Core & Leg Stabilizer", or "Active Recovery"), "durasi" (e.g. "30 minutes", "5x400m", "–"), "tujuan" (logical reasoning). Ensure the order goes Monday to Sunday (7 items).
@@ -369,6 +405,33 @@ Return ONLY the raw JSON array.`;
   return (
     <div className="animate-fade-in">
       {smartAlert()}
+
+      {/* Consistency Banner */}
+      <div style={{
+        background: `linear-gradient(135deg, ${consistencyColor}15, var(--bg-card))`,
+        border: `1px solid ${consistencyColor}40`,
+        borderRadius: 14, padding: '16px 20px', marginBottom: 20,
+        display: 'flex', alignItems: 'center', gap: 16
+      }}>
+        <div style={{
+          position: 'relative', width: 48, height: 48, display: 'flex',
+          alignItems: 'center', justifyContent: 'center', flexShrink: 0
+        }}>
+          <svg width="48" height="48" viewBox="0 0 36 36" style={{ position: 'absolute' }}>
+            <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="var(--border)" strokeWidth="3" />
+            <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke={consistencyColor} strokeWidth="3" strokeDasharray={`${consistencyScore}, 100`} />
+          </svg>
+          <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-primary)' }}>{consistencyScore}%</span>
+        </div>
+        <div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 4 }}>
+            {lang === 'id' ? 'Konsistensi 7 Hari' : '7-Day Consistency'}
+          </div>
+          <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+            {consistencyMsg}
+          </div>
+        </div>
+      </div>
 
       <div className="training-header-controls" style={{ marginBottom: 16 }}>
 
