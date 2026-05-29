@@ -220,8 +220,7 @@ export default function AdminDashboard({ onBack }) {
   if (loading) return <div style={{ padding: 40, textAlign: 'center', color: '#fff' }}>Loading Data Admin...</div>;
 
   const totalUsers = users.length;
-  const totalRuns = users.reduce((acc, user) => acc + (user.data?.running_activities?.length || 0), 0);
-  const totalSleepLogs = users.reduce((acc, user) => acc + Object.keys(user.data?.sleep_records || {}).length, 0);
+  const totalBlogs = blogs.length;
 
   return (
     <div style={{ padding: '40px 20px', maxWidth: 900, margin: '0 auto', color: 'var(--text-primary)' }}>
@@ -274,12 +273,8 @@ export default function AdminDashboard({ onBack }) {
           <div style={{ fontSize: 36, fontWeight: '800', color: 'var(--accent-purple)' }}>{totalUsers}</div>
         </div>
         <div className="stat-card" style={{ background: 'var(--bg-card)', padding: 24, borderRadius: 12, border: '1px solid var(--border)' }}>
-          <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 8, fontWeight: 600 }}>Total Sesi Lari Dicatat</div>
-          <div style={{ fontSize: 36, fontWeight: '800', color: '#10b981' }}>{totalRuns}</div>
-        </div>
-        <div className="stat-card" style={{ background: 'var(--bg-card)', padding: 24, borderRadius: 12, border: '1px solid var(--border)' }}>
-          <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 8, fontWeight: 600 }}>Total Log Tidur</div>
-          <div style={{ fontSize: 36, fontWeight: '800', color: '#38bdf8' }}>{totalSleepLogs}</div>
+          <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 8, fontWeight: 600 }}>Total Artikel Blog</div>
+          <div style={{ fontSize: 36, fontWeight: '800', color: '#10b981' }}>{totalBlogs}</div>
         </div>
       </div>
 
