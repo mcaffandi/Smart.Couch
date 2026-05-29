@@ -1,37 +1,54 @@
 import { useState, useEffect } from 'react';
 import { Lock } from 'lucide-react';
-import { collection, getDocs, deleteDoc, doc } from 'firebase/firestore';
+import { collection, getDocs, deleteDoc, doc, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from './firebase';
 
 export default function AdminDashboard({ onBack }) {
   const [pin, setPin] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [users, setUsers] = useState([]);
+  const [blogs, setBlogs] = useState([]);
   const [loading, setLoading] = useState(true);
+  
+  const [showBlogForm, setShowBlogForm] = useState(false);
+  const [blogPosting, setBlogPosting] = useState(false);
+  const [blogForm, setBlogForm] = useState({ title: '', content: '', tags: '', thumbnail: '' });
 
   const ADMIN_PIN = '210421'; // Simple hardcoded PIN
 
   useEffect(() => {
     if (!isAuthenticated) return;
-    const fetchUsers = async () => {
+    const fetchData = async () => {
       try {
         if (!db) {
            console.log("Firebase not configured");
            setLoading(false);
            return;
         }
-        const querySnapshot = await getDocs(collection(db, "users"));
-        const data = [];
-        querySnapshot.forEach((doc) => {
-          data.push({ id: doc.id, data: doc.data() });
+        // Fetch users
+        const usersSnap = await getDocs(collection(db, "users"));
+        const usersData = [];
+        usersSnap.forEach((doc) => usersData.push({ id: doc.id, data: doc.data() }));
+        setUsers(usersData);
+
+        // Fetch blogs
+        const blogsSnap = await getDocs(collection(db, "blogs"));
+        const blogsData = [];
+        blogsSnap.forEach((doc) => blogsData.push({ id: doc.id, ...doc.data() }));
+        // Sort descending by date
+        blogsData.sort((a, b) => {
+          const tA = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+          const tB = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+          return tB - tA;
         });
-        setUsers(data);
+        setBlogs(blogsData);
+
       } catch (err) {
         console.error("Gagal ambil data admin:", err);
       }
       setLoading(false);
     };
-    fetchUsers();
+    fetchData();
   }, [isAuthenticated]);
 
   const handlePinSubmit = (e) => {
@@ -53,6 +70,50 @@ export default function AdminDashboard({ onBack }) {
     } catch (err) {
       console.error("Gagal menghapus user:", err);
       alert("Gagal menghapus user. Pastikan aturan keamanan Firebase (Security Rules) mengizinkan delete.");
+    }
+  };
+
+  const handlePostBlog = async (e) => {
+    e.preventDefault();
+    if (!blogForm.title || !blogForm.content || !blogForm.tags) return;
+    setBlogPosting(true);
+    try {
+      const tagsArray = blogForm.tags.split(',').map(t => t.trim()).filter(Boolean);
+      const newDocRef = await addDoc(collection(db, "blogs"), {
+        title: blogForm.title,
+        content: blogForm.content,
+        thumbnail: blogForm.thumbnail,
+        tags: tagsArray,
+        createdAt: serverTimestamp(),
+        author: "Admin EnduraUP"
+      });
+      alert("Artikel berhasil di-publish!");
+      setBlogs([{ 
+        id: newDocRef.id, 
+        title: blogForm.title, 
+        content: blogForm.content, 
+        thumbnail: blogForm.thumbnail, 
+        tags: tagsArray, 
+        createdAt: new Date(), 
+        author: "Admin EnduraUP" 
+      }, ...blogs]);
+      setBlogForm({ title: '', content: '', tags: '', thumbnail: '' });
+      setShowBlogForm(false);
+    } catch (err) {
+      console.error(err);
+      alert("Gagal memublikasikan artikel.");
+    }
+    setBlogPosting(false);
+  };
+
+  const handleDeleteBlog = async (blogId) => {
+    if (!window.confirm("Yakin ingin menghapus artikel ini?")) return;
+    try {
+      await deleteDoc(doc(db, "blogs", blogId));
+      setBlogs(blogs.filter(b => b.id !== blogId));
+    } catch (err) {
+      console.error(err);
+      alert("Gagal menghapus artikel.");
     }
   };
 
@@ -154,7 +215,58 @@ export default function AdminDashboard({ onBack }) {
               ))}
               {users.length === 0 && (
                 <tr>
-                  <td colSpan="5" style={{ padding: 20, textAlign: 'center', color: 'var(--text-muted)' }}>Belum ada data atau tidak ada akses Firebase.</td>
+                  <td colSpan="6" style={{ padding: 20, textAlign: 'center', color: 'var(--text-muted)' }}>Belum ada data atau tidak ada akses Firebase.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div style={{ background: 'var(--bg-card)', padding: 24, borderRadius: 12, border: '1px solid var(--border)', marginTop: 20 }}>
+        <h3 style={{ margin: 0, marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          Kelola Artikel Blog
+          <button className="btn btn-primary" onClick={() => setShowBlogForm(!showBlogForm)} style={{ padding: '6px 12px', fontSize: 13 }}>
+            {showBlogForm ? 'Tutup Form' : '+ Tulis Artikel'}
+          </button>
+        </h3>
+        
+        {showBlogForm && (
+          <form onSubmit={handlePostBlog} style={{ background: 'var(--bg-surface)', padding: 20, borderRadius: 10, border: '1px solid var(--border)', marginBottom: 20, display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <input className="form-input" placeholder="Judul Artikel" required value={blogForm.title} onChange={e => setBlogForm({...blogForm, title: e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-primary)' }} />
+            <input className="form-input" placeholder="URL Gambar Thumbnail (Opsional)" value={blogForm.thumbnail} onChange={e => setBlogForm({...blogForm, thumbnail: e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-primary)' }} />
+            <input className="form-input" placeholder="Tags (pisahkan dengan koma, misal: Tips, Recovery, Nutrisi)" required value={blogForm.tags} onChange={e => setBlogForm({...blogForm, tags: e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-primary)' }} />
+            <textarea className="form-input" placeholder="Konten Artikel (Bisa pakai Markdown atau teks biasa)" required value={blogForm.content} onChange={e => setBlogForm({...blogForm, content: e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-primary)', minHeight: 200, resize: 'vertical' }} />
+            <button type="submit" className="btn btn-primary" disabled={blogPosting} style={{ padding: '12px', marginTop: 8 }}>
+              {blogPosting ? 'Memublikasikan...' : 'Publish Artikel'}
+            </button>
+          </form>
+        )}
+
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr style={{ borderBottom: '1px solid var(--border)', color: 'var(--text-secondary)', fontSize: 13 }}>
+                <th style={{ padding: '12px 16px' }}>Judul</th>
+                <th style={{ padding: '12px 16px' }}>Tanggal</th>
+                <th style={{ padding: '12px 16px' }}>Tags</th>
+                <th style={{ padding: '12px 16px', textAlign: 'center' }}>Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              {blogs.map(b => (
+                <tr key={b.id} style={{ borderBottom: '1px dashed rgba(255,255,255,0.05)' }}>
+                  <td style={{ padding: '16px', fontSize: 14, fontWeight: 600 }}>{b.title}</td>
+                  <td style={{ padding: '16px', fontSize: 13, color: 'var(--text-secondary)' }}>{new Date(b.createdAt?.toDate ? b.createdAt.toDate() : b.createdAt).toLocaleDateString('id-ID')}</td>
+                  <td style={{ padding: '16px', fontSize: 13, color: 'var(--accent-purple)' }}>{b.tags?.join(', ')}</td>
+                  <td style={{ padding: '16px', textAlign: 'center' }}>
+                    <button onClick={() => handleDeleteBlog(b.id)} style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Hapus</button>
+                  </td>
+                </tr>
+              ))}
+              {blogs.length === 0 && (
+                <tr>
+                  <td colSpan="4" style={{ padding: 20, textAlign: 'center', color: 'var(--text-muted)' }}>Belum ada artikel blog.</td>
                 </tr>
               )}
             </tbody>
