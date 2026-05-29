@@ -2903,9 +2903,10 @@ export default function App() {
                           <div className="readiness-dial" style={{ position: 'relative', border: 'none', background: 'transparent', boxShadow: 'none' }}>
                             <svg width="68" height="68" viewBox="0 0 68 68" style={{ transform: 'rotate(-90deg)', position: 'absolute', top: 0, left: 0 }}>
                               <circle cx="34" cy="34" r="30" fill="none" stroke={rBgColor} strokeWidth="4" />
-                              <circle cx="34" cy="34" r="30" fill="none" stroke={rColor} strokeWidth="4" strokeLinecap="round" 
+                              <circle cx="34" cy="34" r="30" fill="none" stroke={rColor} strokeWidth="4" 
+                                      strokeLinecap={trainingReadinessScore === 100 ? "butt" : "round"} 
                                       strokeDasharray={188.5} 
-                                      strokeDashoffset={188.5 - (trainingReadinessScore / 100) * 188.5} 
+                                      strokeDashoffset={188.5 - ((trainingReadinessScore === 100 ? 100 : Math.min(trainingReadinessScore, 96)) / 100) * 188.5} 
                                       style={{ transition: 'stroke-dashoffset 1s ease-in-out' }} />
                             </svg>
                             <div className="readiness-dial-value" style={{ position: 'relative', zIndex: 1 }}>{trainingReadinessScore}%</div>
