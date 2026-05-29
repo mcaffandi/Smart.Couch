@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Lock } from 'lucide-react';
 import { collection, getDocs, deleteDoc, doc, addDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from './firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { db, storage } from './firebase';
 
 export default function AdminDashboard({ onBack }) {
   const [pin, setPin] = useState('');
@@ -132,6 +133,49 @@ export default function AdminDashboard({ onBack }) {
     });
     setEditingBlogId(blog.id);
     setShowBlogForm(true);
+  };
+
+  const handlePaste = async (e) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.indexOf('image') !== -1) {
+        e.preventDefault();
+        const file = items[i].getAsFile();
+        if (!file) continue;
+
+        const loadingId = Date.now();
+        const loadingText = `\n![Mengupload gambar...]()\n`;
+        
+        // Insert loading text at cursor position or end
+        const textarea = e.target;
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const currentContent = blogForm.content;
+        
+        const newContent = currentContent.substring(0, start) + loadingText + currentContent.substring(end);
+        setBlogForm(prev => ({ ...prev, content: newContent }));
+
+        try {
+          const fileRef = ref(storage, `blog_images/${loadingId}_${file.name}`);
+          await uploadBytes(fileRef, file);
+          const url = await getDownloadURL(fileRef);
+
+          setBlogForm(prev => ({
+            ...prev,
+            content: prev.content.replace(loadingText, `\n![Gambar](${url})\n`)
+          }));
+        } catch (err) {
+          console.error("Gagal upload gambar:", err);
+          alert("Gagal mengupload gambar. Pastikan aturan Firebase Storage (Security Rules) sudah disetting untuk allow read/write.");
+          setBlogForm(prev => ({
+            ...prev,
+            content: prev.content.replace(loadingText, "")
+          }));
+        }
+      }
+    }
   };
 
   const handleDeleteBlog = async (blogId) => {
@@ -273,7 +317,7 @@ export default function AdminDashboard({ onBack }) {
             <input className="form-input" placeholder="Judul Artikel" required value={blogForm.title} onChange={e => setBlogForm({...blogForm, title: e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-primary)' }} />
             <input className="form-input" placeholder="URL Gambar Thumbnail (Opsional)" value={blogForm.thumbnail} onChange={e => setBlogForm({...blogForm, thumbnail: e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-primary)' }} />
             <input className="form-input" placeholder="Tags (pisahkan dengan koma, misal: Tips, Recovery, Nutrisi)" required value={blogForm.tags} onChange={e => setBlogForm({...blogForm, tags: e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-primary)' }} />
-            <textarea className="form-input" placeholder="Konten Artikel (Bisa pakai Markdown atau teks biasa)" required value={blogForm.content} onChange={e => setBlogForm({...blogForm, content: e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-primary)', minHeight: 200, resize: 'vertical' }} />
+            <textarea className="form-input" placeholder="Konten Artikel (Bisa pakai Markdown. Anda juga bisa langsung COPY & PASTE GAMBAR ke kotak ini!)" required onPaste={handlePaste} value={blogForm.content} onChange={e => setBlogForm({...blogForm, content: e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-primary)', minHeight: 200, resize: 'vertical' }} />
             <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
               <button type="submit" className="btn btn-primary" disabled={blogPosting} style={{ padding: '12px', flex: 1 }}>
                 {blogPosting ? 'Menyimpan...' : (editingBlogId ? 'Update Artikel' : 'Publish Artikel')}

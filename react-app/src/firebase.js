@@ -12,6 +12,7 @@ import {
   deleteUser
 } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 
 // Firebase configuration using Vite environment variables
 const firebaseConfig = {
@@ -32,11 +33,13 @@ if (!isConfigured) {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+const storage = getStorage(app);
 const googleProvider = new GoogleAuthProvider();
 
 export { 
   auth, 
   db,
+  storage,
   googleProvider, 
   signInWithPopup,
   signInWithRedirect,
