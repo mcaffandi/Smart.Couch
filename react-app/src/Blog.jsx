@@ -229,14 +229,14 @@ function BlogReader({ blog, onBack, lang }) {
   
   return (
     <div className="animate-fade-in medium-blog-container">
-      <button onClick={onBack} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontWeight: 600, padding: 0, marginBottom: 32, fontSize: 14 }}>
+      <button onClick={onBack} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontWeight: 600, padding: 0, marginBottom: 32, fontSize: 14, fontFamily: 'Inter, sans-serif' }}>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
         {lang === 'id' ? 'Kembali ke Artikel' : 'Back to Articles'}
       </button>
 
       <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
         {blog.tags && blog.tags.map((tag, i) => (
-          <span key={i} style={{ fontSize: 11, background: 'var(--bg-card-hover)', color: 'var(--text-secondary)', padding: '4px 10px', borderRadius: 12, fontWeight: 600, border: '1px solid var(--border)' }}>
+          <span key={i} style={{ fontSize: 11, background: 'var(--bg-card-hover)', color: 'var(--text-secondary)', padding: '4px 10px', borderRadius: 12, fontWeight: 600, border: '1px solid var(--border)', fontFamily: 'Inter, sans-serif' }}>
             {tag.toUpperCase()}
           </span>
         ))}
