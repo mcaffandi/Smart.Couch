@@ -612,7 +612,7 @@ html, body {
 
 /* Page header */
 .page-header {
-  margin-bottom: 24px;
+  margin-bottom: 32px;
 }
 
 .page-title {
@@ -631,7 +631,6 @@ html, body {
 
 @media (min-width: 901px) {
   .dynamic-page-title-container {
-    height: 33.6px;
     display: flex;
     align-items: center;
   }
