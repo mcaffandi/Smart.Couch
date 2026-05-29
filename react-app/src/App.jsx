@@ -1665,6 +1665,25 @@ export default function App() {
   }
 
   if (!sessionUser) {
+    if (tab === 'blog') {
+      return (
+        <div className="landing-container" style={{ minHeight: '100vh', paddingTop: 80, overflowY: 'auto', background: 'var(--bg-base)' }}>
+          <nav className="landing-nav" style={{ position: 'fixed', top: 0, width: '100%', background: 'rgba(12, 12, 14, 0.8)', backdropFilter: 'blur(12px)', zIndex: 100, borderBottom: '1px solid var(--border)' }}>
+            <div className="nav-logo" onClick={() => { setTab('dashboard'); setShowLanding(true); }} style={{ cursor: 'pointer' }}>
+              <Logo size={26} />
+              <span className="logo-text">EnduraUP</span>
+            </div>
+            <button className="btn btn-outline" onClick={() => { setTab('dashboard'); setShowLanding(true); }} style={{ borderRadius: 20 }}>
+              {lang === 'id' ? '← Kembali ke Utama' : '← Back to Home'}
+            </button>
+          </nav>
+          <div style={{ padding: '40px 20px', maxWidth: 1000, margin: '0 auto' }}>
+            <BlogModule isAdmin={false} lang={lang} />
+          </div>
+        </div>
+      );
+    }
+
     if (showLanding) {
       return <LandingPage 
         onGetStarted={() => setShowLanding(false)} 
