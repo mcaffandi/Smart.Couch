@@ -20,7 +20,38 @@ export default function AICoachChat({ lang, goal, programStyle, targetPace, curr
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-
+  const localDictionary = [
+    // INDONESIAN MATCHES
+    { match: /hujan|ujan|gerimis|deras|mendung|cuaca/, reply: 'Kalau cuaca lagi nggak bersahabat (hujan/deras), mending ganti latihan *Strength Training* di rumah aja hari ini. Latih Core dan Glutes. Keselamatan nomor satu, jadwal larinya kita geser ke hari istirahat berikutnya!' },
+    { match: /capek|lelah|pegal|cape|remuk|ngantuk|kurang tidur/, reply: 'Badan lo lagi minta istirahat tuh. Coba cek *Resting HR* pagi ini, kalau naik drastis mending ambil **Total Rest**. Otot justru berkembang pas lo lagi istirahat, bukan pas lari!' },
+    { match: /nyeri|sakit|kram|cedera|lutut|engkel|betis/, reply: 'Waduh, nyeri di bagian mana? Kalau nyerinya tajam menusuk (bukan pegal biasa), STOP lari. Kompres es (RICE) dan istirahat 2-3 hari. Jangan maksain ya, cedera itu mahal!' },
+    { match: /ngos|napas|engap|jantung|detak/, reply: 'Pace itu cuma angka, bro! Kalau lo ngerasa ngos-ngosan atau napas berat di pace tertentu, **TURUNIN PACE-NYA**. Tujuan utama lari (apalagi Zone 2) itu ngebangun ketahanan jantung, bukan balapan. Coba selingin jalan kaki (Walk-Run) sampai napas lo stabil lagi.' },
+    { match: /sepatu|pakaian|baju|celana/, reply: 'Untuk latihan *Easy Run*, pake sepatu *Daily Trainer* yang empuk buat ngelindungin kaki. Tapi kalau jadwalnya *Interval* atau *Race*, baru deh keluarin sepatu yang responsif/carbon plate-nya.' },
+    { match: /halo|hai|pagi|siang|malam|woy|bro|test|tes/, reply: 'Halo juga! Siap buat nge-crush target lari lo hari ini? 💪' },
+    { match: /kalender|jadwal|besok|latihan|menu/, reply: 'Coba cek tab "Training Plan" ya, gua udah siapin Kalender Berjalan (Adaptive) di situ. Kalau lo bolos, jadwalnya otomatis gua geser!' },
+    { match: /makan|minum|nutrisi|gel|sarapan|lapar|haus|air/, reply: 'Makan berat wajib jeda 2-3 jam sebelum lari, bro! Kalau lari pagi dan laper, cukup makan pisang atau roti tawar + madu 30 menit sebelum jalan. Jangan lupa minum 200ml tiap 2-3km biar gak kram perut.' },
+    { match: /geser|ubah|ganti|rubah|edit/, reply: 'Kalau lo mau ngubah jumlah hari latihan (misal dari 3x seminggu jadi 2x), lo bisa klik tombol "Edit Profil" di sidebar kiri. Kalau soal jadwal lari yang kelewat, tenang aja, kalender *Adaptive* otomatis ngegeser jadwal lo ke hari kosong berikutnya!' },
+    { match: /makasih|terima kasih|thanks|thx|tq/, reply: 'Sama-sama bro! Santai aja, kalau ada yang bingung soal lari langsung tanya ke gua ya. Keep running! 🏃‍♂️🔥' },
+    { match: /vo2max|vo2 max/, reply: 'VO2Max itu ibarat cc mesin mobil, bro. Semakin gede, semakin banyak oksigen yang bisa diolah otot. Cara ningkatinnya? Perbanyak porsi lari santai (Zone 2) dan selipin 1x latihan interval/speed per minggu. Konsistensi kuncinya!' },
+    { match: /stretching|pemanasan|pendinginan/, reply: 'Penting banget! **Sebelum lari:** Lakuin *Dynamic Stretching* (ayun kaki, lari di tempat, jumping jack) biar otot panas. **Sesudah lari:** Lakuin *Static Stretching* (tahan peregangan 15-20 detik) biar otot gak kaku besoknya.' },
+    { match: /zone 2|zona 2|z2|maf/, reply: 'Zone 2 (atau MAF) itu lari santai yang HR-nya dijaga di kisaran 60-70% dari Max HR. Cirinya: lo masih bisa lari sambil ngobrol lancar tanpa ngos-ngosan. Ini penting buat ngebangun "fondasi" aerobik lo biar gak gampang capek.' },
+    { match: /cadence|langkah|spm/, reply: 'Cadence itu jumlah langkah per menit (SPM). Target ideal buat kebanyakan pelari itu di atas **170 SPM**. Langkah yang lebih pendek dan cepat itu ngurangin beban di lutut lo dibanding langkah yang panjang-panjang (overstriding).' },
+    { match: /interval|sprint|kecepatan|ngebut/, reply: 'Latihan Interval itu lari ngebut (Zone 4/5) diselingi istirahat/jogging pelan. Fungsinya buat ngelatih VO2Max dan bikin lari santai lo kerasa makin gampang. Lakuin cukup 1x seminggu aja, sisanya fokus lari santai ya!' },
+    { match: /siapa kamu|fungsi bot|ai/, reply: 'Gua Coach AI bawaan dari EnduraUP! Gua dirancang buat jadi asisten lari pribadi lo. Gua bakal bantu jawab seputar jadwal, tips lari, sepatu, sampe keluhan cedera.' },
+    
+    // ENGLISH MATCHES
+    { match: /rain|weather|storm|pour/, reply: 'If the weather is bad or it\'s pouring, it\'s better to do strength training indoors. Core and glutes. We can push today\'s run to tomorrow!' },
+    { match: /tired|exhausted|sleepy/, reply: 'Don\'t push it if you are exhausted. Check your resting HR; if it\'s spiked, take a Total Rest day. Muscles grow when you rest, not when you run!' },
+    { match: /pain|hurt|injury|knee|ankle|calf/, reply: 'Where is the pain? If it\'s a sharp pain (not muscle soreness), STOP running. Apply ice and rest for 2-3 days.' },
+    { match: /gasp|breathe|breath|pace|hr/, reply: 'Pace is just a number! If you are gasping for air, **SLOW DOWN**. The main goal of easy runs is to build aerobic base, not to race. Try Walk-Run intervals until your breathing stabilizes.' },
+    { match: /shoe|gear|clothes/, reply: 'For Easy Runs, use a cushioned Daily Trainer. Save the responsive carbon-plated shoes for Interval days or Race Day.' },
+    { match: /hello|hi |hey|morning|afternoon|evening/, reply: 'Hello! Ready to crush your running goals today? 💪' },
+    { match: /plan|schedule|tomorrow|menu/, reply: 'Check the "Training Plan" tab! I\'ve set up an Adaptive Calendar for you. If you miss a run, I\'ll automatically reschedule it!' },
+    { match: /food|eat|drink|nutrition|gel|breakfast|hungry|thirsty|water/, reply: 'Wait 2-3 hours after a heavy meal before running! If it\'s a morning run, a banana or toast with honey 30 mins prior is enough. Drink 200ml every 2-3km to avoid cramps.' },
+    { match: /change|shift|edit/, reply: 'If you want to change your training frequency, edit your profile on the left sidebar. As for missed runs, my Adaptive Calendar will automatically shift them to your next available rest day!' },
+    { match: /warm up|cool down/, reply: 'Crucial! **Before run:** Do *Dynamic Stretching* (leg swings, high knees) to warm up. **After run:** Do *Static Stretching* (hold stretches 15-20s) to prevent stiffness.' },
+    { match: /who are you|your purpose/, reply: 'I am the EnduraUP Coach AI! Designed to be your personal running assistant. I can help with schedules, running tips, gear, and minor injury advice.' }
+  ];
 
   const handleSend = async () => {
     if (!input.trim()) return;
@@ -34,7 +65,24 @@ export default function AICoachChat({ lang, goal, programStyle, targetPace, curr
 
     const msgLower = userMsg.toLowerCase();
     
-    // 1. Direct to Real AI (Groq API)
+    // 1. Check Local Dictionary First (Instant Response based on input language)
+    let matchedRule = null;
+    for (const rule of localDictionary) {
+      if (msgLower.match(rule.match)) {
+        matchedRule = rule;
+        break;
+      }
+    }
+
+    if (matchedRule) {
+      setTimeout(() => {
+        setMessages(p => [...p, { role: 'assistant', content: matchedRule.reply }]);
+        setIsTyping(false);
+      }, 800);
+      return;
+    }
+    
+    // 2. Fallback to Real AI (Groq API)
     try {
       let apiKey = localStorage.getItem('groq_api_key');
 
