@@ -612,7 +612,10 @@ html, body {
 
 /* Page header */
 .page-header {
-  margin-bottom: 32px;
+  margin-bottom: 24px;
+}
+.page-header:has(.sidebar-expanded) {
+  margin-bottom: 48px;
 }
 
 .page-title {
