@@ -462,6 +462,30 @@ export default function App() {
     return Math.min(90, Math.max(10, result));
   }, [actualBestPace]);
 
+  const streakWeeks = useMemo(() => {
+    let streak = 0;
+    const weeksMap = {};
+    const msInWeek = 7 * 24 * 60 * 60 * 1000;
+    const now = new Date();
+    (runActs || []).forEach(a => {
+      if (!a.startTimeLocal) return;
+      const d = new Date(a.startTimeLocal);
+      const diffTime = now.getTime() - d.getTime();
+      if (diffTime >= 0) {
+        const weeksAgo = Math.floor(diffTime / msInWeek);
+        weeksMap[weeksAgo] = (weeksMap[weeksAgo] || 0) + 1;
+      }
+    });
+    let w = 0;
+    if (weeksMap[0] > 0) {
+      while (weeksMap[w] > 0) { streak++; w++; }
+    } else if (weeksMap[1] > 0) {
+      w = 1;
+      while (weeksMap[w] > 0) { streak++; w++; }
+    }
+    return streak;
+  }, [runActs]);
+
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -682,6 +706,20 @@ export default function App() {
       ctx.strokeStyle = borderStroke;
       ctx.lineWidth = 1.5;
       ctx.beginPath(); ctx.moveTo(100, 205); ctx.lineTo(980, 205); ctx.stroke();
+      
+      // Draw streak badge in top right for dark themes
+      if (streakWeeks >= 1) {
+        const streakText = `🔥 ${streakWeeks} WEEK STREAK`;
+        ctx.font = '700 20px Inter, sans-serif';
+        const sw = ctx.measureText(streakText).width;
+        ctx.fillStyle = 'rgba(249, 115, 22, 0.15)'; // Orange background
+        fillRoundedRect(ctx, 980 - sw - 30, 110, sw + 30, 44, 22, 'rgba(249, 115, 22, 0.15)');
+        ctx.strokeStyle = 'rgba(249, 115, 22, 0.4)';
+        ctx.lineWidth = 1.5;
+        if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(980 - sw - 30, 110, sw + 30, 44, 22); ctx.stroke(); }
+        ctx.fillStyle = '#f97316';
+        ctx.fillText(streakText, 980 - sw - 15, 140);
+      }
     }
 
     // ── TEMPLATE CONTENT ──────────────────────────────────────────────────────
@@ -842,6 +880,19 @@ export default function App() {
       ctx.fillStyle = '#c0440a';
       ctx.font = '600 26px Inter, sans-serif';
       ctx.fillText('enduraup.vercel.app', lx, 1034);
+      
+      // Streak badge in footer for Sunrise theme
+      if (streakWeeks >= 1) {
+        const streakText = `🔥 ${streakWeeks} WEEK STREAK`;
+        ctx.font = '700 22px Inter, sans-serif';
+        const sw = ctx.measureText(streakText).width;
+        fillRoundedRect(ctx, rx - sw - 30, 984, sw + 30, 46, 23, 'rgba(249, 115, 22, 0.1)');
+        ctx.strokeStyle = 'rgba(249, 115, 22, 0.3)';
+        ctx.lineWidth = 1.5;
+        if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(rx - sw - 30, 984, sw + 30, 46, 23); ctx.stroke(); }
+        ctx.fillStyle = '#c2410c'; // darker orange for light theme
+        ctx.fillText(streakText, rx - sw - 15, 1017);
+      }
 
     } else {
       // ════════════════════════════════════════════════════════════════════
@@ -3155,7 +3206,15 @@ export default function App() {
       {showExportGuide && <ExportGuideModal onClose={() => setShowExportGuide(false)} lang={lang} />}
       {showFeedbackModal && <FeedbackModal onClose={() => setShowFeedbackModal(false)} lang={lang} addToast={addToast} />}
 
-      <AICoachChat lang={lang} goal={goal} programStyle={programStyle} targetPace={targetPace} currentUser={data?.profile?.displayName || currentUser} />
+      <AICoachChat 
+        lang={lang} 
+        goal={goal} 
+        programStyle={programStyle} 
+        targetPace={targetPace} 
+        currentUser={data?.profile?.displayName || currentUser} 
+        runActs={runActs}
+        selectedDays={selectedDays}
+      />
       <Toast toasts={toasts} />
     </div>
   );

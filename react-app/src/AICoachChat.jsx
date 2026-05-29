@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Bot, MessageSquare, Send, X } from 'lucide-react';
 
-export default function AICoachChat({ lang, goal, programStyle, targetPace, currentUser }) {
+export default function AICoachChat({ lang, goal, programStyle, targetPace, currentUser, runActs, selectedDays }) {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -141,9 +141,30 @@ export default function AICoachChat({ lang, goal, programStyle, targetPace, curr
         content: m.content
       }));
 
+      // Consistency Logic inside Chat
+      const planRunDays = selectedDays?.length || 3;
+      const now = new Date();
+      const last7DaysRuns = (runActs || []).filter(a => {
+        if (!a.startTimeLocal) return false;
+        const d = new Date(a.startTimeLocal);
+        const diffDays = (now - d) / (1000 * 60 * 60 * 24);
+        return diffDays >= 0 && diffDays <= 7 && (a.distance > 0 || a.duration > 0);
+      }).length;
+      const consistencyScore = Math.min(100, Math.round((last7DaysRuns / Math.max(1, planRunDays)) * 100));
+
       const systemPrompt = lang === 'id' 
-        ? `Lo adalah Coach AI EnduraUP, pelatih lari profesional yang friendly, suportif, dan asik (pake bahasa gaul lo/gue). User saat ini punya goal: ${goal}, style program: ${programStyle}, dan target pace: ${targetPace} min/km. Jawab pertanyaan user dengan singkat, padat, dan pakai emoji. Kasih tips lari yang praktis dan aman secara medis.`
-        : `You are EnduraUP Coach AI, a professional, friendly, and supportive running coach. The user's current goal: ${goal}, program style: ${programStyle}, target pace: ${targetPace} min/km. Answer concisely with emojis. Provide practical and medically safe running tips.`;
+        ? `Lo adalah Coach AI EnduraUP, pelatih lari profesional yang friendly, suportif, dan asik (pake bahasa gaul lo/gue).
+User saat ini punya target: ${goal}, style program: ${programStyle}, pace: ${targetPace} min/km.
+INFO PENTING: Skor Konsistensi 7 hari terakhir user ini adalah ${consistencyScore}%.
+Jika <50%, lo boleh roasting/teguran halus biar dia sadar kalau dia malas, lalu kasih semangat biar lari Easy Run aja dulu.
+Jika >=80%, puji dia habis-habisan karena konsisten, dan kasih tahu dia udah siap dikasih menu berat kayak Interval.
+Jawab pertanyaan user dengan singkat, padat, dan pakai emoji. Kasih tips lari yang praktis dan aman secara medis.`
+        : `You are EnduraUP Coach AI, a professional, friendly, and supportive running coach.
+User's goal: ${goal}, style: ${programStyle}, target pace: ${targetPace} min/km.
+IMPORTANT: The user's 7-day consistency score is ${consistencyScore}%.
+If <50%, give them a playful roast/tough love about being lazy, then encourage them to just do an Easy Run to build the habit.
+If >=80%, praise them highly for being consistent and let them know they are ready for tough Interval workouts.
+Answer concisely with emojis. Provide practical and medically safe running tips.`;
 
       const endpoint = apiKey ? 'https://api.groq.com/openai/v1/chat/completions' : '/api/coach';
       const headers = { 'Content-Type': 'application/json' };
