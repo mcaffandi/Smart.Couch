@@ -12,6 +12,25 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
   const [currentBlog, setCurrentBlog] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTag, setSelectedTag] = useState('Semua');
+  const [savedBlogs, setSavedBlogs] = useState([]);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('enduraup_saved_blogs');
+    if (saved) setSavedBlogs(JSON.parse(saved));
+  }, []);
+
+  const handleSaveBlog = (blogId) => {
+    setSavedBlogs(prev => {
+      let next;
+      if (prev.includes(blogId)) {
+        next = prev.filter(id => id !== blogId);
+      } else {
+        next = [...prev, blogId];
+      }
+      localStorage.setItem('enduraup_saved_blogs', JSON.stringify(next));
+      return next;
+    });
+  };
 
   useEffect(() => {
     if (onViewChange) onViewChange(view);
@@ -146,6 +165,8 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
         lang={lang} 
         onProps={() => handleProps(currentBlog.id)}
         currentUser={currentUser}
+        savedBlogs={savedBlogs}
+        onSaveToggle={() => handleSaveBlog(currentBlog.id)}
       />
     );
   }
@@ -270,24 +291,34 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
                   {b.excerpt || (b.content || '').replace(/<[^>]+>/g, '').substring(0, 150) + '...'}
                 </p>
                 
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', paddingTop: 16, borderTop: '1px dashed var(--border)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <div style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 500 }}>
-                      {b.createdAt?.toDate ? b.createdAt.toDate().toLocaleDateString('id-ID', {day: 'numeric', month: 'short'}) : ''}
-                    </div>
-                    {b.propsCount > 0 && (
-                      <div style={{ fontSize: 13, color: '#f97316', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <span>🔥</span> {b.propsCount}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', paddingTop: 16, borderTop: '1px dashed var(--border)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <div style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 500 }}>
+                        {b.createdAt?.toDate ? b.createdAt.toDate().toLocaleDateString('id-ID', {day: 'numeric', month: 'short'}) : ''}
                       </div>
-                    )}
-                  </div>
-                  {isAdmin && (
-                    <div style={{ display: 'flex', gap: 12 }} onClick={e => e.stopPropagation()}>
-                      <button onClick={() => { setCurrentBlog(b); setView('edit'); }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }} title="Edit">✏️</button>
-                      <button onClick={() => handleDelete(b.id)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--accent-rose)' }} title="Hapus">🗑️</button>
+                      {b.propsCount > 0 && (
+                        <div style={{ fontSize: 13, color: '#f97316', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 2.5z"></path></svg>
+                          {b.propsCount}
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
+                    <div style={{ display: 'flex', gap: 12, alignItems: 'center' }} onClick={e => e.stopPropagation()}>
+                      <button 
+                        onClick={() => handleSaveBlog(b.id)}
+                        style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, color: savedBlogs.includes(b.id) ? 'var(--text-primary)' : 'var(--text-muted)' }} 
+                        title={savedBlogs.includes(b.id) ? "Tersimpan" : "Simpan"}
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill={savedBlogs.includes(b.id) ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+                      </button>
+                      {isAdmin && (
+                        <>
+                          <button onClick={() => { setCurrentBlog(b); setView('edit'); }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', padding: 0 }} title="Edit">✏️</button>
+                          <button onClick={() => handleDelete(b.id)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--accent-rose)', padding: 0 }} title="Hapus">🗑️</button>
+                        </>
+                      )}
+                    </div>
+                  </div>
               </div>
             </div>
           ))}
@@ -331,18 +362,8 @@ function BlogReader({ blog, onBack, onTagClick, lang, onProps, currentUser }) {
         </div>
       </div>
 
-      {blog.coverImage && (
-        <div style={{ width: '100%', height: 400, background: `url(${blog.coverImage}) center/cover`, borderRadius: 8, marginBottom: 40 }}></div>
-      )}
-
-      {/* Render rich text HTML content safely */}
-      <div 
-        className="medium-blog-content"
-        dangerouslySetInnerHTML={{ __html: blog.content }} 
-      />
-
-      {/* Medium-style Action Bar */}
-      <div style={{ marginTop: 60, padding: '16px 0', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      {/* Top Action Bar */}
+      <div style={{ marginTop: 24, marginBottom: 32, padding: '16px 0', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display: 'flex', gap: 24, alignItems: 'center' }}>
           {/* Burn Button */}
           <button 
@@ -358,21 +379,17 @@ function BlogReader({ blog, onBack, onTagClick, lang, onProps, currentUser }) {
               cursor: 'pointer',
               transition: 'color 0.2s'
             }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.color = '#f97316';
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.color = 'var(--text-secondary)';
-            }}
+            onMouseOver={(e) => e.currentTarget.style.color = '#f97316'}
+            onMouseOut={(e) => e.currentTarget.style.color = 'var(--text-secondary)'}
             title={lang === 'id' ? 'Bakar (Burn) UP!' : 'Burn UP!'}
           >
-            <span style={{ fontSize: 20 }}>🔥</span>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 2.5z"></path></svg>
             <span style={{ fontSize: 14, fontWeight: 500 }}>{blog.propsCount || 0}</span>
           </button>
 
-          {/* Comment Button (Coming soon / UI only for now) */}
+          {/* Comment Button */}
           <button 
-            onClick={() => alert(lang === 'id' ? 'Fitur komentar segera hadir!' : 'Comments feature coming soon!')}
+            onClick={() => document.getElementById('comments-section').scrollIntoView({ behavior: 'smooth' })}
             style={{ 
               background: 'transparent', 
               border: 'none', 
@@ -388,30 +405,30 @@ function BlogReader({ blog, onBack, onTagClick, lang, onProps, currentUser }) {
             onMouseOut={(e) => e.currentTarget.style.color = 'var(--text-secondary)'}
             title={lang === 'id' ? 'Komentar' : 'Comments'}
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
-            <span style={{ fontSize: 14, fontWeight: 500 }}>0</span>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+            <span style={{ fontSize: 14, fontWeight: 500 }}>{blog.comments?.length || 0}</span>
           </button>
         </div>
 
         <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
-          {/* Bookmark Button (Coming soon / UI only for now) */}
+          {/* Bookmark Button */}
           <button 
-            onClick={() => alert(lang === 'id' ? 'Fitur simpan segera hadir!' : 'Bookmark feature coming soon!')}
+            onClick={onSaveToggle}
             style={{ 
               background: 'transparent', 
               border: 'none', 
               padding: 0, 
               display: 'flex', 
               alignItems: 'center', 
-              color: 'var(--text-secondary)',
+              color: savedBlogs?.includes(blog.id) ? 'var(--text-primary)' : 'var(--text-secondary)',
               cursor: 'pointer',
               transition: 'color 0.2s'
             }}
             onMouseOver={(e) => e.currentTarget.style.color = 'var(--text-primary)'}
-            onMouseOut={(e) => e.currentTarget.style.color = 'var(--text-secondary)'}
-            title={lang === 'id' ? 'Simpan' : 'Save'}
+            onMouseOut={(e) => e.currentTarget.style.color = savedBlogs?.includes(blog.id) ? 'var(--text-primary)' : 'var(--text-secondary)'}
+            title={savedBlogs?.includes(blog.id) ? (lang === 'id' ? 'Tersimpan' : 'Saved') : (lang === 'id' ? 'Simpan' : 'Save')}
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill={savedBlogs?.includes(blog.id) ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
           </button>
 
           {/* Share Button */}
@@ -439,9 +456,66 @@ function BlogReader({ blog, onBack, onTagClick, lang, onProps, currentUser }) {
             onMouseOut={(e) => e.currentTarget.style.color = 'var(--text-secondary)'}
             title={lang === 'id' ? 'Bagikan' : 'Share'}
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>
           </button>
         </div>
+      </div>
+
+      {blog.coverImage && (
+        <div style={{ width: '100%', height: 400, background: `url(${blog.coverImage}) center/cover`, borderRadius: 8, marginBottom: 40 }}></div>
+      )}
+
+      {/* Render rich text HTML content safely */}
+      <div 
+        className="medium-blog-content"
+        dangerouslySetInnerHTML={{ __html: blog.content }} 
+      />
+
+      <hr style={{ borderTop: '1px solid var(--border)', margin: '60px 0 40px' }} />
+      
+      {/* Comments Section */}
+      <div id="comments-section" style={{ paddingBottom: 60 }}>
+        <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 24, color: 'var(--text-primary)' }}>
+          {lang === 'id' ? 'Komentar' : 'Comments'} ({blog.comments?.length || 0})
+        </h3>
+        
+        <div style={{ background: 'var(--bg-surface)', padding: 16, borderRadius: 12, border: '1px solid var(--border)', marginBottom: 32 }}>
+          <textarea 
+            placeholder={lang === 'id' ? 'Tulis komentar Anda (segera hadir)...' : 'Write your comment (coming soon)...'} 
+            style={{ width: '100%', background: 'transparent', border: 'none', outline: 'none', color: 'var(--text-primary)', resize: 'none', height: 60, fontSize: 15 }}
+            disabled
+          ></textarea>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 12 }}>
+            <button disabled style={{ background: 'var(--accent-purple)', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: 20, fontWeight: 600, fontSize: 13, opacity: 0.5, cursor: 'not-allowed' }}>
+              {lang === 'id' ? 'Kirim' : 'Post'}
+            </button>
+          </div>
+        </div>
+
+        {blog.comments && blog.comments.length > 0 ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+            {blog.comments.map((c, i) => (
+              <div key={i} style={{ display: 'flex', gap: 12 }}>
+                <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--bg-card)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', flexShrink: 0 }}>
+                  {c.name ? c.name.charAt(0).toUpperCase() : 'U'}
+                </div>
+                <div>
+                  <div style={{ background: 'var(--bg-surface)', padding: '12px 16px', borderRadius: '0 12px 12px 12px', border: '1px solid var(--border)' }}>
+                    <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 4 }}>{c.name || 'User'}</div>
+                    <div style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.5 }}>{c.text}</div>
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6, marginLeft: 4 }}>
+                    {c.createdAt?.toDate ? c.createdAt.toDate().toLocaleDateString() : 'Baru saja'}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-muted)', fontSize: 14 }}>
+            {lang === 'id' ? 'Belum ada komentar. Jadilah yang pertama!' : 'No comments yet. Be the first to comment!'}
+          </div>
+        )}
       </div>
     </div>
   );
