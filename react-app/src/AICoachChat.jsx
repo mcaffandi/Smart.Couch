@@ -103,19 +103,30 @@ export default function AICoachChat({ lang, goal, programStyle, targetPace, curr
       }).length;
       const consistencyScore = Math.min(100, Math.round((last7DaysRuns / Math.max(1, planRunDays)) * 100));
 
+      const formatPace = (p) => {
+        if (!p) return '0:00';
+        const min = Math.floor(p);
+        const sec = Math.round((p - min) * 60);
+        return `${min}:${sec.toString().padStart(2, '0')}`;
+      };
+      
+      const formattedPace = formatPace(targetPace);
+
       const systemPrompt = lang === 'id' 
         ? `Lo adalah Coach AI EnduraUP, pelatih lari profesional yang friendly, suportif, dan asik (pake bahasa gaul lo/gue).
-User saat ini punya target: ${goal}, style program: ${programStyle}, pace: ${targetPace} min/km.
+User saat ini punya target: ${goal}, style program: ${programStyle}, pace: ${formattedPace} min/km.
 INFO PENTING: Skor Konsistensi 7 hari terakhir user ini adalah ${consistencyScore}%.
 Jika <50%, lo boleh roasting/teguran halus biar dia sadar kalau dia malas, lalu kasih semangat biar lari Easy Run aja dulu.
 Jika >=80%, puji dia habis-habisan karena konsisten, dan kasih tahu dia udah siap dikasih menu berat kayak Interval.
-Jawab pertanyaan user dengan singkat, padat, dan pakai emoji. Kasih tips lari yang praktis dan aman secara medis.`
+Jawab pertanyaan user dengan singkat, padat, dan pakai emoji. Kasih tips lari yang praktis dan aman. 
+ATURAN KERAS: JIKA user bertanya topik DI LUAR olahraga/lari (misal coding, agama, politik, dll), TOLAK dengan sopan dan kembalikan obrolan ke olahraga.`
         : `You are EnduraUP Coach AI, a professional, friendly, and supportive running coach.
-User's goal: ${goal}, style: ${programStyle}, target pace: ${targetPace} min/km.
+User's goal: ${goal}, style: ${programStyle}, target pace: ${formattedPace} min/km.
 IMPORTANT: The user's 7-day consistency score is ${consistencyScore}%.
 If <50%, give them a playful roast/tough love about being lazy, then encourage them to just do an Easy Run to build the habit.
 If >=80%, praise them highly for being consistent and let them know they are ready for tough Interval workouts.
-Answer concisely with emojis. Provide practical and medically safe running tips.`;
+Answer concisely with emojis. Provide practical and medically safe running tips. 
+STRICT RULE: IF the user asks about topics OUTSIDE of running/fitness (like coding, politics, etc.), politely DECLINE and steer the conversation back to running.`;
 
       const endpoint = apiKey ? 'https://api.groq.com/openai/v1/chat/completions' : '/api/coach';
       const headers = { 'Content-Type': 'application/json' };
@@ -128,7 +139,7 @@ Answer concisely with emojis. Provide practical and medically safe running tips.
           model: "llama-3.1-8b-instant",
           messages: [{ role: "system", content: systemPrompt }, ...chatHistory],
           temperature: 0.7,
-          max_tokens: 150
+          max_tokens: 400
         })
       });
 
