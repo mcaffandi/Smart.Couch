@@ -81,7 +81,18 @@ export default function BlogModule({ isAdmin, lang = 'id' }) {
   }
 
   if (view === 'read' && currentBlog) {
-    return <BlogReader blog={currentBlog} onBack={() => { setView('list'); setCurrentBlog(null); }} lang={lang} />;
+    return (
+      <BlogReader 
+        blog={currentBlog} 
+        onBack={() => { setView('list'); setCurrentBlog(null); }} 
+        onTagClick={(tag) => {
+          setSelectedTag(tag);
+          setView('list');
+          setCurrentBlog(null);
+        }}
+        lang={lang} 
+      />
+    );
   }
 
   const filteredBlogs = blogs.filter(b => {
@@ -191,7 +202,7 @@ export default function BlogModule({ isAdmin, lang = 'id' }) {
               <div style={{ padding: 20, flex: 1, display: 'flex', flexDirection: 'column' }}>
                 <div style={{ display: 'flex', gap: 6, marginBottom: 12, flexWrap: 'wrap' }}>
                   {b.tags && b.tags.slice(0,2).map((tag, i) => (
-                    <span key={i} style={{ fontSize: 11, background: 'color-mix(in srgb, var(--accent-purple) 15%, transparent)', color: 'var(--accent-purple)', padding: '2px 8px', borderRadius: 12, fontWeight: 700 }}>
+                    <span key={i} onClick={(e) => { e.stopPropagation(); setSelectedTag(tag); }} style={{ fontSize: 11, background: 'color-mix(in srgb, var(--accent-purple) 15%, transparent)', color: 'var(--accent-purple)', padding: '2px 8px', borderRadius: 12, fontWeight: 700, cursor: 'pointer' }}>
                       {tag.toUpperCase()}
                     </span>
                   ))}
@@ -224,7 +235,7 @@ export default function BlogModule({ isAdmin, lang = 'id' }) {
   );
 }
 
-function BlogReader({ blog, onBack, lang }) {
+function BlogReader({ blog, onBack, onTagClick, lang }) {
   const dateStr = blog.createdAt?.toDate ? blog.createdAt.toDate().toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
   
   return (
@@ -236,9 +247,13 @@ function BlogReader({ blog, onBack, lang }) {
 
       <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
         {blog.tags && blog.tags.map((tag, i) => (
-          <span key={i} style={{ fontSize: 11, background: 'var(--bg-card-hover)', color: 'var(--text-secondary)', padding: '4px 10px', borderRadius: 12, fontWeight: 600, border: '1px solid var(--border)', fontFamily: 'Inter, sans-serif' }}>
+          <button 
+            key={i} 
+            onClick={() => onTagClick && onTagClick(tag)}
+            style={{ fontSize: 11, background: 'var(--bg-card-hover)', color: 'var(--text-secondary)', padding: '4px 10px', borderRadius: 12, fontWeight: 600, border: '1px solid var(--border)', fontFamily: 'Inter, sans-serif', cursor: 'pointer' }}
+          >
             {tag.toUpperCase()}
-          </span>
+          </button>
         ))}
       </div>
 
