@@ -172,6 +172,29 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
 
   const consistencyScore = Math.min(100, Math.round((last7DaysRuns / Math.max(1, targetWeeklyRuns)) * 100));
   
+  // Weekly Streak Calculation
+  let streakWeeks = 0;
+  const weeksMap = {};
+  const msInWeek = 7 * 24 * 60 * 60 * 1000;
+  (activities || []).forEach(a => {
+    if (!a.startTimeLocal) return;
+    const d = new Date(a.startTimeLocal);
+    const diffTime = now.getTime() - d.getTime();
+    if (diffTime >= 0) {
+      const weeksAgo = Math.floor(diffTime / msInWeek);
+      weeksMap[weeksAgo] = (weeksMap[weeksAgo] || 0) + 1;
+    }
+  });
+
+  let w = 0;
+  if (weeksMap[0] > 0) {
+    while (weeksMap[w] > 0) { streakWeeks++; w++; }
+  } else if (weeksMap[1] > 0) {
+    // Hasn't run this week yet, but streak from last week is still alive
+    w = 1;
+    while (weeksMap[w] > 0) { streakWeeks++; w++; }
+  }
+
   let consistencyMsg = '';
   let consistencyColor = '';
   if (consistencyScore >= 100) {
@@ -411,26 +434,39 @@ Return ONLY the raw JSON array.`;
         background: `linear-gradient(135deg, ${consistencyColor}15, var(--bg-card))`,
         border: `1px solid ${consistencyColor}40`,
         borderRadius: 14, padding: '16px 20px', marginBottom: 20,
-        display: 'flex', alignItems: 'center', gap: 16
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16
       }}>
-        <div style={{
-          position: 'relative', width: 48, height: 48, display: 'flex',
-          alignItems: 'center', justifyContent: 'center', flexShrink: 0
-        }}>
-          <svg width="48" height="48" viewBox="0 0 36 36" style={{ position: 'absolute' }}>
-            <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="var(--border)" strokeWidth="3" />
-            <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke={consistencyColor} strokeWidth="3" strokeDasharray={`${consistencyScore}, 100`} />
-          </svg>
-          <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-primary)' }}>{consistencyScore}%</span>
-        </div>
-        <div>
-          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 4 }}>
-            {lang === 'id' ? 'Konsistensi 7 Hari' : '7-Day Consistency'}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <div style={{
+            position: 'relative', width: 48, height: 48, display: 'flex',
+            alignItems: 'center', justifyContent: 'center', flexShrink: 0
+          }}>
+            <svg width="48" height="48" viewBox="0 0 36 36" style={{ position: 'absolute' }}>
+              <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="var(--border)" strokeWidth="3" />
+              <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke={consistencyColor} strokeWidth="3" strokeDasharray={`${consistencyScore}, 100`} />
+            </svg>
+            <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-primary)' }}>{consistencyScore}%</span>
           </div>
-          <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
-            {consistencyMsg}
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 4 }}>
+              {lang === 'id' ? 'Konsistensi 7 Hari' : '7-Day Consistency'}
+            </div>
+            <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+              {consistencyMsg}
+            </div>
           </div>
         </div>
+        
+        {/* Streak Badge */}
+        {streakWeeks >= 1 && (
+          <div style={{
+            background: 'rgba(249, 115, 22, 0.1)', border: '1px solid rgba(249, 115, 22, 0.3)',
+            padding: '6px 12px', borderRadius: 20, display: 'flex', alignItems: 'center', gap: 6,
+            color: '#f97316', fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap'
+          }}>
+            🔥 {streakWeeks} {lang === 'id' ? 'Minggu Streak' : 'Week Streak'}
+          </div>
+        )}
       </div>
 
       <div className="training-header-controls" style={{ marginBottom: 16 }}>
