@@ -331,8 +331,48 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
 function BlogReader({ blog, onBack, onTagClick, lang, onProps, currentUser, savedBlogs, onSaveToggle }) {
   const dateStr = blog.createdAt?.toDate ? blog.createdAt.toDate().toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
   
+  const [showBurnAnim, setShowBurnAnim] = useState(false);
+
+  const handleBurnClick = () => {
+    setShowBurnAnim(true);
+    setTimeout(() => setShowBurnAnim(false), 1500);
+    onProps();
+  };
+
   return (
-    <div className="animate-fade-in medium-blog-container">
+    <div className="animate-fade-in medium-blog-container" style={{ position: 'relative' }}>
+      <style>{`
+        @keyframes burnPopup {
+          0% { transform: scale(0.5); opacity: 0; filter: drop-shadow(0 0 10px #f97316); }
+          15% { transform: scale(1.3); opacity: 1; filter: drop-shadow(0 0 60px #f97316); }
+          30% { transform: scale(1); opacity: 1; filter: drop-shadow(0 0 40px #f97316); }
+          80% { transform: scale(1); opacity: 1; filter: drop-shadow(0 0 40px #f97316); }
+          100% { transform: scale(1.8); opacity: 0; filter: drop-shadow(0 0 120px #f97316); }
+        }
+      `}</style>
+
+      {showBurnAnim && (
+        <div style={{
+          position: 'fixed',
+          top: 0, left: 0, right: 0, bottom: 0,
+          pointerEvents: 'none',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 99999,
+          background: 'rgba(0,0,0,0.6)',
+          animation: 'burnPopup 1.5s ease-out forwards'
+        }}>
+          <svg width="240" height="240" viewBox="0 0 24 24" fill="#f97316" stroke="#f97316" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 2.5z"></path>
+          </svg>
+          <div style={{ fontSize: 64, fontWeight: 900, color: '#f97316', marginTop: 32, textShadow: '0 0 30px rgba(249,115,22,0.8)', letterSpacing: 2 }}>
+            BURN UP!
+          </div>
+        </div>
+      )}
+
       <button onClick={onBack} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontWeight: 600, padding: 0, marginBottom: 32, fontSize: 14, fontFamily: 'Inter, sans-serif' }}>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
         {lang === 'id' ? 'Kembali ke Artikel' : 'Back to Articles'}
@@ -367,7 +407,7 @@ function BlogReader({ blog, onBack, onTagClick, lang, onProps, currentUser, save
         <div style={{ display: 'flex', gap: 24, alignItems: 'center' }}>
           {/* Burn Button */}
           <button 
-            onClick={onProps}
+            onClick={handleBurnClick}
             style={{ 
               background: 'transparent', 
               border: 'none', 
@@ -377,8 +417,10 @@ function BlogReader({ blog, onBack, onTagClick, lang, onProps, currentUser, save
               gap: 8, 
               color: 'var(--text-secondary)',
               cursor: 'pointer',
-              transition: 'color 0.2s'
+              transition: 'color 0.2s, transform 0.1s'
             }}
+            onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.9)'}
+            onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
             onMouseOver={(e) => e.currentTarget.style.color = '#f97316'}
             onMouseOut={(e) => e.currentTarget.style.color = 'var(--text-secondary)'}
             title={lang === 'id' ? 'Bakar (Burn) UP!' : 'Burn UP!'}
