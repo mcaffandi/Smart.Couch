@@ -438,6 +438,11 @@ export default function App() {
 
         if (newRuns.length === 0) {
           addToast(lang === 'id' ? 'Tidak ada lari baru di Strava' : 'No new runs found in Strava', 'info');
+          setData(prev => {
+            const updated = { ...prev, profile: { ...(prev.profile || {}), stravaConnected: true } };
+            saveAndSyncData(updated);
+            return updated;
+          });
           setIsUploading(false);
           return;
         }
@@ -459,7 +464,12 @@ export default function App() {
             if (r.maxHr && r.maxHr > maxHr) maxHr = r.maxHr;
           });
 
-          const updated = { ...prev, running_activities: mergedRuns, max_hr: maxHr };
+          const updated = { 
+            ...prev, 
+            running_activities: mergedRuns, 
+            max_hr: maxHr,
+            profile: { ...(prev.profile || {}), stravaConnected: true }
+          };
           saveAndSyncData(updated);
           
           addToast(lang === 'id' ? `Berhasil sync ${addedCount} lari baru dari Strava!` : `Successfully synced ${addedCount} new runs from Strava!`, 'success');
@@ -3290,7 +3300,9 @@ export default function App() {
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169" />
                   </svg>
-                  Connect with Strava (Admin Only)
+                  {data.profile?.stravaConnected 
+                    ? (lang === 'id' ? 'Sync Data Strava (Admin)' : 'Sync Strava Data (Admin)')
+                    : 'Connect with Strava (Admin Only)'}
                 </button>
               </>
             )}
