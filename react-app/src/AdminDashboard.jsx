@@ -230,7 +230,42 @@ export default function AdminDashboard({ onBack }) {
           <h2 style={{ margin: 0, marginBottom: 4 }}>EnduraUP - Admin Dashboard</h2>
           <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 14 }}>Analisis Performa Web & Kebutuhan Bisnis</p>
         </div>
-        <button className="btn btn-secondary" style={{ width: 'auto', padding: '8px 16px' }} onClick={onBack}>Kembali ke Web</button>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button className="btn btn-primary" style={{ width: 'auto', padding: '8px 16px' }} onClick={async () => {
+            const { addDoc, collection, serverTimestamp } = await import('firebase/firestore');
+            const { db } = await import('./firebase');
+            const dummyData = [
+              {
+                title: 'Panduan Lari 5K Pertama untuk Pemula',
+                content: '<h2>Mengapa 5K?</h2><p>Lari 5K adalah jarak yang sangat pas untuk pemula...</p><h3>Tips Memulai:</h3><ol><li>Mulai perlahan.</li><li>Gunakan sepatu lari yang tepat.</li><li>Jangan lupa pemanasan.</li></ol>',
+                tags: ['Pemula', 'Tips'],
+                author: 'Coach EnduraUP',
+                coverImage: 'https://images.unsplash.com/photo-1552674605-15c2174f4153?q=80&w=1200&auto=format&fit=crop',
+              },
+              {
+                title: 'Nutrisi Penting Sebelum Lari Jauh',
+                content: '<h2>Karbohidrat adalah Raja</h2><p>Saat lari jauh, tubuh butuh bahan bakar...</p>',
+                tags: ['Nutrisi', 'Endurance'],
+                author: 'Tim Ahli Gizi',
+                coverImage: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?q=80&w=1200&auto=format&fit=crop',
+              },
+              {
+                title: 'Pentingnya Recovery Run',
+                content: '<h2>Jangan Remehkan Hari Santai</h2><p>Recovery run adalah lari lambat yang dilakukan keesokan harinya setelah latihan berat...</p>',
+                tags: ['Recovery', 'Tips'],
+                author: 'Coach EnduraUP',
+                coverImage: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=1200&auto=format&fit=crop',
+              }
+            ];
+            try {
+              for (const b of dummyData) {
+                await addDoc(collection(db, 'blogs'), { ...b, createdAt: serverTimestamp() });
+              }
+              alert("Dummy articles berhasil ditambahkan! Silakan buka halaman Blog.");
+            } catch(e){ alert("Error: " + e.message); }
+          }}>Generate Dummy Articles</button>
+          <button className="btn btn-secondary" style={{ width: 'auto', padding: '8px 16px' }} onClick={onBack}>Kembali ke Web</button>
+        </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 20, marginBottom: 40 }}>
