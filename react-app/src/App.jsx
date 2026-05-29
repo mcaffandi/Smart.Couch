@@ -236,9 +236,37 @@ export default function App() {
   });
 
   // ── State: active tab ────────────────────────────────────────────────────────
-  const [tab, setTab] = useState('dashboard');
-  const [showLanding, setShowLanding] = useState(true);
+  const [tab, setTab] = useState(() => {
+    if (window.location.pathname.startsWith('/blog')) return 'blog';
+    return 'dashboard';
+  });
+  const [showLanding, setShowLanding] = useState(() => {
+    return !window.location.pathname.startsWith('/blog');
+  });
   const [blogView, setBlogView] = useState('list');
+
+  // Handle browser routing (back/forward)
+  useEffect(() => {
+    const handlePopState = () => {
+      const path = window.location.pathname;
+      if (path.startsWith('/blog')) {
+        setTab('blog');
+        setShowLanding(false);
+      } else {
+        setTab('dashboard');
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // Sync tab state to URL
+  useEffect(() => {
+    const targetPath = tab === 'blog' ? '/blog' : '/';
+    if (window.location.pathname !== targetPath) {
+      window.history.pushState(null, '', targetPath);
+    }
+  }, [tab]);
 
   // ── State: share performance card modal ──────────────────────────────────────
   const [showShareModal, setShowShareModal] = useState(false);
@@ -1665,34 +1693,35 @@ export default function App() {
     return <AdminDashboard onBack={() => { setShowAdmin(false); window.location.hash = ''; }} />;
   }
 
-  if (!sessionUser) {
-    if (tab === 'blog') {
-      return (
-        <div className="landing-container" style={{ minHeight: '100vh', paddingTop: 80, overflowY: 'auto', background: 'var(--bg-base)' }}>
-          {blogView === 'list' && (
-            <nav className="landing-nav" style={{ position: 'fixed', top: 0, left: 0, right: 0, width: '100%', maxWidth: '100%', padding: '20px 5%', background: 'rgba(9, 9, 11, 0.8)', backdropFilter: 'blur(12px)', zIndex: 100, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-              <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-                <div className="nav-logo" onClick={() => { setTab('dashboard'); setShowLanding(true); }} style={{ cursor: 'pointer' }}>
-                  <Logo size={26} />
-                  <span className="logo-text">EnduraUP</span>
-                </div>
-                <button className="nav-btn-primary" onClick={() => { setTab('dashboard'); setShowLanding(true); }}>
-                  {lang === 'id' ? '← Kembali ke Utama' : '← Back to Home'}
-                </button>
-              </div>
-            </nav>
-          )}
-          <div style={{ padding: '60px 20px', maxWidth: 1000, margin: '0 auto' }}>
-            <BlogModule isAdmin={false} lang={lang} onViewChange={setBlogView} />
+  // ─────────────────── STANDALONE BLOG PAGE ───────────────────
+  if (tab === 'blog') {
+    return (
+      <div className="landing-container" style={{ minHeight: '100vh', paddingTop: 80, overflowY: 'auto', background: 'var(--bg-base)' }}>
+        <nav className="landing-nav" style={{ position: 'fixed', top: 0, left: 0, right: 0, width: '100%', maxWidth: '100%', padding: '16px 5%', background: 'var(--glass-bg)', backdropFilter: 'blur(12px)', zIndex: 100, borderBottom: '1px solid var(--border)' }}>
+          <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+            <div className="nav-logo" onClick={() => setTab('dashboard')} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Logo size={24} />
+              <span className="logo-text" style={{ fontSize: 20, letterSpacing: '-0.5px' }}>EnduraUP</span>
+            </div>
+            {blogView === 'list' && (
+              <button className="nav-btn-primary" onClick={() => setTab('dashboard')} style={{ padding: '8px 16px', borderRadius: 20, fontSize: 13, background: 'transparent', border: '1px solid var(--border)', color: 'var(--text-primary)', fontWeight: 600 }}>
+                {lang === 'id' ? 'Kembali ke Dasbor' : 'Back to Dashboard'}
+              </button>
+            )}
           </div>
+        </nav>
+        <div style={{ padding: '60px 20px', maxWidth: 1000, margin: '0 auto' }}>
+          <BlogModule isAdmin={showAdmin} lang={lang} onViewChange={setBlogView} />
         </div>
-      );
-    }
+      </div>
+    );
+  }
 
+  if (!sessionUser) {
     if (showLanding) {
       return <LandingPage 
         onGetStarted={() => setShowLanding(false)} 
-        onViewBlog={() => { setShowLanding(false); setTab('blog'); }}
+        onViewBlog={() => setTab('blog')}
         lang={lang} 
         setLang={setLang} 
         visitorCount={visitorCount} 
@@ -3258,22 +3287,7 @@ export default function App() {
                 )}
               </div>
             )}
-            {/* ─────────────────── BLOG / EDUKASI ─────────────────── */}
-            {tab === 'blog' && (
-              <div className="animate-fade-in">
-                {blogView === 'list' && (
-                  <button 
-                    onClick={() => setTab('dashboard')} 
-                    style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text-primary)', padding: '10px 16px', borderRadius: 20, cursor: 'pointer', marginBottom: 24, display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 700, transition: 'all 0.2s', boxShadow: 'var(--shadow-base)' }}
-                    onMouseOver={e => e.currentTarget.style.borderColor = 'var(--accent-purple)'}
-                    onMouseOut={e => e.currentTarget.style.borderColor = 'var(--border)'}
-                  >
-                    {lang === 'id' ? '← Kembali ke Dashboard' : '← Back to Dashboard'}
-                  </button>
-                )}
-                <BlogModule isAdmin={showAdmin} lang={lang} onViewChange={setBlogView} />
-              </div>
-            )}
+            {/* Blog logic has been moved to a standalone page handler at the top of App.jsx */}
           </>
         )}
       </main>
