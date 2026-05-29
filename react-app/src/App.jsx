@@ -381,6 +381,101 @@ export default function App() {
     setTimeout(() => setToasts(ts => ts.filter(t => t.id !== id)), 3500);
   }, []);
 
+  // ── Strava Integration ───────────────────────────────────────────────────────
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+    if (code && isAdmin) {
+      window.history.replaceState({}, document.title, window.location.pathname);
+      
+      const clientId = import.meta.env.VITE_STRAVA_CLIENT_ID;
+      const clientSecret = import.meta.env.VITE_STRAVA_CLIENT_SECRET;
+      
+      if (!clientId || !clientSecret) {
+        addToast(lang === 'id' ? 'Strava API Keys belum lengkap di .env!' : 'Strava API keys missing in .env!', 'error');
+        return;
+      }
+
+      setIsUploading(true);
+      addToast(lang === 'id' ? 'Menghubungkan ke Strava...' : 'Connecting to Strava...', 'info');
+
+      fetch('https://www.strava.com/oauth/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          client_id: clientId,
+          client_secret: clientSecret,
+          code: code,
+          grant_type: 'authorization_code'
+        })
+      })
+      .then(res => res.json())
+      .then(tokenData => {
+        if (!tokenData.access_token) throw new Error('No access token');
+        
+        return fetch('https://www.strava.com/api/v3/athlete/activities?per_page=30', {
+          headers: { 'Authorization': `Bearer ${tokenData.access_token}` }
+        });
+      })
+      .then(res => res.json())
+      .then(activities => {
+        if (!Array.isArray(activities)) throw new Error('Invalid Strava Data');
+        
+        let newRuns = [];
+        activities.forEach(act => {
+          if (act.type === 'Run') {
+            const startDateLocal = new Date(act.start_date_local).getTime();
+            newRuns.push({
+              activityName: act.name,
+              startTimeLocal: startDateLocal,
+              distance: act.distance * 100, // meters to cm
+              duration: act.moving_time * 1000, // seconds to ms
+              avgHr: act.average_heartrate ? Math.round(act.average_heartrate) : null,
+              maxHr: act.max_heartrate ? Math.round(act.max_heartrate) : null
+            });
+          }
+        });
+
+        if (newRuns.length === 0) {
+          addToast(lang === 'id' ? 'Tidak ada lari baru di Strava' : 'No new runs found in Strava', 'info');
+          setIsUploading(false);
+          return;
+        }
+
+        setData(prev => {
+          let mergedRuns = [...(prev.running_activities || [])];
+          let addedCount = 0;
+          newRuns.forEach(nr => {
+            const exists = mergedRuns.find(er => Math.abs(er.startTimeLocal - nr.startTimeLocal) < 60000);
+            if (!exists) {
+              mergedRuns.push(nr);
+              addedCount++;
+            }
+          });
+          mergedRuns.sort((a,b) => a.startTimeLocal - b.startTimeLocal);
+          
+          let maxHr = prev.max_hr || 0;
+          mergedRuns.forEach(r => {
+            if (r.maxHr && r.maxHr > maxHr) maxHr = r.maxHr;
+          });
+
+          const updated = { ...prev, running_activities: mergedRuns, max_hr: maxHr };
+          saveAndSyncData(updated);
+          
+          addToast(lang === 'id' ? `Berhasil sync ${addedCount} lari baru dari Strava!` : `Successfully synced ${addedCount} new runs from Strava!`, 'success');
+          return updated;
+        });
+
+        setIsUploading(false);
+      })
+      .catch(err => {
+        console.error('Strava Error:', err);
+        addToast(lang === 'id' ? 'Gagal narik data Strava!' : 'Failed to fetch Strava data!', 'error');
+        setIsUploading(false);
+      });
+    }
+  }, [isAdmin, saveAndSyncData, lang, addToast]);
+
   // ── Derived data ─────────────────────────────────────────────────────────────
   const runActs = data.running_activities ?? [];
   const sleepRecs = data.sleep_records ?? {};
