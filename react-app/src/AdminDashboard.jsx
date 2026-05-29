@@ -225,12 +225,12 @@ export default function AdminDashboard({ onBack }) {
 
   return (
     <div style={{ padding: '40px 20px', maxWidth: 900, margin: '0 auto', color: 'var(--text-primary)' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 30 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 30, flexWrap: 'wrap', gap: 16 }}>
         <div>
           <h2 style={{ margin: 0, marginBottom: 4 }}>EnduraUP - Admin Dashboard</h2>
           <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 14 }}>Analisis Performa Web & Kebutuhan Bisnis</p>
         </div>
-        <button className="btn btn-secondary" onClick={onBack}>Kembali ke Web</button>
+        <button className="btn btn-secondary" style={{ width: 'auto', padding: '8px 16px' }} onClick={onBack}>Kembali ke Web</button>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 20, marginBottom: 40 }}>
