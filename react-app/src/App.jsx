@@ -1711,7 +1711,7 @@ export default function App() {
           </div>
         </nav>
         <div style={{ padding: '60px 20px', maxWidth: 1000, margin: '0 auto' }}>
-          <BlogModule isAdmin={showAdmin} lang={lang} onViewChange={setBlogView} />
+          <BlogModule isAdmin={showAdmin} lang={lang} onViewChange={setBlogView} currentUser={currentUser} />
         </div>
       </div>
     );

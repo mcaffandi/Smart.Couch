@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { collection, query, orderBy, getDocs, addDoc, serverTimestamp, deleteDoc, doc, updateDoc } from 'firebase/firestore';
+import { collection, query, orderBy, getDocs, addDoc, serverTimestamp, deleteDoc, doc, updateDoc, increment, arrayUnion } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from './firebase';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 
-export default function BlogModule({ isAdmin, lang = 'id', onViewChange }) {
+export default function BlogModule({ isAdmin, lang = 'id', onViewChange, currentUser }) {
   const [blogs, setBlogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState('list'); // 'list', 'read', 'edit'
@@ -71,6 +71,55 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange }) {
     }
   };
 
+  const handleProps = async (blogId) => {
+    // Determine user identifier: UID or local device ID
+    const userId = currentUser?.uid || localStorage.getItem('smartcoach_device_id') || `anon_${Math.random().toString(36).substring(2, 10)}`;
+    if (!localStorage.getItem('smartcoach_device_id') && !currentUser?.uid) {
+      localStorage.setItem('smartcoach_device_id', userId);
+    }
+    
+    // Check local storage if this device already liked it to prevent spamming
+    const likedStr = localStorage.getItem('enduraup_blog_props') || '[]';
+    const likedArr = JSON.parse(likedStr);
+    
+    // If they already liked it locally, don't allow again
+    if (likedArr.includes(blogId)) return;
+    
+    // Save to local storage
+    likedArr.push(blogId);
+    localStorage.setItem('enduraup_blog_props', JSON.stringify(likedArr));
+
+    // Optimistic UI update
+    setBlogs(prev => prev.map(b => {
+      if (b.id === blogId) {
+        return {
+          ...b,
+          propsCount: (b.propsCount || 0) + 1,
+          propsUsers: [...(b.propsUsers || []), userId]
+        };
+      }
+      return b;
+    }));
+    
+    if (currentBlog?.id === blogId) {
+      setCurrentBlog(prev => ({
+        ...prev,
+        propsCount: (prev.propsCount || 0) + 1,
+        propsUsers: [...(prev.propsUsers || []), userId]
+      }));
+    }
+
+    // Update in Firestore
+    try {
+      await updateDoc(doc(db, 'blogs', blogId), {
+        propsCount: increment(1),
+        propsUsers: arrayUnion(userId)
+      });
+    } catch (e) {
+      console.error("Error adding props:", e);
+    }
+  };
+
   // Extract unique tags
   const allTags = useMemo(() => {
     const tagsSet = new Set();
@@ -95,6 +144,8 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange }) {
           setCurrentBlog(null);
         }}
         lang={lang} 
+        onProps={() => handleProps(currentBlog.id)}
+        currentUser={currentUser}
       />
     );
   }
@@ -220,8 +271,15 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange }) {
                 </p>
                 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', paddingTop: 16, borderTop: '1px dashed var(--border)' }}>
-                  <div style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 500 }}>
-                    {b.createdAt?.toDate ? b.createdAt.toDate().toLocaleDateString('id-ID', {day: 'numeric', month: 'short'}) : ''}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 500 }}>
+                      {b.createdAt?.toDate ? b.createdAt.toDate().toLocaleDateString('id-ID', {day: 'numeric', month: 'short'}) : ''}
+                    </div>
+                    {b.propsCount > 0 && (
+                      <div style={{ fontSize: 13, color: '#f97316', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <span>🔥</span> {b.propsCount}
+                      </div>
+                    )}
                   </div>
                   {isAdmin && (
                     <div style={{ display: 'flex', gap: 12 }} onClick={e => e.stopPropagation()}>
@@ -239,7 +297,7 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange }) {
   );
 }
 
-function BlogReader({ blog, onBack, onTagClick, lang }) {
+function BlogReader({ blog, onBack, onTagClick, lang, onProps, currentUser }) {
   const dateStr = blog.createdAt?.toDate ? blog.createdAt.toDate().toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
   
   return (
@@ -282,6 +340,52 @@ function BlogReader({ blog, onBack, onTagClick, lang }) {
         className="medium-blog-content"
         dangerouslySetInnerHTML={{ __html: blog.content }} 
       />
+
+      {/* Burn / Props Section */}
+      <div style={{ marginTop: 60, paddingTop: 40, borderTop: '1px solid var(--border)', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <h3 style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 16 }}>
+          {lang === 'id' ? 'Suka artikel ini?' : 'Like this article?'}
+        </h3>
+        <button 
+          onClick={onProps}
+          style={{ 
+            background: 'var(--bg-surface)', 
+            border: '1px solid var(--border)', 
+            borderRadius: 30, 
+            padding: '12px 24px', 
+            fontSize: 16, 
+            fontWeight: 700, 
+            color: 'var(--text-primary)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+          }}
+          onMouseOver={(e) => {
+            e.currentTarget.style.transform = 'translateY(-2px) scale(1.02)';
+            e.currentTarget.style.borderColor = '#f97316';
+            e.currentTarget.style.boxShadow = '0 6px 16px rgba(249, 115, 22, 0.2)';
+          }}
+          onMouseOut={(e) => {
+            e.currentTarget.style.transform = 'none';
+            e.currentTarget.style.borderColor = 'var(--border)';
+            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
+          }}
+        >
+          <span style={{ fontSize: 24 }}>🔥</span> 
+          <span>{lang === 'id' ? 'Bakar (Burn) UP!' : 'Burn UP!'}</span>
+          {blog.propsCount > 0 && (
+            <span style={{ background: '#f97316', color: '#fff', padding: '2px 8px', borderRadius: 12, fontSize: 14, marginLeft: 4 }}>
+              {blog.propsCount}
+            </span>
+          )}
+        </button>
+        <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 12 }}>
+          {lang === 'id' ? 'Bakar kalori dan beri semangat buat penulis!' : 'Burn calories and boost the author!'}
+        </p>
+      </div>
     </div>
   );
 }
