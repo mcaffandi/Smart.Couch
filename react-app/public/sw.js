@@ -9,10 +9,21 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Simple network-first strategy to pass PWA criteria
+  // Hanya proses request GET yang menggunakan protokol HTTP/HTTPS
+  if (event.request.method !== 'GET' || !event.request.url.startsWith('http')) return;
+
   event.respondWith(
-    fetch(event.request).catch(() => {
-      return caches.match(event.request);
+    fetch(event.request).catch(async () => {
+      try {
+        const cachedResponse = await caches.match(event.request);
+        if (cachedResponse) return cachedResponse;
+        return new Response('Network error & no cache found.', { 
+          status: 503, 
+          statusText: 'Service Unavailable' 
+        });
+      } catch (err) {
+        return new Response('Error', { status: 500 });
+      }
     })
   );
 });
