@@ -3171,32 +3171,34 @@ export default function App() {
               )}
             </div>
 
-            {/*
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, margin: '16px 0' }}>
-              <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-              <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>ATAU</span>
-              <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-            </div>
+            {isAdmin && (
+              <>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, margin: '16px 0' }}>
+                  <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+                  <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>ATAU</span>
+                  <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+                </div>
 
-            <button 
-              className="btn btn-primary" 
-              onClick={() => {
-                const clientId = import.meta.env.VITE_STRAVA_CLIENT_ID;
-                if (!clientId) {
-                  alert('Strava Client ID belum dikonfigurasi di Environment Variables!');
-                  return;
-                }
-                const redirectUri = window.location.origin;
-                window.location.href = `https://www.strava.com/oauth/authorize?client_id=${clientId}&response_type=code&redirect_uri=${redirectUri}&approval_prompt=force&scope=activity:read_all`;
-              }} 
-              style={{ width: '100%', background: '#fc4c02', color: '#fff', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: 14 }}
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169" />
-              </svg>
-              Connect with Strava
-            </button>
-            */}
+                <button 
+                  className="btn btn-primary" 
+                  onClick={() => {
+                    const clientId = import.meta.env.VITE_STRAVA_CLIENT_ID;
+                    if (!clientId) {
+                      alert('Strava Client ID belum dikonfigurasi di Environment Variables!');
+                      return;
+                    }
+                    const redirectUri = window.location.origin;
+                    window.location.href = `https://www.strava.com/oauth/authorize?client_id=${clientId}&response_type=code&redirect_uri=${redirectUri}&approval_prompt=force&scope=activity:read_all`;
+                  }} 
+                  style={{ width: '100%', background: '#fc4c02', color: '#fff', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: 14 }}
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169" />
+                  </svg>
+                  Connect with Strava (Admin Only)
+                </button>
+              </>
+            )}
 
             <button className="btn btn-secondary" onClick={() => setShowUploadModal(false)} style={{ width: '100%', marginTop: 20 }}>Tutup</button>
           </div>
