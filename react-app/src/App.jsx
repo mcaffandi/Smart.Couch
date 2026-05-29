@@ -1668,16 +1668,18 @@ export default function App() {
     if (tab === 'blog') {
       return (
         <div className="landing-container" style={{ minHeight: '100vh', paddingTop: 80, overflowY: 'auto', background: 'var(--bg-base)' }}>
-          <nav className="landing-nav" style={{ position: 'fixed', top: 0, width: '100%', background: 'rgba(12, 12, 14, 0.8)', backdropFilter: 'blur(12px)', zIndex: 100, borderBottom: '1px solid var(--border)' }}>
-            <div className="nav-logo" onClick={() => { setTab('dashboard'); setShowLanding(true); }} style={{ cursor: 'pointer' }}>
-              <Logo size={26} />
-              <span className="logo-text">EnduraUP</span>
+          <nav className="landing-nav" style={{ position: 'fixed', top: 0, left: 0, right: 0, width: '100%', maxWidth: '100%', padding: '20px 5%', background: 'rgba(9, 9, 11, 0.8)', backdropFilter: 'blur(12px)', zIndex: 100, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+            <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+              <div className="nav-logo" onClick={() => { setTab('dashboard'); setShowLanding(true); }} style={{ cursor: 'pointer' }}>
+                <Logo size={26} />
+                <span className="logo-text">EnduraUP</span>
+              </div>
+              <button className="nav-btn-primary" onClick={() => { setTab('dashboard'); setShowLanding(true); }}>
+                {lang === 'id' ? '← Kembali ke Utama' : '← Back to Home'}
+              </button>
             </div>
-            <button className="btn btn-outline" onClick={() => { setTab('dashboard'); setShowLanding(true); }} style={{ borderRadius: 20 }}>
-              {lang === 'id' ? '← Kembali ke Utama' : '← Back to Home'}
-            </button>
           </nav>
-          <div style={{ padding: '40px 20px', maxWidth: 1000, margin: '0 auto' }}>
+          <div style={{ padding: '60px 20px', maxWidth: 1000, margin: '0 auto' }}>
             <BlogModule isAdmin={false} lang={lang} />
           </div>
         </div>
@@ -1966,6 +1968,41 @@ export default function App() {
                       </button>
                     </div>
                   )}
+                  
+                  {/* Reset Data Button moved here */}
+                  <div style={{ marginBottom: 16 }}>
+                    {!confirmReset ? (
+                      <button
+                        className="btn btn-danger"
+                        onClick={() => setConfirmReset(true)}
+                        style={{ width: '100%', padding: '10px', borderRadius: 8, fontSize: 13, fontWeight: 700 }}
+                      >
+                        {lang === 'id' ? 'Reset & Hapus Semua Data' : 'Reset & Clear All Data'}
+                      </button>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, background: 'rgba(239, 68, 68, 0.05)', padding: 12, borderRadius: 8, border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+                        <div style={{ fontSize: 12, color: '#fb7185', fontWeight: 600, textAlign: 'center' }}>
+                          {lang === 'id' ? 'Hapus semua data? Tidak bisa di-undo.' : 'Delete all data? Cannot be undone.'}
+                        </div>
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          <button
+                            className="btn btn-danger"
+                            style={{ flex: 1, padding: '8px', fontSize: 12 }}
+                            onClick={() => { handleReset(); setShowProfileModal(false); }}
+                          >
+                            {lang === 'id' ? 'Ya, Hapus' : 'Yes, Delete'}
+                          </button>
+                          <button
+                            className="btn btn-secondary"
+                            style={{ flex: 1, padding: '8px', fontSize: 12 }}
+                            onClick={() => setConfirmReset(false)}
+                          >
+                            Batal
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                   <div style={{ display: 'flex', gap: 8, width: '100%' }}>
                     <button onClick={() => { setEditDraft({ displayName: curName, age: curAge, gender: curGender, weight: curWeight, height: curHeight, avatar: avatar, goal: goal, programStyle: programStyle, targetPace: targetPace, selectedDays: selectedDays }); setProfileEditMode(true); }}
                       style={{ flex: 1, padding: '10px', borderRadius: 8, background: 'var(--accent-purple)', border: 'none', color: '#fff', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13, fontWeight: 700 }}
@@ -2844,16 +2881,26 @@ export default function App() {
       {/* ═══════════════════════════════ MAIN ══════════════════════════════════ */}
       <main className="main-content">
         {/* Header */}
-        <div className="page-header" style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <h1 className="page-title" style={{ margin: 0 }}>EnduraUP</h1>
+        <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <h1 className="page-title" style={{ margin: 0 }}>EnduraUP</h1>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
+              <p className="page-subtitle" style={{ fontSize: 14, color: 'var(--text-secondary)', margin: 0 }}>
+                {data.profile?.displayName ? (lang === 'id' ? `Halo, ${data.profile.displayName} — ` : `Hello, ${data.profile.displayName} — `) : ''}
+                {new Date().toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+              </p>
+            </div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
-            <p className="page-subtitle" style={{ fontSize: 14, color: 'var(--text-secondary)', margin: 0 }}>
-              {data.profile?.displayName ? (lang === 'id' ? `Halo, ${data.profile.displayName} — ` : `Hello, ${data.profile.displayName} — `) : ''}
-              {new Date().toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-            </p>
-          </div>
+          <button 
+            onClick={() => setTab('blog')} 
+            style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', fontWeight: 600, fontSize: 14, cursor: 'pointer', transition: 'color 0.2s', marginTop: 4 }}
+            onMouseOver={e => e.target.style.color = 'var(--text-primary)'}
+            onMouseOut={e => e.target.style.color = 'var(--text-secondary)'}
+          >
+            Blog
+          </button>
         </div>
 
         {!hasData ? (
@@ -2901,14 +2948,14 @@ export default function App() {
         ) : (
           <>
             {/* Tabs */}
-            <div className="tabs">
-              {[
+            {tab !== 'blog' && (
+              <div className="tabs">
+                {[
                 { key: 'dashboard', label: t.tabDashboard },
                 { key: 'training', label: t.tabTrainingPlan },
                 { key: 'race', label: t.tabRacePrediction },
                 { key: 'history', label: t.tabRunHistory },
                 { key: 'sleep', label: t.tabSleepAnalysis },
-                { key: 'blog', label: 'Blog' },
               ].map(item => (
                 <button key={item.key} className={`tab ${tab === item.key ? 'active' : ''}`} onClick={() => setTab(item.key)}>
                   {item.label}
@@ -2932,6 +2979,7 @@ export default function App() {
                 Share
               </button>
             </div>
+            )}
 
             {/* ─────────────────── DASHBOARD ─────────────────── */}
             {tab === 'dashboard' && (
@@ -3236,7 +3284,17 @@ export default function App() {
             )}
             {/* ─────────────────── BLOG / EDUKASI ─────────────────── */}
             {tab === 'blog' && (
-              <BlogModule isAdmin={showAdmin} lang={lang} />
+              <div className="animate-fade-in">
+                <button 
+                  onClick={() => setTab('dashboard')} 
+                  style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text-primary)', padding: '10px 16px', borderRadius: 20, cursor: 'pointer', marginBottom: 24, display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 700, transition: 'all 0.2s', boxShadow: 'var(--shadow-base)' }}
+                  onMouseOver={e => e.currentTarget.style.borderColor = 'var(--accent-purple)'}
+                  onMouseOut={e => e.currentTarget.style.borderColor = 'var(--border)'}
+                >
+                  {lang === 'id' ? '← Kembali ke Dashboard' : '← Back to Dashboard'}
+                </button>
+                <BlogModule isAdmin={showAdmin} lang={lang} />
+              </div>
             )}
           </>
         )}
