@@ -3295,13 +3295,25 @@ export default function App() {
                     const redirectUri = window.location.origin;
                     window.location.href = `https://www.strava.com/oauth/authorize?client_id=${clientId}&response_type=code&redirect_uri=${redirectUri}&approval_prompt=force&scope=activity:read_all`;
                   }} 
-                  style={{ width: '100%', background: '#fc4c02', color: '#fff', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: 14 }}
+                  style={{ 
+                    width: '100%', 
+                    background: data.profile?.stravaConnected ? 'rgba(252, 76, 2, 0.2)' : '#fc4c02', 
+                    color: data.profile?.stravaConnected ? '#fc4c02' : '#fff', 
+                    border: data.profile?.stravaConnected ? '1px solid rgba(252, 76, 2, 0.5)' : 'none', 
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: 14 
+                  }}
                 >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169" />
-                  </svg>
+                  {data.profile?.stravaConnected ? (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                  ) : (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169" />
+                    </svg>
+                  )}
                   {data.profile?.stravaConnected 
-                    ? (lang === 'id' ? 'Sync Data Strava (Admin)' : 'Sync Strava Data (Admin)')
+                    ? (lang === 'id' ? 'Strava Terhubung (Klik untuk Sync)' : 'Strava Connected (Click to Sync)')
                     : 'Connect with Strava (Admin Only)'}
                 </button>
               </>
