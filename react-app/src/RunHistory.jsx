@@ -86,9 +86,9 @@ export default function RunHistory({ activities, lang = 'id' }) {
     <div>
       {earnedBadges.length > 0 && (
         <div style={{ marginBottom: 32 }}>
-          <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
-            Achievements
-            <span style={{ fontSize: 12, fontWeight: 700, background: 'var(--accent-purple)', color: '#fff', padding: '2px 8px', borderRadius: 12 }}>{earnedBadges.length}</span>
+          <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
+            {lang === 'id' ? 'Pencapaian' : 'Achievements'}
+            <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-muted)' }}>({earnedBadges.length})</span>
           </h3>
           <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 8, scrollbarWidth: 'none', msOverflowStyle: 'none' }} className="hide-scrollbar">
             {earnedBadges.map((b, idx) => (
