@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { collection, query, orderBy, getDocs, addDoc, serverTimestamp, deleteDoc, doc, updateDoc, increment, arrayUnion } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { db, storage } from './firebase';
+import { db, storage, auth, googleProvider, signInWithPopup } from './firebase';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 
@@ -13,6 +13,26 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTag, setSelectedTag] = useState('Semua');
   const [savedBlogs, setSavedBlogs] = useState([]);
+  
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [pendingAction, setPendingAction] = useState(null);
+
+  const requireAuth = (actionCallback) => {
+    if (currentUser) {
+      actionCallback();
+    } else {
+      setPendingAction(() => actionCallback);
+      setShowAuthModal(true);
+    }
+  };
+
+  useEffect(() => {
+    if (currentUser && pendingAction) {
+      pendingAction();
+      setPendingAction(null);
+      setShowAuthModal(false);
+    }
+  }, [currentUser, pendingAction]);
 
   useEffect(() => {
     const saved = localStorage.getItem('enduraup_saved_blogs');
@@ -20,15 +40,17 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
   }, []);
 
   const handleSaveBlog = (blogId) => {
-    setSavedBlogs(prev => {
-      let next;
-      if (prev.includes(blogId)) {
-        next = prev.filter(id => id !== blogId);
-      } else {
-        next = [...prev, blogId];
-      }
-      localStorage.setItem('enduraup_saved_blogs', JSON.stringify(next));
-      return next;
+    requireAuth(() => {
+      setSavedBlogs(prev => {
+        let next;
+        if (prev.includes(blogId)) {
+          next = prev.filter(id => id !== blogId);
+        } else {
+          next = [...prev, blogId];
+        }
+        localStorage.setItem('enduraup_saved_blogs', JSON.stringify(next));
+        return next;
+      });
     });
   };
 
@@ -56,6 +78,26 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
   useEffect(() => {
     fetchBlogs();
   }, []);
+
+  // Handle direct URL access
+  useEffect(() => {
+    if (blogs.length > 0 && view === 'list') {
+      const path = window.location.pathname;
+      if (path.startsWith('/blog/')) {
+        const slug = path.split('/blog/')[1];
+        if (slug) {
+          const found = blogs.find(b => 
+            b.slug === slug || 
+            (b.title && b.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') === slug)
+          );
+          if (found) {
+            setCurrentBlog(found);
+            setView('read');
+          }
+        }
+      }
+    }
+  }, [blogs]);
 
   const handleSave = async (blogData) => {
     try {
@@ -91,52 +133,51 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
   };
 
   const handleProps = async (blogId) => {
-    // Determine user identifier: UID or local device ID
-    const userId = currentUser?.uid || localStorage.getItem('smartcoach_device_id') || `anon_${Math.random().toString(36).substring(2, 10)}`;
-    if (!localStorage.getItem('smartcoach_device_id') && !currentUser?.uid) {
-      localStorage.setItem('smartcoach_device_id', userId);
-    }
-    
-    // Check local storage if this device already liked it to prevent spamming
-    const likedStr = localStorage.getItem('enduraup_blog_props') || '[]';
-    const likedArr = JSON.parse(likedStr);
-    
-    // If they already liked it locally, don't allow again
-    if (likedArr.includes(blogId)) return;
-    
-    // Save to local storage
-    likedArr.push(blogId);
-    localStorage.setItem('enduraup_blog_props', JSON.stringify(likedArr));
+    requireAuth(async () => {
+      // Determine user identifier: UID
+      const userId = currentUser.uid || currentUser.email || `user_${Date.now()}`;
+      
+      // Check local storage if this device already liked it to prevent spamming
+      const likedStr = localStorage.getItem('enduraup_blog_props') || '[]';
+      const likedArr = JSON.parse(likedStr);
+      
+      // If they already liked it locally, don't allow again
+      if (likedArr.includes(blogId)) return;
+      
+      // Save to local storage
+      likedArr.push(blogId);
+      localStorage.setItem('enduraup_blog_props', JSON.stringify(likedArr));
 
-    // Optimistic UI update
-    setBlogs(prev => prev.map(b => {
-      if (b.id === blogId) {
-        return {
-          ...b,
-          propsCount: (b.propsCount || 0) + 1,
-          propsUsers: [...(b.propsUsers || []), userId]
-        };
-      }
-      return b;
-    }));
-    
-    if (currentBlog?.id === blogId) {
-      setCurrentBlog(prev => ({
-        ...prev,
-        propsCount: (prev.propsCount || 0) + 1,
-        propsUsers: [...(prev.propsUsers || []), userId]
+      // Optimistic UI update
+      setBlogs(prev => prev.map(b => {
+        if (b.id === blogId) {
+          return {
+            ...b,
+            propsCount: (b.propsCount || 0) + 1,
+            propsUsers: [...(b.propsUsers || []), userId]
+          };
+        }
+        return b;
       }));
-    }
+      
+      if (currentBlog?.id === blogId) {
+        setCurrentBlog(prev => ({
+          ...prev,
+          propsCount: (prev.propsCount || 0) + 1,
+          propsUsers: [...(prev.propsUsers || []), userId]
+        }));
+      }
 
-    // Update in Firestore
-    try {
-      await updateDoc(doc(db, 'blogs', blogId), {
-        propsCount: increment(1),
-        propsUsers: arrayUnion(userId)
-      });
-    } catch (e) {
-      console.error("Error adding props:", e);
-    }
+      // Update in Firestore
+      try {
+        await updateDoc(doc(db, 'blogs', blogId), {
+          propsCount: increment(1),
+          propsUsers: arrayUnion(userId)
+        });
+      } catch (e) {
+        console.error("Error adding props:", e);
+      }
+    });
   };
 
   // Extract unique tags
@@ -167,6 +208,7 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
         currentUser={currentUser}
         savedBlogs={savedBlogs}
         onSaveToggle={() => handleSaveBlog(currentBlog.id)}
+        onRequireAuth={requireAuth}
       />
     );
   }
@@ -187,6 +229,44 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
   // LIST VIEW
   return (
     <div className="animate-fade-in" style={{ maxWidth: 1000, margin: '0 auto', width: '100%' }}>
+      {showAuthModal && (
+        <div className="profile-modal-backdrop" onClick={(e) => { if (e.target === e.currentTarget) { setShowAuthModal(false); setPendingAction(null); } }} style={{ zIndex: 100000, background: 'rgba(0,0,0,0.7)' }}>
+          <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 16, width: '100%', maxWidth: 400, padding: 24, textAlign: 'center' }}>
+            <h3 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 8 }}>
+              {lang === 'id' ? 'Login Diperlukan' : 'Login Required'}
+            </h3>
+            <p style={{ color: 'var(--text-secondary)', fontSize: 14, marginBottom: 24 }}>
+              {lang === 'id' ? 'Anda harus masuk untuk berinteraksi dengan artikel.' : 'You must be logged in to interact with articles.'}
+            </p>
+            <button 
+              onClick={async () => {
+                try {
+                  await signInWithPopup(auth, googleProvider);
+                  // onAuthStateChanged in App.jsx will catch this and set currentUser
+                  // the useEffect in BlogModule will automatically run pendingAction when currentUser changes
+                } catch (err) {
+                  console.error(err);
+                }
+              }}
+              style={{ width: '100%', background: 'var(--text-primary)', color: 'var(--bg-base)', border: 'none', padding: '12px 16px', borderRadius: 8, fontWeight: 600, fontSize: 15, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
+                <path fill="#EA4335" d="M12 5.04c1.66 0 3.2.57 4.38 1.69l3.27-3.27C17.67 1.48 15.02 1 12 1 7.28 1 3.22 3.72 1.25 7.68l3.86 3C6.02 7.74 8.78 5.04 12 5.04z" />
+                <path fill="#4285F4" d="M23.49 12.27c0-.81-.07-1.59-.2-2.36H12v4.51h6.46c-.29 1.48-1.14 2.73-2.42 3.57v2.97h3.89c2.28-2.1 3.56-5.19 3.56-8.69z" />
+                <path fill="#FBBC05" d="M5.11 14.78A7.12 7.12 0 0 1 4.7 12c0-.98.17-1.92.47-2.78L1.3 6.22A11.94 11.94 0 0 0 0 12c0 2.08.4 4.06 1.11 5.89l4-3.11z" />
+                <path fill="#34A853" d="M12 23c3.24 0 5.97-1.07 7.96-2.91l-3.89-2.97c-1.08.72-2.48 1.16-4.07 1.16-3.22 0-5.98-2.7-6.97-5.64l-3.86 3C3.22 20.28 7.28 23 12 23z" />
+              </svg>
+              {lang === 'id' ? 'Lanjutkan dengan Google' : 'Continue with Google'}
+            </button>
+            <button 
+              onClick={() => { setShowAuthModal(false); setPendingAction(null); }}
+              style={{ width: '100%', background: 'transparent', color: 'var(--text-muted)', border: 'none', padding: '12px 16px', marginTop: 8, fontWeight: 500, fontSize: 14, cursor: 'pointer' }}
+            >
+              {lang === 'id' ? 'Batal' : 'Cancel'}
+            </button>
+          </div>
+        </div>
+      )}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24, flexWrap: 'wrap', gap: 16 }}>
         <div>
           <h2 style={{ fontSize: 32, fontWeight: 800, margin: 0, letterSpacing: '-0.02em' }}>Blog & Artikel</h2>
@@ -328,50 +408,67 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
   );
 }
 
-function BlogReader({ blog, onBack, onTagClick, lang, onProps, currentUser, savedBlogs, onSaveToggle }) {
+function BlogReader({ blog, onBack, onTagClick, lang, onProps, currentUser, savedBlogs, onSaveToggle, onRequireAuth }) {
   const dateStr = blog.createdAt?.toDate ? blog.createdAt.toDate().toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
   
-  const [showBurnAnim, setShowBurnAnim] = useState(false);
+  const [particles, setParticles] = useState([]);
+  
+  const finalSlug = blog.slug || blog.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+  const blogUrl = `https://www.enduraup.space/blog/${finalSlug}`;
 
-  const handleBurnClick = () => {
-    setShowBurnAnim(true);
-    setTimeout(() => setShowBurnAnim(false), 1500);
+  useEffect(() => {
+    // Save original values
+    const originalTitle = document.title;
+    const metaDesc = document.querySelector('meta[name="description"]');
+    const originalDesc = metaDesc ? metaDesc.getAttribute('content') : '';
+
+    // Update for SEO
+    document.title = blog.seoTitle || `${blog.title} | EnduraUP Blog`;
+    if (metaDesc) {
+      metaDesc.setAttribute('content', blog.seoDescription || `Baca artikel "${blog.title}" di EnduraUP.`);
+    }
+
+    // Update URL history for clean sharing
+    window.history.replaceState({}, '', `/blog/${finalSlug}`);
+
+    return () => {
+      // Restore on unmount
+      document.title = originalTitle;
+      if (metaDesc) metaDesc.setAttribute('content', originalDesc);
+      window.history.replaceState({}, '', '/'); // restore to root or appropriate path
+    };
+  }, [blog]);
+
+  const handleBurnClick = (e) => {
+    const numParticles = Math.floor(Math.random() * 6) + 8; // 8 to 13 particles
+    const newParticles = Array.from({ length: numParticles }).map((_, i) => ({
+      id: Date.now() + i,
+      x: (Math.random() - 0.5) * 100, // -50px to 50px horizontal spread
+      y: (Math.random() - 0.5) * 40, // slight vertical variation
+      r: (Math.random() - 0.5) * 60, // rotation
+      s: Math.random() * 0.6 + 0.6, // scale
+      d: Math.random() * 0.3, // delay
+      dur: Math.random() * 0.6 + 1.2 // duration 1.2s to 1.8s
+    }));
+
+    setParticles(prev => [...prev, ...newParticles]);
+
+    setTimeout(() => {
+      setParticles(prev => prev.filter(p => !newParticles.find(np => np.id === p.id)));
+    }, 2500);
+
     onProps();
   };
 
   return (
     <div className="animate-fade-in medium-blog-container" style={{ position: 'relative' }}>
       <style>{`
-        @keyframes burnPopup {
-          0% { transform: scale(0.5); opacity: 0; filter: drop-shadow(0 0 10px #f97316); }
-          15% { transform: scale(1.3); opacity: 1; filter: drop-shadow(0 0 60px #f97316); }
-          30% { transform: scale(1); opacity: 1; filter: drop-shadow(0 0 40px #f97316); }
-          80% { transform: scale(1); opacity: 1; filter: drop-shadow(0 0 40px #f97316); }
-          100% { transform: scale(1.8); opacity: 0; filter: drop-shadow(0 0 120px #f97316); }
+        @keyframes floatUpFade {
+          0% { transform: translate(var(--tx), var(--ty)) scale(var(--s)) rotate(0deg); opacity: 0; }
+          10% { opacity: 1; }
+          100% { transform: translate(calc(var(--tx) * 2), calc(-150px - var(--ty))) scale(calc(var(--s) * 0.8)) rotate(var(--r)); opacity: 0; }
         }
       `}</style>
-
-      {showBurnAnim && (
-        <div style={{
-          position: 'fixed',
-          top: 0, left: 0, right: 0, bottom: 0,
-          pointerEvents: 'none',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 99999,
-          background: 'rgba(0,0,0,0.6)',
-          animation: 'burnPopup 1.5s ease-out forwards'
-        }}>
-          <svg width="240" height="240" viewBox="0 0 24 24" fill="#f97316" stroke="#f97316" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 2.5z"></path>
-          </svg>
-          <div style={{ fontSize: 64, fontWeight: 900, color: '#f97316', marginTop: 32, textShadow: '0 0 30px rgba(249,115,22,0.8)', letterSpacing: 2 }}>
-            BURN UP!
-          </div>
-        </div>
-      )}
 
       <button onClick={onBack} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontWeight: 600, padding: 0, marginBottom: 32, fontSize: 14, fontFamily: 'Inter, sans-serif' }}>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
@@ -409,6 +506,7 @@ function BlogReader({ blog, onBack, onTagClick, lang, onProps, currentUser, save
           <button 
             onClick={handleBurnClick}
             style={{ 
+              position: 'relative',
               background: 'transparent', 
               border: 'none', 
               padding: 0, 
@@ -427,6 +525,26 @@ function BlogReader({ blog, onBack, onTagClick, lang, onProps, currentUser, save
           >
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 2.5z"></path></svg>
             <span style={{ fontSize: 14, fontWeight: 500 }}>{blog.propsCount || 0}</span>
+            {particles.map(p => (
+              <svg 
+                key={p.id}
+                width="20" height="20" viewBox="0 0 24 24" 
+                fill="#f97316" stroke="#f97316" 
+                style={{
+                  position: 'absolute',
+                  left: 0, top: 0,
+                  pointerEvents: 'none',
+                  '--tx': `${p.x}px`,
+                  '--ty': `${p.y}px`,
+                  '--r': `${p.r}deg`,
+                  '--s': p.s,
+                  animation: `floatUpFade ${p.dur}s ease-out forwards`,
+                  animationDelay: `${p.d}s`
+                }}
+              >
+                <path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 2.5z"></path>
+              </svg>
+            ))}
           </button>
 
           {/* Comment Button */}
@@ -476,11 +594,10 @@ function BlogReader({ blog, onBack, onTagClick, lang, onProps, currentUser, save
           {/* Share Button */}
           <button 
             onClick={() => {
-              const url = window.location.href;
               if (navigator.share) {
-                navigator.share({ title: blog.title, url }).catch(console.error);
+                navigator.share({ title: blog.title, url: blogUrl }).catch(console.error);
               } else {
-                navigator.clipboard.writeText(url);
+                navigator.clipboard.writeText(blogUrl);
                 alert(lang === 'id' ? 'Tautan disalin ke clipboard!' : 'Link copied to clipboard!');
               }
             }}
@@ -524,11 +641,30 @@ function BlogReader({ blog, onBack, onTagClick, lang, onProps, currentUser, save
         <div style={{ background: 'var(--bg-surface)', padding: 16, borderRadius: 12, border: '1px solid var(--border)', marginBottom: 32 }}>
           <textarea 
             placeholder={lang === 'id' ? 'Tulis komentar Anda (segera hadir)...' : 'Write your comment (coming soon)...'} 
-            style={{ width: '100%', background: 'transparent', border: 'none', outline: 'none', color: 'var(--text-primary)', resize: 'none', height: 60, fontSize: 15 }}
-            disabled
+            style={{ width: '100%', background: 'transparent', border: 'none', outline: 'none', color: 'var(--text-primary)', resize: 'none', height: 60, fontSize: 15, cursor: !currentUser ? 'pointer' : 'text' }}
+            readOnly={!currentUser}
+            onClick={() => {
+              if (!currentUser && onRequireAuth) {
+                onRequireAuth(() => {
+                  document.getElementById('comments-section')?.scrollIntoView();
+                });
+              }
+            }}
           ></textarea>
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 12 }}>
-            <button disabled style={{ background: 'var(--accent-purple)', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: 20, fontWeight: 600, fontSize: 13, opacity: 0.5, cursor: 'not-allowed' }}>
+            <button 
+              className="btn btn-primary" 
+              style={{ padding: '8px 16px', borderRadius: 20, fontSize: 14 }}
+              onClick={() => {
+                if (!currentUser && onRequireAuth) {
+                  onRequireAuth(() => {
+                    alert('Komentar akan segera hadir!');
+                  });
+                } else {
+                  alert('Komentar akan segera hadir!');
+                }
+              }}
+            >
               {lang === 'id' ? 'Kirim' : 'Post'}
             </button>
           </div>
@@ -565,6 +701,9 @@ function BlogReader({ blog, onBack, onTagClick, lang, onProps, currentUser, save
 
 function BlogEditor({ blog, onSave, onCancel, lang }) {
   const [title, setTitle] = useState(blog?.title || '');
+  const [slug, setSlug] = useState(blog?.slug || '');
+  const [seoTitle, setSeoTitle] = useState(blog?.seoTitle || '');
+  const [seoDescription, setSeoDescription] = useState(blog?.seoDescription || '');
   const [content, setContent] = useState(blog?.content || '');
   const [tagsStr, setTagsStr] = useState(blog?.tags ? blog.tags.join(', ') : '');
   const [coverImage, setCoverImage] = useState(blog?.coverImage || '');
@@ -587,12 +726,12 @@ function BlogEditor({ blog, onSave, onCancel, lang }) {
           await uploadBytes(fileRef, file);
           const url = await getDownloadURL(fileRef);
 
-          const quill = quillRef.current.getEditor();
-          const range = quill.getSelection(true);
-          quill.insertEmbed(range.index, 'image', url);
-        } catch (err) {
-          console.error("Gagal upload gambar:", err);
-          alert("Gagal mengupload gambar.");
+          const editor = quillRef.current.getEditor();
+          const range = editor.getSelection();
+          editor.insertEmbed(range.index, 'image', url);
+        } catch (e) {
+          console.error("Image upload failed", e);
+          alert("Gagal upload gambar.");
         }
       }
     };
@@ -601,10 +740,10 @@ function BlogEditor({ blog, onSave, onCancel, lang }) {
   const modules = useMemo(() => ({
     toolbar: {
       container: [
-        [{ 'header': [1, 2, 3, false] }],
+        [{ 'header': [2, 3, 4, false] }],
         ['bold', 'italic', 'underline', 'strike', 'blockquote'],
-        [{'list': 'ordered'}, {'list': 'bullet'}],
-        ['link', 'image'],
+        [{'list': 'ordered'}, {'list': 'bullet'}, {'indent': '-1'}, {'indent': '+1'}],
+        ['link', 'image', 'video'],
         ['clean']
       ],
       handlers: {
@@ -615,10 +754,19 @@ function BlogEditor({ blog, onSave, onCancel, lang }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!title.trim() || !content.trim()) return alert("Judul dan konten tidak boleh kosong.");
+    if (!title || !content) {
+      alert("Judul dan Konten wajib diisi!");
+      return;
+    }
     
+    // Auto-generate slug if empty
+    const finalSlug = slug || title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+
     onSave({
       title,
+      slug: finalSlug,
+      seoTitle,
+      seoDescription,
       content,
       tags: tagsStr.split(',').map(t => t.trim()).filter(Boolean),
       coverImage,
@@ -633,7 +781,30 @@ function BlogEditor({ blog, onSave, onCancel, lang }) {
         
         <div className="form-group">
           <label className="form-label">Judul Artikel *</label>
-          <input type="text" className="form-input" value={title} onChange={e => setTitle(e.target.value)} required placeholder="Contoh: Manfaat Recovery Run untuk Pemula" style={{ fontSize: 18, padding: 16, fontWeight: 600 }} />
+          <input type="text" className="form-input" value={title} onChange={e => {
+            setTitle(e.target.value);
+            if (!blog?.slug && !slug) {
+              setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''));
+            }
+          }} required placeholder="Contoh: Manfaat Recovery Run untuk Pemula" style={{ fontSize: 18, padding: 16, fontWeight: 600 }} />
+        </div>
+
+        {/* SEO Space */}
+        <div style={{ background: 'var(--bg-card)', padding: 20, borderRadius: 12, border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <h3 style={{ fontSize: 16, margin: 0, color: 'var(--text-primary)' }}>SEO Settings</h3>
+          <div className="form-group">
+            <label className="form-label">URL Slug</label>
+            <input type="text" className="form-input" value={slug} onChange={e => setSlug(e.target.value)} placeholder="manfaat-recovery-run" />
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>https://www.enduraup.space/blog/{slug || '...'}</div>
+          </div>
+          <div className="form-group">
+            <label className="form-label">SEO Title (Meta Title)</label>
+            <input type="text" className="form-input" value={seoTitle} onChange={e => setSeoTitle(e.target.value)} placeholder="Tampil di tab browser & hasil pencarian Google" />
+          </div>
+          <div className="form-group">
+            <label className="form-label">SEO Description (Meta Description)</label>
+            <textarea className="form-input" value={seoDescription} onChange={e => setSeoDescription(e.target.value)} placeholder="Deskripsi singkat untuk snippet Google (150-160 karakter)" style={{ height: 80, resize: 'vertical' }}></textarea>
+          </div>
         </div>
 
         <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
