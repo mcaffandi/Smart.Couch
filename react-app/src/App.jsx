@@ -15,6 +15,7 @@ import AICoach from './AICoach';
 import LandingPage from './LandingPage';
 import OnboardingWizard from './OnboardingWizard';
 import AdminDashboard from './AdminDashboard';
+import BlogModule from './Blog';
 import Logo from './Logo';
 import ExportGuideModal from './ExportGuideModal';
 import FeedbackModal from './FeedbackModal';
@@ -1665,7 +1666,13 @@ export default function App() {
 
   if (!sessionUser) {
     if (showLanding) {
-      return <LandingPage onGetStarted={() => setShowLanding(false)} lang={lang} setLang={setLang} visitorCount={visitorCount} />;
+      return <LandingPage 
+        onGetStarted={() => setShowLanding(false)} 
+        onViewBlog={() => { setShowLanding(false); setTab('blog'); }}
+        lang={lang} 
+        setLang={setLang} 
+        visitorCount={visitorCount} 
+      />;
     }
     return (
       <>
@@ -2882,6 +2889,7 @@ export default function App() {
                 { key: 'race', label: t.tabRacePrediction },
                 { key: 'history', label: t.tabRunHistory },
                 { key: 'sleep', label: t.tabSleepAnalysis },
+                { key: 'blog', label: 'Blog' },
               ].map(item => (
                 <button key={item.key} className={`tab ${tab === item.key ? 'active' : ''}`} onClick={() => setTab(item.key)}>
                   {item.label}
@@ -3206,6 +3214,10 @@ export default function App() {
                   </>
                 )}
               </div>
+            )}
+            {/* ─────────────────── BLOG / EDUKASI ─────────────────── */}
+            {tab === 'blog' && (
+              <BlogModule isAdmin={showAdmin} lang={lang} />
             )}
           </>
         )}

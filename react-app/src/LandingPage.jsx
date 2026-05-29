@@ -5,7 +5,7 @@ import './LandingPage.css';
 import Logo from './Logo';
 import { translations } from './translations';
 
-export default function LandingPage({ onGetStarted, lang, setLang, visitorCount }) {
+export default function LandingPage({ onGetStarted, onViewBlog, lang, setLang, visitorCount }) {
   const t = translations[lang] || translations.id;
   const [testimonials, setTestimonials] = useState([]);
 
@@ -58,6 +58,14 @@ export default function LandingPage({ onGetStarted, lang, setLang, visitorCount 
           <span className="logo-text">EnduraUP</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <button 
+            onClick={onViewBlog} 
+            style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', fontWeight: 600, fontSize: 13, cursor: 'pointer', transition: 'color 0.2s' }}
+            onMouseOver={e => e.target.style.color = 'var(--accent-purple)'}
+            onMouseOut={e => e.target.style.color = 'var(--text-secondary)'}
+          >
+            {lang === 'id' ? 'Blog' : 'Blog'}
+          </button>
           <div className="lang-switcher">
             <button className={`lang-btn ${lang === 'id' ? 'active' : ''}`} onClick={() => setLang('id')}>ID</button>
             <button className={`lang-btn ${lang === 'en' ? 'active' : ''}`} onClick={() => setLang('en')}>EN</button>
