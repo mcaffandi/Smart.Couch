@@ -2482,21 +2482,20 @@ export default function App() {
               {lang === 'id' ? 'Catat Tidur Semalam' : 'Log Night Sleep'}
             </button>
           </div>
+
+          {hasData && (
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', textAlign: 'center', marginTop: 4 }}>
+              {lang === 'id'
+                ? `${totalSessions} sesi lari · ${Object.keys(sleepRecs).length} malam tidur`
+                : `${totalSessions} runs · ${Object.keys(sleepRecs).length} sleep logs`}
+            </div>
+          )}
         </div>
 
         <div className="sidebar-divider" style={{ marginTop: 'auto' }} />
 
         {/* Footer Actions Group */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-
-
-          {hasData && (
-            <div style={{ fontSize: 11, color: 'var(--text-muted)', textAlign: 'center' }}>
-              {lang === 'id'
-                ? `${totalSessions} sesi lari · ${Object.keys(sleepRecs).length} malam tidur`
-                : `${totalSessions} runs · ${Object.keys(sleepRecs).length} sleep logs`}
-            </div>
-          )}
 
           <a 
             href="https://saweria.co/afnstudio" 
