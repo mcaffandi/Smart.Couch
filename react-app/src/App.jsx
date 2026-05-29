@@ -2890,8 +2890,8 @@ export default function App() {
         {!(tab === 'blog' && blogView !== 'list') && (
           <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <h1 className="page-title" style={{ margin: 0 }}>EnduraUP</h1>
+              <div className="dynamic-page-title-container" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <h1 className={`page-title dynamic-page-title ${sidebarCollapsed ? 'sidebar-collapsed' : 'sidebar-expanded'}`} style={{ margin: 0, marginTop: '-2px' }}>EnduraUP</h1>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
                 <p className="page-subtitle" style={{ fontSize: 14, color: 'var(--text-secondary)', margin: 0 }}>

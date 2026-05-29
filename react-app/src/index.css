@@ -577,7 +577,7 @@ html, body {
 /* Main content */
 .main-content {
   flex: 1;
-  padding: 24px 28px;
+  padding: 16px 28px 24px 28px;
   max-width: 100%;
   overflow-x: hidden;
 }
@@ -627,6 +627,17 @@ html, body {
 .page-subtitle {
   font-size: 14.5px;
   color: var(--text-secondary);
+}
+
+@media (min-width: 901px) {
+  .dynamic-page-title-container {
+    height: 33.6px;
+    display: flex;
+    align-items: center;
+  }
+  .dynamic-page-title.sidebar-expanded {
+    display: none;
+  }
 }
 
 /* Metric cards */
