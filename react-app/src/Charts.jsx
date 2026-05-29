@@ -40,23 +40,23 @@ export function TrendChart({ activities, lang = 'id' }) {
   };
 
   return (
-    <div className="chart-container">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 4 }}>
-        <div className="chart-title">{lang === 'id' ? 'Total Jarak per Bulan (km)' : 'Total Monthly Distance (km)'}</div>
+    <div className="chart-container" style={{ padding: '20px 16px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 16 }}>
+        <div className="chart-title" style={{ fontSize: 14, fontWeight: 600 }}>{lang === 'id' ? 'Total Jarak per Bulan (km)' : 'Total Monthly Distance (km)'}</div>
         <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
           {lang === 'id' ? 'Total keseluruhan:' : 'Overall total:'} <strong style={{ color: 'var(--text-primary)' }}>{totalKm} km</strong>
         </div>
       </div>
       <ResponsiveContainer width="100%" height={220}>
-        <LineChart data={data} margin={{ top: 4, right: 16, left: -10, bottom: 0 }}>
+        <LineChart data={data} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-          <XAxis dataKey="label" tick={{ fill: 'var(--text-secondary)', fontSize: 11 }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
-          <YAxis tick={{ fill: 'var(--text-secondary)', fontSize: 11 }} axisLine={false} tickLine={false} />
+          <XAxis dataKey="label" tick={{ fill: 'var(--text-secondary)', fontSize: 10 }} axisLine={false} tickLine={false} tickMargin={10} minTickGap={15} />
+          <YAxis tick={{ fill: 'var(--text-secondary)', fontSize: 10 }} axisLine={false} tickLine={false} width={40} tickMargin={8} />
           <Tooltip content={<CustomTooltip />} />
           <Line
-            type="monotone" dataKey="km" stroke="#818cf8" strokeWidth={2.5}
-            dot={{ r: 3, fill: '#818cf8', stroke: 'var(--bg-base)', strokeWidth: 2 }}
-            activeDot={{ r: 6 }}
+            type="monotone" dataKey="km" stroke="#818cf8" strokeWidth={3}
+            dot={{ r: 4, fill: '#818cf8', stroke: 'var(--bg-base)', strokeWidth: 2 }}
+            activeDot={{ r: 6, strokeWidth: 0 }}
           />
         </LineChart>
       </ResponsiveContainer>
@@ -107,17 +107,17 @@ export function HRZoneChart({ zones, avgHr, lang = 'id' }) {
   };
 
   return (
-    <div className="chart-container">
-      <div className="chart-title">{lang === 'id' ? 'Zona Detak Jantung' : 'Heart Rate Zones'}</div>
+    <div className="chart-container" style={{ padding: '20px 16px' }}>
+      <div className="chart-title" style={{ fontSize: 14, fontWeight: 600, marginBottom: 16 }}>{lang === 'id' ? 'Zona Detak Jantung' : 'Heart Rate Zones'}</div>
       <ResponsiveContainer width="100%" height={200}>
-        <BarChart data={data} layout="vertical" margin={{ top: 4, right: 16, left: 60, bottom: 0 }}>
+        <BarChart data={data} layout="vertical" margin={{ top: 0, right: 10, left: -20, bottom: 0 }} barCategoryGap="25%">
           <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" horizontal={false} />
-          <XAxis type="number" tick={{ fill: 'var(--text-secondary)', fontSize: 11 }} axisLine={false} tickLine={false} />
-          <YAxis dataKey="zone" type="category" tick={{ fill: 'var(--text-secondary)', fontSize: 12, fontWeight: 600 }} axisLine={false} tickLine={false} />
+          <XAxis type="number" tick={{ fill: 'var(--text-secondary)', fontSize: 10 }} axisLine={false} tickLine={false} tickMargin={8} />
+          <YAxis dataKey="zone" type="category" tick={{ fill: 'var(--text-secondary)', fontSize: 11, fontWeight: 600 }} axisLine={false} tickLine={false} width={45} tickMargin={8} />
           <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--bg-card-hover)' }} />
-          <Bar dataKey="value" radius={[0, 6, 6, 0]}>
+          <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={16}>
             {data.map((entry, index) => (
-              <Cell key={index} fill={entry.color} fillOpacity={0.7} />
+              <Cell key={index} fill={entry.color} fillOpacity={0.85} />
             ))}
           </Bar>
         </BarChart>
