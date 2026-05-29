@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://smart-couch.vercel.app/sitemap.xml
+Sitemap: https://www.enduraup.space/sitemap.xml
