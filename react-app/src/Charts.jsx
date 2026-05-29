@@ -1,26 +1,49 @@
+import React, { useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
 import { msToDate } from './utils';
 
-// ─── Trend chart (monthly distance) ─────────────────────────────────────────
+// ─── Trend chart (monthly/weekly distance) ──────────────────────────────────
 export function TrendChart({ activities, lang = 'id' }) {
-  const monthly = {};
+  const [viewMode, setViewMode] = useState('month'); // 'month' or 'week'
+
+  const aggregated = {};
   for (const a of activities) {
     if (!a.startTimeLocal) continue;
     // distance in cm → km
     const distKm = (a.distance ?? 0) / 100000;
     if (distKm <= 0) continue;
+    
     const d = new Date(a.startTimeLocal);
-    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-    monthly[key] = (monthly[key] ?? 0) + distKm;
+    let key;
+    if (viewMode === 'month') {
+      key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    } else {
+      const day = d.getDay();
+      const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+      const monday = new Date(d);
+      monday.setDate(diff);
+      key = `${monday.getFullYear()}-${String(monday.getMonth() + 1).padStart(2, '0')}-${String(monday.getDate()).padStart(2, '0')}`;
+    }
+    
+    aggregated[key] = (aggregated[key] ?? 0) + distKm;
   }
 
-  const data = Object.entries(monthly)
+  const data = Object.entries(aggregated)
     .sort(([a], [b]) => a.localeCompare(b))
-    .map(([key, km]) => ({
-      key,
-      label: new Date(key + '-01').toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-US', { month: 'short', year: '2-digit' }),
-      km: parseFloat(km.toFixed(1)),
-    }));
+    .map(([key, km]) => {
+      let label;
+      if (viewMode === 'month') {
+        label = new Date(key + '-01').toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-US', { month: 'short', year: '2-digit' });
+      } else {
+        const d = new Date(key);
+        label = `${d.getDate()} ${d.toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-US', { month: 'short' })}`;
+      }
+      return {
+        key,
+        label,
+        km: parseFloat(km.toFixed(1)),
+      };
+    });
 
   const totalKm = data.reduce((s, d) => s + d.km, 0).toFixed(1);
 
@@ -31,7 +54,9 @@ export function TrendChart({ activities, lang = 'id' }) {
           background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 8,
           padding: '10px 14px', fontSize: 13, color: 'var(--text-primary)'
         }}>
-          <div style={{ color: 'var(--text-secondary)', marginBottom: 4 }}>{label}</div>
+          <div style={{ color: 'var(--text-secondary)', marginBottom: 4 }}>
+            {viewMode === 'week' ? (lang === 'id' ? `Minggu, ${label}` : `Week of ${label}`) : label}
+          </div>
           <div style={{ fontWeight: 700 }}>{payload[0].value} km</div>
         </div>
       );
@@ -41,10 +66,25 @@ export function TrendChart({ activities, lang = 'id' }) {
 
   return (
     <div className="chart-container" style={{ padding: '20px 16px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 16 }}>
-        <div className="chart-title" style={{ fontSize: 14, fontWeight: 600 }}>{lang === 'id' ? 'Total Jarak per Bulan (km)' : 'Total Monthly Distance (km)'}</div>
-        <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-          {lang === 'id' ? 'Total keseluruhan:' : 'Overall total:'} <strong style={{ color: 'var(--text-primary)' }}>{totalKm} km</strong>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <div className="chart-title" style={{ fontSize: 14, fontWeight: 600 }}>
+          {lang === 'id' ? 'Tren Jarak' : 'Distance Trend'}
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ display: 'flex', background: 'var(--bg-surface)', borderRadius: 20, padding: 4, border: '1px solid var(--border)' }}>
+            <button 
+              onClick={() => setViewMode('week')}
+              style={{ padding: '4px 10px', fontSize: 11, fontWeight: 600, borderRadius: 16, border: 'none', background: viewMode === 'week' ? 'var(--accent-purple)' : 'transparent', color: viewMode === 'week' ? '#fff' : 'var(--text-muted)', cursor: 'pointer', transition: 'all 0.2s' }}
+            >
+              {lang === 'id' ? 'Mingguan' : 'Weekly'}
+            </button>
+            <button 
+              onClick={() => setViewMode('month')}
+              style={{ padding: '4px 10px', fontSize: 11, fontWeight: 600, borderRadius: 16, border: 'none', background: viewMode === 'month' ? 'var(--accent-purple)' : 'transparent', color: viewMode === 'month' ? '#fff' : 'var(--text-muted)', cursor: 'pointer', transition: 'all 0.2s' }}
+            >
+              {lang === 'id' ? 'Bulanan' : 'Monthly'}
+            </button>
+          </div>
         </div>
       </div>
       <ResponsiveContainer width="100%" height={220}>
@@ -110,7 +150,7 @@ export function HRZoneChart({ zones, avgHr, lang = 'id' }) {
     <div className="chart-container" style={{ padding: '20px 16px' }}>
       <div className="chart-title" style={{ fontSize: 14, fontWeight: 600, marginBottom: 16 }}>{lang === 'id' ? 'Zona Detak Jantung' : 'Heart Rate Zones'}</div>
       <ResponsiveContainer width="100%" height={200}>
-        <BarChart data={data} layout="vertical" margin={{ top: 0, right: 10, left: -20, bottom: 0 }} barCategoryGap="25%">
+        <BarChart data={data} layout="vertical" margin={{ top: 0, right: 10, left: 0, bottom: 0 }} barCategoryGap="25%">
           <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" horizontal={false} />
           <XAxis type="number" tick={{ fill: 'var(--text-secondary)', fontSize: 10 }} axisLine={false} tickLine={false} tickMargin={8} />
           <YAxis dataKey="zone" type="category" tick={{ fill: 'var(--text-secondary)', fontSize: 11, fontWeight: 600 }} axisLine={false} tickLine={false} width={45} tickMargin={8} />

@@ -152,9 +152,12 @@ export default function App() {
         const snap = await getDoc(docRef);
         if (snap.exists()) {
           setVisitorCount(snap.data().count);
+        } else {
+          setVisitorCount(0);
         }
       } catch (e) {
         console.error("Visitor count error", e);
+        setVisitorCount('Err');
       }
     };
     updateVisitorCount();
@@ -275,18 +278,48 @@ export default function App() {
       const userDocSnap = await getDoc(userDocRef);
       if (userDocSnap.exists()) {
         const cloudData = userDocSnap.data();
-        setData(cloudData);
-        setAge(cloudData.profile?.age ?? null);
-        setDisplayName(cloudData.profile?.displayName ?? '');
-        setWeight(cloudData.profile?.weight ?? null);
-        setHeight(cloudData.profile?.height ?? null);
-        setGender(cloudData.profile?.gender ?? '');
-        setAvatar(cloudData.profile?.avatar ?? null);
-        setGoal(cloudData.profile?.goal ?? 'maintenance');
-        setProgramStyle(cloudData.profile?.programStyle ?? 'sedang');
-        setTargetPace(cloudData.profile?.targetPace ?? null);
-        setSelectedDays(cloudData.profile?.selectedDays ?? ['Selasa', 'Kamis', 'Sabtu']);
-        localStorage.setItem(`smartcoach_data_user_${username}`, JSON.stringify(cloudData));
+        const localData = loadUserData(username);
+        
+        const safeAge = cloudData.profile?.age ?? localData.profile?.age ?? null;
+        const safeWeight = cloudData.profile?.weight ?? localData.profile?.weight ?? null;
+        const safeHeight = cloudData.profile?.height ?? localData.profile?.height ?? null;
+        const safeGender = cloudData.profile?.gender || localData.profile?.gender || '';
+        const safeGoal = cloudData.profile?.goal ?? localData.profile?.goal ?? 'maintenance';
+        const safeStyle = cloudData.profile?.programStyle ?? localData.profile?.programStyle ?? 'sedang';
+        const safeTargetPace = cloudData.profile?.targetPace ?? localData.profile?.targetPace ?? null;
+        const safeDays = cloudData.profile?.selectedDays ?? localData.profile?.selectedDays ?? ['Selasa', 'Kamis', 'Sabtu'];
+        
+        const safeData = {
+          ...localData,
+          ...cloudData,
+          profile: {
+            ...(localData.profile || {}),
+            ...(cloudData.profile || {}),
+            displayName: cloudData.profile?.displayName || localData.profile?.displayName || auth.currentUser.displayName || '',
+            avatar: cloudData.profile?.avatar || localData.profile?.avatar || auth.currentUser.photoURL || null,
+            age: safeAge,
+            weight: safeWeight,
+            height: safeHeight,
+            gender: safeGender,
+            goal: safeGoal,
+            programStyle: safeStyle,
+            targetPace: safeTargetPace,
+            selectedDays: safeDays
+          }
+        };
+
+        setData(safeData);
+        setAge(safeAge);
+        setDisplayName(safeData.profile.displayName);
+        setWeight(safeWeight);
+        setHeight(safeHeight);
+        setGender(safeGender);
+        setAvatar(safeData.profile.avatar);
+        setGoal(safeGoal);
+        setProgramStyle(safeStyle);
+        setTargetPace(safeTargetPace);
+        setSelectedDays(safeDays);
+        localStorage.setItem(`smartcoach_data_user_${username}`, JSON.stringify(safeData));
       } else {
         const localData = loadUserData(username);
         await setDoc(userDocRef, localData);
@@ -2877,12 +2910,49 @@ export default function App() {
             {tab === 'dashboard' && (
               <div className="animate-fade-in">
                 {/* Metrics */}
-                <div className="metrics-grid">
+                <div className="metrics-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))' }}>
                   {[
-                    { label: t.totalDistance, value: totalDist.toFixed(1), unit: 'km', color: '#818cf8' },
-                    { label: lang === 'id' ? 'Total Sesi' : 'Total Sessions', value: totalSessions, unit: lang === 'id' ? 'kali' : 'times', color: '#fb7185' },
-                    { label: 'Avg Heart Rate', value: avgHR ? Math.round(avgHR) : '–', unit: 'bpm', color: '#34d399' },
-                    { label: lang === 'id' ? 'Max HR Aktual' : 'Actual Max HR', value: actualMaxHR || '–', unit: 'bpm', color: '#fbbf24' },
+                    { 
+                      label: lang === 'id' ? 'Jarak Minggu Ini' : 'Weekly Mileage', 
+                      value: (() => {
+                        const now = new Date();
+                        const day = now.getDay();
+                        const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+                        const startOfWeek = new Date(now.setDate(diff));
+                        startOfWeek.setHours(0,0,0,0);
+                        let wDist = 0;
+                        for (const a of data.running_activities) {
+                          if (!a.startTimeLocal) continue;
+                          const d = new Date(a.startTimeLocal);
+                          if (d >= startOfWeek) wDist += (a.distance || 0) / 100000;
+                        }
+                        return wDist.toFixed(1);
+                      })(), 
+                      unit: 'km', 
+                      color: '#818cf8' 
+                    },
+                    { 
+                      label: lang === 'id' ? 'Skor Tidur (Kesiapan)' : 'Sleep Score (Readiness)', 
+                      value: latestSleepScore || '–', 
+                      unit: '/100', 
+                      color: '#a78bfa' 
+                    },
+                    { 
+                      label: lang === 'id' ? 'Target Pace' : 'Pace Target', 
+                      value: targetPace ? (() => {
+                        const min = Math.floor(targetPace);
+                        const sec = Math.round((targetPace - min) * 60);
+                        return `${min}:${sec.toString().padStart(2, '0')}`;
+                      })() : '–', 
+                      unit: '/km', 
+                      color: '#34d399' 
+                    },
+                    { 
+                      label: t.totalDistance, 
+                      value: totalDist.toFixed(1), 
+                      unit: 'km', 
+                      color: '#fbbf24' 
+                    },
                   ].map((m, i) => (
                     <div className="metric-card animate-fade-in" key={i} style={{ '--accent-color': m.color, animationDelay: `${i * 0.06}s` }}>
                       <div className="metric-label">{m.label}</div>

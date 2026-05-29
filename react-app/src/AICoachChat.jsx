@@ -112,8 +112,12 @@ export default function AICoachChat({ lang, goal, programStyle, targetPace, curr
       
       const formattedPace = formatPace(targetPace);
 
+      const currentDay = now.toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-US', { weekday: 'long' });
+      const currentTime = now.toLocaleTimeString(lang === 'id' ? 'id-ID' : 'en-US', { hour: '2-digit', minute: '2-digit' });
+
       const systemPrompt = lang === 'id' 
         ? `Lo adalah Coach AI EnduraUP, pelatih lari profesional yang friendly, suportif, dan asik (pake bahasa gaul lo/gue).
+WAKTU SAAT INI: Hari ${currentDay}, Jam ${currentTime} waktu lokal user. (Sesuaikan sapaan Pagi/Siang/Sore/Malam dan saran lari berdasarkan waktu ini).
 User saat ini punya target: ${goal}, style program: ${programStyle}, pace: ${formattedPace} min/km.
 INFO PENTING: Skor Konsistensi 7 hari terakhir user ini adalah ${consistencyScore}%.
 Jika <50%, lo boleh roasting/teguran halus biar dia sadar kalau dia malas, lalu kasih semangat biar lari Easy Run aja dulu.
@@ -121,6 +125,7 @@ Jika >=80%, puji dia habis-habisan karena konsisten, dan kasih tahu dia udah sia
 Jawab pertanyaan user dengan singkat, padat, dan pakai emoji. Kasih tips lari yang praktis dan aman. 
 ATURAN KERAS: JIKA user bertanya topik DI LUAR olahraga/lari (misal coding, agama, politik, dll), TOLAK dengan sopan dan kembalikan obrolan ke olahraga.`
         : `You are EnduraUP Coach AI, a professional, friendly, and supportive running coach.
+CURRENT TIME: ${currentDay}, ${currentTime} local time. (Adjust your greetings Morning/Afternoon/Evening and running advice based on this time).
 User's goal: ${goal}, style: ${programStyle}, target pace: ${formattedPace} min/km.
 IMPORTANT: The user's 7-day consistency score is ${consistencyScore}%.
 If <50%, give them a playful roast/tough love about being lazy, then encourage them to just do an Easy Run to build the habit.
