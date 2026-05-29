@@ -5,13 +5,17 @@ import { db, storage } from './firebase';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 
-export default function BlogModule({ isAdmin, lang = 'id' }) {
+export default function BlogModule({ isAdmin, lang = 'id', onViewChange }) {
   const [blogs, setBlogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState('list'); // 'list', 'read', 'edit'
   const [currentBlog, setCurrentBlog] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTag, setSelectedTag] = useState('Semua');
+
+  useEffect(() => {
+    if (onViewChange) onViewChange(view);
+  }, [view, onViewChange]);
 
   const fetchBlogs = async () => {
     setLoading(true);

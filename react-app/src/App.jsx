@@ -238,6 +238,7 @@ export default function App() {
   // ── State: active tab ────────────────────────────────────────────────────────
   const [tab, setTab] = useState('dashboard');
   const [showLanding, setShowLanding] = useState(true);
+  const [blogView, setBlogView] = useState('list');
 
   // ── State: share performance card modal ──────────────────────────────────────
   const [showShareModal, setShowShareModal] = useState(false);
@@ -1668,19 +1669,21 @@ export default function App() {
     if (tab === 'blog') {
       return (
         <div className="landing-container" style={{ minHeight: '100vh', paddingTop: 80, overflowY: 'auto', background: 'var(--bg-base)' }}>
-          <nav className="landing-nav" style={{ position: 'fixed', top: 0, left: 0, right: 0, width: '100%', maxWidth: '100%', padding: '20px 5%', background: 'rgba(9, 9, 11, 0.8)', backdropFilter: 'blur(12px)', zIndex: 100, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-            <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-              <div className="nav-logo" onClick={() => { setTab('dashboard'); setShowLanding(true); }} style={{ cursor: 'pointer' }}>
-                <Logo size={26} />
-                <span className="logo-text">EnduraUP</span>
+          {blogView === 'list' && (
+            <nav className="landing-nav" style={{ position: 'fixed', top: 0, left: 0, right: 0, width: '100%', maxWidth: '100%', padding: '20px 5%', background: 'rgba(9, 9, 11, 0.8)', backdropFilter: 'blur(12px)', zIndex: 100, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+              <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                <div className="nav-logo" onClick={() => { setTab('dashboard'); setShowLanding(true); }} style={{ cursor: 'pointer' }}>
+                  <Logo size={26} />
+                  <span className="logo-text">EnduraUP</span>
+                </div>
+                <button className="nav-btn-primary" onClick={() => { setTab('dashboard'); setShowLanding(true); }}>
+                  {lang === 'id' ? '← Kembali ke Utama' : '← Back to Home'}
+                </button>
               </div>
-              <button className="nav-btn-primary" onClick={() => { setTab('dashboard'); setShowLanding(true); }}>
-                {lang === 'id' ? '← Kembali ke Utama' : '← Back to Home'}
-              </button>
-            </div>
-          </nav>
+            </nav>
+          )}
           <div style={{ padding: '60px 20px', maxWidth: 1000, margin: '0 auto' }}>
-            <BlogModule isAdmin={false} lang={lang} />
+            <BlogModule isAdmin={false} lang={lang} onViewChange={setBlogView} />
           </div>
         </div>
       );
@@ -2303,21 +2306,23 @@ export default function App() {
       })()}
 
 
-      {/* Mobile Top Bar Header */}
-      <header className="mobile-header">
-        <div className="sidebar-logo" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <Logo size={24} />
-          <div>
-            <div className="sidebar-logo-text">EnduraUP</div>
-            <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>AI Coach</div>
+      {/* Mobile Top Bar Header - hide when reading blog */}
+      {!(tab === 'blog' && blogView !== 'list') && (
+        <header className="mobile-header">
+          <div className="sidebar-logo" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <Logo size={24} />
+            <div>
+              <div className="sidebar-logo-text">EnduraUP</div>
+              <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>AI Coach</div>
+            </div>
           </div>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <button className="mobile-toggle-btn" onClick={() => setSidebarOpen(true)}>
-            {lang === 'id' ? 'Profil & Data' : 'Profile & Data'}
-          </button>
-        </div>
-      </header>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <button className="mobile-toggle-btn" onClick={() => setSidebarOpen(true)}>
+              {lang === 'id' ? 'Profil & Data' : 'Profile & Data'}
+            </button>
+          </div>
+        </header>
+      )}
 
       {/* Sidebar Backdrop Overlay for Mobile */}
       {sidebarOpen && (
@@ -2849,28 +2854,30 @@ export default function App() {
 
       {/* ═══════════════════════════════ MAIN ══════════════════════════════════ */}
       <main className="main-content">
-        {/* Header */}
-        <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <h1 className="page-title" style={{ margin: 0 }}>EnduraUP</h1>
+        {/* Header - hide when reading or editing blog */}
+        {!(tab === 'blog' && blogView !== 'list') && (
+          <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <h1 className="page-title" style={{ margin: 0 }}>EnduraUP</h1>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
+                <p className="page-subtitle" style={{ fontSize: 14, color: 'var(--text-secondary)', margin: 0 }}>
+                  {data.profile?.displayName ? (lang === 'id' ? `Halo, ${data.profile.displayName} — ` : `Hello, ${data.profile.displayName} — `) : ''}
+                  {new Date().toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                </p>
+              </div>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
-              <p className="page-subtitle" style={{ fontSize: 14, color: 'var(--text-secondary)', margin: 0 }}>
-                {data.profile?.displayName ? (lang === 'id' ? `Halo, ${data.profile.displayName} — ` : `Hello, ${data.profile.displayName} — `) : ''}
-                {new Date().toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-              </p>
-            </div>
+            <button 
+              onClick={() => setTab('blog')} 
+              style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', fontWeight: 600, fontSize: 14, cursor: 'pointer', transition: 'color 0.2s', marginTop: 4 }}
+              onMouseOver={e => e.target.style.color = 'var(--text-primary)'}
+              onMouseOut={e => e.target.style.color = 'var(--text-secondary)'}
+            >
+              Blog
+            </button>
           </div>
-          <button 
-            onClick={() => setTab('blog')} 
-            style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', fontWeight: 600, fontSize: 14, cursor: 'pointer', transition: 'color 0.2s', marginTop: 4 }}
-            onMouseOver={e => e.target.style.color = 'var(--text-primary)'}
-            onMouseOut={e => e.target.style.color = 'var(--text-secondary)'}
-          >
-            Blog
-          </button>
-        </div>
+        )}
 
         {!hasData ? (
           /* Empty state */
@@ -3254,15 +3261,17 @@ export default function App() {
             {/* ─────────────────── BLOG / EDUKASI ─────────────────── */}
             {tab === 'blog' && (
               <div className="animate-fade-in">
-                <button 
-                  onClick={() => setTab('dashboard')} 
-                  style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text-primary)', padding: '10px 16px', borderRadius: 20, cursor: 'pointer', marginBottom: 24, display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 700, transition: 'all 0.2s', boxShadow: 'var(--shadow-base)' }}
-                  onMouseOver={e => e.currentTarget.style.borderColor = 'var(--accent-purple)'}
-                  onMouseOut={e => e.currentTarget.style.borderColor = 'var(--border)'}
-                >
-                  {lang === 'id' ? '← Kembali ke Dashboard' : '← Back to Dashboard'}
-                </button>
-                <BlogModule isAdmin={showAdmin} lang={lang} />
+                {blogView === 'list' && (
+                  <button 
+                    onClick={() => setTab('dashboard')} 
+                    style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text-primary)', padding: '10px 16px', borderRadius: 20, cursor: 'pointer', marginBottom: 24, display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 700, transition: 'all 0.2s', boxShadow: 'var(--shadow-base)' }}
+                    onMouseOver={e => e.currentTarget.style.borderColor = 'var(--accent-purple)'}
+                    onMouseOut={e => e.currentTarget.style.borderColor = 'var(--border)'}
+                  >
+                    {lang === 'id' ? '← Kembali ke Dashboard' : '← Back to Dashboard'}
+                  </button>
+                )}
+                <BlogModule isAdmin={showAdmin} lang={lang} onViewChange={setBlogView} />
               </div>
             )}
           </>
