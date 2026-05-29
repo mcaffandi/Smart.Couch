@@ -143,6 +143,7 @@
   -webkit-text-fill-color: transparent;
   background-clip: text;
   padding-bottom: 0.15em; /* Prevent descenders from getting clipped */
+  padding-right: 0.1em; /* Prevent rightmost chars like 'o' from getting clipped */
   display: inline-block;
 }
 
