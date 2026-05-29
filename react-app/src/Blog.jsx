@@ -161,7 +161,7 @@ export default function BlogModule({ isAdmin, lang = 'id' }) {
               onClick={() => setSelectedTag(tag)}
               style={{
                 background: selectedTag === tag ? 'var(--text-primary)' : 'transparent',
-                color: selectedTag === tag ? 'var(--bg-default)' : 'var(--text-secondary)',
+                color: selectedTag === tag ? 'var(--bg-base)' : 'var(--text-secondary)',
                 border: selectedTag === tag ? '1px solid var(--text-primary)' : '1px solid var(--border)',
                 padding: '6px 16px',
                 borderRadius: 20,
