@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Lock } from 'lucide-react';
 import { collection, getDocs, deleteDoc, doc, addDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from './firebase';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 
 export default function AdminDashboard({ onBack }) {
   const [pin, setPin] = useState('');
@@ -15,6 +17,50 @@ export default function AdminDashboard({ onBack }) {
   const [blogPosting, setBlogPosting] = useState(false);
   const [blogForm, setBlogForm] = useState({ title: '', content: '', tags: '', thumbnail: '' });
   const [editingBlogId, setEditingBlogId] = useState(null);
+  const [showAllUsers, setShowAllUsers] = useState(false);
+
+  const quillRef = useRef(null);
+
+  const imageHandler = () => {
+    const input = document.createElement('input');
+    input.setAttribute('type', 'file');
+    input.setAttribute('accept', 'image/*');
+    input.click();
+
+    input.onchange = async () => {
+      const file = input.files[0];
+      if (file) {
+        try {
+          const loadingId = Date.now();
+          const fileRef = ref(storage, `blog_images/${loadingId}_${file.name}`);
+          await uploadBytes(fileRef, file);
+          const url = await getDownloadURL(fileRef);
+
+          const quill = quillRef.current.getEditor();
+          const range = quill.getSelection(true);
+          quill.insertEmbed(range.index, 'image', url);
+        } catch (err) {
+          console.error("Gagal upload gambar:", err);
+          alert("Gagal mengupload gambar.");
+        }
+      }
+    };
+  };
+
+  const modules = useMemo(() => ({
+    toolbar: {
+      container: [
+        [{ 'header': [1, 2, 3, false] }],
+        ['bold', 'italic', 'underline', 'strike', 'blockquote'],
+        [{'list': 'ordered'}, {'list': 'bullet'}],
+        ['link', 'image'],
+        ['clean']
+      ],
+      handlers: {
+        image: imageHandler
+      }
+    }
+  }), []);
 
   const ADMIN_PIN = '210421'; // Simple hardcoded PIN
 
@@ -135,49 +181,6 @@ export default function AdminDashboard({ onBack }) {
     setShowBlogForm(true);
   };
 
-  const handlePaste = async (e) => {
-    const items = e.clipboardData?.items;
-    if (!items) return;
-
-    for (let i = 0; i < items.length; i++) {
-      if (items[i].type.indexOf('image') !== -1) {
-        e.preventDefault();
-        const file = items[i].getAsFile();
-        if (!file) continue;
-
-        const loadingId = Date.now();
-        const loadingText = `\n![Mengupload gambar...]()\n`;
-        
-        // Insert loading text at cursor position or end
-        const textarea = e.target;
-        const start = textarea.selectionStart;
-        const end = textarea.selectionEnd;
-        const currentContent = blogForm.content;
-        
-        const newContent = currentContent.substring(0, start) + loadingText + currentContent.substring(end);
-        setBlogForm(prev => ({ ...prev, content: newContent }));
-
-        try {
-          const fileRef = ref(storage, `blog_images/${loadingId}_${file.name}`);
-          await uploadBytes(fileRef, file);
-          const url = await getDownloadURL(fileRef);
-
-          setBlogForm(prev => ({
-            ...prev,
-            content: prev.content.replace(loadingText, `\n![Gambar](${url})\n`)
-          }));
-        } catch (err) {
-          console.error("Gagal upload gambar:", err);
-          alert("Gagal mengupload gambar. Pastikan aturan Firebase Storage (Security Rules) sudah disetting untuk allow read/write.");
-          setBlogForm(prev => ({
-            ...prev,
-            content: prev.content.replace(loadingText, "")
-          }));
-        }
-      }
-    }
-  };
-
   const handleDeleteBlog = async (blogId) => {
     if (!window.confirm("Yakin ingin menghapus artikel ini?")) return;
     try {
@@ -246,7 +249,17 @@ export default function AdminDashboard({ onBack }) {
       </div>
 
       <div style={{ background: 'var(--bg-card)', padding: 24, borderRadius: 12, border: '1px solid var(--border)' }}>
-        <h3 style={{ margin: 0, marginBottom: 20 }}>Daftar Pengguna Terbaru</h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+          <h3 style={{ margin: 0 }}>Daftar Pengguna Terbaru</h3>
+          {users.length > 10 && (
+            <button 
+              onClick={() => setShowAllUsers(!showAllUsers)}
+              style={{ background: 'transparent', border: '1px solid var(--border)', color: 'var(--text-primary)', padding: '6px 12px', borderRadius: 20, fontSize: 13, cursor: 'pointer' }}
+            >
+              {showAllUsers ? 'Tampilkan Lebih Sedikit' : 'Lihat Semua Pengguna'}
+            </button>
+          )}
+        </div>
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
             <thead>
@@ -260,7 +273,7 @@ export default function AdminDashboard({ onBack }) {
               </tr>
             </thead>
             <tbody>
-              {users.map(u => (
+              {(showAllUsers ? users : users.slice(0, 10)).map(u => (
                 <tr key={u.id} style={{ borderBottom: '1px dashed rgba(255,255,255,0.05)' }}>
                   <td style={{ padding: '16px', fontSize: 14, wordBreak: 'break-all' }}>
                     {u.data?.email || (u.id.substring(0, 10) + '...')}
@@ -273,7 +286,9 @@ export default function AdminDashboard({ onBack }) {
                       {u.data?.profile?.goal || '-'}
                     </span>
                   </td>
-                  <td style={{ padding: '16px', fontSize: 14 }}>{u.data?.profile?.targetPace ? u.data.profile.targetPace + ' /km' : '-'}</td>
+                  <td style={{ padding: '16px', fontSize: 14 }}>
+                    {u.data?.profile?.targetPace ? `${parseFloat(u.data.profile.targetPace).toFixed(2)} /km` : '-'}
+                  </td>
                   <td style={{ padding: '16px', fontSize: 14, fontWeight: 600, color: 'var(--accent-purple)' }}>{u.data?.running_activities?.length || 0} sesi</td>
                   <td style={{ padding: '16px', textAlign: 'center' }}>
                     <button 
@@ -317,7 +332,18 @@ export default function AdminDashboard({ onBack }) {
             <input className="form-input" placeholder="Judul Artikel" required value={blogForm.title} onChange={e => setBlogForm({...blogForm, title: e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-primary)' }} />
             <input className="form-input" placeholder="URL Gambar Thumbnail (Opsional)" value={blogForm.thumbnail} onChange={e => setBlogForm({...blogForm, thumbnail: e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-primary)' }} />
             <input className="form-input" placeholder="Tags (pisahkan dengan koma, misal: Tips, Recovery, Nutrisi)" required value={blogForm.tags} onChange={e => setBlogForm({...blogForm, tags: e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-primary)' }} />
-            <textarea className="form-input" placeholder="Konten Artikel (Bisa pakai Markdown. Anda juga bisa langsung COPY & PASTE GAMBAR ke kotak ini!)" required onPaste={handlePaste} value={blogForm.content} onChange={e => setBlogForm({...blogForm, content: e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-primary)', minHeight: 200, resize: 'vertical' }} />
+            
+            <div style={{ marginBottom: 12 }}>
+              <ReactQuill 
+                ref={quillRef}
+                theme="snow" 
+                value={blogForm.content} 
+                onChange={val => setBlogForm({...blogForm, content: val})} 
+                modules={modules}
+                placeholder="Tulis artikel menarik di sini... (Gambar bisa disisipkan lewat ikon gambar di toolbar)"
+              />
+            </div>
+
             <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
               <button type="submit" className="btn btn-primary" disabled={blogPosting} style={{ padding: '12px', flex: 1 }}>
                 {blogPosting ? 'Menyimpan...' : (editingBlogId ? 'Update Artikel' : 'Publish Artikel')}
