@@ -2385,9 +2385,7 @@ export default function App() {
               alignItems: 'center',
               justifyContent: 'center',
               padding: 0,
-              width: 36,
-              height: 36,
-              margin: '0 auto'
+              marginLeft: 14
             }}
           >
             <Logo size={28} />
