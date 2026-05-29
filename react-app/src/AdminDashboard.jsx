@@ -317,7 +317,7 @@ export default function AdminDashboard({ onBack }) {
                     </span>
                   </td>
                   <td style={{ padding: '16px', fontSize: 14 }}>
-                    {u.data?.profile?.targetPace ? `${parseFloat(u.data.profile.targetPace).toFixed(2)} /km` : '-'}
+                    {u.data?.profile?.targetPace ? `${Math.floor(u.data.profile.targetPace)}:${String(Math.round((u.data.profile.targetPace % 1) * 60)).padStart(2, '0')} /km` : '-'}
                   </td>
                   <td style={{ padding: '16px', fontSize: 14, fontWeight: 600, color: 'var(--accent-purple)' }}>{u.data?.running_activities?.length || 0} sesi</td>
                   <td style={{ padding: '16px', textAlign: 'center' }}>
