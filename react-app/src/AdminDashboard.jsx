@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Lock } from 'lucide-react';
-import { collection, getDocs, deleteDoc, doc, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, getDocs, deleteDoc, doc, addDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from './firebase';
 
 export default function AdminDashboard({ onBack }) {
@@ -13,6 +13,7 @@ export default function AdminDashboard({ onBack }) {
   const [showBlogForm, setShowBlogForm] = useState(false);
   const [blogPosting, setBlogPosting] = useState(false);
   const [blogForm, setBlogForm] = useState({ title: '', content: '', tags: '', thumbnail: '' });
+  const [editingBlogId, setEditingBlogId] = useState(null);
 
   const ADMIN_PIN = '210421'; // Simple hardcoded PIN
 
@@ -78,32 +79,59 @@ export default function AdminDashboard({ onBack }) {
     if (!blogForm.title || !blogForm.content || !blogForm.tags) return;
     setBlogPosting(true);
     try {
-      const tagsArray = blogForm.tags.split(',').map(t => t.trim()).filter(Boolean);
-      const newDocRef = await addDoc(collection(db, "blogs"), {
-        title: blogForm.title,
-        content: blogForm.content,
-        thumbnail: blogForm.thumbnail,
-        tags: tagsArray,
-        createdAt: serverTimestamp(),
-        author: "Admin EnduraUP"
-      });
-      alert("Artikel berhasil di-publish!");
-      setBlogs([{ 
-        id: newDocRef.id, 
-        title: blogForm.title, 
-        content: blogForm.content, 
-        thumbnail: blogForm.thumbnail, 
-        tags: tagsArray, 
-        createdAt: new Date(), 
-        author: "Admin EnduraUP" 
-      }, ...blogs]);
+      const tagsArray = typeof blogForm.tags === 'string' 
+        ? blogForm.tags.split(',').map(t => t.trim()).filter(Boolean)
+        : blogForm.tags;
+
+      if (editingBlogId) {
+        await updateDoc(doc(db, "blogs", editingBlogId), {
+          title: blogForm.title,
+          content: blogForm.content,
+          thumbnail: blogForm.thumbnail,
+          tags: tagsArray
+        });
+        alert("Artikel berhasil di-update!");
+        setBlogs(blogs.map(b => b.id === editingBlogId ? { ...b, title: blogForm.title, content: blogForm.content, thumbnail: blogForm.thumbnail, tags: tagsArray } : b));
+      } else {
+        const newDocRef = await addDoc(collection(db, "blogs"), {
+          title: blogForm.title,
+          content: blogForm.content,
+          thumbnail: blogForm.thumbnail,
+          tags: tagsArray,
+          createdAt: serverTimestamp(),
+          author: "Admin EnduraUP"
+        });
+        alert("Artikel berhasil di-publish!");
+        setBlogs([{ 
+          id: newDocRef.id, 
+          title: blogForm.title, 
+          content: blogForm.content, 
+          thumbnail: blogForm.thumbnail, 
+          tags: tagsArray, 
+          createdAt: new Date(), 
+          author: "Admin EnduraUP" 
+        }, ...blogs]);
+      }
+      
       setBlogForm({ title: '', content: '', tags: '', thumbnail: '' });
+      setEditingBlogId(null);
       setShowBlogForm(false);
     } catch (err) {
       console.error(err);
-      alert("Gagal memublikasikan artikel.");
+      alert("Gagal menyimpan artikel.");
     }
     setBlogPosting(false);
+  };
+
+  const handleEditBlog = (blog) => {
+    setBlogForm({
+      title: blog.title || '',
+      content: blog.content || '',
+      thumbnail: blog.thumbnail || '',
+      tags: blog.tags ? blog.tags.join(', ') : ''
+    });
+    setEditingBlogId(blog.id);
+    setShowBlogForm(true);
   };
 
   const handleDeleteBlog = async (blogId) => {
@@ -226,20 +254,40 @@ export default function AdminDashboard({ onBack }) {
       <div style={{ background: 'var(--bg-card)', padding: 24, borderRadius: 12, border: '1px solid var(--border)', marginTop: 20 }}>
         <h3 style={{ margin: 0, marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           Kelola Artikel Blog
-          <button className="btn btn-primary" onClick={() => setShowBlogForm(!showBlogForm)} style={{ padding: '6px 12px', fontSize: 13 }}>
+          <button className="btn btn-primary" onClick={() => {
+            if (showBlogForm) {
+              setEditingBlogId(null);
+              setBlogForm({ title: '', content: '', tags: '', thumbnail: '' });
+            }
+            setShowBlogForm(!showBlogForm);
+          }} style={{ padding: '6px 12px', fontSize: 13 }}>
             {showBlogForm ? 'Tutup Form' : '+ Tulis Artikel'}
           </button>
         </h3>
         
         {showBlogForm && (
           <form onSubmit={handlePostBlog} style={{ background: 'var(--bg-surface)', padding: 20, borderRadius: 10, border: '1px solid var(--border)', marginBottom: 20, display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 8 }}>
+              {editingBlogId ? 'Edit Artikel' : 'Tulis Artikel Baru'}
+            </div>
             <input className="form-input" placeholder="Judul Artikel" required value={blogForm.title} onChange={e => setBlogForm({...blogForm, title: e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-primary)' }} />
             <input className="form-input" placeholder="URL Gambar Thumbnail (Opsional)" value={blogForm.thumbnail} onChange={e => setBlogForm({...blogForm, thumbnail: e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-primary)' }} />
             <input className="form-input" placeholder="Tags (pisahkan dengan koma, misal: Tips, Recovery, Nutrisi)" required value={blogForm.tags} onChange={e => setBlogForm({...blogForm, tags: e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-primary)' }} />
             <textarea className="form-input" placeholder="Konten Artikel (Bisa pakai Markdown atau teks biasa)" required value={blogForm.content} onChange={e => setBlogForm({...blogForm, content: e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-primary)', minHeight: 200, resize: 'vertical' }} />
-            <button type="submit" className="btn btn-primary" disabled={blogPosting} style={{ padding: '12px', marginTop: 8 }}>
-              {blogPosting ? 'Memublikasikan...' : 'Publish Artikel'}
-            </button>
+            <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
+              <button type="submit" className="btn btn-primary" disabled={blogPosting} style={{ padding: '12px', flex: 1 }}>
+                {blogPosting ? 'Menyimpan...' : (editingBlogId ? 'Update Artikel' : 'Publish Artikel')}
+              </button>
+              {editingBlogId && (
+                <button type="button" className="btn btn-secondary" onClick={() => {
+                  setEditingBlogId(null);
+                  setBlogForm({ title: '', content: '', tags: '', thumbnail: '' });
+                  setShowBlogForm(false);
+                }} style={{ padding: '12px' }}>
+                  Batal
+                </button>
+              )}
+            </div>
           </form>
         )}
 
@@ -259,7 +307,8 @@ export default function AdminDashboard({ onBack }) {
                   <td style={{ padding: '16px', fontSize: 14, fontWeight: 600 }}>{b.title}</td>
                   <td style={{ padding: '16px', fontSize: 13, color: 'var(--text-secondary)' }}>{new Date(b.createdAt?.toDate ? b.createdAt.toDate() : b.createdAt).toLocaleDateString('id-ID')}</td>
                   <td style={{ padding: '16px', fontSize: 13, color: 'var(--accent-purple)' }}>{b.tags?.join(', ')}</td>
-                  <td style={{ padding: '16px', textAlign: 'center' }}>
+                  <td style={{ padding: '16px', textAlign: 'center', display: 'flex', justifyContent: 'center', gap: 8 }}>
+                    <button onClick={() => handleEditBlog(b)} style={{ background: '#3b82f6', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Edit</button>
                     <button onClick={() => handleDeleteBlog(b.id)} style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Hapus</button>
                   </td>
                 </tr>
