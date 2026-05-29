@@ -239,7 +239,7 @@ export default function AdminDashboard({ onBack }) {
                 content: '<h2>Mengapa 5K?</h2><p>Lari 5K adalah jarak yang sangat pas untuk pemula...</p><h3>Tips Memulai:</h3><ol><li>Mulai perlahan.</li><li>Gunakan sepatu lari yang tepat.</li><li>Jangan lupa pemanasan.</li></ol>',
                 tags: ['Pemula', 'Tips'],
                 author: 'Coach EnduraUP',
-                coverImage: 'https://images.unsplash.com/photo-1552674605-15c2174f4153?q=80&w=1200&auto=format&fit=crop',
+                coverImage: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=1200&auto=format&fit=crop',
               },
               {
                 title: 'Nutrisi Penting Sebelum Lari Jauh',

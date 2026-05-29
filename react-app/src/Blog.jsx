@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { collection, query, orderBy, getDocs, addDoc, serverTimestamp, deleteDoc, doc, updateDoc, increment, arrayUnion } from 'firebase/firestore';
+import { collection, query, orderBy, getDocs, addDoc, serverTimestamp, deleteDoc, doc, updateDoc, increment, arrayUnion, onSnapshot, arrayRemove } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage, auth, googleProvider, signInWithPopup } from './firebase';
 import ReactQuill from 'react-quill';
@@ -213,7 +213,11 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
     );
   }
 
+  const [showSavedOnly, setShowSavedOnly] = useState(false);
+
   const filteredBlogs = blogs.filter(b => {
+    // Filter by saved
+    if (showSavedOnly && !savedBlogs.includes(b.id)) return false;
     // Filter by tag
     if (selectedTag !== 'Semua' && (!b.tags || !b.tags.includes(selectedTag))) return false;
     // Filter by search
@@ -242,8 +246,6 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
               onClick={async () => {
                 try {
                   await signInWithPopup(auth, googleProvider);
-                  // onAuthStateChanged in App.jsx will catch this and set currentUser
-                  // the useEffect in BlogModule will automatically run pendingAction when currentUser changes
                 } catch (err) {
                   console.error(err);
                 }
@@ -275,6 +277,19 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
           </p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <button
+            onClick={() => setShowSavedOnly(!showSavedOnly)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              padding: '10px 16px', borderRadius: 24, border: '1px solid var(--border)',
+              background: showSavedOnly ? 'var(--text-primary)' : 'var(--bg-surface)',
+              color: showSavedOnly ? 'var(--bg-base)' : 'var(--text-primary)',
+              fontWeight: 600, fontSize: 14, cursor: 'pointer', transition: 'all 0.2s'
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill={showSavedOnly ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+            {lang === 'id' ? 'Tersimpan' : 'Saved'}
+          </button>
           <div style={{ position: 'relative' }}>
             <input 
               type="text" 
@@ -633,68 +648,7 @@ function BlogReader({ blog, onBack, onTagClick, lang, onProps, currentUser, save
       <hr style={{ borderTop: '1px solid var(--border)', margin: '60px 0 40px' }} />
       
       {/* Comments Section */}
-      <div id="comments-section" style={{ paddingBottom: 60 }}>
-        <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 24, color: 'var(--text-primary)' }}>
-          {lang === 'id' ? 'Komentar' : 'Comments'} ({blog.comments?.length || 0})
-        </h3>
-        
-        <div style={{ background: 'var(--bg-surface)', padding: 16, borderRadius: 12, border: '1px solid var(--border)', marginBottom: 32 }}>
-          <textarea 
-            placeholder={lang === 'id' ? 'Tulis komentar Anda (segera hadir)...' : 'Write your comment (coming soon)...'} 
-            style={{ width: '100%', background: 'transparent', border: 'none', outline: 'none', color: 'var(--text-primary)', resize: 'none', height: 60, fontSize: 15, cursor: !currentUser ? 'pointer' : 'text' }}
-            readOnly={!currentUser}
-            onClick={() => {
-              if (!currentUser && onRequireAuth) {
-                onRequireAuth(() => {
-                  document.getElementById('comments-section')?.scrollIntoView();
-                });
-              }
-            }}
-          ></textarea>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 12 }}>
-            <button 
-              className="btn btn-primary" 
-              style={{ padding: '8px 16px', borderRadius: 20, fontSize: 14 }}
-              onClick={() => {
-                if (!currentUser && onRequireAuth) {
-                  onRequireAuth(() => {
-                    alert('Komentar akan segera hadir!');
-                  });
-                } else {
-                  alert('Komentar akan segera hadir!');
-                }
-              }}
-            >
-              {lang === 'id' ? 'Kirim' : 'Post'}
-            </button>
-          </div>
-        </div>
-
-        {blog.comments && blog.comments.length > 0 ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-            {blog.comments.map((c, i) => (
-              <div key={i} style={{ display: 'flex', gap: 12 }}>
-                <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--bg-card)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', flexShrink: 0 }}>
-                  {c.name ? c.name.charAt(0).toUpperCase() : 'U'}
-                </div>
-                <div>
-                  <div style={{ background: 'var(--bg-surface)', padding: '12px 16px', borderRadius: '0 12px 12px 12px', border: '1px solid var(--border)' }}>
-                    <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 4 }}>{c.name || 'User'}</div>
-                    <div style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.5 }}>{c.text}</div>
-                  </div>
-                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6, marginLeft: 4 }}>
-                    {c.createdAt?.toDate ? c.createdAt.toDate().toLocaleDateString() : 'Baru saja'}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-muted)', fontSize: 14 }}>
-            {lang === 'id' ? 'Belum ada komentar. Jadilah yang pertama!' : 'No comments yet. Be the first to comment!'}
-          </div>
-        )}
-      </div>
+      <BlogComments blogId={blog.id} currentUser={currentUser} onRequireAuth={onRequireAuth} lang={lang} />
     </div>
   );
 }
@@ -840,6 +794,258 @@ function BlogEditor({ blog, onSave, onCancel, lang }) {
           <button type="submit" className="btn btn-primary" style={{ padding: '12px 32px', fontSize: 15 }}>Simpan Artikel</button>
         </div>
       </form>
+    </div>
+  );
+}
+
+function BlogComments({ blogId, currentUser, onRequireAuth, lang }) {
+  const [comments, setComments] = useState([]);
+  const [newComment, setNewComment] = useState('');
+  const [replyingTo, setReplyingTo] = useState(null);
+  const [replyText, setReplyText] = useState('');
+
+  useEffect(() => {
+    if (!blogId) return;
+    const q = query(collection(db, 'blogs', blogId, 'comments'), orderBy('createdAt', 'desc'));
+    const unsub = onSnapshot(q, (snap) => {
+      setComments(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    });
+    return () => unsub();
+  }, [blogId]);
+
+  const handlePostComment = async () => {
+    if (!newComment.trim()) return;
+    try {
+      const uid = auth.currentUser?.uid || currentUser;
+      const name = auth.currentUser?.displayName || (typeof currentUser === 'string' ? currentUser.split('@')[0] : 'User');
+      await addDoc(collection(db, 'blogs', blogId, 'comments'), {
+        text: newComment,
+        authorId: uid,
+        name: name,
+        createdAt: serverTimestamp(),
+        burns: 0,
+        burnUsers: [],
+        replies: []
+      });
+      setNewComment('');
+    } catch(e) {
+      console.error(e);
+      alert('Gagal mengirim komentar');
+    }
+  };
+
+  const handleReply = async (commentId) => {
+    if (!replyText.trim()) return;
+    try {
+      const uid = auth.currentUser?.uid || currentUser;
+      const name = auth.currentUser?.displayName || (typeof currentUser === 'string' ? currentUser.split('@')[0] : 'User');
+      
+      await updateDoc(doc(db, 'blogs', blogId, 'comments', commentId), {
+        replies: arrayUnion({
+          id: Date.now().toString(),
+          text: replyText,
+          authorId: uid,
+          name: name,
+          createdAt: Date.now(),
+          burns: 0,
+          burnUsers: []
+        })
+      });
+      setReplyingTo(null);
+      setReplyText('');
+    } catch(e) {
+      console.error(e);
+      alert('Gagal membalas');
+    }
+  };
+
+  const handleBurn = async (commentId, isReply, replyId, currentBurnUsers) => {
+    const uid = auth.currentUser?.uid || currentUser;
+    if (currentBurnUsers?.includes(uid)) return; // Already burned
+
+    try {
+      const commentRef = doc(db, 'blogs', blogId, 'comments', commentId);
+      if (!isReply) {
+        await updateDoc(commentRef, {
+          burns: increment(1),
+          burnUsers: arrayUnion(uid)
+        });
+      } else {
+        // Find the reply and update it (This requires reading, modifying, writing since arrayUnion doesn't support nested object updates easily)
+        // But to keep it simple and robust, we can just fetch the comment first
+        const comment = comments.find(c => c.id === commentId);
+        if (comment) {
+          const updatedReplies = comment.replies.map(r => {
+            if (r.id === replyId) {
+              return { ...r, burns: (r.burns || 0) + 1, burnUsers: [...(r.burnUsers || []), uid] };
+            }
+            return r;
+          });
+          await updateDoc(commentRef, { replies: updatedReplies });
+        }
+      }
+    } catch(e) {
+      console.error(e);
+    }
+  };
+
+  const getInitials = (name) => name ? name.charAt(0).toUpperCase() : 'U';
+
+  const formatTime = (ts) => {
+    if (!ts) return 'Baru saja';
+    const date = ts.toDate ? ts.toDate() : new Date(ts);
+    return date.toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-US', { day: 'numeric', month: 'short' });
+  };
+
+  return (
+    <div id="comments-section" style={{ paddingBottom: 60 }}>
+      <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 24, color: 'var(--text-primary)' }}>
+        {lang === 'id' ? 'Komentar' : 'Comments'} ({comments.length})
+      </h3>
+      
+      <div style={{ background: 'var(--bg-surface)', padding: 16, borderRadius: 12, border: '1px solid var(--border)', marginBottom: 32 }}>
+        <textarea 
+          placeholder={lang === 'id' ? 'Tulis komentar Anda...' : 'Write your comment...'} 
+          style={{ width: '100%', background: 'transparent', border: 'none', outline: 'none', color: 'var(--text-primary)', resize: 'none', height: 60, fontSize: 15, cursor: !currentUser ? 'pointer' : 'text' }}
+          readOnly={!currentUser}
+          value={newComment}
+          onChange={e => setNewComment(e.target.value)}
+          onClick={() => {
+            if (!currentUser && onRequireAuth) {
+              onRequireAuth(() => {
+                document.getElementById('comments-section')?.scrollIntoView();
+              });
+            }
+          }}
+        ></textarea>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 12 }}>
+          <button 
+            className="btn btn-primary" 
+            style={{ padding: '8px 16px', borderRadius: 20, fontSize: 14 }}
+            onClick={() => {
+              if (!currentUser && onRequireAuth) {
+                onRequireAuth(handlePostComment);
+              } else {
+                handlePostComment();
+              }
+            }}
+          >
+            {lang === 'id' ? 'Kirim' : 'Post'}
+          </button>
+        </div>
+      </div>
+
+      {comments.length > 0 ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+          {comments.map((c) => {
+            const isBurned = c.burnUsers?.includes(auth.currentUser?.uid || currentUser);
+            return (
+              <div key={c.id} style={{ display: 'flex', gap: 12 }}>
+                <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--bg-card)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', flexShrink: 0 }}>
+                  {getInitials(c.name)}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ background: 'var(--bg-surface)', padding: '12px 16px', borderRadius: '0 12px 12px 12px', border: '1px solid var(--border)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                      <div style={{ fontWeight: 600, fontSize: 14 }}>{c.name || 'User'}</div>
+                      <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{formatTime(c.createdAt)}</div>
+                    </div>
+                    <div style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{c.text}</div>
+                  </div>
+                  
+                  {/* Comment Actions */}
+                  <div style={{ display: 'flex', gap: 16, marginTop: 6, marginLeft: 4, alignItems: 'center' }}>
+                    <button 
+                      onClick={() => {
+                        if (!currentUser && onRequireAuth) onRequireAuth(() => handleBurn(c.id, false, null, c.burnUsers));
+                        else handleBurn(c.id, false, null, c.burnUsers);
+                      }}
+                      style={{ background: 'none', border: 'none', padding: 0, fontSize: 12, fontWeight: 600, color: isBurned ? '#f97316' : 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+                    >
+                      🔥 {c.burns || 0} Burn
+                    </button>
+                    <button 
+                      onClick={() => setReplyingTo(replyingTo === c.id ? null : c.id)}
+                      style={{ background: 'none', border: 'none', padding: 0, fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', cursor: 'pointer' }}
+                    >
+                      {lang === 'id' ? 'Balas' : 'Reply'}
+                    </button>
+                  </div>
+
+                  {/* Reply Input */}
+                  {replyingTo === c.id && (
+                    <div style={{ marginTop: 12, display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                      <textarea 
+                        autoFocus
+                        placeholder={lang === 'id' ? 'Tulis balasan...' : 'Write a reply...'} 
+                        style={{ flex: 1, background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '8px 12px', outline: 'none', color: 'var(--text-primary)', resize: 'none', height: 40, fontSize: 14 }}
+                        value={replyText}
+                        onChange={e => setReplyText(e.target.value)}
+                        readOnly={!currentUser}
+                        onClick={() => {
+                          if (!currentUser && onRequireAuth) {
+                            onRequireAuth(() => {});
+                          }
+                        }}
+                      ></textarea>
+                      <button 
+                        className="btn btn-primary" 
+                        style={{ padding: '8px 16px', borderRadius: 20, fontSize: 13 }}
+                        onClick={() => {
+                          if (!currentUser && onRequireAuth) onRequireAuth(() => handleReply(c.id));
+                          else handleReply(c.id);
+                        }}
+                      >
+                        {lang === 'id' ? 'Kirim' : 'Post'}
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Replies List */}
+                  {c.replies && c.replies.length > 0 && (
+                    <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 16 }}>
+                      {c.replies.map(r => {
+                        const isReplyBurned = r.burnUsers?.includes(auth.currentUser?.uid || currentUser);
+                        return (
+                          <div key={r.id} style={{ display: 'flex', gap: 12 }}>
+                            <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--bg-card)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', flexShrink: 0, fontSize: 12 }}>
+                              {getInitials(r.name)}
+                            </div>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ background: 'var(--bg-surface)', padding: '10px 14px', borderRadius: '0 12px 12px 12px', border: '1px solid var(--border)' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                                  <div style={{ fontWeight: 600, fontSize: 13 }}>{r.name || 'User'}</div>
+                                  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{formatTime(r.createdAt)}</div>
+                                </div>
+                                <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{r.text}</div>
+                              </div>
+                              <div style={{ display: 'flex', gap: 16, marginTop: 6, marginLeft: 4, alignItems: 'center' }}>
+                                <button 
+                                  onClick={() => {
+                                    if (!currentUser && onRequireAuth) onRequireAuth(() => handleBurn(c.id, true, r.id, r.burnUsers));
+                                    else handleBurn(c.id, true, r.id, r.burnUsers);
+                                  }}
+                                  style={{ background: 'none', border: 'none', padding: 0, fontSize: 11, fontWeight: 600, color: isReplyBurned ? '#f97316' : 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+                                >
+                                  🔥 {r.burns || 0} Burn
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-muted)', fontSize: 14 }}>
+          {lang === 'id' ? 'Belum ada komentar. Jadilah yang pertama!' : 'No comments yet. Be the first to comment!'}
+        </div>
+      )}
     </div>
   );
 }
