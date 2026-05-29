@@ -2369,7 +2369,7 @@ export default function App() {
 
       {/* ═══════════════════════════════ SIDEBAR ═══════════════════════════════ */}
       <aside className={`sidebar ${sidebarOpen ? 'open' : ''} ${sidebarCollapsed ? 'collapsed' : ''}`}>
-        <div className="sidebar-collapsed-strip" style={{ paddingTop: 0 }}>
+        <div className="sidebar-collapsed-strip">
           <button
             onClick={() => {
               setSidebarCollapsed(false);
@@ -2384,8 +2384,7 @@ export default function App() {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              padding: 0,
-              marginLeft: 14
+              padding: 0
             }}
           >
             <Logo size={28} />
