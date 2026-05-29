@@ -341,51 +341,107 @@ function BlogReader({ blog, onBack, onTagClick, lang, onProps, currentUser }) {
         dangerouslySetInnerHTML={{ __html: blog.content }} 
       />
 
-      {/* Burn / Props Section */}
-      <div style={{ marginTop: 60, paddingTop: 40, borderTop: '1px solid var(--border)', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <h3 style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 16 }}>
-          {lang === 'id' ? 'Suka artikel ini?' : 'Like this article?'}
-        </h3>
-        <button 
-          onClick={onProps}
-          style={{ 
-            background: 'var(--bg-surface)', 
-            border: '1px solid var(--border)', 
-            borderRadius: 30, 
-            padding: '12px 24px', 
-            fontSize: 16, 
-            fontWeight: 700, 
-            color: 'var(--text-primary)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12,
-            cursor: 'pointer',
-            transition: 'all 0.2s',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
-          }}
-          onMouseOver={(e) => {
-            e.currentTarget.style.transform = 'translateY(-2px) scale(1.02)';
-            e.currentTarget.style.borderColor = '#f97316';
-            e.currentTarget.style.boxShadow = '0 6px 16px rgba(249, 115, 22, 0.2)';
-          }}
-          onMouseOut={(e) => {
-            e.currentTarget.style.transform = 'none';
-            e.currentTarget.style.borderColor = 'var(--border)';
-            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
-          }}
-        >
-          <span style={{ fontSize: 24 }}>🔥</span> 
-          <span>{lang === 'id' ? 'Bakar (Burn) UP!' : 'Burn UP!'}</span>
-          {blog.propsCount > 0 && (
-            <span style={{ background: '#f97316', color: '#fff', padding: '2px 8px', borderRadius: 12, fontSize: 14, marginLeft: 4 }}>
-              {blog.propsCount}
-            </span>
-          )}
-        </button>
-        <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 12 }}>
-          {lang === 'id' ? 'Bakar kalori dan beri semangat buat penulis!' : 'Burn calories and boost the author!'}
-        </p>
-      </div>
+      {/* Medium-style Action Bar */}
+      <div style={{ marginTop: 60, padding: '16px 0', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 24, alignItems: 'center' }}>
+          {/* Burn Button */}
+          <button 
+            onClick={onProps}
+            style={{ 
+              background: 'transparent', 
+              border: 'none', 
+              padding: 0, 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 8, 
+              color: 'var(--text-secondary)',
+              cursor: 'pointer',
+              transition: 'color 0.2s'
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.color = '#f97316';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.color = 'var(--text-secondary)';
+            }}
+            title={lang === 'id' ? 'Bakar (Burn) UP!' : 'Burn UP!'}
+          >
+            <span style={{ fontSize: 20 }}>🔥</span>
+            <span style={{ fontSize: 14, fontWeight: 500 }}>{blog.propsCount || 0}</span>
+          </button>
+
+          {/* Comment Button (Coming soon / UI only for now) */}
+          <button 
+            onClick={() => alert(lang === 'id' ? 'Fitur komentar segera hadir!' : 'Comments feature coming soon!')}
+            style={{ 
+              background: 'transparent', 
+              border: 'none', 
+              padding: 0, 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 8, 
+              color: 'var(--text-secondary)',
+              cursor: 'pointer',
+              transition: 'color 0.2s'
+            }}
+            onMouseOver={(e) => e.currentTarget.style.color = 'var(--text-primary)'}
+            onMouseOut={(e) => e.currentTarget.style.color = 'var(--text-secondary)'}
+            title={lang === 'id' ? 'Komentar' : 'Comments'}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+            <span style={{ fontSize: 14, fontWeight: 500 }}>0</span>
+          </button>
+        </div>
+
+        <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+          {/* Bookmark Button (Coming soon / UI only for now) */}
+          <button 
+            onClick={() => alert(lang === 'id' ? 'Fitur simpan segera hadir!' : 'Bookmark feature coming soon!')}
+            style={{ 
+              background: 'transparent', 
+              border: 'none', 
+              padding: 0, 
+              display: 'flex', 
+              alignItems: 'center', 
+              color: 'var(--text-secondary)',
+              cursor: 'pointer',
+              transition: 'color 0.2s'
+            }}
+            onMouseOver={(e) => e.currentTarget.style.color = 'var(--text-primary)'}
+            onMouseOut={(e) => e.currentTarget.style.color = 'var(--text-secondary)'}
+            title={lang === 'id' ? 'Simpan' : 'Save'}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+          </button>
+
+          {/* Share Button */}
+          <button 
+            onClick={() => {
+              const url = window.location.href;
+              if (navigator.share) {
+                navigator.share({ title: blog.title, url }).catch(console.error);
+              } else {
+                navigator.clipboard.writeText(url);
+                alert(lang === 'id' ? 'Tautan disalin ke clipboard!' : 'Link copied to clipboard!');
+              }
+            }}
+            style={{ 
+              background: 'transparent', 
+              border: 'none', 
+              padding: 0, 
+              display: 'flex', 
+              alignItems: 'center', 
+              color: 'var(--text-secondary)',
+              cursor: 'pointer',
+              transition: 'color 0.2s'
+            }}
+            onMouseOver={(e) => e.currentTarget.style.color = 'var(--text-primary)'}
+            onMouseOut={(e) => e.currentTarget.style.color = 'var(--text-secondary)'}
+            title={lang === 'id' ? 'Bagikan' : 'Share'}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>
+          </button>
+        </div>
     </div>
   );
 }
