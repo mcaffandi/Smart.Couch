@@ -67,6 +67,15 @@ export default function BlogModule({ isAdmin, lang = 'id' }) {
     }
   };
 
+  // Extract unique tags
+  const allTags = useMemo(() => {
+    const tagsSet = new Set();
+    blogs.forEach(b => {
+      if (b.tags && Array.isArray(b.tags)) b.tags.forEach(t => tagsSet.add(t));
+    });
+    return ['Semua', ...Array.from(tagsSet)];
+  }, [blogs]);
+
   if (view === 'edit' && isAdmin) {
     return <BlogEditor blog={currentBlog} onSave={handleSave} onCancel={() => { setView('list'); setCurrentBlog(null); }} lang={lang} />;
   }
@@ -74,15 +83,6 @@ export default function BlogModule({ isAdmin, lang = 'id' }) {
   if (view === 'read' && currentBlog) {
     return <BlogReader blog={currentBlog} onBack={() => { setView('list'); setCurrentBlog(null); }} lang={lang} />;
   }
-
-  // Extract unique tags
-  const allTags = useMemo(() => {
-    const tagsSet = new Set();
-    blogs.forEach(b => {
-      if (b.tags) b.tags.forEach(t => tagsSet.add(t));
-    });
-    return ['Semua', ...Array.from(tagsSet)];
-  }, [blogs]);
 
   const filteredBlogs = blogs.filter(b => {
     // Filter by tag
@@ -201,7 +201,7 @@ export default function BlogModule({ isAdmin, lang = 'id' }) {
                 
                 {/* Extract pure text from HTML for excerpt */}
                 <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 20, flex: 1, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.6 }}>
-                  {b.excerpt || b.content.replace(/<[^>]+>/g, '').substring(0, 150) + '...'}
+                  {b.excerpt || (b.content || '').replace(/<[^>]+>/g, '').substring(0, 150) + '...'}
                 </p>
                 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', paddingTop: 16, borderTop: '1px dashed var(--border)' }}>
