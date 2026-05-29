@@ -2369,18 +2369,28 @@ export default function App() {
 
       {/* ═══════════════════════════════ SIDEBAR ═══════════════════════════════ */}
       <aside className={`sidebar ${sidebarOpen ? 'open' : ''} ${sidebarCollapsed ? 'collapsed' : ''}`}>
-        {/* Collapsed strip: only visible when sidebar is collapsed */}
-        <div className="sidebar-collapsed-strip">
+        <div className="sidebar-collapsed-strip" style={{ paddingTop: 0 }}>
           <button
-            className="sidebar-toggle-btn-desktop"
             onClick={() => {
               setSidebarCollapsed(false);
               localStorage.setItem('smartcoach_sidebar_collapsed', 'false');
             }}
             title={lang === 'id' ? 'Tampilkan Panel' : 'Expand Panel'}
             aria-label="Expand Sidebar"
+            style={{ 
+              background: 'transparent', 
+              border: 'none', 
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: 0,
+              width: 36,
+              height: 36,
+              margin: '0 auto'
+            }}
           >
-            <Logo size={24} />
+            <Logo size={28} />
           </button>
         </div>
         {/* Logo */}
