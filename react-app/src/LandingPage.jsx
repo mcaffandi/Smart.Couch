@@ -302,15 +302,11 @@ export default function LandingPage({ onGetStarted, lang, setLang, visitorCount 
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
           <div className="badge-pill" style={{ marginBottom: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
             <span><span className="badge-dot"></span> Pre-Release (Beta)</span>
-            {visitorCount !== null && (
-              <>
-                <span style={{ opacity: 0.5 }}>•</span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 4, opacity: 0.8 }}>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                  {visitorCount > 9999 ? (visitorCount / 1000).toFixed(1).replace('.0', '') + 'k' : visitorCount}
-                </span>
-              </>
-            )}
+            <span style={{ opacity: 0.5 }}>•</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 4, opacity: 0.8 }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+              {visitorCount === null ? '...' : (visitorCount > 9999 ? (visitorCount / 1000).toFixed(1).replace('.0', '') + 'k' : visitorCount)}
+            </span>
           </div>
         </div>
         <p>© {new Date().getFullYear()} EnduraUP. {t.builtForRunners}</p>

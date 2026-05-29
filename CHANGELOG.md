@@ -2,6 +2,16 @@
 
 ---
 
+## [Uncommitted] — 2026-05-29 · SEO Enhancements & PWA Optimization
+
+### ✨ Fitur Baru & Optimasi
+- **SEO & Meta Tags Tambahan**: Menambahkan metadata terstruktur (JSON-LD) `schema.org` untuk `WebApplication` agar pencarian Google lebih akurat.
+- **PWA & Mobile Web App**: Menambahkan `apple-mobile-web-app-capable`, `apple-mobile-web-app-status-bar-style`, dan mematikan `format-detection` untuk experience PWA yang lebih baik di iOS dan Safari.
+- **Preconnect Fonts**: Menambahkan tag `preconnect` untuk Google Fonts guna mempercepat pemuatan font awal.
+- **Open Graph**: Menambahkan `og:locale` dan `og:site_name` untuk meningkatkan *shareability* di media sosial.
+
+---
+
 ## [Uncommitted] — 2026-05-27 · Pre-Release Polish & Architecture Simplification
 
 ### ✨ UI / UX Enhancements
@@ -291,3 +301,4 @@ Seluruh warna teks diubah dari nuansa dingin (`#ffffff`, `#a1a1aa`, `#71717a`) k
 - [x] Foto/avatar upload untuk profil
 - [x] Umur & pace di sidebar otomatis grey saat user baru (clear localStorage)
 - [x] Chunk size optimization: bundle saat ini ~1.2MB (warning Vite > 500kB)
+- [ ] **Blog / Edukasi Artikel (Programmatic SEO)**: Buat fitur artikel Markdown bersumber dari Firestore. Tampilkan di Landing Page & Sidebar Dashboard. Tambahkan fitur CRUD khusus untuk *role* Admin.
