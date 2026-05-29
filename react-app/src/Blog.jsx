@@ -328,7 +328,7 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
   );
 }
 
-function BlogReader({ blog, onBack, onTagClick, lang, onProps, currentUser }) {
+function BlogReader({ blog, onBack, onTagClick, lang, onProps, currentUser, savedBlogs, onSaveToggle }) {
   const dateStr = blog.createdAt?.toDate ? blog.createdAt.toDate().toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
   
   return (
