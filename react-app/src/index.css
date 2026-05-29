@@ -2002,3 +2002,117 @@ html[data-theme="dark"] .neon-donate {
 html[data-theme="dark"] .neon-donate:hover {
   color: #fcd34d; /* Bright yellow on hover in dark mode */
 }
+
+/* Medium-like Blog Layout */
+.medium-blog-container {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 40px 20px 80px 20px;
+  font-family: 'Charter', 'Georgia', serif;
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+
+.medium-blog-title {
+  font-family: 'Inter', -apple-system, sans-serif;
+  font-size: 40px;
+  font-weight: 800;
+  line-height: 1.2;
+  margin-bottom: 16px;
+  letter-spacing: -0.02em;
+}
+
+.medium-blog-meta {
+  font-family: 'Inter', -apple-system, sans-serif;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 32px;
+  font-size: 14px;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 24px;
+}
+
+.medium-blog-content {
+  font-size: 20px;
+  color: var(--text-primary);
+}
+
+.medium-blog-content p {
+  margin-bottom: 28px;
+}
+
+.medium-blog-content h1, 
+.medium-blog-content h2, 
+.medium-blog-content h3 {
+  font-family: 'Inter', -apple-system, sans-serif;
+  font-weight: 700;
+  margin-top: 48px;
+  margin-bottom: 16px;
+  line-height: 1.3;
+}
+
+.medium-blog-content h2 { font-size: 28px; }
+.medium-blog-content h3 { font-size: 24px; }
+
+.medium-blog-content img {
+  max-width: 100vw;
+  width: 100%;
+  border-radius: 4px;
+  margin: 32px 0;
+}
+
+@media (min-width: 768px) {
+  .medium-blog-content img {
+    /* Slight bleed out of container on desktop */
+    width: calc(100% + 100px);
+    margin-left: -50px;
+  }
+}
+
+.medium-blog-content blockquote {
+  border-left: 4px solid var(--text-primary);
+  padding-left: 20px;
+  font-style: italic;
+  font-size: 24px;
+  margin: 32px 0;
+  color: var(--text-secondary);
+}
+
+.medium-blog-content a {
+  color: var(--text-primary);
+  text-decoration: underline;
+  text-decoration-color: var(--text-muted);
+}
+
+.medium-blog-content ul, .medium-blog-content ol {
+  margin-bottom: 28px;
+  padding-left: 20px;
+}
+
+.medium-blog-content li {
+  margin-bottom: 10px;
+}
+
+/* React Quill styling overrides for dark mode */
+.ql-container.ql-snow {
+  border: 1px solid var(--border) !important;
+  border-radius: 0 0 8px 8px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-family: 'Inter', -apple-system, sans-serif;
+  font-size: 16px;
+}
+.ql-editor {
+  min-height: 300px;
+}
+.ql-toolbar.ql-snow {
+  border: 1px solid var(--border) !important;
+  border-bottom: none !important;
+  border-radius: 8px 8px 0 0;
+  background: var(--bg-surface);
+}
+.ql-snow .ql-stroke { stroke: var(--text-primary) !important; }
+.ql-snow .ql-fill, .ql-snow .ql-stroke.ql-fill { fill: var(--text-primary) !important; }
+.ql-snow .ql-picker { color: var(--text-primary) !important; }
