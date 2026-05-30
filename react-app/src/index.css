@@ -2025,7 +2025,7 @@ html[data-theme="dark"] .neon-donate:hover {
   max-width: 680px;
   margin: 0 auto;
   padding: 0 20px 80px 20px;
-  font-family: 'Charter', 'Georgia', serif;
+  font-family: 'Inter', -apple-system, sans-serif;
   color: var(--text-primary);
   line-height: 1.6;
 }
