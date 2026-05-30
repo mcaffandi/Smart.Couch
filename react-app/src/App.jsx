@@ -520,7 +520,7 @@ export default function App() {
         let newRuns = [];
         activities.forEach(act => {
           if (act.type === 'Run') {
-            const startDateLocal = new Date(act.start_date_local.replace('Z', '')).getTime();
+            const startDateLocal = new Date(act.start_date).getTime();
             newRuns.push({
               activityName: act.name,
               startTimeLocal: startDateLocal,
@@ -1398,7 +1398,7 @@ export default function App() {
       let newRuns = [];
       activities.forEach(act => {
         if (act.type === 'Run') {
-          const startDateLocal = new Date(act.start_date_local.replace('Z', '')).getTime();
+          const startDateLocal = new Date(act.start_date).getTime();
           newRuns.push({
             activityName: act.name,
             startTimeLocal: startDateLocal,
@@ -3389,10 +3389,31 @@ export default function App() {
             {/* ─────────────────── RUN HISTORY ─────────────────── */}
             {tab === 'history' && (
               <div className="animate-fade-in">
-                <div className="section-header">
-                  <h2 className="section-title">
+                <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                  <h2 className="section-title" style={{ margin: 0 }}>
                     {lang === 'id' ? `Riwayat Sesi Lari (${totalSessions})` : `Run Session History (${totalSessions})`}
                   </h2>
+                  {totalSessions > 0 && (
+                    <button 
+                      onClick={() => {
+                        if (window.confirm(lang === 'id' ? 'Yakin ingin menghapus SEMUA histori lari? (Tenang, nanti bisa di-sync ulang dari Strava)' : 'Are you sure you want to delete ALL run history? (Can be re-synced from Strava)')) {
+                          setData(prev => {
+                            const updated = {
+                              ...prev,
+                              running_activities: []
+                            };
+                            saveAndSyncData(updated);
+                            return updated;
+                          });
+                        }
+                      }}
+                      style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', color: '#ef4444', padding: '6px 14px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
+                      onMouseEnter={(e) => e.target.style.background = 'rgba(239, 68, 68, 0.2)'}
+                      onMouseLeave={(e) => e.target.style.background = 'rgba(239, 68, 68, 0.1)'}
+                    >
+                      {lang === 'id' ? 'Hapus Semua' : 'Delete All'}
+                    </button>
+                  )}
                 </div>
                 <RunHistory 
                   activities={runActs} 
