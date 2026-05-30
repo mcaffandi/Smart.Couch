@@ -1712,21 +1712,25 @@ export default function App() {
   // ─────────────────── STANDALONE BLOG PAGE ───────────────────
   if (tab === 'blog') {
     return (
-      <div className="landing-container" style={{ minHeight: '100vh', paddingTop: 80, overflowY: 'auto', background: 'var(--bg-base)' }}>
+      <div className="landing-container" style={{ minHeight: '100vh', paddingTop: 56, overflowY: 'auto', background: 'var(--bg-base)' }}>
         <nav className="landing-nav" style={{ position: 'fixed', top: 0, left: 0, right: 0, width: '100%', maxWidth: '100%', padding: '16px 5%', background: 'var(--glass-bg)', backdropFilter: 'blur(12px)', zIndex: 100, borderBottom: '1px solid var(--border)' }}>
           <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
             <div className="nav-logo" onClick={() => setTab('dashboard')} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
               <Logo size={24} />
               <span className="logo-text" style={{ fontSize: 20, letterSpacing: '-0.5px' }}>EnduraUP</span>
             </div>
-            {blogView === 'list' && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ display: 'flex', background: 'var(--bg-surface)', borderRadius: 20, padding: 2, border: '1px solid var(--border)' }}>
+                <button onClick={() => { setLang('id'); localStorage.setItem('smartcoach_lang','id'); }} style={{ padding: '4px 12px', borderRadius: 18, fontSize: 12, fontWeight: 700, background: lang === 'id' ? 'var(--accent-purple)' : 'transparent', color: lang === 'id' ? '#fff' : 'var(--text-muted)', border: 'none', cursor: 'pointer', transition: 'all 0.2s' }}>ID</button>
+                <button onClick={() => { setLang('en'); localStorage.setItem('smartcoach_lang','en'); }} style={{ padding: '4px 12px', borderRadius: 18, fontSize: 12, fontWeight: 700, background: lang === 'en' ? 'var(--accent-purple)' : 'transparent', color: lang === 'en' ? '#fff' : 'var(--text-muted)', border: 'none', cursor: 'pointer', transition: 'all 0.2s' }}>EN</button>
+              </div>
               <button className="nav-btn-primary" onClick={() => setTab('dashboard')} style={{ padding: '8px 16px', borderRadius: 20, fontSize: 13, background: 'transparent', border: '1px solid var(--border)', color: 'var(--text-primary)', fontWeight: 600 }}>
                 {lang === 'id' ? 'Kembali ke Dasbor' : 'Back to Dashboard'}
               </button>
-            )}
+            </div>
           </div>
         </nav>
-        <div style={{ padding: '60px 20px', maxWidth: 1000, margin: '0 auto' }}>
+        <div style={{ padding: '20px 20px', maxWidth: 1000, margin: '0 auto' }}>
           <ErrorBoundary>
             <BlogModule isAdmin={showAdmin} lang={lang} onViewChange={setBlogView} currentUser={currentUser} />
           </ErrorBoundary>
