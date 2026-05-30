@@ -352,32 +352,85 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
           </p>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 24, paddingTop: 10 }}>
-          {filteredBlogs.map(b => (
-            <div key={b.id} className="glass-panel hover-lift" onClick={() => { setCurrentBlog(b); setView('read'); }} style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column', cursor: 'pointer', padding: 0, border: '1px solid var(--border)', background: 'var(--bg-card)' }}>
-              {b.coverImage ? (
-                <div style={{ height: 180, background: `url(${b.coverImage}) center/cover`, borderBottom: '1px solid var(--border)' }}></div>
-              ) : (
-                <div style={{ height: 180, background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
-                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-                </div>
-              )}
-              <div style={{ padding: 24, flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <>
+          {/* Featured Hero Article */}
+          {filteredBlogs.length > 0 && selectedTag === 'Semua' && !searchQuery && !showSavedOnly && (
+            <div 
+              className="glass-panel hover-lift"
+              onClick={() => { setCurrentBlog(filteredBlogs[0]); setView('read'); }}
+              style={{ overflow: 'hidden', display: 'flex', flexDirection: window.innerWidth < 768 ? 'column' : 'row', cursor: 'pointer', padding: 0, border: '1px solid var(--border)', background: 'var(--bg-card)', marginBottom: 40, minHeight: 360 }}
+            >
+              <div style={{ flex: 1, minHeight: 250, background: filteredBlogs[0].coverImage ? `url(${filteredBlogs[0].coverImage}) center/cover` : 'var(--bg-surface)' }}></div>
+              <div style={{ flex: 1, padding: '40px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                 <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
-                  {b.tags && b.tags.slice(0,2).map((tag, i) => (
+                  {filteredBlogs[0].tags && filteredBlogs[0].tags.slice(0, 3).map((tag, i) => (
                     <span key={i} onClick={(e) => { e.stopPropagation(); setSelectedTag(tag); }} style={{ fontSize: 12, background: 'color-mix(in srgb, var(--accent-purple) 15%, transparent)', color: 'var(--accent-purple)', padding: '4px 12px', borderRadius: 20, fontWeight: 700, cursor: 'pointer' }}>
                       {tag.toUpperCase()}
                     </span>
                   ))}
-                  {b.tags && b.tags.length > 2 && <span style={{ fontSize: 12, color: 'var(--text-muted)', padding: '4px 6px' }}>+{b.tags.length - 2}</span>}
                 </div>
-                <h3 style={{ fontSize: 19, fontWeight: 700, marginBottom: 12, lineHeight: 1.4, color: 'var(--text-primary)' }}>{b.title}</h3>
-                
-                {/* Extract pure text from HTML for excerpt */}
-                <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 20, flex: 1, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.6 }}>
-                  {b.excerpt || (b.content || '').replace(/<[^>]+>/g, '').substring(0, 150) + '...'}
+                <h2 style={{ fontSize: window.innerWidth < 768 ? 24 : 32, fontWeight: 800, marginBottom: 16, lineHeight: 1.2, color: 'var(--text-primary)', letterSpacing: '-0.5px' }}>{filteredBlogs[0].title}</h2>
+                <p style={{ fontSize: 16, color: 'var(--text-secondary)', marginBottom: 24, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.6 }}>
+                  {filteredBlogs[0].excerpt || (filteredBlogs[0].content || '').replace(/<[^>]+>/g, '').substring(0, 200) + '...'}
                 </p>
-                
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', paddingTop: 20, borderTop: '1px dashed var(--border)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ fontSize: 14, color: 'var(--text-muted)', fontWeight: 500 }}>
+                      {filteredBlogs[0].createdAt?.toDate ? filteredBlogs[0].createdAt.toDate().toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'}) : ''}
+                    </div>
+                    {filteredBlogs[0].propsCount > 0 && (
+                      <div style={{ fontSize: 14, color: '#f97316', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 2.5z"></path></svg>
+                        {filteredBlogs[0].propsCount}
+                      </div>
+                    )}
+                  </div>
+                  <div style={{ display: 'flex', gap: 12, alignItems: 'center' }} onClick={e => e.stopPropagation()}>
+                    <button 
+                      onClick={() => handleSaveBlog(filteredBlogs[0].id)}
+                      style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, color: savedBlogs.includes(filteredBlogs[0].id) ? 'var(--text-primary)' : 'var(--text-muted)' }} 
+                    >
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill={savedBlogs.includes(filteredBlogs[0].id) ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+                    </button>
+                    {isAdmin && (
+                      <>
+                        <button onClick={() => { setCurrentBlog(filteredBlogs[0]); setView('edit'); }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', padding: 0 }} title="Edit">✏️</button>
+                        <button onClick={() => handleDelete(filteredBlogs[0].id)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--accent-rose)', padding: 0 }} title="Hapus">🗑️</button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Grid of the remaining articles */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 24, paddingBottom: 40 }}>
+            {filteredBlogs.slice(selectedTag === 'Semua' && !searchQuery && !showSavedOnly ? 1 : 0).map(b => (
+              <div key={b.id} className="glass-panel hover-lift" onClick={() => { setCurrentBlog(b); setView('read'); }} style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column', cursor: 'pointer', padding: 0, border: '1px solid var(--border)', background: 'var(--bg-card)' }}>
+                {b.coverImage ? (
+                  <div style={{ height: 180, background: `url(${b.coverImage}) center/cover`, borderBottom: '1px solid var(--border)' }}></div>
+                ) : (
+                  <div style={{ height: 180, background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                  </div>
+                )}
+                <div style={{ padding: 24, flex: 1, display: 'flex', flexDirection: 'column' }}>
+                  <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+                    {b.tags && b.tags.slice(0,2).map((tag, i) => (
+                      <span key={i} onClick={(e) => { e.stopPropagation(); setSelectedTag(tag); }} style={{ fontSize: 12, background: 'color-mix(in srgb, var(--accent-purple) 15%, transparent)', color: 'var(--accent-purple)', padding: '4px 12px', borderRadius: 20, fontWeight: 700, cursor: 'pointer' }}>
+                        {tag.toUpperCase()}
+                      </span>
+                    ))}
+                    {b.tags && b.tags.length > 2 && <span style={{ fontSize: 12, color: 'var(--text-muted)', padding: '4px 6px' }}>+{b.tags.length - 2}</span>}
+                  </div>
+                  <h3 style={{ fontSize: 19, fontWeight: 700, marginBottom: 12, lineHeight: 1.4, color: 'var(--text-primary)' }}>{b.title}</h3>
+                  
+                  {/* Extract pure text from HTML for excerpt */}
+                  <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 20, flex: 1, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.6 }}>
+                    {b.excerpt || (b.content || '').replace(/<[^>]+>/g, '').substring(0, 150) + '...'}
+                  </p>
+                  
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', paddingTop: 16, borderTop: '1px dashed var(--border)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                       <div style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 500 }}>
@@ -406,10 +459,29 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
                       )}
                     </div>
                   </div>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* Blog Footer */}
+      {!loading && (
+        <footer style={{ marginTop: 'auto', paddingTop: 60, paddingBottom: 40, borderTop: '1px solid var(--border)', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', color: 'var(--text-secondary)' }}>
+          <h3 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.5px' }}>EnduraUP</h3>
+          <p style={{ maxWidth: 400, marginTop: 12, marginBottom: 24, fontSize: 14 }}>
+            Platform AI pelatih lari pintar yang membantu pelari mencapai personal best dengan program adaptif berbasis data.
+          </p>
+          <div style={{ display: 'flex', gap: 20, marginBottom: 24 }}>
+            <a href="#" style={{ color: 'var(--text-muted)', textDecoration: 'none', fontSize: 13, fontWeight: 500, transition: 'color 0.2s' }}>Tentang Kami</a>
+            <a href="#" style={{ color: 'var(--text-muted)', textDecoration: 'none', fontSize: 13, fontWeight: 500, transition: 'color 0.2s' }}>Kebijakan Privasi</a>
+            <a href="#" style={{ color: 'var(--text-muted)', textDecoration: 'none', fontSize: 13, fontWeight: 500, transition: 'color 0.2s' }}>Hubungi Pelatih</a>
+          </div>
+          <div style={{ fontSize: 12, color: 'var(--text-muted)', borderTop: '1px solid var(--border)', paddingTop: 20, width: '100%', maxWidth: 400 }}>
+            &copy; {new Date().getFullYear()} EnduraUP. All rights reserved.
+          </div>
+        </footer>
       )}
     </div>
   );
