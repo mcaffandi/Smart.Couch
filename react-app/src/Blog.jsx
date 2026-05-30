@@ -655,7 +655,7 @@ function BlogReader({ blog, onBack, onTagClick, lang, onProps, currentUser, save
       {/* Render rich text HTML content safely */}
       <div 
         className="medium-blog-content"
-        dangerouslySetInnerHTML={{ __html: blog.content }} 
+        dangerouslySetInnerHTML={{ __html: blog?.content || '' }} 
       />
 
       <hr style={{ borderTop: '1px solid var(--border)', margin: '60px 0 40px' }} />
