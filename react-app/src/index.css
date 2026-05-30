@@ -2016,7 +2016,7 @@ html[data-theme="dark"] .neon-donate:hover {
 .medium-blog-container {
   max-width: 680px;
   margin: 0 auto;
-  padding: 16px 20px 80px 20px;
+  padding: 8px 20px 80px 20px;
   font-family: 'Charter', 'Georgia', serif;
   color: var(--text-primary);
   line-height: 1.6;
