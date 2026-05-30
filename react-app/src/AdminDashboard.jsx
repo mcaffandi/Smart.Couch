@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { Lock } from 'lucide-react';
-import { collection, getDocs, deleteDoc, doc, addDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, getDocs, getDocsFromServer, deleteDoc, doc, addDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from './firebase';
 import ReactQuill from 'react-quill';
@@ -67,20 +67,25 @@ export default function AdminDashboard({ onBack }) {
   useEffect(() => {
     if (!isAuthenticated) return;
     const fetchData = async () => {
+      if (!db) {
+         console.log("Firebase not configured");
+         setLoading(false);
+         return;
+      }
+      
+      // Fetch users
       try {
-        if (!db) {
-           console.log("Firebase not configured");
-           setLoading(false);
-           return;
-        }
-        // Fetch users
-        const usersSnap = await getDocs(collection(db, "users"));
+        const usersSnap = await getDocsFromServer(collection(db, "users"));
         const usersData = [];
         usersSnap.forEach((doc) => usersData.push({ id: doc.id, data: doc.data() }));
         setUsers(usersData);
+      } catch (err) {
+        console.error("Gagal ambil data users:", err);
+      }
 
-        // Fetch blogs
-        const blogsSnap = await getDocs(collection(db, "blogs"));
+      // Fetch blogs
+      try {
+        const blogsSnap = await getDocsFromServer(collection(db, "blogs"));
         const blogsData = [];
         blogsSnap.forEach((doc) => blogsData.push({ id: doc.id, ...doc.data() }));
         // Sort descending by date
@@ -90,10 +95,10 @@ export default function AdminDashboard({ onBack }) {
           return tB - tA;
         });
         setBlogs(blogsData);
-
       } catch (err) {
-        console.error("Gagal ambil data admin:", err);
+        console.error("Gagal ambil data blogs:", err);
       }
+
       setLoading(false);
     };
     fetchData();
@@ -349,7 +354,7 @@ export default function AdminDashboard({ onBack }) {
               setBlogForm({ title: '', content: '', tags: '', thumbnail: '' });
             }
             setShowBlogForm(!showBlogForm);
-          }} style={{ padding: '6px 12px', fontSize: 13 }}>
+          }} style={{ padding: '6px 16px', fontSize: 13, width: 'auto', borderRadius: 20 }}>
             {showBlogForm ? 'Tutup Form' : '+ Tulis Artikel'}
           </button>
         </h3>
