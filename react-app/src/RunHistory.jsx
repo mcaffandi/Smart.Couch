@@ -16,7 +16,9 @@ export default function RunHistory({ activities, lang = 'id' }) {
 
   const msToDate = (ms) => {
     const d = new Date(ms);
-    return d.toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-US', { day: '2-digit', month: 'short', year: 'numeric' });
+    const dateStr = d.toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-US', { day: '2-digit', month: 'short', year: 'numeric' });
+    const timeStr = d.toLocaleTimeString(lang === 'id' ? 'id-ID' : 'en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+    return `${dateStr} • ${timeStr}`;
   };
 
   const getBadge = (avgHr, maxHr) => {
@@ -126,7 +128,10 @@ export default function RunHistory({ activities, lang = 'id' }) {
       <div className="history-list">
         {paged.map((act, i) => {
           const distKm = ((act.distance ?? 0) / 100000).toFixed(2);
-          const durMin = Math.round((act.duration ?? 0) / 60000);
+          const totalSecs = Math.round((act.duration ?? 0) / 1000);
+          const m = Math.floor(totalSecs / 60);
+          const s = totalSecs % 60;
+          const formattedDur = `${m}:${s.toString().padStart(2, '0')}`;
           const pace = act.distance && act.duration
             ? ((act.duration / 60000) / (act.distance / 100000)).toFixed(2)
             : '–';
@@ -144,10 +149,10 @@ export default function RunHistory({ activities, lang = 'id' }) {
                   <div className="history-stat-value">{distKm}</div>
                   <div className="history-stat-label">km</div>
                 </div>
-                {durMin > 0 && (
+                {totalSecs > 0 && (
                   <div className="history-stat">
-                    <div className="history-stat-value">{durMin}</div>
-                    <div className="history-stat-label">{lang === 'id' ? 'menit' : 'mins'}</div>
+                    <div className="history-stat-value">{formattedDur}</div>
+                    <div className="history-stat-label">{lang === 'id' ? 'waktu' : 'time'}</div>
                   </div>
                 )}
                 {act.avgHr && (

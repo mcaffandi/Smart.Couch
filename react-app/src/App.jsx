@@ -4,7 +4,7 @@ import * as XLSX from 'xlsx';
 import {
   loadUsersList, saveUsersList, getCurrentUser, saveCurrentUser,
   loadUserData, saveUserData, deleteUserData,
-  msToDate, getPaceRecommendations, getHRZones, mergeData, parseGarminZip, parseGpxFile
+  msToDate, getPaceRecommendations, getHRZones, mergeData, parseGarminZip, parseGpxFile, decodePolyline
 } from './utils';
 import { TrendChart, HRZoneChart } from './Charts';
 import RunHistory from './RunHistory';
@@ -489,12 +489,19 @@ export default function App() {
       .then(tokenData => {
         if (!tokenData.access_token) throw new Error('No access token');
         
+        const savedTokens = {
+          stravaAccessToken: tokenData.access_token,
+          stravaRefreshToken: tokenData.refresh_token,
+          stravaTokenExpiresAt: tokenData.expires_at * 1000
+        };
+        
         return fetch('https://www.strava.com/api/v3/athlete/activities?per_page=30', {
           headers: { 'Authorization': `Bearer ${tokenData.access_token}` }
-        });
+        })
+        .then(res => res.json())
+        .then(activities => ({ activities, savedTokens }));
       })
-      .then(res => res.json())
-      .then(activities => {
+      .then(({ activities, savedTokens }) => {
         if (!Array.isArray(activities)) throw new Error('Invalid Strava Data');
         
         let newRuns = [];
@@ -507,7 +514,8 @@ export default function App() {
               distance: act.distance * 100, // meters to cm
               duration: act.moving_time * 1000, // seconds to ms
               avgHr: act.average_heartrate ? Math.round(act.average_heartrate) : null,
-              maxHr: act.max_heartrate ? Math.round(act.max_heartrate) : null
+              maxHr: act.max_heartrate ? Math.round(act.max_heartrate) : null,
+              route: act.map && act.map.summary_polyline ? decodePolyline(act.map.summary_polyline) : null
             });
           }
         });
@@ -515,7 +523,14 @@ export default function App() {
         if (newRuns.length === 0) {
           addToast(lang === 'id' ? 'Tidak ada lari baru di Strava' : 'No new runs found in Strava', 'info');
           setData(prev => {
-            const updated = { ...prev, profile: { ...(prev.profile || {}), stravaConnected: true } };
+            const updated = { 
+              ...prev, 
+              profile: { 
+                ...(prev.profile || {}), 
+                stravaConnected: true,
+                ...savedTokens
+              } 
+            };
             saveAndSyncData(updated);
             return updated;
           });
@@ -544,7 +559,11 @@ export default function App() {
             ...prev, 
             running_activities: mergedRuns, 
             max_hr: maxHr,
-            profile: { ...(prev.profile || {}), stravaConnected: true }
+            profile: { 
+              ...(prev.profile || {}), 
+              stravaConnected: true,
+              ...savedTokens
+            }
           };
           saveAndSyncData(updated);
           
@@ -1313,6 +1332,125 @@ export default function App() {
   };
 
   // ── File upload (Garmin ZIP & Strava GPX) ──────────────────────────────────
+  const syncStravaData = async () => {
+    if (!data.profile?.stravaRefreshToken) {
+      addToast(lang === 'id' ? 'Token Strava tidak ditemukan. Silakan hubungkan ulang.' : 'Strava token missing. Please reconnect.', 'error');
+      return;
+    }
+
+    const clientId = import.meta.env.VITE_STRAVA_CLIENT_ID;
+    const clientSecret = import.meta.env.VITE_STRAVA_CLIENT_SECRET;
+    
+    if (!clientId || !clientSecret) {
+      addToast(lang === 'id' ? 'Strava API Keys belum lengkap di .env!' : 'Strava API keys missing in .env!', 'error');
+      return;
+    }
+
+    setIsUploading(true);
+    addToast(lang === 'id' ? 'Menarik data dari Strava...' : 'Fetching data from Strava...', 'info');
+
+    let accessToken = data.profile.stravaAccessToken;
+    let newTokens = {};
+
+    try {
+      if (Date.now() > (data.profile.stravaTokenExpiresAt || 0)) {
+        const refreshRes = await fetch('https://www.strava.com/oauth/token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            client_id: clientId,
+            client_secret: clientSecret,
+            grant_type: 'refresh_token',
+            refresh_token: data.profile.stravaRefreshToken
+          })
+        });
+        const refreshData = await refreshRes.json();
+        if (!refreshData.access_token) throw new Error('Failed to refresh token');
+        
+        accessToken = refreshData.access_token;
+        newTokens = {
+          stravaAccessToken: refreshData.access_token,
+          stravaRefreshToken: refreshData.refresh_token,
+          stravaTokenExpiresAt: refreshData.expires_at * 1000
+        };
+      }
+
+      const actsRes = await fetch('https://www.strava.com/api/v3/athlete/activities?per_page=30', {
+        headers: { 'Authorization': `Bearer ${accessToken}` }
+      });
+      const activities = await actsRes.json();
+
+      if (!Array.isArray(activities)) throw new Error('Invalid Strava Data');
+
+      let newRuns = [];
+      activities.forEach(act => {
+        if (act.type === 'Run') {
+          const startDateLocal = new Date(act.start_date_local).getTime();
+          newRuns.push({
+            activityName: act.name,
+            startTimeLocal: startDateLocal,
+            distance: act.distance * 100,
+            duration: act.moving_time * 1000,
+            avgHr: act.average_heartrate ? Math.round(act.average_heartrate) : null,
+            maxHr: act.max_heartrate ? Math.round(act.max_heartrate) : null,
+            route: act.map && act.map.summary_polyline ? decodePolyline(act.map.summary_polyline) : null
+          });
+        }
+      });
+
+      if (newRuns.length === 0) {
+        addToast(lang === 'id' ? 'Tidak ada lari baru di Strava' : 'No new runs found in Strava', 'info');
+        if (Object.keys(newTokens).length > 0) {
+          setData(prev => {
+            const updated = { ...prev, profile: { ...(prev.profile || {}), ...newTokens } };
+            saveAndSyncData(updated);
+            return updated;
+          });
+        }
+        setIsUploading(false);
+        return;
+      }
+
+      setData(prev => {
+        let mergedRuns = [...(prev.running_activities || [])];
+        let addedCount = 0;
+        newRuns.forEach(nr => {
+          const exists = mergedRuns.find(er => Math.abs(er.startTimeLocal - nr.startTimeLocal) < 60000);
+          if (!exists) {
+            mergedRuns.push(nr);
+            addedCount++;
+          }
+        });
+        mergedRuns.sort((a,b) => a.startTimeLocal - b.startTimeLocal);
+        
+        let maxHr = prev.max_hr || 0;
+        mergedRuns.forEach(r => {
+          if (r.maxHr && r.maxHr > maxHr) maxHr = r.maxHr;
+        });
+
+        const updated = { 
+          ...prev, 
+          running_activities: mergedRuns, 
+          max_hr: maxHr,
+          profile: { 
+            ...(prev.profile || {}), 
+            ...newTokens 
+          }
+        };
+        saveAndSyncData(updated);
+        
+        addToast(lang === 'id' ? `Berhasil sync ${addedCount} lari baru dari Strava!` : `Successfully synced ${addedCount} new runs from Strava!`, 'success');
+        return updated;
+      });
+
+    } catch (err) {
+      console.error('Strava Sync Error:', err);
+      addToast(lang === 'id' ? 'Gagal narik data Strava!' : 'Failed to fetch Strava data!', 'error');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const handleFileUpload = async (file) => {
     if (!file) return;
     const isZip = file.name.toLowerCase().endsWith('.zip');
@@ -3471,6 +3609,12 @@ export default function App() {
                 <button 
                   className="btn btn-primary" 
                   onClick={() => {
+                    if (data.profile?.stravaConnected && data.profile?.stravaRefreshToken) {
+                      syncStravaData();
+                      setShowUploadModal(false);
+                      return;
+                    }
+
                     const clientId = import.meta.env.VITE_STRAVA_CLIENT_ID;
                     if (!clientId) {
                       alert('Strava Client ID belum dikonfigurasi di Environment Variables!');

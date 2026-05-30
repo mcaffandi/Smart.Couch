@@ -1,0 +1,58 @@
+# EnduraUP - Firestore Security Rules
+
+Copy dan paste seluruh kode di bawah ini ke tab **Rules** di Firebase Console (bagian Firestore Database). 
+
+Rules ini sudah diperbarui dengan fungsi `isAdmin()` supaya data tetap aman (tidak sembarang user bisa menghapus/mengubah blog), namun Admin tetap bisa melihat data pelari di Admin Dashboard.
+
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+  
+    // Fungsi bantuan untuk mengecek apakah user yang mengakses adalah Admin
+    function isAdmin() {
+      return request.auth != null && request.auth.token.email in ['m.c.affandi@gmail.com', 'affanbelajar@gmail.com'];
+    }
+
+    match /testimonials/{doc} {
+      // Semua orang boleh membaca testimonials
+      allow read: if true;
+      // HANYA Admin yang boleh menambah atau menghapus testimonials
+      allow write: if isAdmin();
+    }
+    
+    match /blogs/{blogId} {
+      // Semua orang boleh membaca artikel blog
+      allow read: if true;
+      // HANYA Admin yang boleh menulis, mengedit, atau menghapus artikel blog
+      allow write: if isAdmin();
+    }
+    
+    match /comments/{commentId} {
+      // Semua orang boleh membaca komentar
+      allow read: if true;
+      // User yang terdaftar (login) boleh membuat komentar
+      allow create: if request.auth != null;
+      // User yang terdaftar boleh mengedit/menghapus
+      allow update, delete: if request.auth != null;
+    }
+    
+    match /users/{userId} {
+      // INI YANG PALING PENTING UNTUK ADMIN DASHBOARD:
+      // User HANYA bisa mengakses datanya sendiri, KECUALI dia adalah Admin.
+      // Admin punya hak akses dewa untuk membaca semua data pelari.
+      allow read, write: if request.auth != null && (request.auth.uid == userId || isAdmin());
+    }
+    
+    match /stats/{doc} {
+      // Semua orang boleh membaca dan mengupdate statistik visitor
+      allow read, write: if true;
+    }
+    
+    match /{document=**} {
+      // Kunci mati semua koleksi lain yang tidak dideklarasikan di atas
+      allow read, write: if false;
+    }
+  }
+}
+```
