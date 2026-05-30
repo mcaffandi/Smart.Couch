@@ -147,10 +147,38 @@ STRICT RULE: IF the user asks about topics OUTSIDE of running/fitness (like codi
       const aiReply = data.choices[0].message.content;
       setMessages(p => [...p, { role: 'assistant', content: aiReply }]);
     } catch (e) {
-      setMessages(p => [...p, { role: 'assistant', content: lang === 'id' 
-        ? `Waduh, koneksi ke otak AI gua gagal bro: ${e.message}` 
-        : `Oops, failed to connect to my AI brain: ${e.message}` 
-      }]);
+      // 3. Fallback to Local Rule-Based "AI" with Reasoning
+      const isId = lang === 'id';
+      let fallbackReply = '';
+      
+      if (msgLower.includes('pace') || msgLower.includes('kecepatan') || msgLower.includes('cepat') || msgLower.includes('lambat')) {
+        fallbackReply = isId 
+          ? `(AI Offline Mode) Target pace lo kan ${formattedPace} min/km. Berdasarkan rumus dasar, untuk **Easy Run** lo bisa pelanin jadi sekitar ${formatPace(targetPace + 1.5)} min/km biar detak jantung tetap aman bro!`
+          : `(Offline Mode) Your target pace is ${formattedPace} min/km. Based on basic formulas, for an **Easy Run** you should slow down to around ${formatPace(targetPace + 1.5)} min/km to keep your HR low!`;
+      } 
+      else if (msgLower.includes('hari ini') || msgLower.includes('jadwal') || msgLower.includes('lari apa')) {
+        if (consistencyScore < 50) {
+          fallbackReply = isId 
+            ? `(AI Offline Mode) Sistem baca konsistensi lo baru **${consistencyScore}%**. Gak usah mikir menu berat dulu, hari ini **Easy Run 3KM - 5KM** aja biar kebiasaannya nempel lagi!`
+            : `(Offline Mode) Consistency is at **${consistencyScore}%**. Don't do heavy workouts yet, just go for an **Easy Run 3KM - 5KM** today to build the habit back!`;
+        } else {
+          fallbackReply = isId
+            ? `(AI Offline Mode) Konsistensi lo mantap (**${consistencyScore}%**)! Untuk capai target ${goal}, hari ini lo udah siap sikat sesi **Interval ringan** atau siap-siap buat Long Run akhir pekan.`
+            : `(Offline Mode) Great consistency (**${consistencyScore}%**)! To reach your ${goal}, you're ready for a light **Interval session** or preparing for a weekend Long Run.`;
+        }
+      }
+      else if (msgLower.includes('capek') || msgLower.includes('sakit') || msgLower.includes('cedera') || msgLower.includes('pegal') || msgLower.includes('rest')) {
+        fallbackReply = isId
+          ? `(AI Offline Mode) Kalau udah ngerasa gitu mending **Rest (Istirahat)** bro! Jangan dipaksa lari, lakukan *stretching* atau tidur yang cukup hari ini.`
+          : `(Offline Mode) If you feel like that, please take a **Rest Day**! Don't force a run, do some stretching and get enough sleep today.`;
+      }
+      else {
+        fallbackReply = isId
+          ? `Sori banget bro, server AI utama (Groq) lagi limit/offline. Tapi tenang, tetap fokus aja ke target **${goal}** lo dengan program **${programStyle}**. Kalau butuh panduan, cek tab Training Plan ya! 💪`
+          : `Sorry bro, the main AI server (Groq) is currently over limit/offline. But keep focusing on your **${goal}** with the **${programStyle}** plan. Check the Training Plan tab for your schedule! 💪`;
+      }
+
+      setMessages(p => [...p, { role: 'assistant', content: fallbackReply }]);
     }
     
     setIsTyping(false);
