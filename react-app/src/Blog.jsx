@@ -985,15 +985,50 @@ function BlogComments({ blogId, currentUser, onRequireAuth, lang }) {
                   {getInitials(c.name)}
                 </div>
                 <div style={{ flex: 1 }}>
+                  {/* Parent comment bubble */}
                   <div style={{ background: 'var(--bg-surface)', padding: '12px 16px', borderRadius: '0 12px 12px 12px', border: '1px solid var(--border)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
                       <div style={{ fontWeight: 600, fontSize: 14 }}>{c.name || 'User'}</div>
                       <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{formatTime(c.createdAt)}</div>
                     </div>
                     <div style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{c.text}</div>
+
+                    {/* Replies nested inside parent bubble */}
+                    {c.replies && c.replies.length > 0 && (
+                      <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 12, borderLeft: '2px solid var(--border)', paddingLeft: 14 }}>
+                        {c.replies.map(r => {
+                          const isReplyBurned = r.burnUsers?.includes(auth.currentUser?.uid || currentUser);
+                          return (
+                            <div key={r.id}>
+                              <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                                <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'var(--bg-card)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', flexShrink: 0, fontSize: 11 }}>
+                                  {getInitials(r.name)}
+                                </div>
+                                <div style={{ flex: 1 }}>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
+                                    <div style={{ fontWeight: 600, fontSize: 13 }}>{r.name || 'User'}</div>
+                                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{formatTime(r.createdAt)}</div>
+                                  </div>
+                                  <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{r.text}</div>
+                                  <button 
+                                    onClick={() => {
+                                      if (!currentUser && onRequireAuth) onRequireAuth(() => handleBurn(c.id, true, r.id, r.burnUsers));
+                                      else handleBurn(c.id, true, r.id, r.burnUsers);
+                                    }}
+                                    style={{ background: 'none', border: 'none', padding: 0, marginTop: 4, fontSize: 11, fontWeight: 600, color: isReplyBurned ? '#f97316' : 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+                                  >
+                                    🔥 {r.burns || 0} Burn
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
-                  
-                  {/* Comment Actions */}
+
+                  {/* Actions below bubble */}
                   <div style={{ display: 'flex', gap: 16, marginTop: 6, marginLeft: 4, alignItems: 'center' }}>
                     <button 
                       onClick={() => {
@@ -1040,42 +1075,6 @@ function BlogComments({ blogId, currentUser, onRequireAuth, lang }) {
                           {lang === 'id' ? 'Kirim' : 'Post'}
                         </button>
                       </div>
-                    </div>
-                  )}
-
-                  {/* Replies List */}
-                  {c.replies && c.replies.length > 0 && (
-                    <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 16 }}>
-                      {c.replies.map(r => {
-                        const isReplyBurned = r.burnUsers?.includes(auth.currentUser?.uid || currentUser);
-                        return (
-                          <div key={r.id} style={{ display: 'flex', gap: 12 }}>
-                            <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--bg-card)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', flexShrink: 0, fontSize: 12 }}>
-                              {getInitials(r.name)}
-                            </div>
-                            <div style={{ flex: 1 }}>
-                              <div style={{ background: 'var(--bg-surface)', padding: '10px 14px', borderRadius: '0 12px 12px 12px', border: '1px solid var(--border)' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                                  <div style={{ fontWeight: 600, fontSize: 13 }}>{r.name || 'User'}</div>
-                                  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{formatTime(r.createdAt)}</div>
-                                </div>
-                                <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{r.text}</div>
-                              </div>
-                              <div style={{ display: 'flex', gap: 16, marginTop: 6, marginLeft: 4, alignItems: 'center' }}>
-                                <button 
-                                  onClick={() => {
-                                    if (!currentUser && onRequireAuth) onRequireAuth(() => handleBurn(c.id, true, r.id, r.burnUsers));
-                                    else handleBurn(c.id, true, r.id, r.burnUsers);
-                                  }}
-                                  style={{ background: 'none', border: 'none', padding: 0, fontSize: 11, fontWeight: 600, color: isReplyBurned ? '#f97316' : 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
-                                >
-                                  🔥 {r.burns || 0} Burn
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
                     </div>
                   )}
                 </div>
