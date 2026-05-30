@@ -35,7 +35,9 @@ export default function RunHistory({ activities, lang = 'id', onEdit, onDelete }
   const RouteMap = ({ route }) => {
     if (!route || route.length < 2) return null;
     let minLat = 90, maxLat = -90, minLon = 180, maxLon = -180;
-    route.forEach(([lat, lon]) => {
+    route.forEach((pt) => {
+      const lat = pt.lat !== undefined ? pt.lat : pt[0];
+      const lon = pt.lon !== undefined ? pt.lon : pt[1];
       if (lat < minLat) minLat = lat;
       if (lat > maxLat) maxLat = lat;
       if (lon < minLon) minLon = lon;
@@ -53,7 +55,11 @@ export default function RunHistory({ activities, lang = 'id', onEdit, onDelete }
       return `${x},${y}`;
     };
 
-    const pts = route.map(([lat, lon]) => getPt(lat, lon)).join(' ');
+    const pts = route.map((pt) => {
+      const lat = pt.lat !== undefined ? pt.lat : pt[0];
+      const lon = pt.lon !== undefined ? pt.lon : pt[1];
+      return getPt(lat, lon);
+    }).join(' ');
 
     return (
       <div className="route-map-container" style={{

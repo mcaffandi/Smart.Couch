@@ -601,7 +601,7 @@ export const parseGpxFile = async (file) => {
     const pt = trkpts[i];
     const lat = parseFloat(pt.getAttribute("lat"));
     const lon = parseFloat(pt.getAttribute("lon"));
-    route.push([lat, lon]);
+    route.push({ lat, lon });
 
     const timeEl = pt.querySelector("time");
     if (timeEl) {
@@ -675,7 +675,7 @@ export const decodePolyline = (str, precision = 5) => {
     do { byte = str.charCodeAt(index++) - 63; result |= (byte & 0x1f) << shift; shift += 5; } while (byte >= 0x20);
     longitude_change = ((result & 1) ? ~(result >> 1) : (result >> 1));
     lat += latitude_change; lng += longitude_change;
-    coordinates.push([lat / factor, lng / factor]);
+    coordinates.push({ lat: lat / factor, lon: lng / factor });
   }
   return coordinates;
 };

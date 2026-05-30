@@ -385,6 +385,19 @@ export default function App() {
           isAnonymous: auth.currentUser.isAnonymous,
           uid: auth.currentUser.uid
         };
+        
+        // Firestore doesn't support nested arrays. Sanitize any legacy route data.
+        if (dataToSave.running_activities) {
+          dataToSave.running_activities.forEach(act => {
+            if (act.route && Array.isArray(act.route)) {
+              act.route = act.route.map(pt => {
+                if (Array.isArray(pt)) return { lat: pt[0], lon: pt[1] };
+                return pt;
+              });
+            }
+          });
+        }
+
         const userDocRef = doc(db, 'users', auth.currentUser.uid);
         setDoc(userDocRef, dataToSave).catch(e => {
           console.error('Failed to sync save to Firestore:', e);
