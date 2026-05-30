@@ -281,7 +281,7 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
           </div>
         </div>
       )}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24, flexWrap: 'wrap', gap: 16 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 16 }}>
         <div>
           <h2 style={{ fontSize: 32, fontWeight: 800, margin: 0, letterSpacing: '-0.02em' }}>Blog & Artikel</h2>
           <p style={{ color: 'var(--text-secondary)', margin: '8px 0 0 0', fontSize: 15 }}>
