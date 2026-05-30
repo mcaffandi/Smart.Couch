@@ -1003,11 +1003,11 @@ function BlogComments({ blogId, currentUser, onRequireAuth, lang }) {
 
                   {/* Reply Input */}
                   {replyingTo === c.id && (
-                    <div style={{ marginTop: 12, display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                    <div style={{ marginTop: 12, background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '8px 12px' }}>
                       <textarea 
                         autoFocus
                         placeholder={lang === 'id' ? 'Tulis balasan...' : 'Write a reply...'} 
-                        style={{ flex: 1, background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '8px 12px', outline: 'none', color: 'var(--text-primary)', resize: 'none', height: 40, fontSize: 14 }}
+                        style={{ width: '100%', background: 'transparent', border: 'none', outline: 'none', color: 'var(--text-primary)', resize: 'none', height: 52, fontSize: 14, boxSizing: 'border-box' }}
                         value={replyText}
                         onChange={e => setReplyText(e.target.value)}
                         readOnly={!currentUser}
@@ -1017,16 +1017,18 @@ function BlogComments({ blogId, currentUser, onRequireAuth, lang }) {
                           }
                         }}
                       ></textarea>
-                      <button 
-                        className="btn btn-primary" 
-                        style={{ padding: '8px 16px', borderRadius: 20, fontSize: 13 }}
-                        onClick={() => {
-                          if (!currentUser && onRequireAuth) onRequireAuth(() => handleReply(c.id));
-                          else handleReply(c.id);
-                        }}
-                      >
-                        {lang === 'id' ? 'Kirim' : 'Post'}
-                      </button>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 6 }}>
+                        <button 
+                          className="btn btn-primary" 
+                          style={{ padding: '6px 16px', borderRadius: 20, fontSize: 13 }}
+                          onClick={() => {
+                            if (!currentUser && onRequireAuth) onRequireAuth(() => handleReply(c.id));
+                            else handleReply(c.id);
+                          }}
+                        >
+                          {lang === 'id' ? 'Kirim' : 'Post'}
+                        </button>
+                      </div>
                     </div>
                   )}
 
