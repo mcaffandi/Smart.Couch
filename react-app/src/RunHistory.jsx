@@ -152,7 +152,7 @@ export default function RunHistory({ activities, lang = 'id', onEdit, onDelete }
               style={{ animationDelay: `${i * 0.04}s`, position: 'relative', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}
             >
               <div className="history-meta" style={{ flex: '1 1 auto', minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                <span className="history-date" style={{ display: 'block', fontSize: 11, marginBottom: 2 }}>{msToDate(act.startTimeLocal)}</span>
+                <span className="history-date">{msToDate(act.startTimeLocal)}</span>
                 <span className="history-name" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block', width: '100%' }}>{act.name ?? (lang === 'id' ? 'Sesi Lari' : 'Running Session')}</span>
                 {badge && <span className={`badge ${badge.cls}`} style={{ marginTop: 6, display: 'inline-flex', alignSelf: 'flex-start' }}>{badge.label}</span>}
               </div>
