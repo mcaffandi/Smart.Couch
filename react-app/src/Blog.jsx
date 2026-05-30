@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { collection, query, orderBy, getDocs, addDoc, serverTimestamp, deleteDoc, doc, updateDoc, increment, arrayUnion, onSnapshot, arrayRemove } from 'firebase/firestore';
+import { collection, query, orderBy, getDocs, getDocsFromServer, addDoc, serverTimestamp, deleteDoc, doc, updateDoc, increment, arrayUnion, onSnapshot, arrayRemove } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage, auth, googleProvider, signInWithPopup } from './firebase';
 import ReactQuill from 'react-quill';
@@ -70,7 +70,7 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
     setLoading(true);
     try {
       const q = query(collection(db, 'blogs'), orderBy('createdAt', 'desc'));
-      const snap = await getDocs(q);
+      const snap = await getDocsFromServer(q);
       const fetched = [];
       snap.forEach(doc => {
         const d = doc.data();
