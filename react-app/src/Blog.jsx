@@ -649,7 +649,12 @@ function BlogReader({ blog, onBack, onTagClick, lang, onProps, currentUser, save
       </div>
 
       {blog.coverImage && (
-        <div style={{ width: '100%', height: 400, background: `url(${blog.coverImage}) center/cover`, borderRadius: 8, marginBottom: 40 }}></div>
+        <img 
+          src={blog.coverImage} 
+          alt={safeTitle}
+          style={{ width: '100%', height: 400, objectFit: 'cover', borderRadius: 8, marginBottom: 40, display: 'block' }}
+          onError={(e) => e.currentTarget.style.display = 'none'}
+        />
       )}
 
       {/* Render rich text HTML content safely */}
@@ -830,6 +835,9 @@ function BlogComments({ blogId, currentUser, onRequireAuth, lang }) {
     const q = query(collection(db, 'blogs', blogId, 'comments'), orderBy('createdAt', 'desc'));
     const unsub = onSnapshot(q, (snap) => {
       setComments(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    }, (error) => {
+      console.warn("Failed to fetch comments, likely insufficient permissions:", error);
+      setComments([]);
     });
     return () => unsub();
   }, [blogId]);
