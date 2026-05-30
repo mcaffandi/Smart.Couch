@@ -1724,7 +1724,7 @@ export default function App() {
             </button>
           </div>
         </nav>
-        <div style={{ padding: '0 20px', maxWidth: 1000, margin: '0 auto' }}>
+        <div style={{ padding: '16px 20px', maxWidth: 1000, margin: '0 auto' }}>
           <ErrorBoundary>
             <BlogModule isAdmin={showAdmin} lang={lang} onViewChange={setBlogView} currentUser={currentUser} />
           </ErrorBoundary>
