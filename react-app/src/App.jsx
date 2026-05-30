@@ -1425,26 +1425,16 @@ export default function App() {
       }
 
       setData(prev => {
-        let mergedRuns = [...(prev.running_activities || [])];
-        let addedCount = 0;
-        newRuns.forEach(nr => {
-          const exists = mergedRuns.find(er => Math.abs(er.startTimeLocal - nr.startTimeLocal) < 60000);
-          if (!exists) {
-            mergedRuns.push(nr);
-            addedCount++;
-          }
-        });
-        mergedRuns.sort((a,b) => a.startTimeLocal - b.startTimeLocal);
+        const mergedData = mergeData(prev, { running_activities: newRuns, sleep_records: {}, max_hr: 0 });
+        mergedData.running_activities.sort((a,b) => b.startTimeLocal - a.startTimeLocal); // Sort newest first
         
-        let maxHr = prev.max_hr || 0;
-        mergedRuns.forEach(r => {
-          if (r.maxHr && r.maxHr > maxHr) maxHr = r.maxHr;
-        });
+        let addedCount = mergedData.running_activities.length - (prev.running_activities?.length || 0);
+        if (addedCount < 0) addedCount = 0;
 
         const updated = { 
           ...prev, 
-          running_activities: mergedRuns, 
-          max_hr: maxHr,
+          running_activities: mergedData.running_activities, 
+          max_hr: mergedData.max_hr,
           profile: { 
             ...(prev.profile || {}), 
             ...newTokens 
@@ -1463,6 +1453,16 @@ export default function App() {
       setIsUploading(false);
     }
   };
+
+  // Auto-sync Strava on load to automatically fix any timezone issues without user interaction
+  useEffect(() => {
+    if (isFirebaseConfigured && data.profile?.stravaConnected && data.profile?.stravaAccessToken) {
+      if (!window.__hasAutoSyncedStrava) {
+        window.__hasAutoSyncedStrava = true;
+        syncStravaData();
+      }
+    }
+  }, [isFirebaseConfigured, data.profile?.stravaConnected]);
 
   const handleFileUpload = async (file) => {
     if (!file) return;

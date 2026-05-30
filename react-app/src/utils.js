@@ -546,23 +546,38 @@ export const parseGarminZip = async (file, JSZip) => {
 };
 
 export const mergeData = (existing, incoming) => {
-  const existingTimes = new Set(existing.running_activities.map(a => a.startTimeLocal));
-  const merged = [...existing.running_activities];
+  let merged = [...(existing.running_activities || [])];
+  
   for (const a of incoming.running_activities) {
-    const existingIndex = merged.findIndex(ex => Math.abs(ex.startTimeLocal - a.startTimeLocal) < 60000);
+    const existingIndex = merged.findIndex(ex => {
+      const timeDiff = Math.abs(ex.startTimeLocal - a.startTimeLocal);
+      const isTimeMatch = timeDiff < 60000;
+      
+      // Auto-fix for previous +7/+8/+9 timezone bug: detect same activity by identical distance & duration
+      const isSameStats = Math.abs(ex.distance - a.distance) < 5000 && Math.abs(ex.duration - a.duration) < 10000;
+      const isBuggyTimezoneMatch = isSameStats && timeDiff > 0 && timeDiff < 24 * 3600 * 1000;
+
+      return isTimeMatch || isBuggyTimezoneMatch;
+    });
+
     if (existingIndex === -1) {
       merged.push(a);
     } else {
-      // If existing doesn't have a route but incoming DOES (GPX upload), overwrite with incoming route
-      if (!merged[existingIndex].route && a.route) {
-        merged[existingIndex] = { ...merged[existingIndex], route: a.route };
-      }
+      // Overwrite existing with incoming (since incoming has the correct UTC time now)
+      merged[existingIndex] = { 
+        ...a, 
+        route: a.route || merged[existingIndex].route,
+        name: (merged[existingIndex].name && merged[existingIndex].name !== 'Running Session' && merged[existingIndex].name !== 'Sesi Lari' && merged[existingIndex].name !== 'Morning Run' && merged[existingIndex].name !== 'Afternoon Run' && merged[existingIndex].name !== 'Evening Run' && merged[existingIndex].name !== 'Night Run') 
+              ? merged[existingIndex].name 
+              : a.name 
+      };
     }
   }
+
   return {
     running_activities: merged,
     sleep_records: { ...existing.sleep_records, ...incoming.sleep_records },
-    max_hr: Math.max(existing.max_hr, incoming.max_hr),
+    max_hr: Math.max(existing.max_hr || 0, incoming.max_hr || 0),
   };
 };
 
