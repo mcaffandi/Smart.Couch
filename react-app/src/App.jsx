@@ -395,6 +395,8 @@ export default function App() {
                 return pt;
               });
             }
+            // Firestore strictly blocks undefined values, so strip them out:
+            Object.keys(act).forEach(k => act[k] === undefined && delete act[k]);
           });
         }
 
@@ -522,7 +524,7 @@ export default function App() {
           if (act.type === 'Run') {
             const startDateLocal = new Date(act.start_date).getTime();
             newRuns.push({
-              activityName: act.name,
+              name: act.name || null,
               startTimeLocal: startDateLocal,
               distance: act.distance * 100, // meters to cm
               duration: act.moving_time * 1000, // seconds to ms
@@ -1400,7 +1402,7 @@ export default function App() {
         if (act.type === 'Run') {
           const startDateLocal = new Date(act.start_date).getTime();
           newRuns.push({
-            activityName: act.name,
+            name: act.name || null,
             startTimeLocal: startDateLocal,
             distance: act.distance * 100,
             duration: act.moving_time * 1000,

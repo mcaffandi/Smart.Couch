@@ -566,10 +566,10 @@ export const mergeData = (existing, incoming) => {
       // Overwrite existing with incoming (since incoming has the correct UTC time now)
       merged[existingIndex] = { 
         ...a, 
-        route: a.route || merged[existingIndex].route,
+        route: a.route || merged[existingIndex].route || null,
         name: (merged[existingIndex].name && merged[existingIndex].name !== 'Running Session' && merged[existingIndex].name !== 'Sesi Lari' && merged[existingIndex].name !== 'Morning Run' && merged[existingIndex].name !== 'Afternoon Run' && merged[existingIndex].name !== 'Evening Run' && merged[existingIndex].name !== 'Night Run') 
               ? merged[existingIndex].name 
-              : a.name 
+              : (a.name || null) 
       };
     }
   }
