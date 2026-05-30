@@ -5,12 +5,12 @@ import { db, storage, auth, googleProvider, signInWithPopup } from './firebase';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 
-export default function BlogModule({ isAdmin, lang = 'id', onViewChange, currentUser }) {
+export default function BlogModule({ isAdmin, lang = 'id', onViewChange, currentUser, searchQuery = '' }) {
   const [blogs, setBlogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState('list'); // 'list', 'read', 'edit'
   const [currentBlog, setCurrentBlog] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
+  // internal state removed for search
   const [selectedTag, setSelectedTag] = useState('Semua');
   const [savedBlogs, setSavedBlogs] = useState([]);
   const [showSavedOnly, setShowSavedOnly] = useState(false);
@@ -233,8 +233,8 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
     // Filter by tag
     if (selectedTag !== 'Semua' && (!b.tags || !b.tags.includes(selectedTag))) return false;
     // Filter by search
-    if (!searchTerm) return true;
-    const lower = searchTerm.toLowerCase();
+    if (!searchQuery) return true;
+    const lower = searchQuery.toLowerCase();
     return (
       (b.title && b.title.toLowerCase().includes(lower)) ||
       (b.content && b.content.toLowerCase().includes(lower)) ||
@@ -302,27 +302,7 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
             <svg width="16" height="16" viewBox="0 0 24 24" fill={showSavedOnly ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
             {lang === 'id' ? 'Tersimpan' : 'Saved'}
           </button>
-          <div style={{ position: 'relative' }}>
-            <input 
-              type="text" 
-              placeholder={lang === 'id' ? 'Cari topik...' : 'Search topics...'}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              style={{
-                padding: '12px 16px',
-                paddingLeft: 40,
-                borderRadius: 24,
-                border: '1px solid var(--border)',
-                background: 'var(--bg-surface)',
-                color: 'var(--text-primary)',
-                fontSize: 14,
-                width: 260,
-                outline: 'none',
-                transition: 'border-color 0.2s'
-              }}
-            />
-            <svg style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-          </div>
+          {/* Search bar removed, now in navbar */}
           {isAdmin && (
             <button 
               className="btn btn-primary"
@@ -368,7 +348,7 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
           <div style={{ fontSize: 48, marginBottom: 16, opacity: 0.8 }}>📚</div>
           <h3 style={{ fontSize: 20, color: 'var(--text-primary)', marginBottom: 8 }}>Belum ada artikel</h3>
           <p style={{ color: 'var(--text-secondary)' }}>
-            {searchTerm ? 'Tidak ada artikel yang cocok dengan pencarian Anda.' : 'Nantikan konten edukasi menarik dari EnduraUP!'}
+            {searchQuery ? 'Tidak ada artikel yang cocok dengan pencarian Anda.' : 'Nantikan konten edukasi menarik dari EnduraUP!'}
           </p>
         </div>
       ) : (

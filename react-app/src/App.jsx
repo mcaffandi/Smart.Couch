@@ -245,6 +245,7 @@ export default function App() {
     return !window.location.pathname.startsWith('/blog');
   });
   const [blogView, setBlogView] = useState('list');
+  const [blogSearch, setBlogSearch] = useState('');
 
   // Handle browser routing (back/forward)
   useEffect(() => {
@@ -1719,6 +1720,18 @@ export default function App() {
               <Logo size={24} />
               <span className="logo-text" style={{ fontSize: 20, letterSpacing: '-0.5px' }}>EnduraUP</span>
             </div>
+            <div style={{ flex: 1, maxWidth: 340, margin: '0 24px' }}>
+              <div style={{ position: 'relative' }}>
+                <input
+                  type="text"
+                  placeholder="Cari topik..."
+                  value={blogSearch}
+                  onChange={e => setBlogSearch(e.target.value)}
+                  style={{ width: '100%', padding: '8px 16px 8px 36px', borderRadius: 20, border: '1px solid var(--border)', background: 'var(--bg-surface)', color: 'var(--text-primary)', fontSize: 13, outline: 'none', boxSizing: 'border-box' }}
+                />
+                <svg style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              </div>
+            </div>
             <button className="nav-btn-primary" onClick={() => setTab('dashboard')} style={{ padding: '8px 16px', borderRadius: 20, fontSize: 13, background: 'transparent', border: '1px solid var(--border)', color: 'var(--text-primary)', fontWeight: 600 }}>
               Kembali ke Dasbor
             </button>
@@ -1726,7 +1739,7 @@ export default function App() {
         </nav>
         <div style={{ padding: '16px 20px', maxWidth: 1000, margin: '0 auto' }}>
           <ErrorBoundary>
-            <BlogModule isAdmin={showAdmin} lang={lang} onViewChange={setBlogView} currentUser={currentUser} />
+            <BlogModule isAdmin={showAdmin} lang={lang} onViewChange={setBlogView} currentUser={currentUser} searchQuery={blogSearch} />
           </ErrorBoundary>
         </div>
       </div>
