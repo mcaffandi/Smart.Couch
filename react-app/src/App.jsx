@@ -1289,7 +1289,7 @@ export default function App() {
 
     } // end else (dark themes)
 
-  }, [showShareModal, shareTemplate, shareTheme, runActs, totalDist, totalSessions, avgHR, actualMaxHR, vo2max, targetPace, displayName, currentUser, avatar, retroImageLoaded, lang, customColor1, customColor2]);
+  }, [showShareModal, shareTemplate, shareStatsPeriod, shareTheme, runActs, totalDist, totalSessions, avgHR, actualMaxHR, vo2max, targetPace, displayName, currentUser, avatar, retroImageLoaded, lang, customColor1, customColor2]);
 
 
   const shareOrDownloadImage = async () => {
