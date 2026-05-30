@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Star, Flame, Medal, Crown, Zap, Trophy } from 'lucide-react';
 
+import { Edit2, Trash2 } from 'lucide-react';
+
 const ITEMS_PER_PAGE = 10;
 
-export default function RunHistory({ activities, lang = 'id' }) {
+export default function RunHistory({ activities, lang = 'id', onEdit, onDelete }) {
   const [page, setPage] = useState(0);
 
   const sorted = [...activities].sort((a, b) =>
@@ -54,11 +56,10 @@ export default function RunHistory({ activities, lang = 'id' }) {
 
     return (
       <div className="route-map-container" style={{
-        width: '100%', height: '120px', background: 'rgba(30, 41, 59, 0.4)',
-        borderRadius: 8, marginTop: 12, overflow: 'hidden', border: '1px solid var(--border)'
+        width: '60px', height: '40px', flexShrink: 0
       }}>
         <svg width="100%" height="100%" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet">
-          <polyline points={pts} fill="none" stroke="#818cf8" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+          <polyline points={pts} fill="none" stroke="#818cf8" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </div>
     );
@@ -138,31 +139,63 @@ export default function RunHistory({ activities, lang = 'id' }) {
           const badge = getBadge(act.avgHr, act.maxHr);
 
           return (
-            <div className="history-item animate-fade-in" key={i} style={{ animationDelay: `${i * 0.04}s` }}>
-              <div className="history-meta">
-                <span className="history-date">{msToDate(act.startTimeLocal)}</span>
-                <span className="history-name">{act.name ?? (lang === 'id' ? 'Sesi Lari' : 'Running Session')}</span>
-                {badge && <span className={`badge ${badge.cls}`} style={{ marginTop: 4, width: 'fit-content' }}>{badge.label}</span>}
-              </div>
-              <div className="history-stats">
-                <div className="history-stat">
-                  <div className="history-stat-value">{distKm}</div>
-                  <div className="history-stat-label">km</div>
+            <div className="history-item animate-fade-in" key={i} style={{ animationDelay: `${i * 0.04}s`, display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                <div className="history-meta">
+                  <span className="history-date">{msToDate(act.startTimeLocal)}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span className="history-name">{act.name ?? (lang === 'id' ? 'Sesi Lari' : 'Running Session')}</span>
+                    {onEdit && (
+                      <button 
+                        onClick={() => {
+                          const newName = window.prompt(lang === 'id' ? 'Masukkan nama baru:' : 'Enter new name:', act.name || '');
+                          if (newName) onEdit(act.startTimeLocal, newName);
+                        }}
+                        style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 4 }}
+                      >
+                        <Edit2 size={12} />
+                      </button>
+                    )}
+                  </div>
+                  {badge && <span className={`badge ${badge.cls}`} style={{ marginTop: 4, width: 'fit-content' }}>{badge.label}</span>}
                 </div>
-                {totalSecs > 0 && (
-                  <div className="history-stat">
-                    <div className="history-stat-value">{formattedDur}</div>
-                    <div className="history-stat-label">{lang === 'id' ? 'waktu' : 'time'}</div>
-                  </div>
-                )}
-                {act.avgHr && (
-                  <div className="history-stat">
-                    <div className="history-stat-value">{Math.round(act.avgHr)}</div>
-                    <div className="history-stat-label">avg HR</div>
-                  </div>
-                )}
+                
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  {onDelete && (
+                    <button 
+                      onClick={() => onDelete(act.startTimeLocal)}
+                      style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', padding: 8, opacity: 0.7 }}
+                      title={lang === 'id' ? 'Hapus' : 'Delete'}
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  )}
+                </div>
               </div>
-              {act.route && act.route.length > 0 && <RouteMap route={act.route} />}
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                <div>
+                  {act.route && act.route.length > 0 && <RouteMap route={act.route} />}
+                </div>
+                <div className="history-stats" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                  <div className="history-stat">
+                    <div className="history-stat-value">{distKm}</div>
+                    <div className="history-stat-label">km</div>
+                  </div>
+                  {totalSecs > 0 && (
+                    <div className="history-stat">
+                      <div className="history-stat-value">{formattedDur}</div>
+                      <div className="history-stat-label">{lang === 'id' ? 'waktu' : 'time'}</div>
+                    </div>
+                  )}
+                  {act.avgHr && (
+                    <div className="history-stat">
+                      <div className="history-stat-value">{Math.round(act.avgHr)}</div>
+                      <div className="history-stat-label">avg HR</div>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           );
         })}

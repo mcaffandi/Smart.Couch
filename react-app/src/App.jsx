@@ -507,7 +507,7 @@ export default function App() {
         let newRuns = [];
         activities.forEach(act => {
           if (act.type === 'Run') {
-            const startDateLocal = new Date(act.start_date_local).getTime();
+            const startDateLocal = new Date(act.start_date_local.replace('Z', '')).getTime();
             newRuns.push({
               activityName: act.name,
               startTimeLocal: startDateLocal,
@@ -1385,7 +1385,7 @@ export default function App() {
       let newRuns = [];
       activities.forEach(act => {
         if (act.type === 'Run') {
-          const startDateLocal = new Date(act.start_date_local).getTime();
+          const startDateLocal = new Date(act.start_date_local.replace('Z', '')).getTime();
           newRuns.push({
             activityName: act.name,
             startTimeLocal: startDateLocal,
@@ -3381,7 +3381,34 @@ export default function App() {
                     {lang === 'id' ? `Riwayat Sesi Lari (${totalSessions})` : `Run Session History (${totalSessions})`}
                   </h2>
                 </div>
-                <RunHistory activities={runActs} lang={lang} />
+                <RunHistory 
+                  activities={runActs} 
+                  lang={lang}
+                  onDelete={(actTime) => {
+                    if (window.confirm(lang === 'id' ? 'Hapus sesi lari ini?' : 'Delete this run session?')) {
+                      setData(prev => {
+                        const updated = {
+                          ...prev,
+                          running_activities: prev.running_activities.filter(a => a.startTimeLocal !== actTime)
+                        };
+                        saveAndSyncData(updated);
+                        return updated;
+                      });
+                    }
+                  }}
+                  onEdit={(actTime, newName) => {
+                    setData(prev => {
+                      const updated = {
+                        ...prev,
+                        running_activities: prev.running_activities.map(a => 
+                          a.startTimeLocal === actTime ? { ...a, name: newName } : a
+                        )
+                      };
+                      saveAndSyncData(updated);
+                      return updated;
+                    });
+                  }}
+                />
               </div>
             )}
 
