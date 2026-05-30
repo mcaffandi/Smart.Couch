@@ -655,7 +655,15 @@ function BlogReader({ blog, onBack, onTagClick, lang, onProps, currentUser, save
       {/* Render rich text HTML content safely */}
       <div 
         className="medium-blog-content"
-        dangerouslySetInnerHTML={{ __html: blog?.content || '' }} 
+        dangerouslySetInnerHTML={{ __html: (() => {
+          const html = blog?.content || '';
+          if (html.includes('&lt;') && html.includes('&gt;')) {
+            const txt = document.createElement('textarea');
+            txt.innerHTML = html;
+            return txt.value;
+          }
+          return html;
+        })() }} 
       />
 
       <hr style={{ borderTop: '1px solid var(--border)', margin: '60px 0 40px' }} />
