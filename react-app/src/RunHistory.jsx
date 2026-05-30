@@ -8,6 +8,7 @@ const ITEMS_PER_PAGE = 10;
 
 export default function RunHistory({ activities, lang = 'id', onEdit, onDelete }) {
   const [page, setPage] = useState(0);
+  const [selectedAct, setSelectedAct] = useState(null);
 
   const sorted = [...activities].sort((a, b) =>
     (b.startTimeLocal ?? 0) - (a.startTimeLocal ?? 0)
@@ -139,37 +140,21 @@ export default function RunHistory({ activities, lang = 'id', onEdit, onDelete }
           const badge = getBadge(act.avgHr, act.maxHr);
 
           return (
-            <div className="history-item animate-fade-in" key={i} style={{ animationDelay: `${i * 0.04}s`, display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div 
+              className="history-item animate-fade-in clickable" 
+              key={i} 
+              style={{ animationDelay: `${i * 0.04}s`, display: 'flex', flexDirection: 'column', gap: 12, cursor: (onEdit || onDelete) ? 'pointer' : 'default' }}
+              onClick={() => {
+                if (onEdit || onDelete) setSelectedAct(act);
+              }}
+            >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
                 <div className="history-meta">
                   <span className="history-date">{msToDate(act.startTimeLocal)}</span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <span className="history-name">{act.name ?? (lang === 'id' ? 'Sesi Lari' : 'Running Session')}</span>
-                    {onEdit && (
-                      <button 
-                        onClick={() => {
-                          const newName = window.prompt(lang === 'id' ? 'Masukkan nama baru:' : 'Enter new name:', act.name || '');
-                          if (newName) onEdit(act.startTimeLocal, newName);
-                        }}
-                        style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 4 }}
-                      >
-                        <Edit2 size={12} />
-                      </button>
-                    )}
                   </div>
                   {badge && <span className={`badge ${badge.cls}`} style={{ marginTop: 4, width: 'fit-content' }}>{badge.label}</span>}
-                </div>
-                
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  {onDelete && (
-                    <button 
-                      onClick={() => onDelete(act.startTimeLocal)}
-                      style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', padding: 8, opacity: 0.7 }}
-                      title={lang === 'id' ? 'Hapus' : 'Delete'}
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  )}
                 </div>
               </div>
 
@@ -222,6 +207,53 @@ export default function RunHistory({ activities, lang = 'id', onEdit, onDelete }
           >
             Next →
           </button>
+        </div>
+      )}
+
+      {selectedAct && (
+        <div className="global-upload-overlay" onClick={() => setSelectedAct(null)} style={{ zIndex: 999999 }}>
+          <div style={{ background: 'var(--bg-card)', padding: '24px', borderRadius: '16px', width: '90%', maxWidth: '320px', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '16px' }} onClick={e => e.stopPropagation()}>
+            <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', margin: 0, textAlign: 'center' }}>
+              {lang === 'id' ? 'Opsi Sesi Lari' : 'Run Session Options'}
+            </h3>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {onEdit && (
+                <button 
+                  className="btn btn-secondary" 
+                  onClick={() => {
+                    const newName = window.prompt(lang === 'id' ? 'Masukkan nama baru:' : 'Enter new name:', selectedAct.name || '');
+                    if (newName) onEdit(selectedAct.startTimeLocal, newName);
+                    setSelectedAct(null);
+                  }}
+                  style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, padding: '12px' }}
+                >
+                  <Edit2 size={16} />
+                  {lang === 'id' ? 'Ganti Nama' : 'Edit Name'}
+                </button>
+              )}
+              {onDelete && (
+                <button 
+                  className="btn" 
+                  onClick={() => {
+                    onDelete(selectedAct.startTimeLocal);
+                    setSelectedAct(null);
+                  }}
+                  style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, padding: '12px', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: '10px', fontWeight: 600 }}
+                >
+                  <Trash2 size={16} />
+                  {lang === 'id' ? 'Hapus' : 'Delete'}
+                </button>
+              )}
+            </div>
+
+            <button 
+              onClick={() => setSelectedAct(null)}
+              style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '12px', fontWeight: 600 }}
+            >
+              {lang === 'id' ? 'Batal' : 'Cancel'}
+            </button>
+          </div>
         </div>
       )}
     </div>
