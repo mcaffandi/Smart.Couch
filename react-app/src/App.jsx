@@ -1,3 +1,4 @@
+import ErrorBoundary from "./ErrorBoundary";
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import * as XLSX from 'xlsx';
 import {
@@ -1701,7 +1702,11 @@ export default function App() {
 
   // ─────────────────────────────────────────────────────────────────────────────
   if (showAdmin) {
-    return <AdminDashboard onBack={() => { setShowAdmin(false); window.location.hash = ''; }} />;
+    return (
+      <ErrorBoundary>
+        <AdminDashboard onBack={() => { setShowAdmin(false); window.location.hash = ''; }} />
+      </ErrorBoundary>
+    );
   }
 
   // ─────────────────── STANDALONE BLOG PAGE ───────────────────
@@ -1722,7 +1727,9 @@ export default function App() {
           </div>
         </nav>
         <div style={{ padding: '60px 20px', maxWidth: 1000, margin: '0 auto' }}>
-          <BlogModule isAdmin={showAdmin} lang={lang} onViewChange={setBlogView} currentUser={currentUser} />
+          <ErrorBoundary>
+            <BlogModule isAdmin={showAdmin} lang={lang} onViewChange={setBlogView} currentUser={currentUser} />
+          </ErrorBoundary>
         </div>
       </div>
     );

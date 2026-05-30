@@ -522,7 +522,7 @@ function BlogReader({ blog, onBack, onTagClick, lang, onProps, currentUser, save
           {typeof blog.author === 'string' && blog.author ? blog.author.charAt(0).toUpperCase() : 'E'}
         </div>
         <div>
-          <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: 2 }}>{blog.author || 'Tim EnduraUP'}</div>
+          <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: 2 }}>{typeof blog.author === 'string' && blog.author ? blog.author : 'Tim EnduraUP'}</div>
           <div>{dateStr} · {lang === 'id' ? 'Waktu baca 5 mnt' : '5 min read'}</div>
         </div>
       </div>
