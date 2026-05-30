@@ -2,6 +2,21 @@
 
 ---
 
+## [Uncommitted] — 2026-05-30 · Production UI Polish, Domain Switch & Share Card Filter
+
+### ✨ Fitur Baru & Optimasi
+- **Filter Rentang Waktu (Share Card)**: Menambahkan tombol filter dinamis (7 Hari, 1 Bulan, 6 Bulan, 1 Tahun) khusus untuk *template* Ringkasan Stats di modal Bagikan Pencapaian. Canvas akan dirender ulang secara *real-time* berdasarkan pilihan pengguna.
+- **Transisi Domain Resmi**: Melakukan *find & replace* secara menyeluruh untuk mengganti domain lama `enduraup.vercel.app` menjadi domain *production* resmi `www.enduraup.space`. Ini mencakup tautan watermark di gambar canvas, teks *caption* *share* media sosial, tombol Salin Tautan, hingga *intent* WhatsApp/Twitter.
+
+### 🎨 UI / UX (Premium Emoji-less Redesign)
+- **SVG Flame Premium**: Menghapus seluruh penggunaan emoji bawaan OS (🔥) pada *Streak Badge* (Training Plan) dan tombol reaksi *Burn* (Komentar Blog) untuk menghindari fragmentasi desain antar perangkat. Emoji tersebut diganti secara permanen dengan *vector icon* SVG kustom yang lebih ramping, seragam, dan menyatu sempurna dengan skema warna aplikasi.
+- **Pembersihan Teks Pesan**: Menghapus berbagai emoji dari teks pesan status konsistensi (*consistency message*) dan teks sapaan lainnya untuk mematuhi arahan desain UI/UX yang profesional, minimalis, dan *clean* (emoji-less).
+
+### 🐛 Bug Fix
+- **Canvas Re-render Fix**: Memasukkan `shareStatsPeriod` ke dalam struktur *dependency array* milik hook `useEffect` generator canvas. Perbaikan kritis ini memastikan *preview* gambar otomatis diperbarui saat pengguna mengganti filter rentang waktu.
+
+---
+
 ## [Uncommitted] — 2026-05-29 · SEO Enhancements & PWA Optimization
 
 ### ✨ Fitur Baru & Optimasi
