@@ -149,35 +149,39 @@ export default function RunHistory({ activities, lang = 'id', onEdit, onDelete }
             <div 
               className="history-item animate-fade-in" 
               key={i} 
-              style={{ animationDelay: `${i * 0.04}s`, position: 'relative', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}
+              style={{ animationDelay: `${i * 0.04}s`, position: 'relative', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}
             >
-              <div className="history-meta" style={{ flex: '1 1 30%', minWidth: 0, paddingRight: 8 }}>
+              <div className="history-meta" style={{ flex: '1 1 auto', minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                 <span className="history-date" style={{ display: 'block', fontSize: 11, marginBottom: 2 }}>{msToDate(act.startTimeLocal)}</span>
-                <span className="history-name" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>{act.name ?? (lang === 'id' ? 'Sesi Lari' : 'Running Session')}</span>
-                {badge && <span className={`badge ${badge.cls}`} style={{ marginTop: 4, display: 'inline-block' }}>{badge.label}</span>}
+                <span className="history-name" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block', width: '100%' }}>{act.name ?? (lang === 'id' ? 'Sesi Lari' : 'Running Session')}</span>
+                {badge && <span className={`badge ${badge.cls}`} style={{ marginTop: 6, display: 'inline-flex', alignSelf: 'flex-start' }}>{badge.label}</span>}
               </div>
 
-              <div style={{ flex: '1 1 30%', display: 'flex', justifyContent: 'center' }}>
-                {act.route && act.route.length > 0 ? <RouteMap route={act.route} /> : null}
-              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexShrink: 0 }}>
+                {act.route && act.route.length > 0 ? (
+                  <div style={{ marginRight: 8 }}>
+                    <RouteMap route={act.route} />
+                  </div>
+                ) : null}
 
-              <div className="history-stats" style={{ flex: '1 1 40%', display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
-                <div className="history-stat">
-                  <div className="history-stat-value">{distKm}</div>
-                  <div className="history-stat-label">km</div>
+                <div className="history-stats" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                  <div className="history-stat">
+                    <div className="history-stat-value">{distKm}</div>
+                    <div className="history-stat-label">km</div>
+                  </div>
+                  {totalSecs > 0 && (
+                    <div className="history-stat">
+                      <div className="history-stat-value">{formattedDur}</div>
+                      <div className="history-stat-label">{lang === 'id' ? 'waktu' : 'time'}</div>
+                    </div>
+                  )}
+                  {act.avgHr && (
+                    <div className="history-stat">
+                      <div className="history-stat-value">{Math.round(act.avgHr)}</div>
+                      <div className="history-stat-label">avg HR</div>
+                    </div>
+                  )}
                 </div>
-                {totalSecs > 0 && (
-                  <div className="history-stat">
-                    <div className="history-stat-value">{formattedDur}</div>
-                    <div className="history-stat-label">{lang === 'id' ? 'waktu' : 'time'}</div>
-                  </div>
-                )}
-                {act.avgHr && (
-                  <div className="history-stat">
-                    <div className="history-stat-value">{Math.round(act.avgHr)}</div>
-                    <div className="history-stat-label">avg HR</div>
-                  </div>
-                )}
               </div>
 
               {selectedAct === act.startTimeLocal ? (
@@ -189,7 +193,7 @@ export default function RunHistory({ activities, lang = 'id', onEdit, onDelete }
                   {onEdit && (
                     <button 
                       className="btn btn-secondary"
-                      style={{ padding: '6px 16px', fontSize: 13, height: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}
+                      style={{ padding: '6px 16px', fontSize: 13, height: 'auto', width: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}
                       onClick={(e) => {
                         e.stopPropagation();
                         const newName = window.prompt(lang === 'id' ? 'Masukkan nama baru:' : 'Enter new name:', act.name || '');
@@ -203,7 +207,7 @@ export default function RunHistory({ activities, lang = 'id', onEdit, onDelete }
                   {onDelete && (
                     <button 
                       className="btn"
-                      style={{ padding: '6px 16px', fontSize: 13, height: 'auto', display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(239, 68, 68, 0.15)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.3)' }}
+                      style={{ padding: '6px 16px', fontSize: 13, height: 'auto', width: 'auto', display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(239, 68, 68, 0.15)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.3)' }}
                       onClick={(e) => {
                         e.stopPropagation();
                         onDelete(act.startTimeLocal);
