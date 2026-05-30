@@ -323,13 +323,13 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
               key={tag}
               onClick={() => setSelectedTag(tag)}
               style={{
-                background: selectedTag === tag ? 'var(--text-primary)' : 'transparent',
-                color: selectedTag === tag ? 'var(--bg-base)' : 'var(--text-secondary)',
-                border: selectedTag === tag ? '1px solid var(--text-primary)' : '1px solid var(--border)',
-                padding: '6px 16px',
-                borderRadius: 20,
+                background: selectedTag === tag ? 'var(--bg-card-hover)' : 'transparent',
+                color: selectedTag === tag ? 'var(--text-primary)' : 'var(--text-secondary)',
+                border: 'none',
+                padding: '6px 12px',
+                borderRadius: 6,
                 fontSize: 14,
-                fontWeight: 600,
+                fontWeight: selectedTag === tag ? 600 : 500,
                 cursor: 'pointer',
                 whiteSpace: 'nowrap',
                 transition: 'all 0.2s'
