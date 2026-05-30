@@ -440,7 +440,8 @@ function BlogReader({ blog, onBack, onTagClick, lang, onProps, currentUser, save
   
   const [particles, setParticles] = useState([]);
   
-  const finalSlug = blog.slug || blog.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+  const safeTitle = blog.title || 'Untitled';
+  const finalSlug = blog.slug || safeTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
   const blogUrl = `https://www.enduraup.space/blog/${finalSlug}`;
 
   useEffect(() => {
@@ -518,7 +519,7 @@ function BlogReader({ blog, onBack, onTagClick, lang, onProps, currentUser, save
       
       <div className="medium-blog-meta">
         <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--accent-purple)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 'bold' }}>
-          {blog.author ? blog.author.charAt(0).toUpperCase() : 'E'}
+          {typeof blog.author === 'string' && blog.author ? blog.author.charAt(0).toUpperCase() : 'E'}
         </div>
         <div>
           <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: 2 }}>{blog.author || 'Tim EnduraUP'}</div>
