@@ -362,16 +362,16 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
                   <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                 </div>
               )}
-              <div style={{ padding: 20, flex: 1, display: 'flex', flexDirection: 'column' }}>
-                <div style={{ display: 'flex', gap: 6, marginBottom: 12, flexWrap: 'wrap' }}>
+              <div style={{ padding: 24, flex: 1, display: 'flex', flexDirection: 'column' }}>
+                <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
                   {b.tags && b.tags.slice(0,2).map((tag, i) => (
-                    <span key={i} onClick={(e) => { e.stopPropagation(); setSelectedTag(tag); }} style={{ fontSize: 11, background: 'color-mix(in srgb, var(--accent-purple) 15%, transparent)', color: 'var(--accent-purple)', padding: '2px 8px', borderRadius: 12, fontWeight: 700, cursor: 'pointer' }}>
+                    <span key={i} onClick={(e) => { e.stopPropagation(); setSelectedTag(tag); }} style={{ fontSize: 12, background: 'color-mix(in srgb, var(--accent-purple) 15%, transparent)', color: 'var(--accent-purple)', padding: '4px 12px', borderRadius: 20, fontWeight: 700, cursor: 'pointer' }}>
                       {tag.toUpperCase()}
                     </span>
                   ))}
-                  {b.tags && b.tags.length > 2 && <span style={{ fontSize: 11, color: 'var(--text-muted)', padding: '2px 4px' }}>+{b.tags.length - 2}</span>}
+                  {b.tags && b.tags.length > 2 && <span style={{ fontSize: 12, color: 'var(--text-muted)', padding: '4px 6px' }}>+{b.tags.length - 2}</span>}
                 </div>
-                <h3 style={{ fontSize: 19, fontWeight: 700, marginBottom: 8, lineHeight: 1.4, color: 'var(--text-primary)' }}>{b.title}</h3>
+                <h3 style={{ fontSize: 19, fontWeight: 700, marginBottom: 12, lineHeight: 1.4, color: 'var(--text-primary)' }}>{b.title}</h3>
                 
                 {/* Extract pure text from HTML for excerpt */}
                 <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 20, flex: 1, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.6 }}>
