@@ -13,6 +13,8 @@ export default function AdminDashboard({ onBack }) {
   const [blogs, setBlogs] = useState([]);
   const [loading, setLoading] = useState(true);
   
+  const [adminTab, setAdminTab] = useState('overview');
+
   const [showBlogForm, setShowBlogForm] = useState(false);
   const [blogPosting, setBlogPosting] = useState(false);
   const [blogForm, setBlogForm] = useState({ title: '', content: '', tags: '', thumbnail: '' });
@@ -228,205 +230,207 @@ export default function AdminDashboard({ onBack }) {
   const totalBlogs = blogs.length;
 
   return (
-    <div style={{ padding: '40px 20px', maxWidth: 900, margin: '0 auto', color: 'var(--text-primary)' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 30, flexWrap: 'wrap', gap: 16 }}>
+    <div style={{ padding: '40px 20px', maxWidth: adminTab === 'blogs' && showBlogForm ? 1200 : 900, margin: '0 auto', color: 'var(--text-primary)', transition: 'max-width 0.3s ease' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24, flexWrap: 'wrap', gap: 16 }}>
         <div>
-          <h2 style={{ margin: 0, marginBottom: 4 }}>EnduraUP - Admin Dashboard</h2>
-          <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 14 }}>Analisis Performa Web & Kebutuhan Bisnis</p>
+          <h2 style={{ margin: 0, marginBottom: 8 }}>EnduraUP - Admin</h2>
+          <div style={{ display: 'flex', gap: 4, background: 'var(--bg-surface)', padding: 4, borderRadius: 24, border: '1px solid var(--border)' }}>
+            <button 
+              onClick={() => { setAdminTab('overview'); setShowBlogForm(false); }} 
+              style={{ background: adminTab === 'overview' ? 'var(--text-primary)' : 'transparent', color: adminTab === 'overview' ? 'var(--bg-base)' : 'var(--text-secondary)', border: 'none', padding: '6px 16px', borderRadius: 20, cursor: 'pointer', fontWeight: 600, fontSize: 13, transition: 'all 0.2s' }}
+            >
+              Dashboard
+            </button>
+            <button 
+              onClick={() => setAdminTab('blogs')} 
+              style={{ background: adminTab === 'blogs' ? 'var(--text-primary)' : 'transparent', color: adminTab === 'blogs' ? 'var(--bg-base)' : 'var(--text-secondary)', border: 'none', padding: '6px 16px', borderRadius: 20, cursor: 'pointer', fontWeight: 600, fontSize: 13, transition: 'all 0.2s' }}
+            >
+              Kelola Artikel
+            </button>
+          </div>
         </div>
+        
         <div style={{ display: 'flex', gap: 10 }}>
-          <button className="btn btn-primary" style={{ width: 'auto', padding: '8px 16px' }} onClick={async () => {
-            const { addDoc, collection, serverTimestamp } = await import('firebase/firestore');
-            const { db } = await import('./firebase');
-            const dummyData = [
-              {
-                title: 'Panduan Lari 5K Pertama untuk Pemula',
-                content: '<h2>Mengapa 5K?</h2><p>Lari 5K adalah jarak yang sangat pas untuk pemula...</p><h3>Tips Memulai:</h3><ol><li>Mulai perlahan.</li><li>Gunakan sepatu lari yang tepat.</li><li>Jangan lupa pemanasan.</li></ol>',
-                tags: ['Pemula', 'Tips'],
-                author: 'Coach EnduraUP',
-                coverImage: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=1200&auto=format&fit=crop',
-              },
-              {
-                title: 'Nutrisi Penting Sebelum Lari Jauh',
-                content: '<h2>Karbohidrat adalah Raja</h2><p>Saat lari jauh, tubuh butuh bahan bakar...</p>',
-                tags: ['Nutrisi', 'Endurance'],
-                author: 'Tim Ahli Gizi',
-                coverImage: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?q=80&w=1200&auto=format&fit=crop',
-              },
-              {
-                title: 'Pentingnya Recovery Run',
-                content: '<h2>Jangan Remehkan Hari Santai</h2><p>Recovery run adalah lari lambat yang dilakukan keesokan harinya setelah latihan berat...</p>',
-                tags: ['Recovery', 'Tips'],
-                author: 'Coach EnduraUP',
-                coverImage: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=1200&auto=format&fit=crop',
-              }
-            ];
-            try {
-              for (const b of dummyData) {
-                await addDoc(collection(db, 'blogs'), { ...b, createdAt: serverTimestamp() });
-              }
-              alert("Dummy articles berhasil ditambahkan! Silakan buka halaman Blog.");
-            } catch(e){ alert("Error: " + e.message); }
-          }}>Generate Dummy Articles</button>
+          {adminTab === 'blogs' && (
+            <button className="btn btn-primary" style={{ width: 'auto', padding: '8px 16px' }} onClick={async () => {
+              const { addDoc, collection, serverTimestamp } = await import('firebase/firestore');
+              const { db } = await import('./firebase');
+              const dummyData = [
+                {
+                  title: 'Panduan Lari 5K Pertama untuk Pemula',
+                  content: '<h2>Mengapa 5K?</h2><p>Lari 5K adalah jarak yang sangat pas untuk pemula...</p>',
+                  tags: ['Pemula', 'Tips'],
+                  author: 'Coach EnduraUP',
+                  coverImage: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=1200&auto=format&fit=crop',
+                }
+              ];
+              try {
+                for (const b of dummyData) {
+                  await addDoc(collection(db, 'blogs'), { ...b, createdAt: serverTimestamp() });
+                }
+                alert("Dummy articles ditambahkan!");
+              } catch(e){ alert("Error: " + e.message); }
+            }}>Generate Dummy</button>
+          )}
           <button className="btn btn-secondary" style={{ width: 'auto', padding: '8px 16px' }} onClick={onBack}>Kembali ke Web</button>
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 20, marginBottom: 40 }}>
-        <div className="stat-card" style={{ background: 'var(--bg-card)', padding: 24, borderRadius: 12, border: '1px solid var(--border)' }}>
-          <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 8, fontWeight: 600 }}>Total Pelari Aktif</div>
-          <div style={{ fontSize: 36, fontWeight: '800', color: 'var(--accent-purple)' }}>{totalUsers}</div>
-        </div>
-        <div className="stat-card" style={{ background: 'var(--bg-card)', padding: 24, borderRadius: 12, border: '1px solid var(--border)' }}>
-          <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 8, fontWeight: 600 }}>Total Artikel Blog</div>
-          <div style={{ fontSize: 36, fontWeight: '800', color: '#10b981' }}>{totalBlogs}</div>
-        </div>
-      </div>
-
-      <div style={{ background: 'var(--bg-card)', padding: 24, borderRadius: 12, border: '1px solid var(--border)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          <h3 style={{ margin: 0 }}>Daftar Pengguna Terbaru</h3>
-          {users.length > 10 && (
-            <button 
-              onClick={() => setShowAllUsers(!showAllUsers)}
-              style={{ background: 'transparent', border: '1px solid var(--border)', color: 'var(--text-primary)', padding: '6px 12px', borderRadius: 20, fontSize: 13, cursor: 'pointer' }}
-            >
-              {showAllUsers ? 'Tampilkan Lebih Sedikit' : 'Lihat Semua Pengguna'}
-            </button>
-          )}
-        </div>
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ borderBottom: '1px solid var(--border)', color: 'var(--text-secondary)', fontSize: 13 }}>
-                <th style={{ padding: '12px 16px' }}>Email / ID</th>
-                <th style={{ padding: '12px 16px' }}>Nama</th>
-                <th style={{ padding: '12px 16px' }}>Tujuan Latihan</th>
-                <th style={{ padding: '12px 16px' }}>Target Pace</th>
-                <th style={{ padding: '12px 16px' }}>Aktivitas Lari</th>
-                <th style={{ padding: '12px 16px', textAlign: 'center' }}>Aksi</th>
-              </tr>
-            </thead>
-            <tbody>
-              {(showAllUsers ? users : users.slice(0, 10)).map(u => (
-                <tr key={u.id} style={{ borderBottom: '1px dashed rgba(255,255,255,0.05)' }}>
-                  <td style={{ padding: '16px', fontSize: 14, wordBreak: 'break-all' }}>
-                    {u.data?.email || (u.id.substring(0, 10) + '...')}
-                  </td>
-                  <td style={{ padding: '16px', fontSize: 14 }}>
-                    {u.data?.displayName || u.data?.profile?.displayName || 'Anonim'}
-                  </td>
-                  <td style={{ padding: '16px', fontSize: 14 }}>
-                    <span style={{ background: 'rgba(255,255,255,0.05)', padding: '4px 8px', borderRadius: 4 }}>
-                      {u.data?.profile?.goal || '-'}
-                    </span>
-                  </td>
-                  <td style={{ padding: '16px', fontSize: 14 }}>
-                    {u.data?.profile?.targetPace ? `${Math.floor(u.data.profile.targetPace)}:${String(Math.round((u.data.profile.targetPace % 1) * 60)).padStart(2, '0')} /km` : '-'}
-                  </td>
-                  <td style={{ padding: '16px', fontSize: 14, fontWeight: 600, color: 'var(--accent-purple)' }}>{u.data?.running_activities?.length || 0} sesi</td>
-                  <td style={{ padding: '16px', textAlign: 'center' }}>
-                    <button 
-                      onClick={() => handleDeleteUser(u.id)}
-                      style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
-                    >
-                      Hapus
-                    </button>
-                  </td>
-                </tr>
-              ))}
-              {users.length === 0 && (
-                <tr>
-                  <td colSpan="6" style={{ padding: 20, textAlign: 'center', color: 'var(--text-muted)' }}>Belum ada data atau tidak ada akses Firebase.</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div style={{ background: 'var(--bg-card)', padding: 24, borderRadius: 12, border: '1px solid var(--border)', marginTop: 20 }}>
-        <h3 style={{ margin: 0, marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          Kelola Artikel Blog
-          <button className="btn btn-primary" onClick={() => {
-            if (showBlogForm) {
-              setEditingBlogId(null);
-              setBlogForm({ title: '', content: '', tags: '', thumbnail: '' });
-            }
-            setShowBlogForm(!showBlogForm);
-          }} style={{ padding: '6px 16px', fontSize: 13, width: 'auto', borderRadius: 20 }}>
-            {showBlogForm ? 'Tutup Form' : '+ Tulis Artikel'}
-          </button>
-        </h3>
-        
-        {showBlogForm && (
-          <form onSubmit={handlePostBlog} style={{ background: 'var(--bg-surface)', padding: 20, borderRadius: 10, border: '1px solid var(--border)', marginBottom: 20, display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 8 }}>
-              {editingBlogId ? 'Edit Artikel' : 'Tulis Artikel Baru'}
+      {adminTab === 'overview' && (
+        <div className="animate-fade-in">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 20, marginBottom: 40 }}>
+            <div className="stat-card" style={{ background: 'var(--bg-card)', padding: 24, borderRadius: 12, border: '1px solid var(--border)' }}>
+              <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 8, fontWeight: 600 }}>Total Pelari Aktif</div>
+              <div style={{ fontSize: 36, fontWeight: '800', color: 'var(--accent-purple)' }}>{totalUsers}</div>
             </div>
-            <input className="form-input" placeholder="Judul Artikel" required value={blogForm.title} onChange={e => setBlogForm({...blogForm, title: e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-primary)' }} />
-            <input className="form-input" placeholder="URL Gambar Thumbnail (Opsional)" value={blogForm.thumbnail} onChange={e => setBlogForm({...blogForm, thumbnail: e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-primary)' }} />
-            <input className="form-input" placeholder="Tags (pisahkan dengan koma, misal: Tips, Recovery, Nutrisi)" required value={blogForm.tags} onChange={e => setBlogForm({...blogForm, tags: e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-primary)' }} />
-            
-            <div style={{ marginBottom: 12 }}>
-              <ReactQuill 
-                ref={quillRef}
-                theme="snow" 
-                value={blogForm.content} 
-                onChange={val => setBlogForm({...blogForm, content: val})} 
-                modules={modules}
-                placeholder="Tulis artikel menarik di sini... (Gambar bisa disisipkan lewat ikon gambar di toolbar)"
-              />
+            <div className="stat-card" style={{ background: 'var(--bg-card)', padding: 24, borderRadius: 12, border: '1px solid var(--border)' }} onClick={() => setAdminTab('blogs')} style={{ cursor: 'pointer' }}>
+              <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 8, fontWeight: 600 }}>Total Artikel Blog</div>
+              <div style={{ fontSize: 36, fontWeight: '800', color: '#10b981' }}>{totalBlogs}</div>
             </div>
+          </div>
 
-            <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
-              <button type="submit" className="btn btn-primary" disabled={blogPosting} style={{ padding: '12px', flex: 1 }}>
-                {blogPosting ? 'Menyimpan...' : (editingBlogId ? 'Update Artikel' : 'Publish Artikel')}
-              </button>
-              {editingBlogId && (
-                <button type="button" className="btn btn-secondary" onClick={() => {
-                  setEditingBlogId(null);
-                  setBlogForm({ title: '', content: '', tags: '', thumbnail: '' });
-                  setShowBlogForm(false);
-                }} style={{ padding: '12px' }}>
-                  Batal
+          <div style={{ background: 'var(--bg-card)', padding: 24, borderRadius: 12, border: '1px solid var(--border)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <h3 style={{ margin: 0 }}>Daftar Pengguna Terbaru</h3>
+              {users.length > 10 && (
+                <button 
+                  onClick={() => setShowAllUsers(!showAllUsers)}
+                  style={{ background: 'transparent', border: '1px solid var(--border)', color: 'var(--text-primary)', padding: '6px 12px', borderRadius: 20, fontSize: 13, cursor: 'pointer' }}
+                >
+                  {showAllUsers ? 'Tampilkan Lebih Sedikit' : 'Lihat Semua Pengguna'}
                 </button>
               )}
             </div>
-          </form>
-        )}
-
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ borderBottom: '1px solid var(--border)', color: 'var(--text-secondary)', fontSize: 13 }}>
-                <th style={{ padding: '12px 16px' }}>Judul</th>
-                <th style={{ padding: '12px 16px' }}>Tanggal</th>
-                <th style={{ padding: '12px 16px' }}>Tags</th>
-                <th style={{ padding: '12px 16px', textAlign: 'center' }}>Aksi</th>
-              </tr>
-            </thead>
-            <tbody>
-              {blogs.map(b => (
-                <tr key={b.id} style={{ borderBottom: '1px dashed rgba(255,255,255,0.05)' }}>
-                  <td style={{ padding: '16px', fontSize: 14, fontWeight: 600 }}>{b.title}</td>
-                  <td style={{ padding: '16px', fontSize: 13, color: 'var(--text-secondary)' }}>{new Date(b.createdAt?.toDate ? b.createdAt.toDate() : b.createdAt).toLocaleDateString('id-ID')}</td>
-                  <td style={{ padding: '16px', fontSize: 13, color: 'var(--accent-purple)' }}>{b.tags?.join(', ')}</td>
-                  <td style={{ padding: '16px', textAlign: 'center', display: 'flex', justifyContent: 'center', gap: 8 }}>
-                    <button onClick={() => handleEditBlog(b)} style={{ background: '#3b82f6', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Edit</button>
-                    <button onClick={() => handleDeleteBlog(b.id)} style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Hapus</button>
-                  </td>
-                </tr>
-              ))}
-              {blogs.length === 0 && (
-                <tr>
-                  <td colSpan="4" style={{ padding: 20, textAlign: 'center', color: 'var(--text-muted)' }}>Belum ada artikel blog.</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid var(--border)', color: 'var(--text-secondary)', fontSize: 13 }}>
+                    <th style={{ padding: '12px 16px' }}>Email / ID</th>
+                    <th style={{ padding: '12px 16px' }}>Nama</th>
+                    <th style={{ padding: '12px 16px' }}>Tujuan</th>
+                    <th style={{ padding: '12px 16px' }}>Target Pace</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'center' }}>Aksi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(showAllUsers ? users : users.slice(0, 10)).map(u => (
+                    <tr key={u.id} style={{ borderBottom: '1px dashed rgba(128,128,128,0.1)' }}>
+                      <td style={{ padding: '16px', fontSize: 14, wordBreak: 'break-all' }}>
+                        {u.data?.email || (u.id.substring(0, 10) + '...')}
+                      </td>
+                      <td style={{ padding: '16px', fontSize: 14 }}>
+                        {u.data?.displayName || u.data?.profile?.displayName || 'Anonim'}
+                      </td>
+                      <td style={{ padding: '16px', fontSize: 14 }}>
+                        <span style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', padding: '4px 8px', borderRadius: 4 }}>
+                          {u.data?.profile?.goal || '-'}
+                        </span>
+                      </td>
+                      <td style={{ padding: '16px', fontSize: 14 }}>
+                        {u.data?.profile?.targetPace ? `${Math.floor(u.data.profile.targetPace)}:${String(Math.round((u.data.profile.targetPace % 1) * 60)).padStart(2, '0')}/km` : '-'}
+                      </td>
+                      <td style={{ padding: '16px', textAlign: 'center' }}>
+                        <button 
+                          onClick={() => handleDeleteUser(u.id)}
+                          style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
+                        >
+                          Hapus
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                  {users.length === 0 && (
+                    <tr>
+                      <td colSpan="5" style={{ padding: 20, textAlign: 'center', color: 'var(--text-muted)' }}>Belum ada data pelari.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
+
+      {adminTab === 'blogs' && (
+        <div className="animate-fade-in" style={{ background: 'var(--bg-card)', padding: 32, borderRadius: 16, border: '1px solid var(--border)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+            <h3 style={{ margin: 0, fontSize: 24 }}>Content Management System</h3>
+            <button className="btn btn-primary" onClick={() => {
+              if (showBlogForm) {
+                setEditingBlogId(null);
+                setBlogForm({ title: '', content: '', tags: '', thumbnail: '' });
+              }
+              setShowBlogForm(!showBlogForm);
+            }} style={{ padding: '8px 20px', fontSize: 14, width: 'auto', borderRadius: 24 }}>
+              {showBlogForm ? 'Kembali ke Daftar Artikel' : '+ Tulis Artikel Baru'}
+            </button>
+          </div>
+          
+          {showBlogForm ? (
+            <form onSubmit={handlePostBlog} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--accent-purple)', marginBottom: 8 }}>
+                {editingBlogId ? '✍️ Edit Artikel' : '📝 Tulis Artikel Baru'}
+              </div>
+              <input className="form-input" placeholder="Judul Artikel" required value={blogForm.title} onChange={e => setBlogForm({...blogForm, title: e.target.value})} style={{ width: '100%', padding: '14px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-surface)', color: 'var(--text-primary)', fontSize: 16 }} />
+              <input className="form-input" placeholder="URL Gambar Cover (Opsional)" value={blogForm.thumbnail} onChange={e => setBlogForm({...blogForm, thumbnail: e.target.value})} style={{ width: '100%', padding: '14px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-surface)', color: 'var(--text-primary)' }} />
+              <input className="form-input" placeholder="Tags (pisahkan dengan koma, misal: Tips, Recovery, Nutrisi)" required value={blogForm.tags} onChange={e => setBlogForm({...blogForm, tags: e.target.value})} style={{ width: '100%', padding: '14px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-surface)', color: 'var(--text-primary)' }} />
+              
+              <div style={{ marginTop: 8, background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 8, overflow: 'hidden' }}>
+                <ReactQuill 
+                  ref={quillRef}
+                  theme="snow" 
+                  value={blogForm.content} 
+                  onChange={val => setBlogForm({...blogForm, content: val})} 
+                  modules={modules}
+                  placeholder="Tulis artikel menarik di sini... (Gambar bisa disisipkan lewat ikon gambar di toolbar)"
+                  style={{ minHeight: 400 }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
+                <button type="submit" className="btn btn-primary" disabled={blogPosting} style={{ padding: '14px', flex: 1, fontSize: 16 }}>
+                  {blogPosting ? 'Menyimpan...' : (editingBlogId ? 'Update Artikel' : 'Publish Artikel')}
+                </button>
+              </div>
+            </form>
+          ) : (
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid var(--border)', color: 'var(--text-secondary)', fontSize: 13 }}>
+                    <th style={{ padding: '16px' }}>Judul Artikel</th>
+                    <th style={{ padding: '16px' }}>Tanggal</th>
+                    <th style={{ padding: '16px' }}>Tags</th>
+                    <th style={{ padding: '16px', textAlign: 'center' }}>Aksi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {blogs.map(b => (
+                    <tr key={b.id} style={{ borderBottom: '1px solid var(--border)', transition: 'background 0.2s' }} className="hover-lift">
+                      <td style={{ padding: '20px 16px', fontSize: 15, fontWeight: 700 }}>{b.title}</td>
+                      <td style={{ padding: '20px 16px', fontSize: 14, color: 'var(--text-secondary)' }}>{new Date(b.createdAt?.toDate ? b.createdAt.toDate() : b.createdAt).toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'})}</td>
+                      <td style={{ padding: '20px 16px', fontSize: 13 }}>
+                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                          {b.tags?.map(t => <span key={t} style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', padding: '2px 8px', borderRadius: 12 }}>{t}</span>)}
+                        </div>
+                      </td>
+                      <td style={{ padding: '20px 16px', textAlign: 'center', display: 'flex', justifyContent: 'center', gap: 10 }}>
+                        <button onClick={() => handleEditBlog(b)} style={{ background: 'var(--bg-surface)', color: 'var(--accent-blue)', border: '1px solid var(--accent-blue)', padding: '6px 16px', borderRadius: '20px', cursor: 'pointer', fontSize: '13px', fontWeight: 600 }}>Edit</button>
+                        <button onClick={() => handleDeleteBlog(b.id)} style={{ background: 'var(--bg-surface)', color: 'var(--accent-rose)', border: '1px solid var(--accent-rose)', padding: '6px 16px', borderRadius: '20px', cursor: 'pointer', fontSize: '13px', fontWeight: 600 }}>Hapus</button>
+                      </td>
+                    </tr>
+                  ))}
+                  {blogs.length === 0 && (
+                    <tr>
+                      <td colSpan="4" style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>Belum ada artikel blog. Mulai menulis sekarang!</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
