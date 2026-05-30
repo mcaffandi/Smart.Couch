@@ -1719,15 +1719,9 @@ export default function App() {
               <Logo size={24} />
               <span className="logo-text" style={{ fontSize: 20, letterSpacing: '-0.5px' }}>EnduraUP</span>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{ display: 'flex', background: 'var(--bg-surface)', borderRadius: 20, padding: 2, border: '1px solid var(--border)' }}>
-                <button onClick={() => { setLang('id'); localStorage.setItem('smartcoach_lang','id'); }} style={{ padding: '4px 12px', borderRadius: 18, fontSize: 12, fontWeight: 700, background: lang === 'id' ? 'var(--accent-purple)' : 'transparent', color: lang === 'id' ? '#fff' : 'var(--text-muted)', border: 'none', cursor: 'pointer', transition: 'all 0.2s' }}>ID</button>
-                <button onClick={() => { setLang('en'); localStorage.setItem('smartcoach_lang','en'); }} style={{ padding: '4px 12px', borderRadius: 18, fontSize: 12, fontWeight: 700, background: lang === 'en' ? 'var(--accent-purple)' : 'transparent', color: lang === 'en' ? '#fff' : 'var(--text-muted)', border: 'none', cursor: 'pointer', transition: 'all 0.2s' }}>EN</button>
-              </div>
-              <button className="nav-btn-primary" onClick={() => setTab('dashboard')} style={{ padding: '8px 16px', borderRadius: 20, fontSize: 13, background: 'transparent', border: '1px solid var(--border)', color: 'var(--text-primary)', fontWeight: 600 }}>
-                {lang === 'id' ? 'Kembali ke Dasbor' : 'Back to Dashboard'}
-              </button>
-            </div>
+            <button className="nav-btn-primary" onClick={() => setTab('dashboard')} style={{ padding: '8px 16px', borderRadius: 20, fontSize: 13, background: 'transparent', border: '1px solid var(--border)', color: 'var(--text-primary)', fontWeight: 600 }}>
+              Kembali ke Dasbor
+            </button>
           </div>
         </nav>
         <div style={{ padding: '0 20px', maxWidth: 1000, margin: '0 auto' }}>
