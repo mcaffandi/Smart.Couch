@@ -36,7 +36,14 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
 
   useEffect(() => {
     const saved = localStorage.getItem('enduraup_saved_blogs');
-    if (saved) setSavedBlogs(JSON.parse(saved));
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) setSavedBlogs(parsed);
+      } catch (e) {
+        console.error("Invalid saved blogs format");
+      }
+    }
   }, []);
 
   const handleSaveBlog = (blogId) => {
@@ -65,7 +72,12 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
       const snap = await getDocs(q);
       const fetched = [];
       snap.forEach(doc => {
-        fetched.push({ id: doc.id, ...doc.data() });
+        const d = doc.data();
+        fetched.push({ 
+          id: doc.id, 
+          ...d,
+          tags: Array.isArray(d.tags) ? d.tags : (typeof d.tags === 'string' ? d.tags.split(',').map(s=>s.trim()).filter(Boolean) : [])
+        });
       });
       setBlogs(fetched);
     } catch (e) {

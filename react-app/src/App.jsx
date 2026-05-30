@@ -310,6 +310,9 @@ export default function App() {
         const cloudData = userDocSnap.data();
         const localData = loadUserData(username);
         
+        // Ensure running activities and sleep records are properly merged instead of blindly overwritten
+        const mergedActivities = mergeData(localData, cloudData);
+
         const safeAge = cloudData.profile?.age ?? localData.profile?.age ?? null;
         const safeWeight = cloudData.profile?.weight ?? localData.profile?.weight ?? null;
         const safeHeight = cloudData.profile?.height ?? localData.profile?.height ?? null;
@@ -322,6 +325,9 @@ export default function App() {
         const safeData = {
           ...localData,
           ...cloudData,
+          running_activities: mergedActivities.running_activities,
+          sleep_records: mergedActivities.sleep_records,
+          max_hr: mergedActivities.max_hr,
           profile: {
             ...(localData.profile || {}),
             ...(cloudData.profile || {}),
@@ -350,6 +356,11 @@ export default function App() {
         setTargetPace(safeTargetPace);
         setSelectedDays(safeDays);
         localStorage.setItem(`smartcoach_data_user_${username}`, JSON.stringify(safeData));
+
+        // Push the merged safeData back to Firestore to ensure it stays fully synchronized
+        setDoc(userDocRef, safeData).catch(e => {
+          console.error('Failed to update synced data back to Firestore:', e);
+        });
       } else {
         const localData = loadUserData(username);
         await setDoc(userDocRef, localData);

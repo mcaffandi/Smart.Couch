@@ -255,6 +255,10 @@ html, body {
 }
 
 
+.sidebar-collapsed-strip {
+  display: none;
+}
+
 @media (min-width: 901px) {
   .sidebar.collapsed {
     width: 56px !important;
@@ -266,10 +270,6 @@ html, body {
 
   .sidebar.collapsed > *:not(.sidebar-collapsed-strip) {
     display: none !important;
-  }
-
-  .sidebar-collapsed-strip {
-    display: none;
   }
 
   .sidebar.collapsed .sidebar-collapsed-strip {
