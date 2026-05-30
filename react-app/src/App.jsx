@@ -510,7 +510,7 @@ export default function App() {
           stravaTokenExpiresAt: tokenData.expires_at * 1000
         };
         
-        return fetch('https://www.strava.com/api/v3/athlete/activities?per_page=30', {
+        return fetch('https://www.strava.com/api/v3/athlete/activities?per_page=200', {
           headers: { 'Authorization': `Bearer ${tokenData.access_token}` }
         })
         .then(res => res.json())
@@ -1390,7 +1390,7 @@ export default function App() {
         };
       }
 
-      const actsRes = await fetch('https://www.strava.com/api/v3/athlete/activities?per_page=30', {
+      const actsRes = await fetch('https://www.strava.com/api/v3/athlete/activities?per_page=200', {
         headers: { 'Authorization': `Bearer ${accessToken}` }
       });
       const activities = await actsRes.json();
