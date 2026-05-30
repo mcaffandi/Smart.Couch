@@ -549,7 +549,7 @@ export const mergeData = (existing, incoming) => {
   const existingTimes = new Set(existing.running_activities.map(a => a.startTimeLocal));
   const merged = [...existing.running_activities];
   for (const a of incoming.running_activities) {
-    const existingIndex = merged.findIndex(ex => ex.startTimeLocal === a.startTimeLocal);
+    const existingIndex = merged.findIndex(ex => Math.abs(ex.startTimeLocal - a.startTimeLocal) < 60000);
     if (existingIndex === -1) {
       merged.push(a);
     } else {
