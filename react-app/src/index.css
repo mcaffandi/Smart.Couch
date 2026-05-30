@@ -344,6 +344,14 @@ html, body {
   flex-shrink: 0;
 }
 
+.logo-text {
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--accent-purple) 0%, var(--accent-purple-dark) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: var(--accent-purple);
+}
+
 .sidebar-logo-text {
   font-size: 15px;
   font-weight: 700;
