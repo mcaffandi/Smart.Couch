@@ -356,10 +356,13 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
           {/* Featured Hero Article */}
           {filteredBlogs.length > 0 && selectedTag === 'Semua' && !searchQuery && !showSavedOnly && (
             <div 
+              className="blog-list-item"
               onClick={() => { setCurrentBlog(filteredBlogs[0]); setView('read'); }}
-              style={{ overflow: 'hidden', display: 'flex', flexDirection: window.innerWidth < 768 ? 'column' : 'row', cursor: 'pointer', padding: 0, borderBottom: '1px solid var(--border)', marginBottom: 40, paddingBottom: 40, alignItems: 'center' }}
+              style={{ overflow: 'hidden', display: 'flex', flexDirection: window.innerWidth < 768 ? 'column' : 'row', cursor: 'pointer', padding: '16px', margin: '-16px -16px 40px -16px', borderBottom: '1px solid var(--border)', paddingBottom: 40, alignItems: 'center' }}
             >
-              <div style={{ flex: 1, width: '100%', minHeight: window.innerWidth < 768 ? 200 : 300, background: filteredBlogs[0].coverImage ? `url(${filteredBlogs[0].coverImage}) center/cover` : 'var(--bg-surface)' }}></div>
+              <div className="blog-img-container" style={{ flex: 1, width: '100%', minHeight: window.innerWidth < 768 ? 200 : 300 }}>
+                <div className="blog-img-inner" style={{ background: filteredBlogs[0].coverImage ? `url(${filteredBlogs[0].coverImage}) center/cover` : 'var(--bg-surface)' }}></div>
+              </div>
               <div style={{ flex: 1.2, padding: window.innerWidth < 768 ? '24px 0 0 0' : '0 0 0 40px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                 <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
                   {filteredBlogs[0].tags && filteredBlogs[0].tags.slice(0, 3).map((tag, i) => (
@@ -368,7 +371,7 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
                     </span>
                   ))}
                 </div>
-                <h2 style={{ fontFamily: '"Inter", sans-serif', fontSize: window.innerWidth < 768 ? 28 : 38, fontWeight: 800, marginBottom: 16, lineHeight: 1.2, color: 'var(--text-primary)', letterSpacing: '-0.5px' }}>{filteredBlogs[0].title}</h2>
+                <h2 className="blog-title-text" style={{ fontFamily: '"Inter", sans-serif', fontSize: window.innerWidth < 768 ? 28 : 38, fontWeight: 800, marginBottom: 16, lineHeight: 1.2, color: 'var(--text-primary)', letterSpacing: '-0.5px' }}>{filteredBlogs[0].title}</h2>
                 <p style={{ fontSize: 16, color: 'var(--text-secondary)', marginBottom: 24, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.6 }}>
                   {filteredBlogs[0].excerpt || (filteredBlogs[0].content || '').replace(/<[^>]+>/g, '').substring(0, 200) + '...'}
                 </p>
@@ -420,7 +423,7 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
           <div style={{ maxWidth: 800, margin: '0 auto', width: '100%', paddingBottom: 60, paddingTop: searchQuery ? 0 : 20 }}>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               {filteredBlogs.slice(!searchQuery && selectedTag === 'Semua' && !showSavedOnly ? 1 : 0).map(b => (
-                <div key={b.id} onClick={() => { setCurrentBlog(b); setView('read'); }} style={{ display: 'flex', gap: window.innerWidth < 768 ? 16 : 32, paddingBottom: 32, paddingTop: 32, borderBottom: '1px solid var(--border)', cursor: 'pointer', alignItems: 'flex-start', flexDirection: window.innerWidth < 768 ? 'column-reverse' : 'row' }}>
+                <div key={b.id} className="blog-list-item" onClick={() => { setCurrentBlog(b); setView('read'); }} style={{ display: 'flex', gap: window.innerWidth < 768 ? 16 : 32, paddingBottom: 24, paddingTop: 24, paddingLeft: 16, paddingRight: 16, margin: '0 -16px', borderBottom: '1px solid var(--border)', cursor: 'pointer', alignItems: 'flex-start', flexDirection: window.innerWidth < 768 ? 'column-reverse' : 'row' }}>
                   <div style={{ flex: 1 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                       <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--accent-purple)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 10, fontWeight: 'bold' }}>E</div>
@@ -428,7 +431,7 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
                       <span style={{ color: 'var(--text-muted)' }}>·</span>
                       <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>{b.createdAt?.toDate ? b.createdAt.toDate().toLocaleDateString('id-ID', {day: 'numeric', month: 'short'}) : ''}</span>
                     </div>
-                    <h3 style={{ fontFamily: '"Inter", sans-serif', fontSize: window.innerWidth < 768 ? 20 : 22, fontWeight: 800, marginBottom: 8, lineHeight: 1.3, color: 'var(--text-primary)' }}>{b.title}</h3>
+                    <h3 className="blog-title-text" style={{ fontFamily: '"Inter", sans-serif', fontSize: window.innerWidth < 768 ? 20 : 22, fontWeight: 800, marginBottom: 8, lineHeight: 1.3, color: 'var(--text-primary)' }}>{b.title}</h3>
                     <p style={{ fontSize: window.innerWidth < 768 ? 15 : 16, color: 'var(--text-secondary)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.5, marginBottom: 16 }}>
                       {b.excerpt || (b.content || '').replace(/<[^>]+>/g, '').substring(0, 150) + '...'}
                     </p>
@@ -458,7 +461,9 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
                     </div>
                   </div>
                   {b.coverImage && (
-                    <div style={{ width: window.innerWidth < 768 ? '100%' : 144, height: window.innerWidth < 768 ? 160 : 90, background: `url(${b.coverImage}) center/cover`, flexShrink: 0 }}></div>
+                    <div className="blog-img-container" style={{ width: window.innerWidth < 768 ? '100%' : 144, height: window.innerWidth < 768 ? 160 : 90, flexShrink: 0 }}>
+                      <div className="blog-img-inner" style={{ background: `url(${b.coverImage}) center/cover` }}></div>
+                    </div>
                   )}
                 </div>
               ))}
