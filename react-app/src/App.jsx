@@ -282,6 +282,7 @@ export default function App() {
     return () => { document.body.style.overflow = ''; };
   }, [showShareModal, showProfileModal, showAddRunModal, showSleepModal, showUploadModal]);
   const [shareTemplate, setShareTemplate] = useState('vo2');
+  const [shareStatsPeriod, setShareStatsPeriod] = useState('yearly');
   const [shareTheme, setShareTheme] = useState('dark');
   const [customCaption, setCustomCaption] = useState('Lihat pencapaian lari gue di EnduraUP! Gabung yuk di www.enduraup.space');
   const [retroImageLoaded, setRetroImageLoaded] = useState(false);
@@ -1009,22 +1010,41 @@ export default function App() {
         ctx.font = '600 30px Inter, sans-serif';
         ctx.fillText(lang === 'id' ? 'RINGKASAN PERFORMA' : 'PERFORMANCE SUMMARY', lx, 592);
 
-        const targetYear = (() => {
-          let y = new Date().getFullYear();
-          let acts = runActs.filter(a => a.startTimeLocal && new Date(a.startTimeLocal).getFullYear() === y);
-          if (acts.length === 0 && runActs.length > 0) {
-            const years = runActs.map(a => a.startTimeLocal ? new Date(a.startTimeLocal).getFullYear() : null).filter(Boolean);
-            if (years.length > 0) y = Math.max(...years);
-          }
-          return y;
-        })();
+        const now = new Date();
+        let targetActs = [];
+        let periodLabel = '';
+        
+        if (shareStatsPeriod === 'weekly') {
+          const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+          targetActs = runActs.filter(a => a.startTimeLocal && new Date(a.startTimeLocal) >= weekAgo);
+          periodLabel = lang === 'id' ? '7 Hari' : '7 Days';
+        } else if (shareStatsPeriod === 'monthly') {
+          const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+          targetActs = runActs.filter(a => a.startTimeLocal && new Date(a.startTimeLocal) >= monthAgo);
+          periodLabel = lang === 'id' ? '30 Hari' : '30 Days';
+        } else if (shareStatsPeriod === '6months') {
+          const sixMonthsAgo = new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000);
+          targetActs = runActs.filter(a => a.startTimeLocal && new Date(a.startTimeLocal) >= sixMonthsAgo);
+          periodLabel = lang === 'id' ? '6 Bulan' : '6 Months';
+        } else {
+          const targetYear = (() => {
+            let y = new Date().getFullYear();
+            let acts = runActs.filter(a => a.startTimeLocal && new Date(a.startTimeLocal).getFullYear() === y);
+            if (acts.length === 0 && runActs.length > 0) {
+              const years = runActs.map(a => a.startTimeLocal ? new Date(a.startTimeLocal).getFullYear() : null).filter(Boolean);
+              if (years.length > 0) y = Math.max(...years);
+            }
+            return y;
+          })();
+          targetActs = runActs.filter(a => a.startTimeLocal && new Date(a.startTimeLocal).getFullYear() === targetYear);
+          periodLabel = targetYear.toString();
+        }
 
-        const yearlyActs = runActs.filter(a => a.startTimeLocal && new Date(a.startTimeLocal).getFullYear() === targetYear);
-        const yearlyDist = yearlyActs.reduce((s, a) => s + (a.distance ?? 0) / 100000, 0);
-        const yearlySessions = yearlyActs.length;
-        const hrActs = yearlyActs.filter(a => a.avgHr);
-        const yearlyAvgHR = hrActs.length ? yearlyActs.reduce((s, a) => s + (a.avgHr ?? 0), 0) / hrActs.length : 0;
-        const yearlyMaxHR = yearlyActs.reduce((max, a) => Math.max(max, a.maxHr ?? a.max_hr ?? 0), 0);
+        const yearlyDist = targetActs.reduce((s, a) => s + (a.distance ?? 0) / 100000, 0);
+        const yearlySessions = targetActs.length;
+        const hrActs = targetActs.filter(a => a.avgHr);
+        const yearlyAvgHR = hrActs.length ? hrActs.reduce((s, a) => s + (a.avgHr ?? 0), 0) / hrActs.length : 0;
+        const yearlyMaxHR = targetActs.reduce((max, a) => Math.max(max, a.maxHr ?? a.max_hr ?? 0), 0);
 
         // 2×2 grid — row1: y=630, row2: y=810 | col1: lx, col2: 580
         // Each metric: label(26px) → +104 value(80px) → +38 unit(24px)
@@ -1039,8 +1059,8 @@ export default function App() {
           ctx.font = '500 24px Inter, sans-serif';
           ctx.fillText(unit.toUpperCase(), x, y + 132);
         };
-        drawM(lx,  630, lang === 'id' ? `Jarak (${targetYear})` : `Distance (${targetYear})`,   yearlyDist.toFixed(1),                        'km',   '#c0440a');
-        drawM(580, 630, lang === 'id' ? `Latihan (${targetYear})` : `Workouts (${targetYear})`, yearlySessions.toString(),                    lang === 'id' ? 'sesi' : 'sessions', '#2a9d8f');
+        drawM(lx,  630, lang === 'id' ? `Jarak (${periodLabel})` : `Distance (${periodLabel})`,   yearlyDist.toFixed(1),                        'km',   '#c0440a');
+        drawM(580, 630, lang === 'id' ? `Latihan (${periodLabel})` : `Workouts (${periodLabel})`, yearlySessions.toString(),                    lang === 'id' ? 'sesi' : 'sessions', '#2a9d8f');
         drawM(lx,  810, lang === 'id' ? 'HR Rerata' : 'Avg HR',               yearlyAvgHR ? Math.round(yearlyAvgHR).toString() : '–', 'bpm', '#0d626c');
         drawM(580, 810, lang === 'id' ? 'HR Maks' : 'Max HR',                 yearlyMaxHR ? yearlyMaxHR.toString() : '–',   'bpm', '#b45309');
 
@@ -2850,6 +2870,43 @@ export default function App() {
                 ))}
               </div>
             </div>
+
+            {/* Period Selector (Only for Stats) */}
+            {shareTemplate === 'stats' && (
+              <div className="animate-fade-in">
+                <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>
+                  Pilih Rentang Waktu
+                </label>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  {[
+                    { key: 'weekly', label: '7 Hari' },
+                    { key: 'monthly', label: '1 Bulan' },
+                    { key: '6months', label: '6 Bulan' },
+                    { key: 'yearly', label: '1 Tahun' }
+                  ].map(p => (
+                    <button
+                      key={p.key}
+                      onClick={() => setShareStatsPeriod(p.key)}
+                      style={{
+                        flex: 1,
+                        padding: '8px 12px',
+                        borderRadius: 8,
+                        border: '1px solid ' + (shareStatsPeriod === p.key ? 'var(--accent-purple)' : 'var(--border)'),
+                        background: shareStatsPeriod === p.key ? 'rgba(167, 139, 250, 0.1)' : 'transparent',
+                        color: shareStatsPeriod === p.key ? 'var(--text-primary)' : 'var(--text-muted)',
+                        fontSize: 12,
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        fontFamily: 'inherit',
+                        transition: 'all 0.15s'
+                      }}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Theme Selector */}
             <div>
