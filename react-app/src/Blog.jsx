@@ -439,7 +439,18 @@ function BlogReader({ blog, onBack, onTagClick, lang, onProps, currentUser, save
   const dateStr = blog.createdAt?.toDate ? blog.createdAt.toDate().toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
   
   const [particles, setParticles] = useState([]);
-  
+  const [commentCount, setCommentCount] = useState(0);
+
+  // Subscribe to live comment count
+  useEffect(() => {
+    if (!blog?.id) return;
+    const q = query(collection(db, 'blogs', blog.id, 'comments'));
+    const unsub = onSnapshot(q, (snap) => {
+      setCommentCount(snap.size);
+    }, () => setCommentCount(0));
+    return () => unsub();
+  }, [blog?.id]);
+
   const safeTitle = blog.title || 'Untitled';
   const finalSlug = blog.slug || safeTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
   const blogUrl = `https://www.enduraup.space/blog/${finalSlug}`;
@@ -594,7 +605,7 @@ function BlogReader({ blog, onBack, onTagClick, lang, onProps, currentUser, save
             title={lang === 'id' ? 'Komentar' : 'Comments'}
           >
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
-            <span style={{ fontSize: 14, fontWeight: 500 }}>{blog.comments?.length || 0}</span>
+            <span style={{ fontSize: 14, fontWeight: 500 }}>{commentCount}</span>
           </button>
         </div>
 
