@@ -120,7 +120,7 @@ export function HRZoneChart({ zones, avgHr, lang = 'id' }) {
       min: z.min,
       max: z.max,
       color: z.color,
-      value: z.max - z.min,
+      value: 10, // All zones = equal 10% HR bands, normalize for consistent bar width
     };
   });
 
