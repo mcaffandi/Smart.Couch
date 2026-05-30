@@ -13,6 +13,7 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTag, setSelectedTag] = useState('Semua');
   const [savedBlogs, setSavedBlogs] = useState([]);
+  const [showSavedOnly, setShowSavedOnly] = useState(false);
   
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [pendingAction, setPendingAction] = useState(null);
@@ -225,7 +226,6 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
     );
   }
 
-  const [showSavedOnly, setShowSavedOnly] = useState(false);
 
   const filteredBlogs = blogs.filter(b => {
     // Filter by saved
