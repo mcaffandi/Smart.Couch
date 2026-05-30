@@ -70,7 +70,7 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
     setLoading(true);
     try {
       const q = query(collection(db, 'blogs'), orderBy('createdAt', 'desc'));
-      const snap = await getDocsFromServer(q);
+      const snap = await getDocs(q);
       const fetched = [];
       snap.forEach(doc => {
         const d = doc.data();
