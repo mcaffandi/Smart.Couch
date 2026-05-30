@@ -360,7 +360,7 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
               onClick={() => { setCurrentBlog(filteredBlogs[0]); setView('read'); }}
               style={{ overflow: 'hidden', display: 'flex', flexDirection: window.innerWidth < 768 ? 'column' : 'row', cursor: 'pointer', padding: 0, border: '1px solid var(--border)', background: 'var(--bg-card)', marginBottom: 40, minHeight: 360 }}
             >
-              <div style={{ flex: 1, minHeight: 250, background: filteredBlogs[0].coverImage ? `url(${filteredBlogs[0].coverImage}) center/cover` : 'var(--bg-surface)' }}></div>
+              <div style={{ flex: 1.618, minHeight: window.innerWidth < 768 ? 200 : 360, background: filteredBlogs[0].coverImage ? `url(${filteredBlogs[0].coverImage}) center/cover` : 'var(--bg-surface)' }}></div>
               <div style={{ flex: 1, padding: '40px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                 <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
                   {filteredBlogs[0].tags && filteredBlogs[0].tags.slice(0, 3).map((tag, i) => (
@@ -444,7 +444,7 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
                       </div>
                     </div>
                     {b.coverImage && (
-                      <div style={{ width: window.innerWidth < 768 ? '100%' : 160, height: window.innerWidth < 768 ? 180 : 110, background: `url(${b.coverImage}) center/cover`, borderRadius: 4, flexShrink: 0 }}></div>
+                      <div style={{ width: window.innerWidth < 768 ? '100%' : 178, height: window.innerWidth < 768 ? 180 : 110, background: `url(${b.coverImage}) center/cover`, borderRadius: 4, flexShrink: 0 }}></div>
                     )}
                   </div>
                 ))}
@@ -456,9 +456,9 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
               {filteredBlogs.slice(selectedTag === 'Semua' && !searchQuery && !showSavedOnly ? 1 : 0).map(b => (
                 <div key={b.id} className="glass-panel hover-lift" onClick={() => { setCurrentBlog(b); setView('read'); }} style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column', cursor: 'pointer', padding: 0, border: '1px solid var(--border)', background: 'var(--bg-card)' }}>
                   {b.coverImage ? (
-                    <div style={{ height: 180, background: `url(${b.coverImage}) center/cover`, borderBottom: '1px solid var(--border)' }}></div>
+                    <div style={{ height: 198, background: `url(${b.coverImage}) center/cover`, borderBottom: '1px solid var(--border)' }}></div>
                   ) : (
-                    <div style={{ height: 180, background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
+                    <div style={{ height: 198, background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
                       <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                     </div>
                   )}
