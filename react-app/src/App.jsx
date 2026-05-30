@@ -283,7 +283,7 @@ export default function App() {
   }, [showShareModal, showProfileModal, showAddRunModal, showSleepModal, showUploadModal]);
   const [shareTemplate, setShareTemplate] = useState('vo2');
   const [shareTheme, setShareTheme] = useState('dark');
-  const [customCaption, setCustomCaption] = useState('Lihat pencapaian lari gue di EnduraUP! Gabung yuk di enduraup.vercel.app 🏃‍♂️🔥');
+  const [customCaption, setCustomCaption] = useState('Lihat pencapaian lari gue di EnduraUP! Gabung yuk di www.enduraup.space');
   const [retroImageLoaded, setRetroImageLoaded] = useState(false);
   const retroImageRef = useRef(null);
 
@@ -924,7 +924,7 @@ export default function App() {
       
       // Draw streak badge in top right for dark themes
       if (streakWeeks >= 1) {
-        const streakText = `🔥 ${streakWeeks} WEEK STREAK`;
+        const streakText = `${streakWeeks} WEEK STREAK`;
         ctx.font = '700 20px Inter, sans-serif';
         const sw = ctx.measureText(streakText).width;
         ctx.fillStyle = 'rgba(249, 115, 22, 0.15)'; // Orange background
@@ -1094,11 +1094,11 @@ export default function App() {
       ctx.fillText(lang === 'id' ? 'Dibuat otomatis oleh EnduraUP AI Engine' : 'Generated automatically by EnduraUP AI Engine', lx, 994);
       ctx.fillStyle = '#c0440a';
       ctx.font = '600 26px Inter, sans-serif';
-      ctx.fillText('enduraup.vercel.app', lx, 1034);
+      ctx.fillText('www.enduraup.space', lx, 1034);
       
       // Streak badge in footer for Sunrise theme
       if (streakWeeks >= 1) {
-        const streakText = `🔥 ${streakWeeks} WEEK STREAK`;
+        const streakText = `${streakWeeks} WEEK STREAK`;
         ctx.font = '700 22px Inter, sans-serif';
         const sw = ctx.measureText(streakText).width;
         fillRoundedRect(ctx, rx - sw - 30, 984, sw + 30, 46, 23, 'rgba(249, 115, 22, 0.1)');
@@ -1265,7 +1265,7 @@ export default function App() {
       ctx.fillText(lang === 'id' ? 'Dibuat otomatis oleh EnduraUP AI Engine' : 'Generated automatically by EnduraUP AI Engine', px, 962);
       ctx.fillStyle = shareTheme === 'cyber' ? '#06b6d4' : (isCustomLight ? textPrimary : '#a78bfa');
       ctx.font = '600 22px Inter, sans-serif';
-      ctx.fillText('enduraup.vercel.app', px, 996);
+      ctx.fillText('www.enduraup.space', px, 996);
 
     } // end else (dark themes)
 
@@ -1304,7 +1304,7 @@ export default function App() {
   };
 
   const copyLinkToClipboard = () => {
-    navigator.clipboard.writeText('https://enduraup.vercel.app').then(() => {
+    navigator.clipboard.writeText('https://www.enduraup.space').then(() => {
       addToast('Link website berhasil disalin! Siap dibagikan.');
     }).catch(err => {
       console.error('Failed to copy link:', err);
@@ -1327,13 +1327,13 @@ export default function App() {
   };
 
   const shareToWhatsApp = () => {
-    const text = encodeURIComponent('Lihat hasil analisis latihan lari dan performa VO2Max saya di EnduraUP! Cek di: https://enduraup.vercel.app 🏃‍♂️🔥');
+    const text = encodeURIComponent('Lihat hasil analisis latihan lari dan performa VO2Max saya di EnduraUP! Cek di: https://www.enduraup.space');
     window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
   };
 
   const shareToTwitter = () => {
     const text = encodeURIComponent('Lihat hasil analisis lari & performa VO2Max saya di EnduraUP! 🏃‍♂️🔥');
-    const url = encodeURIComponent('https://enduraup.vercel.app');
+    const url = encodeURIComponent('https://www.enduraup.space');
     window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank');
   };
 
