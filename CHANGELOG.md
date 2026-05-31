@@ -2,6 +2,24 @@
 
 ---
 
+## [Uncommitted] — 2026-05-31 · Dynamic Recovery, Notification Center & Analytics UI
+
+### ✨ Fitur Baru & Optimasi
+- **Notification Center (Lonceng Notifikasi)**: Menambahkan menu *dropdown* notifikasi di Header Dashboard dengan tombol "Tandai Semua Dibaca" untuk mencatat riwayat pembaruan (misal penambahan waktu pemulihan saat sinkronisasi Strava selesai).
+- **Time-Range Filter pada Trend Jarak**: Melengkapi grafik "Tren Jarak" (*TrendChart*) dengan tombol rentang waktu dinamis (*Semua, 1Y, 6M, 3M, 1M, 1W*). Mengubah logika pengelompokan secara otomatis menjadi **Harian (Daily)** jika *range* yang dipilih adalah 1M atau 1W, sehingga *chart* tetap menunjukkan pergerakan data yang akurat alih-alih garis lurus kosong.
+- **Kalkulasi Pemulihan (Recovery) Dinamis ala Garmin**:
+  - Mengubah titik mulai hitung mundur (*countdown*) waktu pemulihan dari awal lari menjadi **selesai lari** (`startTimeLocal + duration`).
+  - Menyesuaikan sensitivitas *multiplier* zona *Heart Rate* menjadi lebih realistis dan linier (Zona 1/2 nambah lebih sedikit, persis seperti Garmin EPOC).
+  - Teks `Pemulihan: Xh` dengan emoji diganti menjadi *badge premium* `Sisa: Xh` menggunakan ikon *Hourglass* SVG kustom.
+- **Peningkatan Input Manual yang Organik**:
+  - **Manual Run**: Menambahkan kolom **Waktu (Jam)** sehingga sinkronisasi *recovery decay* lebih presisi (sebelumnya sistem selalu mematok lari manual terjadi pada pukul 00:00).
+  - **Manual Sleep**: 
+    - Input durasi dipecah menjadi dua kolom terpisah: **Jam** dan **Menit** (tidak perlu kalkulasi desimal manual).
+    - Memunculkan nilai *Score* di keterangan tombol (misal: "Score: 90") agar *user* lebih memahami kualitas tidurnya.
+    - Mengintegrasikan fungsi **Organic Variance** (variasi acak -4 hingga +4) saat simulasi nilai, menjadikan grafik riwayat tidur manual terlihat bervariasi dan natural, layaknya membaca sensor dari jam tangan asli.
+
+---
+
 ## [Uncommitted] — 2026-05-30 · Production UI Polish, Domain Switch & Share Card Filter
 
 ### ✨ Fitur Baru & Optimasi
