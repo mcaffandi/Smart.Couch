@@ -243,6 +243,7 @@ export default function App() {
   const [manualRun, setManualRun] = useState({
     name: '',
     date: new Date().toISOString().split('T')[0],
+    time: '06:00',
     distance: 5.0,
     duration: 30,
     avgHr: 145,
@@ -1973,7 +1974,7 @@ export default function App() {
 
   // ── Save manual run ───────────────────────────────────────────────────────────
   const saveManualRun = () => {
-    const epochMs = new Date(manualRun.date).getTime();
+    const epochMs = new Date(`${manualRun.date}T${manualRun.time || '06:00'}:00`).getTime();
     const newRun = {
       startTimeLocal: epochMs,
       distance: manualRun.distance * 100000,
@@ -3816,9 +3817,15 @@ export default function App() {
                 onChange={e => setManualRun(r => ({ ...r, name: e.target.value }))}
               />
             </div>
-            <div className="form-group" style={{ marginBottom: 12 }}>
-              <label className="form-label">{lang === 'id' ? 'Tanggal' : 'Date'}</label>
-              <input className="form-input" type="date" value={manualRun.date} onChange={e => setManualRun(r => ({ ...r, date: e.target.value }))} />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+              <div className="form-group">
+                <label className="form-label">{lang === 'id' ? 'Tanggal' : 'Date'}</label>
+                <input className="form-input" type="date" value={manualRun.date} onChange={e => setManualRun(r => ({ ...r, date: e.target.value }))} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">{lang === 'id' ? 'Waktu (Jam)' : 'Time'}</label>
+                <input className="form-input" type="time" value={manualRun.time} onChange={e => setManualRun(r => ({ ...r, time: e.target.value }))} />
+              </div>
             </div>
             <div style={{ marginBottom: 12 }}>
               <NumberInput label={lang === 'id' ? 'Jarak (km)' : 'Distance (km)'} value={manualRun.distance} onChange={v => setManualRun(r => ({ ...r, distance: v }))} min={0.1} step={0.1} />
