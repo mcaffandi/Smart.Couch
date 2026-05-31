@@ -252,7 +252,8 @@ export default function App() {
   const [manualSleep, setManualSleep] = useState({
     date: new Date().toISOString().split('T')[0],
     quality: 'cukup',
-    duration: 7.0,
+    sleepHours: 7,
+    sleepMinutes: 0,
   });
 
   // ── State: active tab ────────────────────────────────────────────────────────
@@ -1999,11 +2000,12 @@ export default function App() {
   const saveManualSleep = () => {
     const scoreMap = { pulas: 90, cukup: 75, kurang: 55, begadang: 30 };
     const score = scoreMap[manualSleep.quality] ?? 75;
+    const duration = (manualSleep.sleepHours || 0) + ((manualSleep.sleepMinutes || 0) / 60);
     const updated = {
       ...data,
       sleep_records: {
         ...data.sleep_records,
-        [manualSleep.date]: { score, duration: manualSleep.duration },
+        [manualSleep.date]: { score, duration: duration },
       },
       profile: { age, goal, programStyle, targetPace, selectedDays }
     };
@@ -3858,10 +3860,10 @@ export default function App() {
               <label className="form-label">{t.sleepQuality}</label>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 8 }}>
                 {[
-                  { val: 'pulas', label: lang === 'id' ? '😴 Sangat Pulas & Segar' : '😴 Deep Sleep & Refreshed', col: '#10b981' },
-                  { val: 'cukup', label: lang === 'id' ? '🙂 Cukup Baik' : '🙂 Okay / Normal', col: '#38bdf8' },
-                  { val: 'kurang', label: lang === 'id' ? '🥱 Kurang Nyenyak' : '🥱 Poor / Interrupted', col: '#f59e0b' },
-                  { val: 'begadang', label: lang === 'id' ? '😫 Begadang / Sangat Kurang' : '😫 Restless / Too Short', col: '#f43f5e' }
+                  { val: 'pulas', label: lang === 'id' ? '😴 Sangat Pulas & Segar (Score: 90)' : '😴 Deep Sleep & Refreshed (Score: 90)', col: '#10b981' },
+                  { val: 'cukup', label: lang === 'id' ? '🙂 Cukup Baik (Score: 75)' : '🙂 Okay / Normal (Score: 75)', col: '#38bdf8' },
+                  { val: 'kurang', label: lang === 'id' ? '🥱 Kurang Nyenyak (Score: 55)' : '🥱 Poor / Interrupted (Score: 55)', col: '#f59e0b' },
+                  { val: 'begadang', label: lang === 'id' ? '😫 Begadang / Sangat Kurang (Score: 30)' : '😫 Restless / Too Short (Score: 30)', col: '#f43f5e' }
                 ].map(q => (
                   <button key={q.val} type="button" onClick={() => setManualSleep(s => ({ ...s, quality: q.val }))}
                     style={{ background: manualSleep.quality === q.val ? `${q.col}15` : 'var(--bg-card)', border: `1.5px solid ${manualSleep.quality === q.val ? q.col : 'var(--border)'}`, color: manualSleep.quality === q.val ? q.col : 'var(--text-secondary)', padding: '12px', borderRadius: 8, textAlign: 'left', fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s' }}>
@@ -3870,8 +3872,9 @@ export default function App() {
                 ))}
               </div>
             </div>
-            <div style={{ marginBottom: 24 }}>
-              <NumberInput label={lang === 'id' ? 'Durasi Tidur (jam)' : 'Sleep Duration (hrs)'} value={manualSleep.duration} onChange={v => setManualSleep(s => ({ ...s, duration: v }))} min={1} max={24} step={0.5} />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 24 }}>
+              <NumberInput label={lang === 'id' ? 'Jam' : 'Hours'} value={manualSleep.sleepHours} onChange={v => setManualSleep(s => ({ ...s, sleepHours: v }))} min={0} max={24} step={1} />
+              <NumberInput label={lang === 'id' ? 'Menit' : 'Minutes'} value={manualSleep.sleepMinutes} onChange={v => setManualSleep(s => ({ ...s, sleepMinutes: v }))} min={0} max={59} step={1} />
             </div>
             <div style={{ display: 'flex', gap: 10 }}>
               <button className="btn btn-secondary" onClick={() => setShowSleepModal(false)}>{lang === 'id' ? 'Batal' : 'Cancel'}</button>
