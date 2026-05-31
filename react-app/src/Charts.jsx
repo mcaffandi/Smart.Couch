@@ -4,10 +4,26 @@ import { msToDate } from './utils';
 
 // ─── Trend chart (monthly/weekly distance) ──────────────────────────────────
 export function TrendChart({ activities, lang = 'id' }) {
-  const [viewMode, setViewMode] = useState('month'); // 'month' or 'week'
+  const [viewMode, setViewMode] = useState('month'); // 'month', 'week', 'day'
+  const [timeRange, setTimeRange] = useState('all');
+
+  const now = new Date().getTime();
+  const ranges = {
+    '1w': now - 7 * 24 * 60 * 60 * 1000,
+    '1m': now - 30 * 24 * 60 * 60 * 1000,
+    '3m': now - 90 * 24 * 60 * 60 * 1000,
+    '6m': now - 180 * 24 * 60 * 60 * 1000,
+    '1y': now - 365 * 24 * 60 * 60 * 1000,
+  };
+
+  const filteredActivities = activities.filter(a => {
+    if (!a.startTimeLocal) return false;
+    if (timeRange === 'all') return true;
+    return a.startTimeLocal >= ranges[timeRange];
+  });
 
   const aggregated = {};
-  for (const a of activities) {
+  for (const a of filteredActivities) {
     if (!a.startTimeLocal) continue;
     // distance in cm → km
     const distKm = (a.distance ?? 0) / 100000;
@@ -17,12 +33,14 @@ export function TrendChart({ activities, lang = 'id' }) {
     let key;
     if (viewMode === 'month') {
       key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-    } else {
+    } else if (viewMode === 'week') {
       const day = d.getDay();
       const diff = d.getDate() - day + (day === 0 ? -6 : 1);
       const monday = new Date(d);
       monday.setDate(diff);
       key = `${monday.getFullYear()}-${String(monday.getMonth() + 1).padStart(2, '0')}-${String(monday.getDate()).padStart(2, '0')}`;
+    } else { // day
+      key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     }
     
     aggregated[key] = (aggregated[key] ?? 0) + distKm;
@@ -66,12 +84,18 @@ export function TrendChart({ activities, lang = 'id' }) {
 
   return (
     <div className="chart-container" style={{ padding: '20px 16px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <div className="chart-title" style={{ fontSize: 14, fontWeight: 600 }}>
-          {lang === 'id' ? 'Tren Jarak' : 'Distance Trend'}
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 16 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div className="chart-title" style={{ fontSize: 14, fontWeight: 600 }}>
+            {lang === 'id' ? 'Tren Jarak' : 'Distance Trend'}
+          </div>
           <div style={{ display: 'flex', background: 'var(--bg-surface)', borderRadius: 20, padding: 4, border: '1px solid var(--border)' }}>
+            <button 
+              onClick={() => setViewMode('day')}
+              style={{ padding: '4px 10px', fontSize: 11, fontWeight: 600, borderRadius: 16, border: 'none', background: viewMode === 'day' ? 'var(--accent-purple)' : 'transparent', color: viewMode === 'day' ? '#fff' : 'var(--text-muted)', cursor: 'pointer', transition: 'all 0.2s' }}
+            >
+              {lang === 'id' ? 'Harian' : 'Daily'}
+            </button>
             <button 
               onClick={() => setViewMode('week')}
               style={{ padding: '4px 10px', fontSize: 11, fontWeight: 600, borderRadius: 16, border: 'none', background: viewMode === 'week' ? 'var(--accent-purple)' : 'transparent', color: viewMode === 'week' ? '#fff' : 'var(--text-muted)', cursor: 'pointer', transition: 'all 0.2s' }}
@@ -85,6 +109,34 @@ export function TrendChart({ activities, lang = 'id' }) {
               {lang === 'id' ? 'Bulanan' : 'Monthly'}
             </button>
           </div>
+        </div>
+        
+        <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4, scrollbarWidth: 'none' }}>
+          {[
+            { val: 'all', label: lang === 'id' ? 'Semua' : 'All Time' },
+            { val: '1y', label: '1Y' },
+            { val: '6m', label: '6M' },
+            { val: '3m', label: '3M' },
+            { val: '1m', label: '1M' },
+            { val: '1w', label: '1W' },
+          ].map(r => (
+            <button
+              key={r.val}
+              onClick={() => {
+                setTimeRange(r.val);
+                if (r.val === '1w' || r.val === '1m') setViewMode('day');
+                else if (r.val === '3m' || r.val === '6m') setViewMode('week');
+              }}
+              style={{
+                padding: '4px 12px', fontSize: 11, fontWeight: 600, borderRadius: 12, border: '1px solid var(--border)',
+                background: timeRange === r.val ? 'var(--text-primary)' : 'transparent',
+                color: timeRange === r.val ? 'var(--bg-base)' : 'var(--text-secondary)',
+                cursor: 'pointer', transition: 'all 0.2s', whiteSpace: 'nowrap'
+              }}
+            >
+              {r.label}
+            </button>
+          ))}
         </div>
       </div>
       <ResponsiveContainer width="100%" height={220}>
