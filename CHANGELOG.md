@@ -311,6 +311,14 @@ Seluruh warna teks diubah dari nuansa dingin (`#ffffff`, `#a1a1aa`, `#71717a`) k
 
 ## To Do / Next
 
+### Kesiapan Latihan (Training Load) & Strava Sync
+- [x] **Strava Sync Mode di Admin**: Tambahkan opsi konfigurasi `Fast Sync` (ambil 5 aktivitas terbaru saja) vs `Full Sync` di Admin Dashboard.
+- [x] **Modifikasi Strava Fetcher**: Sesuaikan `App.jsx` untuk membaca pengaturan mode sync dan mengubah parameter `per_page` API Strava secara dinamis.
+- [x] **Kalkulasi Training Load**: Buat logika untuk menghitung beban latihan (Training Load / Recovery Time) secara otomatis dari `Heart Rate` dan `Durasi`.
+- [x] **UI Sisa Recovery Time**: Tambahkan badge indikator `Sisa Recovery: X Jam` di komponen Kesiapan Latihan (Readiness).
+- [x] **Notifikasi Beban Latihan**: Buat Pop-up Notif setelah sync yang menampilkan penambahan Recovery Time, atau meminta input RPE jika data HR kosong.
+
+### Ekstra
 - [x] Simpan profil ke Firebase Firestore (saat ini hanya localStorage)
 - [x] Validasi input: tidak bisa simpan umur < 10 atau tinggi > 250
 - [x] Foto/avatar upload untuk profil

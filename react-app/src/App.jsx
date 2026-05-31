@@ -120,6 +120,8 @@ export default function App() {
   const [showAddRunModal, setShowAddRunModal] = useState(false);
   const [showSleepModal, setShowSleepModal] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showSyncModal, setShowSyncModal] = useState(false);
+  const [syncedRuns, setSyncedRuns] = useState([]);
   const [showExportGuide, setShowExportGuide] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [showAdmin, setShowAdmin] = useState(window.location.hash.toLowerCase() === '#admin');
@@ -130,6 +132,7 @@ export default function App() {
   const [programStyle, setProgramStyle] = useState(() => data.profile?.programStyle ?? 'sedang');
   const [targetPace, setTargetPace] = useState(() => data.profile?.targetPace ?? null);
   const [selectedDays, setSelectedDays] = useState(() => data.profile?.selectedDays ?? ['Selasa', 'Kamis', 'Sabtu']);
+  const [globalSettings, setGlobalSettings] = useState({ stravaSyncMode: 'fast' });
 
   useEffect(() => {
     const handleHashChange = () => {
@@ -163,6 +166,19 @@ export default function App() {
       }
     };
     updateVisitorCount();
+
+    const fetchGlobalSettings = async () => {
+      try {
+        const docRef = doc(db, 'settings', 'global');
+        const snap = await getDoc(docRef);
+        if (snap.exists()) {
+          setGlobalSettings(snap.data());
+        }
+      } catch (e) {
+        console.error("Settings error", e);
+      }
+    };
+    fetchGlobalSettings();
 
     const unsubscribe = onAuthStateChanged(auth, (fbUser) => {
       if (fbUser) {
@@ -511,7 +527,8 @@ export default function App() {
           stravaTokenExpiresAt: tokenData.expires_at * 1000
         };
         
-        return fetch('https://www.strava.com/api/v3/athlete/activities?per_page=200', {
+        const perPage = globalSettings.stravaSyncMode === 'full' ? 200 : 5;
+        return fetch(`https://www.strava.com/api/v3/athlete/activities?per_page=${perPage}`, {
           headers: { 'Authorization': `Bearer ${tokenData.access_token}` }
         })
         .then(res => res.json())
@@ -557,13 +574,20 @@ export default function App() {
         setData(prev => {
           let mergedRuns = [...(prev.running_activities || [])];
           let addedCount = 0;
+          let recentlyAdded = [];
           newRuns.forEach(nr => {
             const exists = mergedRuns.find(er => Math.abs(er.startTimeLocal - nr.startTimeLocal) < 60000);
             if (!exists) {
               mergedRuns.push(nr);
+              recentlyAdded.push(nr);
               addedCount++;
             }
           });
+          
+          if (addedCount > 0) {
+            setSyncedRuns(recentlyAdded);
+            setShowSyncModal(true);
+          }
           mergedRuns.sort((a,b) => a.startTimeLocal - b.startTimeLocal);
           
           let maxHr = prev.max_hr || 0;
@@ -630,26 +654,83 @@ export default function App() {
     return Math.max(0, diffDays);
   }, [runActs]);
 
+  // Calculate recovery remaining hours based on runs and sleep
+  const recoveryRemainingHours = useMemo(() => {
+    if (!runActs || !runActs.length) return 0;
+    
+    const events = [];
+    runActs.forEach(r => {
+      if (r.startTimeLocal) {
+        events.push({ type: 'run', time: r.startTimeLocal, data: r });
+      }
+    });
+    
+    Object.entries(sleepRecs || {}).forEach(([dateStr, sleep]) => {
+      const d = new Date(dateStr + 'T08:00:00');
+      events.push({ type: 'sleep', time: d.getTime(), data: sleep });
+    });
+    
+    events.sort((a, b) => a.time - b.time);
+    
+    let currentRecoveryMs = 0;
+    let lastTime = null;
+    const userMaxHr = actualMaxHR || (220 - (age || 30));
+    
+    events.forEach(ev => {
+      if (lastTime) {
+        const timePassed = ev.time - lastTime;
+        currentRecoveryMs = Math.max(0, currentRecoveryMs - timePassed);
+      }
+      
+      if (ev.type === 'run') {
+        const durationHours = (ev.data.duration || 0) / 3600000;
+        let addedHours = durationHours * 24; // default
+        if (ev.data.avgHr) {
+          const intensity = ev.data.avgHr / userMaxHr;
+          if (intensity < 0.65) addedHours = durationHours * 12;
+          else if (intensity < 0.75) addedHours = durationHours * 24;
+          else if (intensity < 0.85) addedHours = durationHours * 36;
+          else addedHours = durationHours * 48;
+        }
+        currentRecoveryMs += (addedHours * 3600000);
+      } else if (ev.type === 'sleep') {
+        const score = ev.data.score || 75;
+        const sleepHours = ev.data.duration || 7;
+        let multiplier = 1.0;
+        if (score >= 85) multiplier = 1.5;
+        else if (score < 65) multiplier = 0.5;
+        
+        const bonusDeduction = (multiplier - 1.0) * sleepHours * 3600000;
+        currentRecoveryMs = Math.max(0, currentRecoveryMs - bonusDeduction);
+      }
+      
+      lastTime = ev.time;
+    });
+    
+    if (lastTime) {
+      const timePassed = Date.now() - lastTime;
+      currentRecoveryMs = Math.max(0, currentRecoveryMs - timePassed);
+    }
+    
+    return Math.max(0, Math.round(currentRecoveryMs / 3600000));
+  }, [runActs, sleepRecs, actualMaxHR, age]);
+
   // Adjust readiness score based on sleep score and running fatigue/rest
   const trainingReadiness = useMemo(() => {
     if (latestSleepScore === null) return null;
     let score = latestSleepScore;
-    if (daysSinceLastRun === 0) {
-      score = Math.max(30, score - 20);
-    } else if (daysSinceLastRun === 1) {
-      score = Math.max(40, score - 10);
-    } else if (daysSinceLastRun === 2) {
-      score = score;
-    } else if (daysSinceLastRun === 3) {
-      score = Math.min(100, score + 10);
-    } else if (daysSinceLastRun >= 4 || daysSinceLastRun === null) {
-      score = Math.min(100, score + 15);
+    
+    if (recoveryRemainingHours <= 0) {
       if (latestSleepScore >= 50) {
         score = Math.max(80, score);
       }
+    } else {
+      const penalty = Math.min(50, Math.round(recoveryRemainingHours * (50 / 48)));
+      score = Math.max(10, score - penalty);
     }
+    
     return Math.round(score);
-  }, [latestSleepScore, daysSinceLastRun]);
+  }, [latestSleepScore, recoveryRemainingHours]);
 
   const runDates = new Set(runActs.map(a => a.startTimeLocal ? msToDate(a.startTimeLocal) : null).filter(Boolean));
   const runDayScores = Object.entries(sleepRecs).filter(([d]) => runDates.has(d)).map(([, v]) => v.score);
@@ -1410,7 +1491,8 @@ export default function App() {
         };
       }
 
-      const actsRes = await fetch('https://www.strava.com/api/v3/athlete/activities?per_page=200', {
+      const perPage = globalSettings.stravaSyncMode === 'full' ? 200 : 5;
+      const actsRes = await fetch(`https://www.strava.com/api/v3/athlete/activities?per_page=${perPage}`, {
         headers: { 'Authorization': `Bearer ${accessToken}` }
       });
       const activities = await actsRes.json();
@@ -2004,29 +2086,14 @@ export default function App() {
       : `Based on your latest sleep record (${latestSleepDate}), your sleep quality score is ${latestSleepScore}%. `;
 
     let restPart = '';
-    if (daysSinceLastRun === 0) {
+    if (recoveryRemainingHours === 0) {
       restPart = isId
-        ? `Lo ada sesi lari hari ini, jadi kesiapan fisik disesuaikan karena faktor kelelahan otot aktif.`
-        : `You ran today, so physical readiness is adjusted due to active muscle fatigue.`;
-    } else if (daysSinceLastRun === 1) {
+        ? `Otot lo udah pulih 100% dari sesi lari terakhir (0 jam sisa recovery). Kesiapan fisik pulih maksimal.`
+        : `Your muscles have fully recovered from the last run (0 hours remaining). Physical readiness is at maximum.`;
+    } else {
       restPart = isId
-        ? `Lo baru lari kemarin, ada sedikit penyesuaian skor karena sisa kelelahan.`
-        : `You ran yesterday, with a minor score adjustment for residual fatigue.`;
-    } else if (daysSinceLastRun === 2) {
-      restPart = isId
-        ? `Masa pemulihan lo seimbang (2 hari sejak sesi lari terakhir).`
-        : `Your recovery duration is balanced (2 days since your last run).`;
-    } else if (daysSinceLastRun === 3) {
-      restPart = isId
-        ? `Lo udah istirahat 3 hari. Kesiapan naik (+10%) karena capek lari sebelumnya sudah pulih sepenuhnya.`
-        : `You have rested for 3 days. Readiness is boosted (+10%) as training fatigue has fully cleared.`;
-    } else if (daysSinceLastRun >= 4 || daysSinceLastRun === null) {
-      const dayText = daysSinceLastRun === null 
-        ? (isId ? 'beberapa hari' : 'several days') 
-        : `${daysSinceLastRun} hari`;
-      restPart = isId
-        ? `Lo udah istirahat ${dayText}. Kesiapan fisik pulih maksimal (+15% bonus, minimal 80%) karena tidak ada kelelahan lari aktif.`
-        : `You have rested for ${dayText}. Physical readiness is fully restored (+15% bonus, minimum 80%) as there is zero active fatigue from running.`;
+        ? `Sisa waktu pemulihan (Recovery Time) lo masih ${recoveryRemainingHours} jam. Ada penyesuaian skor karena sisa kelelahan otot.`
+        : `Your remaining Recovery Time is ${recoveryRemainingHours} hours. There is a score adjustment due to residual muscle fatigue.`;
     }
 
     let actionPart = '';
@@ -3306,6 +3373,11 @@ export default function App() {
                           <div className="readiness-dial-label" style={{ color: rColor }}>
                             {trainingReadinessScore >= 80 ? (lang === 'id' ? 'Prima' : 'Prime') : trainingReadinessScore >= 60 ? (lang === 'id' ? 'Cukup' : 'Fair') : (lang === 'id' ? 'Rendah' : 'Low')}
                           </div>
+                          {recoveryRemainingHours > 0 && (
+                            <div style={{ marginTop: '4px', padding: '2px 8px', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold' }}>
+                              ⏱️ Recov: {recoveryRemainingHours}h
+                            </div>
+                          )}
                         </div>
                         <div style={{ flex: 1 }}>
                           <h3 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
@@ -3512,6 +3584,11 @@ export default function App() {
                           <div className="readiness-dial-label" style={{ color: rColor }}>
                             {trainingReadinessScore >= 80 ? (lang === 'id' ? 'Prima' : 'Prime') : trainingReadinessScore >= 60 ? (lang === 'id' ? 'Cukup' : 'Fair') : (lang === 'id' ? 'Rendah' : 'Low')}
                           </div>
+                          {recoveryRemainingHours > 0 && (
+                            <div style={{ marginTop: '4px', padding: '2px 8px', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold' }}>
+                              ⏱️ Recov: {recoveryRemainingHours}h
+                            </div>
+                          )}
                         </div>
                         <div style={{ flex: 1 }}>
                           <h3 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>

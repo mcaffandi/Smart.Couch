@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { Lock } from 'lucide-react';
-import { collection, getDocs, getDocsFromServer, deleteDoc, doc, addDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, getDocs, getDocsFromServer, getDoc, setDoc, deleteDoc, doc, addDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from './firebase';
 import ReactQuill from 'react-quill';
@@ -14,6 +14,9 @@ export default function AdminDashboard({ onBack }) {
   const [loading, setLoading] = useState(true);
   
   const [adminTab, setAdminTab] = useState('overview');
+  
+  const [globalSettings, setGlobalSettings] = useState({ stravaSyncMode: 'fast' });
+  const [savingSettings, setSavingSettings] = useState(false);
 
   const [showBlogForm, setShowBlogForm] = useState(false);
   const [blogPosting, setBlogPosting] = useState(false);
@@ -101,6 +104,16 @@ export default function AdminDashboard({ onBack }) {
         console.error("Gagal ambil data blogs:", err);
       }
 
+      // Fetch settings
+      try {
+        const settingsSnap = await getDoc(doc(db, "settings", "global"));
+        if (settingsSnap.exists()) {
+          setGlobalSettings(settingsSnap.data());
+        }
+      } catch (err) {
+        console.error("Gagal ambil data settings:", err);
+      }
+
       setLoading(false);
     };
     fetchData();
@@ -114,6 +127,18 @@ export default function AdminDashboard({ onBack }) {
       alert("PIN Salah!");
       setPin('');
     }
+  };
+
+  const handleSaveSettings = async () => {
+    setSavingSettings(true);
+    try {
+      await setDoc(doc(db, "settings", "global"), globalSettings, { merge: true });
+      alert("Pengaturan berhasil disimpan.");
+    } catch (err) {
+      console.error(err);
+      alert("Gagal menyimpan pengaturan.");
+    }
+    setSavingSettings(false);
   };
 
   const handleDeleteUser = async (userId) => {
@@ -247,6 +272,12 @@ export default function AdminDashboard({ onBack }) {
             >
               Kelola Artikel
             </button>
+            <button 
+              onClick={() => { setAdminTab('settings'); setShowBlogForm(false); }} 
+              style={{ background: adminTab === 'settings' ? 'var(--text-primary)' : 'transparent', color: adminTab === 'settings' ? 'var(--bg-base)' : 'var(--text-secondary)', border: 'none', padding: '6px 16px', borderRadius: 20, cursor: 'pointer', fontWeight: 600, fontSize: 13, transition: 'all 0.2s' }}
+            >
+              Pengaturan
+            </button>
           </div>
         </div>
         
@@ -348,6 +379,35 @@ export default function AdminDashboard({ onBack }) {
               </table>
             </div>
           </div>
+        </div>
+      )}
+
+      {adminTab === 'settings' && (
+        <div className="animate-fade-in" style={{ background: 'var(--bg-card)', padding: 32, borderRadius: 16, border: '1px solid var(--border)' }}>
+          <h3 style={{ margin: 0, fontSize: 24, marginBottom: 24 }}>Pengaturan Sistem</h3>
+          
+          <div style={{ marginBottom: 24 }}>
+            <label style={{ display: 'block', marginBottom: 8, fontWeight: 600, fontSize: 14 }}>Strava Sync Mode</label>
+            <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 12 }}>Pilih berapa banyak aktivitas yang ditarik setiap kali pengguna login atau memicu sync.</p>
+            <select 
+              className="form-input" 
+              value={globalSettings.stravaSyncMode || 'fast'} 
+              onChange={e => setGlobalSettings({...globalSettings, stravaSyncMode: e.target.value})}
+              style={{ width: '100%', padding: '12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-surface)', color: 'var(--text-primary)', fontSize: 15 }}
+            >
+              <option value="fast">Fast Sync (5 Aktivitas Terbaru) - Rekomendasi</option>
+              <option value="full">Full Sync (200 Aktivitas)</option>
+            </select>
+          </div>
+
+          <button 
+            className="btn btn-primary" 
+            onClick={handleSaveSettings}
+            disabled={savingSettings}
+            style={{ padding: '12px 24px', fontSize: 15 }}
+          >
+            {savingSettings ? 'Menyimpan...' : 'Simpan Pengaturan'}
+          </button>
         </div>
       )}
 
