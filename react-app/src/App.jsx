@@ -122,6 +122,8 @@ export default function App() {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showSyncModal, setShowSyncModal] = useState(false);
   const [syncedRuns, setSyncedRuns] = useState([]);
+  const [notifications, setNotifications] = useState([]);
+  const [showNotifMenu, setShowNotifMenu] = useState(false);
   const [showExportGuide, setShowExportGuide] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [showAdmin, setShowAdmin] = useState(window.location.hash.toLowerCase() === '#admin');
@@ -587,6 +589,35 @@ export default function App() {
           if (addedCount > 0) {
             setSyncedRuns(recentlyAdded);
             setShowSyncModal(true);
+            
+            // Calculate added recovery for notification
+            const userMaxHr = actualMaxHR || (220 - (age || 30));
+            let totalAddedHours = 0;
+            recentlyAdded.forEach(r => {
+              const durationHours = (r.duration || 0) / 3600000;
+              let added = durationHours * 24;
+              if (r.avgHr) {
+                const intensity = r.avgHr / userMaxHr;
+                if (intensity < 0.65) added = durationHours * 12;
+                else if (intensity < 0.75) added = durationHours * 24;
+                else if (intensity < 0.85) added = durationHours * 36;
+                else added = durationHours * 48;
+              }
+              totalAddedHours += added;
+            });
+            
+            setNotifications(prev => [
+              {
+                id: Date.now(),
+                title: lang === 'id' ? 'Sinkronisasi Selesai' : 'Sync Complete',
+                message: lang === 'id' 
+                  ? `Data lari baru berhasil di-sync. Beban latihan kamu bertambah sekitar ${Math.round(totalAddedHours)} jam waktu pemulihan.`
+                  : `New runs synced. Your training load increased by roughly ${Math.round(totalAddedHours)} hours of recovery time.`,
+                time: Date.now(),
+                read: false
+              },
+              ...prev
+            ]);
           }
           mergedRuns.sort((a,b) => a.startTimeLocal - b.startTimeLocal);
           
@@ -661,7 +692,8 @@ export default function App() {
     const events = [];
     runActs.forEach(r => {
       if (r.startTimeLocal) {
-        events.push({ type: 'run', time: r.startTimeLocal, data: r });
+        const endTime = r.startTimeLocal + (r.duration || 0);
+        events.push({ type: 'run', time: endTime, data: r });
       }
     });
     
@@ -1529,11 +1561,49 @@ export default function App() {
       }
 
       setData(prev => {
+        let recentlyAdded = [];
+        newRuns.forEach(nr => {
+          const exists = (prev.running_activities || []).find(er => Math.abs(er.startTimeLocal - nr.startTimeLocal) < 60000);
+          if (!exists) recentlyAdded.push(nr);
+        });
+        
         const mergedData = mergeData(prev, { running_activities: newRuns, sleep_records: {}, max_hr: 0 });
         mergedData.running_activities.sort((a,b) => b.startTimeLocal - a.startTimeLocal); // Sort newest first
         
-        let addedCount = mergedData.running_activities.length - (prev.running_activities?.length || 0);
-        if (addedCount < 0) addedCount = 0;
+        let addedCount = recentlyAdded.length;
+        
+        if (addedCount > 0) {
+          setSyncedRuns(recentlyAdded);
+          setShowSyncModal(true);
+          
+          const userMaxHr = actualMaxHR || (220 - (age || 30));
+          let totalAddedHours = 0;
+          recentlyAdded.forEach(r => {
+            const durationHours = (r.duration || 0) / 3600000;
+            let added = durationHours * 24;
+            if (r.avgHr) {
+              const intensity = r.avgHr / userMaxHr;
+              if (intensity < 0.65) added = durationHours * 12;
+              else if (intensity < 0.75) added = durationHours * 24;
+              else if (intensity < 0.85) added = durationHours * 36;
+              else added = durationHours * 48;
+            }
+            totalAddedHours += added;
+          });
+          
+          setNotifications(prevNotifs => [
+            {
+              id: Date.now(),
+              title: lang === 'id' ? 'Sinkronisasi Selesai' : 'Sync Complete',
+              message: lang === 'id' 
+                ? `Data lari baru berhasil di-sync. Beban latihan kamu bertambah sekitar ${Math.round(totalAddedHours)} jam waktu pemulihan.`
+                : `New runs synced. Your training load increased by roughly ${Math.round(totalAddedHours)} hours of recovery time.`,
+              time: Date.now(),
+              read: false
+            },
+            ...prevNotifs
+          ]);
+        }
 
         const updated = { 
           ...prev, 
@@ -3206,14 +3276,69 @@ export default function App() {
                 </p>
               </div>
             </div>
-            <button 
-              onClick={() => setTab('blog')} 
-              style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', fontWeight: 600, fontSize: 14, cursor: 'pointer', transition: 'color 0.2s', marginTop: 4 }}
-              onMouseOver={e => e.target.style.color = 'var(--text-primary)'}
-              onMouseOut={e => e.target.style.color = 'var(--text-secondary)'}
-            >
-              Blog
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+              <div style={{ position: 'relative' }}>
+                <button 
+                  onClick={() => setShowNotifMenu(!showNotifMenu)}
+                  style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 4 }}
+                  onMouseOver={e => e.currentTarget.style.color = 'var(--text-primary)'}
+                  onMouseOut={e => e.currentTarget.style.color = 'var(--text-secondary)'}
+                >
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                  </svg>
+                  {notifications.filter(n => !n.read).length > 0 && (
+                    <div style={{ position: 'absolute', top: 2, right: 4, width: 8, height: 8, background: '#ef4444', borderRadius: '50%', border: '2px solid var(--bg-base)' }}></div>
+                  )}
+                </button>
+                
+                {showNotifMenu && (
+                  <div className="animate-fade-in" style={{ position: 'absolute', top: '100%', right: 0, marginTop: 12, width: 320, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 16, boxShadow: '0 8px 32px rgba(0,0,0,0.4)', zIndex: 100, overflow: 'hidden' }}>
+                    <div style={{ padding: '16px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <h4 style={{ margin: 0, fontSize: 14 }}>{lang === 'id' ? 'Notifikasi' : 'Notifications'}</h4>
+                      {notifications.length > 0 && (
+                        <button 
+                          onClick={() => setNotifications(notifications.map(n => ({...n, read: true})))}
+                          style={{ background: 'transparent', border: 'none', color: '#10b981', fontSize: 12, cursor: 'pointer', fontWeight: 600 }}
+                        >
+                          {lang === 'id' ? 'Tandai Semua Dibaca' : 'Mark All Read'}
+                        </button>
+                      )}
+                    </div>
+                    <div style={{ maxHeight: 350, overflowY: 'auto' }}>
+                      {notifications.length === 0 ? (
+                        <div style={{ padding: 32, textAlign: 'center', color: 'var(--text-secondary)', fontSize: 13 }}>
+                          {lang === 'id' ? 'Belum ada notifikasi.' : 'No notifications yet.'}
+                        </div>
+                      ) : (
+                        notifications.map(notif => (
+                          <div key={notif.id} onClick={() => setNotifications(notifications.map(n => n.id === notif.id ? {...n, read: true} : n))} style={{ padding: '16px', borderBottom: '1px solid var(--border)', background: notif.read ? 'transparent' : 'rgba(16, 185, 129, 0.05)', cursor: 'pointer', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                            <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: 8, borderRadius: 8, color: '#10b981' }}>
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                            </div>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 4, color: notif.read ? 'var(--text-primary)' : '#10b981' }}>{notif.title}</div>
+                              <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.5 }}>{notif.message}</div>
+                              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 6 }}>{new Date(notif.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              <button 
+                onClick={() => setTab('blog')} 
+                style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', fontWeight: 600, fontSize: 14, cursor: 'pointer', transition: 'color 0.2s' }}
+                onMouseOver={e => e.target.style.color = 'var(--text-primary)'}
+                onMouseOut={e => e.target.style.color = 'var(--text-secondary)'}
+              >
+                Blog
+              </button>
+            </div>
           </div>
         )}
 
@@ -3374,8 +3499,26 @@ export default function App() {
                             {trainingReadinessScore >= 80 ? (lang === 'id' ? 'Prima' : 'Prime') : trainingReadinessScore >= 60 ? (lang === 'id' ? 'Cukup' : 'Fair') : (lang === 'id' ? 'Rendah' : 'Low')}
                           </div>
                           {recoveryRemainingHours > 0 && (
-                            <div style={{ marginTop: '4px', padding: '2px 8px', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold' }}>
-                              ⏱️ Recov: {recoveryRemainingHours}h
+                            <div style={{ 
+                              marginTop: '6px', 
+                              padding: '4px 10px', 
+                              background: 'rgba(245, 158, 11, 0.1)', 
+                              color: '#f59e0b', 
+                              border: '1px solid rgba(245, 158, 11, 0.2)',
+                              borderRadius: '12px', 
+                              fontSize: '11px', 
+                              fontWeight: '600',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '4px'
+                            }}>
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M5 22h14"></path>
+                                <path d="M5 2h14"></path>
+                                <path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"></path>
+                                <path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"></path>
+                              </svg>
+                              {lang === 'id' ? 'Pemulihan:' : 'Recovery:'} {recoveryRemainingHours}h
                             </div>
                           )}
                         </div>
@@ -3585,8 +3728,26 @@ export default function App() {
                             {trainingReadinessScore >= 80 ? (lang === 'id' ? 'Prima' : 'Prime') : trainingReadinessScore >= 60 ? (lang === 'id' ? 'Cukup' : 'Fair') : (lang === 'id' ? 'Rendah' : 'Low')}
                           </div>
                           {recoveryRemainingHours > 0 && (
-                            <div style={{ marginTop: '4px', padding: '2px 8px', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold' }}>
-                              ⏱️ Recov: {recoveryRemainingHours}h
+                            <div style={{ 
+                              marginTop: '6px', 
+                              padding: '4px 10px', 
+                              background: 'rgba(245, 158, 11, 0.1)', 
+                              color: '#f59e0b', 
+                              border: '1px solid rgba(245, 158, 11, 0.2)',
+                              borderRadius: '12px', 
+                              fontSize: '11px', 
+                              fontWeight: '600',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '4px'
+                            }}>
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M5 22h14"></path>
+                                <path d="M5 2h14"></path>
+                                <path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"></path>
+                                <path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"></path>
+                              </svg>
+                              {lang === 'id' ? 'Pemulihan:' : 'Recovery:'} {recoveryRemainingHours}h
                             </div>
                           )}
                         </div>
