@@ -719,10 +719,11 @@ export default function App() {
         let addedHours = durationHours * 24; // default
         if (ev.data.avgHr) {
           const intensity = ev.data.avgHr / userMaxHr;
-          if (intensity < 0.65) addedHours = durationHours * 12;
-          else if (intensity < 0.75) addedHours = durationHours * 24;
-          else if (intensity < 0.85) addedHours = durationHours * 36;
-          else addedHours = durationHours * 48;
+          if (intensity < 0.60) addedHours = durationHours * 4;
+          else if (intensity < 0.70) addedHours = durationHours * 10;
+          else if (intensity < 0.80) addedHours = durationHours * 16;
+          else if (intensity < 0.90) addedHours = durationHours * 24;
+          else addedHours = durationHours * 36;
         }
         currentRecoveryMs += (addedHours * 3600000);
       } else if (ev.type === 'sleep') {
@@ -1583,10 +1584,11 @@ export default function App() {
             let added = durationHours * 24;
             if (r.avgHr) {
               const intensity = r.avgHr / userMaxHr;
-              if (intensity < 0.65) added = durationHours * 12;
-              else if (intensity < 0.75) added = durationHours * 24;
-              else if (intensity < 0.85) added = durationHours * 36;
-              else added = durationHours * 48;
+              if (intensity < 0.60) added = durationHours * 4;
+              else if (intensity < 0.70) added = durationHours * 10;
+              else if (intensity < 0.80) added = durationHours * 16;
+              else if (intensity < 0.90) added = durationHours * 24;
+              else added = durationHours * 36;
             }
             totalAddedHours += added;
           });
@@ -3518,7 +3520,7 @@ export default function App() {
                                 <path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"></path>
                                 <path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"></path>
                               </svg>
-                              {lang === 'id' ? 'Pemulihan:' : 'Recovery:'} {recoveryRemainingHours}h
+                              {lang === 'id' ? 'Sisa:' : 'Left:'} {recoveryRemainingHours}h
                             </div>
                           )}
                         </div>
@@ -3747,7 +3749,7 @@ export default function App() {
                                 <path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"></path>
                                 <path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"></path>
                               </svg>
-                              {lang === 'id' ? 'Pemulihan:' : 'Recovery:'} {recoveryRemainingHours}h
+                              {lang === 'id' ? 'Sisa:' : 'Left:'} {recoveryRemainingHours}h
                             </div>
                           )}
                         </div>
