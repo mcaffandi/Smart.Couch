@@ -1996,10 +1996,16 @@ export default function App() {
     setSidebarOpen(false);
   };
 
-  // ── Save manual sleep ─────────────────────────────────────────────────────────
   const saveManualSleep = () => {
     const scoreMap = { pulas: 90, cukup: 75, kurang: 55, begadang: 30 };
-    const score = scoreMap[manualSleep.quality] ?? 75;
+    const baseScore = scoreMap[manualSleep.quality] ?? 75;
+    
+    // Add random variance (-4 to +4) to make scores look organic and varied
+    const variance = Math.floor(Math.random() * 9) - 4;
+    let score = baseScore + variance;
+    if (score > 100) score = 100;
+    if (score < 10) score = 10;
+    
     const duration = (manualSleep.sleepHours || 0) + ((manualSleep.sleepMinutes || 0) / 60);
     const updated = {
       ...data,
