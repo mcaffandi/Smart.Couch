@@ -3277,6 +3277,15 @@ export default function App() {
               </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+              <button 
+                onClick={() => setTab('blog')} 
+                style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', fontWeight: 600, fontSize: 14, cursor: 'pointer', transition: 'color 0.2s' }}
+                onMouseOver={e => e.target.style.color = 'var(--text-primary)'}
+                onMouseOut={e => e.target.style.color = 'var(--text-secondary)'}
+              >
+                Blog
+              </button>
+              
               <div style={{ position: 'relative' }}>
                 <button 
                   onClick={() => setShowNotifMenu(!showNotifMenu)}
@@ -3329,15 +3338,6 @@ export default function App() {
                   </div>
                 )}
               </div>
-              
-              <button 
-                onClick={() => setTab('blog')} 
-                style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', fontWeight: 600, fontSize: 14, cursor: 'pointer', transition: 'color 0.2s' }}
-                onMouseOver={e => e.target.style.color = 'var(--text-primary)'}
-                onMouseOut={e => e.target.style.color = 'var(--text-secondary)'}
-              >
-                Blog
-              </button>
             </div>
           </div>
         )}
