@@ -86,6 +86,9 @@ export default function AdminDashboard({ onBack }) {
         setUsers(usersData);
       } catch (err) {
         console.error("Gagal ambil data users:", err);
+        if (err.code === 'permission-denied') {
+          alert("Akses Ditolak: Anda login dengan email yang bukan Admin. Anda bisa mengakses dashboard, tapi data pengguna disembunyikan oleh Firebase Security Rules.");
+        }
       }
 
       // Fetch blogs

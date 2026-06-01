@@ -329,7 +329,8 @@ export default function App() {
     if (username !== userIdentifier) return;
 
     try {
-      const userDocRef = doc(db, 'users', auth.currentUser.uid);
+      const userDocId = auth.currentUser.email ? auth.currentUser.email.toLowerCase() : auth.currentUser.uid;
+      const userDocRef = doc(db, 'users', userDocId);
       const userDocSnap = await getDoc(userDocRef);
       if (userDocSnap.exists()) {
         const cloudData = userDocSnap.data();
@@ -423,7 +424,8 @@ export default function App() {
           });
         }
 
-        const userDocRef = doc(db, 'users', auth.currentUser.uid);
+        const userDocId = auth.currentUser.email ? auth.currentUser.email.toLowerCase() : auth.currentUser.uid;
+        const userDocRef = doc(db, 'users', userDocId);
         setDoc(userDocRef, dataToSave).catch(e => {
           console.error('Failed to sync save to Firestore:', e);
         });

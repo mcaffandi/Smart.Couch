@@ -38,10 +38,10 @@ service cloud.firestore {
     }
     
     match /users/{userId} {
-      // INI YANG PALING PENTING UNTUK ADMIN DASHBOARD:
+      // INI YANG PALING PENTING UNTUK ADMIN DASHBOARD & SINKRONISASI DATA:
       // User HANYA bisa mengakses datanya sendiri, KECUALI dia adalah Admin.
-      // Admin punya hak akses dewa untuk membaca semua data pelari.
-      allow read, write: if request.auth != null && (request.auth.uid == userId || isAdmin());
+      // userId sekarang bisa berupa email (untuk menyatukan akun) atau UID.
+      allow read, write: if request.auth != null && (request.auth.uid == userId || request.auth.token.email.lower() == userId || isAdmin());
     }
     
     match /stats/{doc} {
