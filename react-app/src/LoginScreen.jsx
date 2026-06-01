@@ -154,6 +154,13 @@ export default function LoginScreen({ onLoginSuccess, usersList, addToast, lang 
     if (loading) return;
     setLoading(true);
     try {
+      const lastEmail = localStorage.getItem('smartcoach_last_email');
+      if (lastEmail) {
+        googleProvider.setCustomParameters({ login_hint: lastEmail });
+      } else {
+        googleProvider.setCustomParameters({});
+      }
+      
       const result = await signInWithPopup(auth, googleProvider);
       addToast(lang === 'id' ? `Selamat datang, ${result.user.displayName || 'User'}!` : `Welcome, ${result.user.displayName || 'User'}!`);
       const userIdentifier = result.user.email || result.user.displayName;
@@ -296,6 +303,21 @@ export default function LoginScreen({ onLoginSuccess, usersList, addToast, lang 
               </button>
             </div>
           </>
+        )}
+
+        {localStorage.getItem('smartcoach_last_email') && isFirebaseConfigured && (
+          <div style={{ textAlign: 'center', marginTop: 12 }}>
+            <button 
+              onClick={() => {
+                localStorage.removeItem('smartcoach_last_email');
+                addToast(lang === 'id' ? 'Cache Google Account dibersihkan!' : 'Google Account cache cleared!');
+                setTimeout(() => window.location.reload(), 1000);
+              }}
+              style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 11, textDecoration: 'underline', cursor: 'pointer' }}
+            >
+              {lang === 'id' ? 'Ganti Akun Google (Hapus Cache)' : 'Switch Google Account (Clear Cache)'}
+            </button>
+          </div>
         )}
 
         <div className="login-footer" style={{ marginTop: 20 }}>

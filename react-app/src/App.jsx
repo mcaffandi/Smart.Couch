@@ -81,6 +81,7 @@ const ADMIN_EMAILS = ['m.c.affandi@gmail.com', 'affanbelajar@gmail.com'];
 export default function App() {
   // ── State: data ─────────────────────────────────────────────────────────────
   const [sessionUser, setSessionUser] = useState(() => sessionStorage.getItem('smartcoach_session') || null);
+  const [isAuthReady, setIsAuthReady] = useState(false);
   const [currentUser, setCurrentUser] = useState(() => getCurrentUser());
   const isAdmin = Boolean(currentUser && ADMIN_EMAILS.some(e => e.toLowerCase() === currentUser.trim().toLowerCase()));
   const [usersList, setUsersList] = useState(() => loadUsersList());
@@ -187,6 +188,9 @@ export default function App() {
         const userIdentifier = fbUser.email || fbUser.displayName || `Anonim-${fbUser.uid.substring(0, 4)}`;
         setSessionUser(userIdentifier);
         sessionStorage.setItem('smartcoach_session', userIdentifier);
+        if (fbUser.email) {
+          localStorage.setItem('smartcoach_last_email', fbUser.email);
+        }
 
         setUsersList(prev => {
           if (!prev.includes(userIdentifier)) {
@@ -213,7 +217,11 @@ export default function App() {
         setSelectedDays(uData.profile?.selectedDays ?? ['Selasa', 'Kamis', 'Sabtu']);
         
         syncFromFirestore(userIdentifier);
+      } else {
+        setSessionUser(null);
+        sessionStorage.removeItem('smartcoach_session');
       }
+      setIsAuthReady(true);
     });
 
     return () => unsubscribe();
@@ -2089,6 +2097,19 @@ export default function App() {
             <BlogModule isAdmin={showAdmin} lang={lang} onViewChange={setBlogView} currentUser={currentUser} searchQuery={blogSearch} />
           </ErrorBoundary>
         </div>
+      </div>
+    );
+  }
+
+  if (!isAuthReady) {
+    return (
+      <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-base)' }}>
+        <div style={{ display: 'flex', gap: 6 }}>
+          <div className="typing-dot" style={{ width: 12, height: 12, background: 'var(--accent-purple)', borderRadius: '50%', animation: 'blink 1.4s infinite both' }} />
+          <div className="typing-dot" style={{ width: 12, height: 12, background: 'var(--accent-purple)', borderRadius: '50%', animation: 'blink 1.4s infinite both', animationDelay: '0.2s' }} />
+          <div className="typing-dot" style={{ width: 12, height: 12, background: 'var(--accent-purple)', borderRadius: '50%', animation: 'blink 1.4s infinite both', animationDelay: '0.4s' }} />
+        </div>
+        <style dangerouslySetInnerHTML={{__html:`@keyframes blink { 0% { opacity: 0.2; } 20% { opacity: 1; } 100% { opacity: 0.2; } }`}} />
       </div>
     );
   }
