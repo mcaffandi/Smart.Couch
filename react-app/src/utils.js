@@ -552,30 +552,51 @@ export const mergeData = (existing, incoming) => {
     const existingIndex = merged.findIndex(ex => {
       const timeDiff = Math.abs(ex.startTimeLocal - a.startTimeLocal);
       const isTimeMatch = timeDiff < 60000;
-      
-      // Auto-fix for previous +7/+8/+9 timezone bug: detect same activity by identical distance & duration
       const isSameStats = Math.abs(ex.distance - a.distance) < 5000 && Math.abs(ex.duration - a.duration) < 10000;
       const isBuggyTimezoneMatch = isSameStats && timeDiff > 0 && timeDiff < 24 * 3600 * 1000;
-
       return isTimeMatch || isBuggyTimezoneMatch;
     });
 
     if (existingIndex === -1) {
       merged.push(a);
     } else {
-      // Overwrite existing with incoming (since incoming has the correct UTC time now)
       merged[existingIndex] = { 
         ...a, 
         route: a.route || merged[existingIndex].route || null,
-        name: (merged[existingIndex].name && merged[existingIndex].name !== 'Running Session' && merged[existingIndex].name !== 'Sesi Lari' && merged[existingIndex].name !== 'Morning Run' && merged[existingIndex].name !== 'Afternoon Run' && merged[existingIndex].name !== 'Evening Run' && merged[existingIndex].name !== 'Night Run') 
+        name: (merged[existingIndex].name && !['Running Session', 'Sesi Lari', 'Morning Run', 'Afternoon Run', 'Evening Run', 'Night Run'].includes(merged[existingIndex].name)) 
               ? merged[existingIndex].name 
               : (a.name || null) 
       };
     }
   }
 
+  // Final deduplication pass to clean up any historically saved duplicates in existing data
+  const uniqueRuns = [];
+  merged.forEach(run => {
+    const existingIndex = uniqueRuns.findIndex(ex => {
+      const timeDiff = Math.abs(ex.startTimeLocal - run.startTimeLocal);
+      const isTimeMatch = timeDiff < 60000;
+      const isSameStats = Math.abs(ex.distance - run.distance) < 5000 && Math.abs(ex.duration - run.duration) < 10000;
+      const isBuggyTimezoneMatch = isSameStats && timeDiff > 0 && timeDiff < 24 * 3600 * 1000;
+      return isTimeMatch || isBuggyTimezoneMatch;
+    });
+
+    if (existingIndex === -1) {
+      uniqueRuns.push(run);
+    } else {
+      // Merge best properties if it's a duplicate
+      uniqueRuns[existingIndex] = {
+        ...uniqueRuns[existingIndex],
+        route: uniqueRuns[existingIndex].route || run.route || null,
+        name: (uniqueRuns[existingIndex].name && !['Running Session', 'Sesi Lari', 'Morning Run', 'Afternoon Run', 'Evening Run', 'Night Run'].includes(uniqueRuns[existingIndex].name))
+              ? uniqueRuns[existingIndex].name
+              : (run.name || null)
+      };
+    }
+  });
+
   return {
-    running_activities: merged,
+    running_activities: uniqueRuns,
     sleep_records: { ...existing.sleep_records, ...incoming.sleep_records },
     max_hr: Math.max(existing.max_hr || 0, incoming.max_hr || 0),
   };
