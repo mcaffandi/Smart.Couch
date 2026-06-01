@@ -49,6 +49,15 @@ service cloud.firestore {
       allow read, write: if true;
     }
     
+    match /feedback/{feedbackId} {
+      // Semua orang boleh membaca testimoni
+      allow read: if true;
+      // User yang login boleh mengirim testimoni
+      allow create: if request.auth != null;
+      // Hanya Admin yang boleh mengedit (misalnya mengubah status 'featured') atau menghapus
+      allow update, delete: if isAdmin();
+    }
+    
     match /{document=**} {
       // Kunci mati semua koleksi lain yang tidak dideklarasikan di atas
       allow read, write: if false;
