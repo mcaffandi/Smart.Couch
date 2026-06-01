@@ -77,6 +77,39 @@ function NumberInput({ value, onChange, min, max, step = 1, label }) {
 }
 const ADMIN_EMAILS = ['m.c.affandi@gmail.com', 'affanbelajar@gmail.com'];
 
+const LiveCountdown = ({ endTimestamp, lang }) => {
+  const [timeLeft, setTimeLeft] = useState(() => Math.max(0, endTimestamp - Date.now()));
+
+  useEffect(() => {
+    if (!endTimestamp) return;
+    
+    // Initial update in case time passed between render and mount
+    setTimeLeft(Math.max(0, endTimestamp - Date.now()));
+    
+    const interval = setInterval(() => {
+      const remaining = Math.max(0, endTimestamp - Date.now());
+      setTimeLeft(remaining);
+      if (remaining <= 0) clearInterval(interval);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [endTimestamp]);
+
+  if (!endTimestamp || timeLeft <= 0) return <span>{lang === 'id' ? 'Selesai' : 'Done'}</span>;
+
+  const totalSeconds = Math.floor(timeLeft / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  
+  const pad = (n) => n.toString().padStart(2, '0');
+
+  return (
+    <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+      {lang === 'id' ? 'Sisa:' : 'Left:'} {hours > 0 ? `${hours}h ` : ''}{pad(minutes)}m {pad(seconds)}s
+    </span>
+  );
+};
+
 // ─── Main App ─────────────────────────────────────────────────────────────────
 export default function App() {
   // ── State: data ─────────────────────────────────────────────────────────────
@@ -741,8 +774,8 @@ export default function App() {
   }, [runActs]);
 
   // Calculate recovery remaining hours based on runs and sleep
-  const recoveryRemainingHours = useMemo(() => {
-    if (!runActs || !runActs.length) return 0;
+  const { recoveryRemainingHours, recoveryEndTimestamp } = useMemo(() => {
+    if (!runActs || !runActs.length) return { recoveryRemainingHours: 0, recoveryEndTimestamp: null };
     
     const events = [];
     runActs.forEach(r => {
@@ -800,7 +833,10 @@ export default function App() {
       currentRecoveryMs = Math.max(0, currentRecoveryMs - timePassed);
     }
     
-    return Math.max(0, Math.round(currentRecoveryMs / 3600000));
+    return {
+      recoveryRemainingHours: Math.max(0, Math.round(currentRecoveryMs / 3600000)),
+      recoveryEndTimestamp: currentRecoveryMs > 0 ? Date.now() + currentRecoveryMs : null
+    };
   }, [runActs, sleepRecs, actualMaxHR, age]);
 
   // Adjust readiness score based on sleep score and running fatigue/rest
@@ -3582,7 +3618,7 @@ export default function App() {
                           <div className="readiness-dial-label" style={{ color: rColor }}>
                             {trainingReadinessScore >= 80 ? (lang === 'id' ? 'Prima' : 'Prime') : trainingReadinessScore >= 60 ? (lang === 'id' ? 'Cukup' : 'Fair') : (lang === 'id' ? 'Rendah' : 'Low')}
                           </div>
-                          {recoveryRemainingHours > 0 && (
+                          {recoveryEndTimestamp && (
                             <div style={{ 
                               marginTop: '6px', 
                               padding: '4px 10px', 
@@ -3602,7 +3638,7 @@ export default function App() {
                                 <path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"></path>
                                 <path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"></path>
                               </svg>
-                              {lang === 'id' ? 'Sisa:' : 'Left:'} {recoveryRemainingHours}h
+                              <LiveCountdown endTimestamp={recoveryEndTimestamp} lang={lang} />
                             </div>
                           )}
                         </div>
@@ -3811,7 +3847,7 @@ export default function App() {
                           <div className="readiness-dial-label" style={{ color: rColor }}>
                             {trainingReadinessScore >= 80 ? (lang === 'id' ? 'Prima' : 'Prime') : trainingReadinessScore >= 60 ? (lang === 'id' ? 'Cukup' : 'Fair') : (lang === 'id' ? 'Rendah' : 'Low')}
                           </div>
-                          {recoveryRemainingHours > 0 && (
+                          {recoveryEndTimestamp && (
                             <div style={{ 
                               marginTop: '6px', 
                               padding: '4px 10px', 
@@ -3831,7 +3867,7 @@ export default function App() {
                                 <path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"></path>
                                 <path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"></path>
                               </svg>
-                              {lang === 'id' ? 'Sisa:' : 'Left:'} {recoveryRemainingHours}h
+                              <LiveCountdown endTimestamp={recoveryEndTimestamp} lang={lang} />
                             </div>
                           )}
                         </div>
