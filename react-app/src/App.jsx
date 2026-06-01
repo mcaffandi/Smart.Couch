@@ -2275,15 +2275,19 @@ export default function App() {
       ? `Berdasarkan rekaman tidur terakhir (${latestSleepDate}), kualitas tidur lo berada di skor ${latestSleepScore}%. `
       : `Based on your latest sleep record (${latestSleepDate}), your sleep quality score is ${latestSleepScore}%. `;
 
-    let restPart = '';
-    if (recoveryRemainingHours === 0) {
+    let restPart;
+    if (!recoveryEndTimestamp) {
       restPart = isId
         ? `Otot lo udah pulih 100% dari sesi lari terakhir (0 jam sisa recovery). Kesiapan fisik pulih maksimal.`
         : `Your muscles have fully recovered from the last run (0 hours remaining). Physical readiness is at maximum.`;
     } else {
-      restPart = isId
-        ? `Sisa waktu pemulihan (Recovery Time) lo masih ${recoveryRemainingHours} jam. Ada penyesuaian skor karena sisa kelelahan otot.`
-        : `Your remaining Recovery Time is ${recoveryRemainingHours} hours. There is a score adjustment due to residual muscle fatigue.`;
+      restPart = (
+        <span>
+          {isId ? 'Sisa waktu pemulihan (Recovery Time) lo masih ' : 'Your remaining Recovery Time is '}
+          <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}><LiveCountdown endTimestamp={recoveryEndTimestamp} lang={lang} /></span>
+          {isId ? '. Ada penyesuaian skor karena sisa kelelahan otot.' : '. There is a score adjustment due to residual muscle fatigue.'}
+        </span>
+      );
     }
 
     let actionPart = '';
