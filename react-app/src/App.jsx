@@ -396,8 +396,49 @@ export default function App() {
           console.error('Failed to update synced data back to Firestore:', e);
         });
       } else {
-        const localData = loadUserData(username);
-        await setDoc(userDocRef, localData);
+        // Migration: Check if they have legacy data under their old UID
+        const legacyDocRef = doc(db, 'users', auth.currentUser.uid);
+        const legacySnap = await getDoc(legacyDocRef);
+        
+        let dataToSave;
+        if (legacySnap.exists()) {
+          const legacyData = legacySnap.data();
+          const localData = loadUserData(username);
+          
+          const safeAge = legacyData.profile?.age ?? localData.profile?.age ?? null;
+          const safeWeight = legacyData.profile?.weight ?? localData.profile?.weight ?? null;
+          const safeHeight = legacyData.profile?.height ?? localData.profile?.height ?? null;
+          const safeGender = legacyData.profile?.gender ?? localData.profile?.gender ?? '';
+          const safeGoal = legacyData.profile?.goal ?? localData.profile?.goal ?? 'maintenance';
+          const safeStyle = legacyData.profile?.programStyle ?? localData.profile?.programStyle ?? 'sedang';
+          const safeTargetPace = legacyData.profile?.targetPace ?? localData.profile?.targetPace ?? null;
+          const safeDays = legacyData.profile?.selectedDays ?? localData.profile?.selectedDays ?? ['Selasa', 'Kamis', 'Sabtu'];
+
+          dataToSave = {
+            ...localData,
+            ...legacyData,
+            profile: {
+              ...(localData.profile || {}),
+              ...(legacyData.profile || {}),
+            }
+          };
+
+          setData(dataToSave);
+          setAge(safeAge);
+          setDisplayName(dataToSave.profile?.displayName || '');
+          setWeight(safeWeight);
+          setHeight(safeHeight);
+          setGender(safeGender);
+          setAvatar(dataToSave.profile?.avatar || null);
+          setGoal(safeGoal);
+          setProgramStyle(safeStyle);
+          setTargetPace(safeTargetPace);
+          setSelectedDays(safeDays);
+          localStorage.setItem(`smartcoach_data_user_${username}`, JSON.stringify(dataToSave));
+        } else {
+          dataToSave = loadUserData(username);
+        }
+        await setDoc(userDocRef, dataToSave);
       }
     } catch (e) {
       console.error('Failed to sync from Firestore:', e);
