@@ -14,7 +14,6 @@ export default function FeedbackModal({ onClose, lang = 'id', addToast }) {
       try {
         if (!isFirebaseConfigured) throw new Error("Firebase not configured");
         let constraints = [
-          where('featured', '==', true),
           orderBy('createdAt', 'desc')
         ];
         if (!showAllReviews) {
@@ -235,7 +234,14 @@ export default function FeedbackModal({ onClose, lang = 'id', addToast }) {
                   <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'linear-gradient(135deg, #a78bfa, #f472b6)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 10, fontWeight: 700 }}>
                     {testi.name?.substring(0, 1).toUpperCase()}
                   </div>
-                  <div style={{ fontWeight: 600, fontSize: 12, color: 'var(--text-primary)' }}>{testi.name}</div>
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ fontWeight: 600, fontSize: 12, color: 'var(--text-primary)' }}>{testi.name}</div>
+                    <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>
+                      {testi.createdAt?.toDate 
+                        ? testi.createdAt.toDate().toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric' }) 
+                        : (testi.date || '')}
+                    </div>
+                  </div>
                   <div style={{ display: 'flex', gap: 2, marginLeft: 'auto' }}>
                     {[...Array(5)].map((_, i) => (
                       <svg key={i} width="10" height="10" viewBox="0 0 24 24" fill={i < (testi.rating || 5) ? '#fbbf24' : '#3f3f46'} stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>

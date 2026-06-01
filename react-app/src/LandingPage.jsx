@@ -13,7 +13,7 @@ export default function LandingPage({ onGetStarted, onViewBlog, lang, setLang, v
     const fetchTestimonials = async () => {
       if (!isFirebaseConfigured) return;
       try {
-        const q = query(collection(db, 'feedback'), where('featured', '==', true));
+        const q = query(collection(db, 'feedback'), orderBy('createdAt', 'desc'), limit(10));
         const querySnapshot = await getDocs(q);
         const fetched = [];
         querySnapshot.forEach((doc) => {
@@ -298,7 +298,14 @@ export default function LandingPage({ onGetStarted, onViewBlog, lang, setLang, v
                 <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg, #a78bfa, #f472b6)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 12, fontWeight: 700 }}>
                   {testi.name?.substring(0, 1).toUpperCase()}
                 </div>
-                <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)' }}>{testi.name}</div>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)' }}>{testi.name}</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                    {testi.createdAt?.toDate 
+                      ? testi.createdAt.toDate().toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric' }) 
+                      : (testi.date || '')}
+                  </div>
+                </div>
               </div>
             </div>
           ))}
