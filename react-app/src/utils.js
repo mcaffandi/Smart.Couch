@@ -552,7 +552,7 @@ export const mergeData = (existing, incoming) => {
     const existingIndex = merged.findIndex(ex => {
       const timeDiff = Math.abs(ex.startTimeLocal - a.startTimeLocal);
       const isTimeMatch = timeDiff < 60000;
-      const isSameStats = Math.abs(ex.distance - a.distance) < 5000 && Math.abs(ex.duration - a.duration) < 10000;
+      const isSameStats = Math.abs(ex.distance - a.distance) < 15000 && Math.abs(ex.duration - a.duration) < 120000;
       const isBuggyTimezoneMatch = isSameStats && timeDiff > 0 && timeDiff < 24 * 3600 * 1000;
       return isTimeMatch || isBuggyTimezoneMatch;
     });
@@ -576,7 +576,7 @@ export const mergeData = (existing, incoming) => {
     const existingIndex = uniqueRuns.findIndex(ex => {
       const timeDiff = Math.abs(ex.startTimeLocal - run.startTimeLocal);
       const isTimeMatch = timeDiff < 60000;
-      const isSameStats = Math.abs(ex.distance - run.distance) < 5000 && Math.abs(ex.duration - run.duration) < 10000;
+      const isSameStats = Math.abs(ex.distance - run.distance) < 15000 && Math.abs(ex.duration - run.duration) < 120000;
       const isBuggyTimezoneMatch = isSameStats && timeDiff > 0 && timeDiff < 24 * 3600 * 1000;
       return isTimeMatch || isBuggyTimezoneMatch;
     });
