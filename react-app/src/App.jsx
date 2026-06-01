@@ -4060,6 +4060,9 @@ export default function App() {
         currentUser={data?.profile?.displayName || currentUser} 
         runActs={runActs}
         selectedDays={selectedDays}
+        latestSleepScore={latestSleepScore}
+        recoveryRemainingHours={recoveryRemainingHours}
+        trainingReadinessScore={trainingReadinessScore}
       />
       <Toast toasts={toasts} />
     </div>
