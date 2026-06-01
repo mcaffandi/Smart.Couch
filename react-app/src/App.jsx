@@ -250,8 +250,10 @@ export default function App() {
     maxHr: 180,
   });
   const [manualSleep, setManualSleep] = useState({
+    inputType: 'score', // 'quality' or 'score'
     date: new Date().toISOString().split('T')[0],
     quality: 'cukup',
+    score: 80,
     sleepHours: 7,
     sleepMinutes: 0,
   });
@@ -1997,14 +1999,21 @@ export default function App() {
   };
 
   const saveManualSleep = () => {
-    const scoreMap = { pulas: 90, cukup: 75, kurang: 55, begadang: 30 };
-    const baseScore = scoreMap[manualSleep.quality] ?? 75;
-    
-    // Add random variance (-4 to +4) to make scores look organic and varied
-    const variance = Math.floor(Math.random() * 9) - 4;
-    let score = baseScore + variance;
-    if (score > 100) score = 100;
-    if (score < 10) score = 10;
+    let score;
+    if (manualSleep.inputType === 'score') {
+      score = parseInt(manualSleep.score) || 75;
+      if (score > 100) score = 100;
+      if (score < 10) score = 10;
+    } else {
+      const scoreMap = { pulas: 90, cukup: 75, kurang: 55, begadang: 30 };
+      const baseScore = scoreMap[manualSleep.quality] ?? 75;
+      
+      // Add random variance (-4 to +4) to make scores look organic and varied
+      const variance = Math.floor(Math.random() * 9) - 4;
+      score = baseScore + variance;
+      if (score > 100) score = 100;
+      if (score < 10) score = 10;
+    }
     
     const duration = (manualSleep.sleepHours || 0) + ((manualSleep.sleepMinutes || 0) / 60);
     const updated = {
@@ -3858,30 +3867,61 @@ export default function App() {
         <div className="profile-modal-backdrop" onClick={e => { if (e.target === e.currentTarget) setShowSleepModal(false); }}>
           <div className="animate-fade-in" style={{ background: 'var(--bg-surface)', padding: 24, borderRadius: 16, width: '100%', maxWidth: 400, boxShadow: 'var(--shadow-premium)' }}>
             <h3 style={{ marginBottom: 16 }}>{lang === 'id' ? 'Catat Tidur Semalam' : 'Log Night Sleep'}</h3>
+            
+            <div style={{ display: 'flex', gap: 8, marginBottom: 16, background: 'var(--bg-card)', padding: 4, borderRadius: 12, border: '1px solid var(--border)' }}>
+              <button
+                style={{ flex: 1, padding: '8px', borderRadius: 8, border: 'none', background: manualSleep.inputType === 'score' ? 'var(--bg-surface)' : 'transparent', color: manualSleep.inputType === 'score' ? 'var(--text-primary)' : 'var(--text-muted)', fontWeight: 600, fontSize: 13, cursor: 'pointer', transition: 'all 0.2s', boxShadow: manualSleep.inputType === 'score' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none' }}
+                onClick={() => setManualSleep(s => ({ ...s, inputType: 'score' }))}
+              >
+                {lang === 'id' ? 'Skor Akurat' : 'Exact Score'}
+              </button>
+              <button
+                style={{ flex: 1, padding: '8px', borderRadius: 8, border: 'none', background: manualSleep.inputType === 'quality' ? 'var(--bg-surface)' : 'transparent', color: manualSleep.inputType === 'quality' ? 'var(--text-primary)' : 'var(--text-muted)', fontWeight: 600, fontSize: 13, cursor: 'pointer', transition: 'all 0.2s', boxShadow: manualSleep.inputType === 'quality' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none' }}
+                onClick={() => setManualSleep(s => ({ ...s, inputType: 'quality' }))}
+              >
+                {lang === 'id' ? 'Kualitas Umum' : 'General Quality'}
+              </button>
+            </div>
+
             <div className="form-group" style={{ marginBottom: 12 }}>
               <label className="form-label">{lang === 'id' ? 'Tanggal' : 'Date'}</label>
               <input className="form-input" type="date" value={manualSleep.date} onChange={e => setManualSleep(s => ({ ...s, date: e.target.value }))} />
             </div>
-            <div className="form-group" style={{ marginBottom: 12 }}>
-              <label className="form-label">{t.sleepQuality}</label>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 8 }}>
-                {[
-                  { val: 'pulas', label: lang === 'id' ? '😴 Sangat Pulas & Segar (Score: 90)' : '😴 Deep Sleep & Refreshed (Score: 90)', col: '#10b981' },
-                  { val: 'cukup', label: lang === 'id' ? '🙂 Cukup Baik (Score: 75)' : '🙂 Okay / Normal (Score: 75)', col: '#38bdf8' },
-                  { val: 'kurang', label: lang === 'id' ? '🥱 Kurang Nyenyak (Score: 55)' : '🥱 Poor / Interrupted (Score: 55)', col: '#f59e0b' },
-                  { val: 'begadang', label: lang === 'id' ? '😫 Begadang / Sangat Kurang (Score: 30)' : '😫 Restless / Too Short (Score: 30)', col: '#f43f5e' }
-                ].map(q => (
-                  <button key={q.val} type="button" onClick={() => setManualSleep(s => ({ ...s, quality: q.val }))}
-                    style={{ background: manualSleep.quality === q.val ? `${q.col}15` : 'var(--bg-card)', border: `1.5px solid ${manualSleep.quality === q.val ? q.col : 'var(--border)'}`, color: manualSleep.quality === q.val ? q.col : 'var(--text-secondary)', padding: '12px', borderRadius: 8, textAlign: 'left', fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s' }}>
-                    {q.label}
-                  </button>
-                ))}
+
+            {manualSleep.inputType === 'score' ? (
+              <div className="form-group" style={{ marginBottom: 16 }}>
+                <label className="form-label">{lang === 'id' ? 'Skor Tidur (0-100)' : 'Sleep Score (0-100)'}</label>
+                <NumberInput label={lang === 'id' ? 'Skor' : 'Score'} value={manualSleep.score} onChange={v => setManualSleep(s => ({ ...s, score: v }))} min={10} max={100} step={1} />
+                <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8 }}>
+                  {lang === 'id' ? 'Masukkan skor tidur dari smartwatch Anda.' : 'Enter your exact sleep score from your smartwatch.'}
+                </p>
               </div>
-            </div>
+            ) : (
+              <div className="form-group" style={{ marginBottom: 12 }}>
+                <label className="form-label">{t.sleepQuality}</label>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 8 }}>
+                  {[
+                    { val: 'pulas', label: lang === 'id' ? '😴 Sangat Pulas & Segar (Score: 90)' : '😴 Deep Sleep & Refreshed (Score: 90)', col: '#10b981' },
+                    { val: 'cukup', label: lang === 'id' ? '🙂 Cukup Baik (Score: 75)' : '🙂 Okay / Normal (Score: 75)', col: '#38bdf8' },
+                    { val: 'kurang', label: lang === 'id' ? '🥱 Kurang Nyenyak (Score: 55)' : '🥱 Poor / Interrupted (Score: 55)', col: '#f59e0b' },
+                    { val: 'begadang', label: lang === 'id' ? '😫 Begadang / Sangat Kurang (Score: 30)' : '😫 Restless / Too Short (Score: 30)', col: '#f43f5e' }
+                  ].map(q => (
+                    <button key={q.val} type="button" onClick={() => setManualSleep(s => ({ ...s, quality: q.val }))}
+                      style={{ background: manualSleep.quality === q.val ? `${q.col}15` : 'var(--bg-card)', border: `1.5px solid ${manualSleep.quality === q.val ? q.col : 'var(--border)'}`, color: manualSleep.quality === q.val ? q.col : 'var(--text-secondary)', padding: '12px', borderRadius: 8, textAlign: 'left', fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s' }}>
+                      {q.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 24 }}>
               <NumberInput label={lang === 'id' ? 'Jam' : 'Hours'} value={manualSleep.sleepHours} onChange={v => setManualSleep(s => ({ ...s, sleepHours: v }))} min={0} max={24} step={1} />
               <NumberInput label={lang === 'id' ? 'Menit' : 'Minutes'} value={manualSleep.sleepMinutes} onChange={v => setManualSleep(s => ({ ...s, sleepMinutes: v }))} min={0} max={59} step={1} />
             </div>
+            <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: -16, marginBottom: 20, textAlign: 'center' }}>
+              {lang === 'id' ? '*Durasi disarankan agar penghitungan recovery optimal.' : '*Duration is recommended for optimal recovery calculation.'}
+            </p>
             <div style={{ display: 'flex', gap: 10 }}>
               <button className="btn btn-secondary" onClick={() => setShowSleepModal(false)}>{lang === 'id' ? 'Batal' : 'Cancel'}</button>
               <button className="btn btn-primary" onClick={() => { saveManualSleep(); setShowSleepModal(false); }}>{lang === 'id' ? 'Simpan Tidur' : 'Save Sleep'}</button>
