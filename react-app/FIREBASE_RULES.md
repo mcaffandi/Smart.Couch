@@ -1,8 +1,10 @@
 # EnduraUP - Firestore Security Rules
 
+*(Terakhir diupdate: 3 Juni 2026, 05:15 WIB)*
+
 Copy dan paste seluruh kode di bawah ini ke tab **Rules** di Firebase Console (bagian Firestore Database). 
 
-Rules ini sudah diperbarui dengan fungsi `isAdmin()` supaya data tetap aman (tidak sembarang user bisa menghapus/mengubah blog), namun Admin tetap bisa melihat data pelari di Admin Dashboard.
+Rules ini sudah diperbarui dengan fungsi `isAdmin()` dan sistem `upgrade_requests` supaya data tetap aman, namun Admin tetap bisa mengelola data pelari di Admin Dashboard.
 
 ```javascript
 rules_version = '2';
@@ -57,9 +59,8 @@ service cloud.firestore {
     }
     
     match /upgrade_requests/{reqId} {
-      // User bisa bikin request, admin bisa baca dan edit
-      allow read: if isAdmin() || (request.auth != null && request.auth.uid == resource.data.userId);
-      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow read: if isAdmin() || (request.auth != null && (request.auth.uid == resource.data.userId || request.auth.token.email.lower() == resource.data.userId));
+      allow create: if request.auth != null && (request.resource.data.userId == request.auth.uid || request.resource.data.userId == request.auth.token.email.lower());
       allow update, delete: if isAdmin();
     }
     
