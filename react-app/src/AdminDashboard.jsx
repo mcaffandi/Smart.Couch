@@ -126,7 +126,8 @@ export default function AdminDashboard({ onBack }) {
   const handlePinSubmit = (e) => {
     e.preventDefault();
     if (pin === ADMIN_PIN) {
-      if (!auth.currentUser) {
+      const hasLocalSession = !!localStorage.getItem('smartcoach_last_email') || !!sessionStorage.getItem('smartcoach_session');
+      if (!auth.currentUser && !hasLocalSession) {
         alert("Akses Firebase ditolak: Anda belum Login ke sistem menggunakan Google Account! Silakan kembali ke web utama dan Login terlebih dahulu.");
         return;
       }
