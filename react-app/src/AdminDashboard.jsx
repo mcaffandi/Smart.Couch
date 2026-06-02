@@ -23,6 +23,7 @@ export default function AdminDashboard({ onBack }) {
   const [blogForm, setBlogForm] = useState({ title: '', content: '', tags: '', thumbnail: '' });
   const [editingBlogId, setEditingBlogId] = useState(null);
   const [showAllUsers, setShowAllUsers] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const quillRef = useRef(null);
 
@@ -156,27 +157,48 @@ export default function AdminDashboard({ onBack }) {
     }
   };
 
-  const handleTogglePremium = async (userId, currentStatus) => {
+  const handleTogglePremium = async (userId, userProfile) => {
+    const isCurrentlyPro = userProfile?.isPremium || (userProfile?.premiumUntil && userProfile.premiumUntil > Date.now());
+    
     try {
-      await updateDoc(doc(db, "users", userId), {
-        "profile.isPremium": !currentStatus
-      });
+      let updates = {};
+      let updatedProfile = { ...(userProfile || {}) };
+
+      if (isCurrentlyPro) {
+        if (!window.confirm("Yakin ingin mencabut status PRO user ini?")) return;
+        updates = { "profile.isPremium": false, "profile.premiumUntil": null };
+        updatedProfile.isPremium = false;
+        updatedProfile.premiumUntil = null;
+      } else {
+        const monthsStr = window.prompt("Berapa bulan status PRO ingin diaktifkan?", "1");
+        if (!monthsStr) return;
+        const months = parseInt(monthsStr);
+        if (isNaN(months) || months <= 0) {
+          alert("Jumlah bulan tidak valid!");
+          return;
+        }
+        
+        const premiumUntil = Date.now() + (months * 30 * 24 * 60 * 60 * 1000);
+        updates = { "profile.isPremium": true, "profile.premiumUntil": premiumUntil };
+        updatedProfile.isPremium = true;
+        updatedProfile.premiumUntil = premiumUntil;
+      }
+
+      await updateDoc(doc(db, "users", userId), updates);
+      
       setUsers(users.map(u => {
         if (u.id === userId) {
           return {
             ...u,
             data: {
               ...u.data,
-              profile: {
-                ...(u.data.profile || {}),
-                isPremium: !currentStatus
-              }
+              profile: updatedProfile
             }
           };
         }
         return u;
       }));
-      alert(`Status PRO berhasil ${!currentStatus ? 'diaktifkan' : 'dicabut'}.`);
+      alert(`Status PRO berhasil ${!isCurrentlyPro ? 'diaktifkan' : 'dicabut'}.`);
     } catch (err) {
       console.error(err);
       alert("Gagal mengubah status PRO.");
