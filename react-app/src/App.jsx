@@ -20,6 +20,7 @@ import BlogModule from './Blog';
 import Logo from './Logo';
 import ExportGuideModal from './ExportGuideModal';
 import FeedbackModal from './FeedbackModal';
+import PremiumModal from './PremiumModal';
 import { Sun, Moon, Coffee } from 'lucide-react';
 import { translations } from './translations';
 import {
@@ -160,6 +161,7 @@ export default function App() {
   const [showNotifMenu, setShowNotifMenu] = useState(false);
   const [showExportGuide, setShowExportGuide] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [showAdmin, setShowAdmin] = useState(window.location.hash.toLowerCase() === '#admin');
   const [visitorCount, setVisitorCount] = useState(null);
   const [editDraft, setEditDraft] = useState({});
@@ -745,6 +747,7 @@ export default function App() {
   const runActs = data.running_activities ?? [];
   const sleepRecs = data.sleep_records ?? {};
   const actualMaxHR = data.max_hr ?? 0;
+  const isPremium = data.profile?.isPremium || false;
 
   const totalDist = runActs.reduce((s, a) => s + (a.distance ?? 0) / 100000, 0);
   const totalSessions = runActs.length;
@@ -2936,7 +2939,7 @@ export default function App() {
             )}
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 13, fontWeight: 650, color: displayName ? 'var(--text-primary)' : 'var(--text-muted)', fontStyle: displayName ? 'normal' : 'italic', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {displayName || t.fillProfileName}
+                {displayName || t.fillProfileName} {isPremium && '👑'}
               </div>
               <div style={{ fontSize: 10, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 1 }}>{currentUser}</div>
             </div>
@@ -3010,6 +3013,13 @@ export default function App() {
 
         {/* Footer Actions Group */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+
+          <button
+            onClick={() => setShowPremiumModal(true)}
+            className="btn btn-secondary"
+          >
+            {isPremium ? 'PRO Member' : (lang === 'id' ? 'Upgrade ke PRO' : 'Upgrade to PRO')}
+          </button>
 
           <a 
             href="https://saweria.co/afnstudio" 
@@ -3677,7 +3687,7 @@ export default function App() {
                     )}
 
                     <TrendChart activities={runActs} lang={lang} />
-                    <AICoach activities={data.running_activities} profile={{ age, goal, targetPace }} lang={lang} />
+                    <AICoach activities={data.running_activities} profile={{ age, goal, targetPace }} lang={lang} isPremium={isPremium} setShowPremiumModal={setShowPremiumModal} />
                   </div>
 
                   {/* Right Column: Secondary charts and summaries */}
@@ -4221,6 +4231,23 @@ export default function App() {
 
       {showExportGuide && <ExportGuideModal onClose={() => setShowExportGuide(false)} lang={lang} />}
       {showFeedbackModal && <FeedbackModal onClose={() => setShowFeedbackModal(false)} lang={lang} addToast={addToast} />}
+      {showPremiumModal && (
+        <PremiumModal 
+          onClose={() => setShowPremiumModal(false)} 
+          isPremium={isPremium}
+          lang={lang}
+          onUpgrade={() => {
+            saveAndSyncData({
+              ...data,
+              profile: {
+                ...(data.profile || {}),
+                isPremium: true
+              }
+            });
+            addToast(lang === 'id' ? 'Berhasil upgrade ke PRO! 🎉' : 'Successfully upgraded to PRO! 🎉');
+          }}
+        />
+      )}
 
       <AICoachChat 
         lang={lang} 
@@ -4233,6 +4260,8 @@ export default function App() {
         latestSleepScore={latestSleepScore}
         recoveryRemainingHours={recoveryRemainingHours}
         trainingReadinessScore={trainingReadinessScore}
+        isPremium={isPremium}
+        setShowPremiumModal={setShowPremiumModal}
       />
       <Toast toasts={toasts} />
     </div>

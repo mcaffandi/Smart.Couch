@@ -156,6 +156,33 @@ export default function AdminDashboard({ onBack }) {
     }
   };
 
+  const handleTogglePremium = async (userId, currentStatus) => {
+    try {
+      await updateDoc(doc(db, "users", userId), {
+        "profile.isPremium": !currentStatus
+      });
+      setUsers(users.map(u => {
+        if (u.id === userId) {
+          return {
+            ...u,
+            data: {
+              ...u.data,
+              profile: {
+                ...(u.data.profile || {}),
+                isPremium: !currentStatus
+              }
+            }
+          };
+        }
+        return u;
+      }));
+      alert(`Status PRO berhasil ${!currentStatus ? 'diaktifkan' : 'dicabut'}.`);
+    } catch (err) {
+      console.error(err);
+      alert("Gagal mengubah status PRO.");
+    }
+  };
+
   const handlePostBlog = async (e) => {
     e.preventDefault();
     if (!blogForm.title || !blogForm.content || !blogForm.tags) return;
@@ -363,7 +390,13 @@ export default function AdminDashboard({ onBack }) {
                       <td style={{ padding: '16px', fontSize: 14 }}>
                         {u.data?.profile?.targetPace ? `${Math.floor(u.data.profile.targetPace)}:${String(Math.round((u.data.profile.targetPace % 1) * 60)).padStart(2, '0')}/km` : '-'}
                       </td>
-                      <td style={{ padding: '16px', textAlign: 'center' }}>
+                      <td style={{ padding: '16px', textAlign: 'center', display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                        <button 
+                          onClick={() => handleTogglePremium(u.id, u.data?.profile?.isPremium)}
+                          style={{ background: u.data?.profile?.isPremium ? '#f59e0b' : '#10b981', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
+                        >
+                          {u.data?.profile?.isPremium ? 'Cabut PRO' : 'Jadikan PRO'}
+                        </button>
                         <button 
                           onClick={() => handleDeleteUser(u.id)}
                           style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}

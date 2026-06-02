@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Sparkles } from 'lucide-react';
 
-export default function AICoach({ activities, profile, lang = 'id' }) {
+export default function AICoach({ activities, profile, lang = 'id', isPremium, setShowPremiumModal }) {
   const [loading, setLoading] = useState(false);
   const [analysis, setAnalysis] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
@@ -20,7 +20,34 @@ export default function AICoach({ activities, profile, lang = 'id' }) {
     setErrorMsg('');
   };
 
+  const getUsage = () => {
+    try {
+      const usage = JSON.parse(localStorage.getItem('enduraup_ai_usage') || '{"count": 0, "weekStart": 0}');
+      const now = Date.now();
+      if (now - usage.weekStart > 7 * 24 * 60 * 60 * 1000) {
+        return { count: 0, weekStart: now };
+      }
+      return usage;
+    } catch(e) {
+      return { count: 0, weekStart: Date.now() };
+    }
+  };
+
+  const incrementUsage = () => {
+    const usage = getUsage();
+    usage.count++;
+    localStorage.setItem('enduraup_ai_usage', JSON.stringify(usage));
+  };
+
   const getAIAnalysis = async () => {
+    if (!isPremium && useServer) {
+      const usage = getUsage();
+      if (usage.count >= 4) {
+        setErrorMsg(lang === 'id' ? "Batas AI Coach gratis (4x/minggu) telah habis. Upgrade ke PRO untuk akses tanpa batas!" : "Free AI limit (4x/week) reached. Upgrade to PRO for unlimited access!");
+        if (setShowPremiumModal) setShowPremiumModal(true);
+        return;
+      }
+    }
     setLoading(true);
     setAnalysis('');
     setErrorMsg('');
@@ -61,8 +88,11 @@ Data pelari:
 5 Data Lari Terakhir:
 ${recentRuns || "Belum ada data lari."}
 
+ATURAN WAJIB (PENTING!):
+Pahami ilmu lari seperti "Zone 2 Training" atau aturan "80/20". Berlari dengan pace lambat (misal 8-9 min/km) pada sebagian besar sesi SANGATLAH PENTING untuk membangun fondasi aerobik (aerobic base). JANGAN kritik atau sebut pengguna "performa tidak stabil / kurang intensitas" hanya karena pace mereka lambat dibandingkan target pace, melainkan PUJILAH bahwa lari pelan sangat bagus untuk latihan Easy Run agar terhindar dari cedera.
+
 Berikan:
-1. Analisis singkat performa dari data di atas.
+1. Analisis singkat performa dari data di atas dengan bijaksana.
 2. Rekomendasi tajam untuk latihan selanjutnya agar bisa mencapai target pace-nya.
 Jawab dalam 1-2 paragraf saja, langsung ke intinya, tanpa basa-basi.`
         : `You are an elite running coach (EnduraUP) with a direct, smart, and to the point speaking style. Use professional, modern, and motivating English (e.g. conversational but high authority, like a personal coach).
@@ -74,6 +104,9 @@ Runner profile:
 
 Last 5 Run Activities:
 ${recentRuns || "No running data yet."}
+
+MANDATORY RULES (IMPORTANT!):
+Understand running science such as "Zone 2 Training" or the "80/20 rule". Running at a slow pace (e.g., 8-9 min/km) for the majority of runs is CRUCIAL for building an aerobic base. DO NOT criticize the user for running slow compared to their target pace, but rather PRAISE them for doing proper Easy Runs to avoid injuries.
 
 Provide:
 1. A brief analysis of their performance based on the data above.
@@ -109,6 +142,7 @@ Keep the answer to 1-2 paragraphs max, direct, and without fluff.`;
 
         if (data.choices && data.choices.length > 0) {
           setAnalysis(data.choices[0].message.content);
+          if (!isPremium && useServer) incrementUsage();
         } else {
           setErrorMsg(lang === 'id' ? "Gagal memproses analisis." : "Failed to process analysis.");
         }

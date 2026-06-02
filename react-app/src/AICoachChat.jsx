@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Bot, MessageSquare, Send, X } from 'lucide-react';
 
-export default function AICoachChat({ lang, goal, programStyle, targetPace, currentUser, runActs, selectedDays, latestSleepScore, recoveryRemainingHours, trainingReadinessScore }) {
+export default function AICoachChat({ lang, goal, programStyle, targetPace, currentUser, runActs, selectedDays, latestSleepScore, recoveryRemainingHours, trainingReadinessScore, isPremium, setShowPremiumModal }) {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -33,6 +33,25 @@ export default function AICoachChat({ lang, goal, programStyle, targetPace, curr
     { match: /change|shift|edit/, reply: 'If you want to change your training frequency, edit your profile on the left sidebar. As for missed runs, my Adaptive Calendar will automatically shift them to your next available rest day!' },
     { match: /who are you|your purpose/, reply: 'I am the EnduraUP Coach AI! Designed to be your personal running assistant. I can help with schedules, running tips, gear, and minor injury advice.' }
   ];
+
+  const getUsage = () => {
+    try {
+      const usage = JSON.parse(localStorage.getItem('enduraup_ai_usage') || '{"count": 0, "weekStart": 0}');
+      const now = Date.now();
+      if (now - usage.weekStart > 7 * 24 * 60 * 60 * 1000) {
+        return { count: 0, weekStart: now };
+      }
+      return usage;
+    } catch(e) {
+      return { count: 0, weekStart: Date.now() };
+    }
+  };
+
+  const incrementUsage = () => {
+    const usage = getUsage();
+    usage.count++;
+    localStorage.setItem('enduraup_ai_usage', JSON.stringify(usage));
+  };
 
   const handleSend = async () => {
     if (!input.trim()) return;
@@ -66,6 +85,16 @@ export default function AICoachChat({ lang, goal, programStyle, targetPace, curr
     // 2. Fallback to Real AI (Groq API)
     try {
       let apiKey = localStorage.getItem('groq_api_key');
+
+      if (!isPremium && !apiKey) {
+        const usage = getUsage();
+        if (usage.count >= 4) {
+          setMessages(p => [...p, { role: 'assistant', content: lang === 'id' ? "Batas AI Chat gratis (4x/minggu) telah habis. Upgrade ke PRO untuk akses tanpa batas!" : "Free AI Chat limit (4x/week) reached. Upgrade to PRO for unlimited access!" }]);
+          setIsTyping(false);
+          if (setShowPremiumModal) setShowPremiumModal(true);
+          return;
+        }
+      }
 
       // Prepare conversation history for LLM
       const chatHistory = newMessages.map(m => ({
@@ -110,8 +139,9 @@ ATURAN WAJIB (PATUHI INI):
 1. JIKA READINESS < 60%: User sedang KECAPAIAN. LO DILARANG KERAS menyuruh atau mengizinkan user lari. Wajib paksa user untuk ISTIRAHAT TOTAL hari ini atau maksimal jalan kaki. Jika user nanya soal lari, tolak dan ingatkan readiness-nya masih ${trainingReadinessScore}%.
 2. JIKA READINESS >= 80%: Puji kondisi fisiknya yang prima dan dorong untuk latihan intens.
 3. JIKA KONSISTENSI < 50%: Roasting/tegur halus user karena malas.
-4. Jawab pertanyaan user dengan singkat, padat, pakai emoji.
-5. JIKA user bahas topik di luar lari/olahraga, tolak dengan sopan.`
+4. JANGAN KRITIK pace lambat. Pahami ilmu Zone 2 / 80/20. Puji lari lambat sebagai "Easy Run" yang bagus buat aerobic base. Jangan judge pelari jelek hanya karena pacenya jauh dari target.
+5. Jawab pertanyaan user dengan singkat, padat, pakai emoji.
+6. JIKA user bahas topik di luar lari/olahraga, tolak dengan sopan.`
         : `You are EnduraUP Coach AI, a professional, friendly running coach.
 LOCAL TIME: ${currentDay}, ${currentTime}.
 USER'S TARGET: ${goal}, Program: ${programStyle}, Pace: ${formattedPace} min/km.
@@ -125,8 +155,9 @@ STRICT RULES (MUST FOLLOW):
 1. IF READINESS < 60%: User is EXHAUSTED. YOU ARE STRICTLY FORBIDDEN to tell them to run. You MUST force them to REST today. If they ask to run, refuse and remind them their readiness is ${trainingReadinessScore}%.
 2. IF READINESS >= 80%: Praise their prime condition and encourage intense workouts.
 3. IF CONSISTENCY < 50%: Give them a playful roast for being lazy.
-4. Answer concisely with emojis.
-5. IF user talks about non-running topics, politely decline.`;
+4. DO NOT CRITICIZE slow paces. Understand Zone 2 / 80/20 training. Praise slow running as good "Easy Runs" for building aerobic base.
+5. Answer concisely with emojis.
+6. IF user talks about non-running topics, politely decline.`;
 
       const endpoint = apiKey ? 'https://api.groq.com/openai/v1/chat/completions' : '/api/coach';
       const headers = { 'Content-Type': 'application/json' };
@@ -159,6 +190,7 @@ STRICT RULES (MUST FOLLOW):
       }
       
       const aiReply = data.choices[0].message.content;
+      if (!isPremium && !apiKey) incrementUsage();
       setMessages(p => [...p, { role: 'assistant', content: aiReply }]);
     } catch (e) {
       // 3. Fallback to Local Rule-Based "AI" with Reasoning
