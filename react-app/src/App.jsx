@@ -2979,7 +2979,7 @@ export default function App() {
             </button>
             <button className="btn btn-secondary" onClick={() => setShowSleepModal(true)} style={{ justifyContent: 'flex-start', padding: '12px 16px', background: 'var(--bg-card)', borderRadius: 10 }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#38bdf8' }}><path d="M2 4v16"></path><path d="M2 8h18a2 2 0 0 1 2 2v10"></path><path d="M2 17h20"></path><path d="M6 8v9"></path></svg>
-              {lang === 'id' ? 'Catat Tidur Semalam' : 'Log Night Sleep'}
+              {lang === 'id' ? 'Catat Tidur / Nap' : 'Log Sleep / Nap'}
             </button>
           </div>
 
@@ -3976,7 +3976,7 @@ export default function App() {
       {showSleepModal && (
         <div className="profile-modal-backdrop" onClick={e => { if (e.target === e.currentTarget) setShowSleepModal(false); }}>
           <div className="animate-fade-in" style={{ background: 'var(--bg-surface)', padding: 24, borderRadius: 16, width: '100%', maxWidth: 400, boxShadow: 'var(--shadow-premium)' }}>
-            <h3 style={{ marginBottom: 16 }}>{lang === 'id' ? 'Catat Tidur Semalam' : 'Log Night Sleep'}</h3>
+            <h3 style={{ marginBottom: 16 }}>{lang === 'id' ? 'Catat Tidur / Nap' : 'Log Sleep / Nap'}</h3>
             
             <div style={{ display: 'flex', gap: 8, marginBottom: 16, background: 'var(--bg-card)', padding: 4, borderRadius: 12, border: '1px solid var(--border)' }}>
               <button
