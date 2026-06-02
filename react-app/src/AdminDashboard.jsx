@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { Lock } from 'lucide-react';
 import { collection, getDocs, getDocsFromServer, getDoc, setDoc, deleteDoc, doc, addDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { db, storage } from './firebase';
+import { db, storage, auth } from './firebase';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 
@@ -126,6 +126,10 @@ export default function AdminDashboard({ onBack }) {
   const handlePinSubmit = (e) => {
     e.preventDefault();
     if (pin === ADMIN_PIN) {
+      if (!auth.currentUser) {
+        alert("Akses Firebase ditolak: Anda belum Login ke sistem menggunakan Google Account! Silakan kembali ke web utama dan Login terlebih dahulu.");
+        return;
+      }
       setIsAuthenticated(true);
     } else {
       alert("PIN Salah!");
