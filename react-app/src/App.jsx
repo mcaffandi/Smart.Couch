@@ -2042,7 +2042,7 @@ export default function App() {
             running_activities: mergedRuns,
             sleep_records: mergedSleep,
             max_hr: mergedMaxHr,
-            profile: { age, goal, programStyle, targetPace, selectedDays }
+            profile: { ...(data.profile || {}), age, goal, programStyle, targetPace, selectedDays }
           };
 
           saveAndSyncData(updated);
@@ -2078,7 +2078,7 @@ export default function App() {
       ...data,
       running_activities: [...data.running_activities, newRun],
       max_hr: Math.max(data.max_hr ?? 0, manualRun.maxHr),
-      profile: { age, goal, programStyle, targetPace, selectedDays }
+      profile: { ...(data.profile || {}), age, goal, programStyle, targetPace, selectedDays }
     };
     saveAndSyncData(updated);
     addToast('Sesi lari berhasil disimpan.');
@@ -2109,7 +2109,7 @@ export default function App() {
         ...data.sleep_records,
         [manualSleep.date]: { score, duration: duration },
       },
-      profile: { age, goal, programStyle, targetPace, selectedDays }
+      profile: { ...(data.profile || {}), age, goal, programStyle, targetPace, selectedDays }
     };
     saveAndSyncData(updated);
     addToast('Data tidur berhasil disimpan.');
