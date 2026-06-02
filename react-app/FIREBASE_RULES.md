@@ -56,6 +56,13 @@ service cloud.firestore {
       allow read, write: if true;
     }
     
+    match /upgrade_requests/{reqId} {
+      // User bisa bikin request, admin bisa baca dan edit
+      allow read: if isAdmin() || (request.auth != null && request.auth.uid == resource.data.userId);
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
+    
     match /feedback/{feedbackId} {
       // Semua orang boleh membaca testimoni
       allow read: if true;

@@ -11,6 +11,7 @@ export default function AdminDashboard({ onBack }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [users, setUsers] = useState([]);
   const [blogs, setBlogs] = useState([]);
+  const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   
   const [adminTab, setAdminTab] = useState('overview');
@@ -106,6 +107,21 @@ export default function AdminDashboard({ onBack }) {
         setBlogs(blogsData);
       } catch (err) {
         console.error("Gagal ambil data blogs:", err);
+      }
+
+      // Fetch upgrade requests
+      try {
+        const reqSnap = await getDocsFromServer(collection(db, "upgrade_requests"));
+        const reqData = [];
+        reqSnap.forEach((doc) => reqData.push({ id: doc.id, ...doc.data() }));
+        reqData.sort((a, b) => {
+          const tA = a.requestedAt?.toMillis ? a.requestedAt.toMillis() : 0;
+          const tB = b.requestedAt?.toMillis ? b.requestedAt.toMillis() : 0;
+          return tB - tA;
+        });
+        setRequests(reqData);
+      } catch (err) {
+        console.error("Gagal ambil data requests:", err);
       }
 
       // Fetch settings
@@ -207,6 +223,68 @@ export default function AdminDashboard({ onBack }) {
     } catch (err) {
       console.error(err);
       alert("Gagal mengubah status PRO.");
+    }
+  };
+
+  const handleApproveRequest = async (requestDoc) => {
+    const monthsStr = window.prompt(`Berapa bulan PRO untuk ${requestDoc.email}?`, "1");
+    if (!monthsStr) return;
+    const months = parseInt(monthsStr);
+    if (isNaN(months) || months <= 0) {
+      alert("Jumlah bulan tidak valid!");
+      return;
+    }
+
+    try {
+      const premiumUntil = Date.now() + (months * 30 * 24 * 60 * 60 * 1000);
+      
+      // Update user doc
+      await updateDoc(doc(db, "users", requestDoc.userId), {
+        "profile.isPremium": true,
+        "profile.premiumUntil": premiumUntil
+      });
+
+      // Mark request as approved
+      await updateDoc(doc(db, "upgrade_requests", requestDoc.id), {
+        status: 'approved',
+        approvedAt: serverTimestamp()
+      });
+
+      // Update local state
+      setRequests(requests.map(r => r.id === requestDoc.id ? { ...r, status: 'approved' } : r));
+      setUsers(users.map(u => {
+        if (u.id === requestDoc.userId) {
+          return {
+            ...u,
+            data: {
+              ...u.data,
+              profile: {
+                ...(u.data.profile || {}),
+                isPremium: true,
+                premiumUntil: premiumUntil
+              }
+            }
+          };
+        }
+        return u;
+      }));
+
+      alert(`Sukses mengaktifkan PRO untuk ${requestDoc.email}.`);
+    } catch (err) {
+      console.error(err);
+      alert("Gagal memproses request.");
+    }
+  };
+
+  const handleRejectRequest = async (requestId) => {
+    if (!window.confirm("Tolak permintaan ini?")) return;
+    try {
+      await updateDoc(doc(db, "upgrade_requests", requestId), {
+        status: 'rejected'
+      });
+      setRequests(requests.map(r => r.id === requestId ? { ...r, status: 'rejected' } : r));
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -340,6 +418,17 @@ export default function AdminDashboard({ onBack }) {
               style={{ background: adminTab === 'blogs' ? 'var(--text-primary)' : 'transparent', color: adminTab === 'blogs' ? 'var(--bg-base)' : 'var(--text-secondary)', border: 'none', padding: '6px 16px', borderRadius: 20, cursor: 'pointer', fontWeight: 600, fontSize: 13, transition: 'all 0.2s' }}
             >
               Kelola Artikel
+            </button>
+            <button 
+              onClick={() => { setAdminTab('upgrades'); setShowBlogForm(false); }} 
+              style={{ background: adminTab === 'upgrades' ? 'var(--text-primary)' : 'transparent', color: adminTab === 'upgrades' ? 'var(--bg-base)' : 'var(--text-secondary)', border: 'none', padding: '6px 16px', borderRadius: 20, cursor: 'pointer', fontWeight: 600, fontSize: 13, transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: 6 }}
+            >
+              Requests
+              {requests.filter(r => r.status === 'pending').length > 0 && (
+                <span style={{ background: '#ef4444', color: '#fff', borderRadius: '50%', width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11 }}>
+                  {requests.filter(r => r.status === 'pending').length}
+                </span>
+              )}
             </button>
             <button 
               onClick={() => { setAdminTab('settings'); setShowBlogForm(false); }} 
@@ -596,6 +685,79 @@ export default function AdminDashboard({ onBack }) {
               </table>
             </div>
           )}
+        </div>
+      )}
+
+      {adminTab === 'upgrades' && (
+        <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+          <div style={{ background: 'var(--bg-card)', padding: 24, borderRadius: 12, border: '1px solid var(--border)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <h3 style={{ margin: 0 }}>Permintaan Upgrade PRO</h3>
+            </div>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid var(--border)', color: 'var(--text-secondary)', fontSize: 13 }}>
+                    <th style={{ padding: '12px 16px' }}>Tanggal Request</th>
+                    <th style={{ padding: '12px 16px' }}>Email / ID</th>
+                    <th style={{ padding: '12px 16px' }}>Nama</th>
+                    <th style={{ padding: '12px 16px' }}>Status</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'center' }}>Aksi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {requests.map(r => (
+                    <tr key={r.id} style={{ borderBottom: '1px dashed rgba(128,128,128,0.1)' }}>
+                      <td style={{ padding: '16px', fontSize: 14 }}>
+                        {r.requestedAt ? new Date(r.requestedAt.seconds ? r.requestedAt.seconds * 1000 : r.requestedAt).toLocaleString('id-ID') : '-'}
+                      </td>
+                      <td style={{ padding: '16px', fontSize: 14, wordBreak: 'break-all' }}>
+                        {r.email || r.userId}
+                      </td>
+                      <td style={{ padding: '16px', fontSize: 14 }}>
+                        {r.displayName || 'Anonim'}
+                      </td>
+                      <td style={{ padding: '16px', fontSize: 14 }}>
+                        <span style={{ 
+                          background: r.status === 'approved' ? 'rgba(16, 185, 129, 0.1)' : r.status === 'rejected' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(245, 158, 11, 0.1)', 
+                          color: r.status === 'approved' ? '#10b981' : r.status === 'rejected' ? '#ef4444' : '#f59e0b', 
+                          border: `1px solid ${r.status === 'approved' ? 'rgba(16, 185, 129, 0.2)' : r.status === 'rejected' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(245, 158, 11, 0.2)'}`, 
+                          padding: '4px 8px', borderRadius: 4, textTransform: 'capitalize' 
+                        }}>
+                          {r.status}
+                        </span>
+                      </td>
+                      <td style={{ padding: '16px', textAlign: 'center', display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                        {r.status === 'pending' ? (
+                          <>
+                            <button 
+                              onClick={() => handleApproveRequest(r)}
+                              style={{ background: '#10b981', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
+                            >
+                              Approve
+                            </button>
+                            <button 
+                              onClick={() => handleRejectRequest(r.id)}
+                              style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
+                            >
+                              Tolak
+                            </button>
+                          </>
+                        ) : (
+                          <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>-</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                  {requests.length === 0 && (
+                    <tr>
+                      <td colSpan="5" style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>Belum ada permintaan upgrade.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -104,16 +104,15 @@ export default function PremiumModal({ onClose, onUpgrade, isPremium, lang = 'id
                 </div>
               </div>
 
-              <a 
-                href={`https://wa.me/6281234567890?text=${encodeURIComponent('Halo Admin EnduraUP, saya ingin konfirmasi pembayaran untuk Upgrade ke akun PRO.\n\nEmail akun saya: \n\n[Silakan lampirkan foto bukti transfer di sini]')}`}
-                target="_blank"
-                rel="noopener noreferrer"
+              <button 
+                onClick={handleUpgrade}
+                disabled={loading}
                 className="btn btn-primary" 
-                style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, textDecoration: 'none', width: '100%', height: 52, fontSize: 16, fontWeight: 700, background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', boxShadow: '0 8px 20px rgba(16, 185, 129, 0.3)', borderRadius: 12, transition: 'transform 0.2s, box-shadow 0.2s' }}
+                style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, width: '100%', height: 52, fontSize: 16, fontWeight: 700, background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', boxShadow: '0 8px 20px rgba(16, 185, 129, 0.3)', borderRadius: 12, transition: 'transform 0.2s, box-shadow 0.2s', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1 }}
               >
                 <MessageCircle size={20} />
-                {lang === 'id' ? 'Konfirmasi via WhatsApp' : 'Confirm via WhatsApp'}
-              </a>
+                {loading ? (lang === 'id' ? 'Memproses...' : 'Processing...') : (lang === 'id' ? 'Request Upgrade PRO' : 'Request PRO Upgrade')}
+              </button>
             </>
           )}
         </div>

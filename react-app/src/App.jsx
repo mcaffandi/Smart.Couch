@@ -31,7 +31,7 @@ import {
   onAuthStateChanged,
   isConfigured as isFirebaseConfigured
 } from './firebase';
-import { doc, getDoc, setDoc, deleteDoc, increment } from 'firebase/firestore';
+import { doc, getDoc, setDoc, deleteDoc, increment, collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
 // ─── Toast component ──────────────────────────────────────────────────────────
 function Toast({ toasts }) {
@@ -4236,15 +4236,25 @@ export default function App() {
           onClose={() => setShowPremiumModal(false)} 
           isPremium={isPremium}
           lang={lang}
-          onUpgrade={() => {
-            saveAndSyncData({
-              ...data,
-              profile: {
-                ...(data.profile || {}),
-                isPremium: true
+          onUpgrade={async () => {
+            try {
+              if (!auth.currentUser) {
+                addToast('Harap login terlebih dahulu untuk upgrade.');
+                return;
               }
-            });
-            addToast(lang === 'id' ? 'Berhasil upgrade ke PRO! 🎉' : 'Successfully upgraded to PRO! 🎉');
+              const userEmail = auth.currentUser.email || auth.currentUser.displayName || currentUser;
+              await addDoc(collection(db, "upgrade_requests"), {
+                userId: auth.currentUser.email ? auth.currentUser.email.toLowerCase() : auth.currentUser.uid,
+                email: userEmail,
+                displayName: displayName,
+                requestedAt: serverTimestamp(),
+                status: 'pending'
+              });
+              addToast(lang === 'id' ? 'Permintaan Upgrade berhasil dikirim! Menunggu konfirmasi Admin.' : 'Upgrade request sent! Waiting for Admin confirmation.');
+            } catch (err) {
+              console.error(err);
+              addToast(lang === 'id' ? 'Gagal mengirim permintaan.' : 'Failed to send request.');
+            }
           }}
         />
       )}
