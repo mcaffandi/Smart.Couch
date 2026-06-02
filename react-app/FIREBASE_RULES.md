@@ -74,7 +74,36 @@ service cloud.firestore {
     }
     
     match /{document=**} {
-      // Kunci mati semua koleksi lain yang tidak dideklarasikan di atas
+      allow read, write: if false;
+    }
+  }
+}
+```
+
+---
+
+## Firebase Storage Security Rules
+
+Karena sekarang fitur request upgrade mendukung **upload gambar (bukti transfer)**, kamu juga wajib meng-update *Rules* di **Firebase Storage**.
+
+1. Masuk ke Firebase Console > **Storage** > tab **Rules**.
+2. Hapus semua teks yang ada, dan ganti dengan ini:
+
+```javascript
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Fungsi bantuan cek admin di Storage (opsional, karena Storage gak bisa baca token email se-gampang Firestore, kita pakai aturan dasar)
+    
+    match /upgrade_receipts/{imageId} {
+      // User wajib login buat upload bukti trf, gambar max 5MB.
+      allow write: if request.auth != null && request.resource.size < 5 * 1024 * 1024 && request.resource.contentType.matches('image/.*');
+      // Admin (atau siapa saja yang punya URL-nya) boleh melihat gambar tersebut.
+      allow read: if true;
+    }
+    
+    match /{allPaths=**} {
       allow read, write: if false;
     }
   }

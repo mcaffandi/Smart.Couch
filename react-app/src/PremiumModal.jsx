@@ -1,16 +1,24 @@
 import { useState } from 'react';
-import { Crown, Sparkles, BarChart2, Activity, MessageCircle } from 'lucide-react';
+import { Crown, Sparkles, BarChart2, Activity, UploadCloud, MessageCircle } from 'lucide-react';
 
 export default function PremiumModal({ onClose, onUpgrade, isPremium, lang = 'id' }) {
   const [loading, setLoading] = useState(false);
+  const [receipt, setReceipt] = useState(null);
 
-  const handleUpgrade = () => {
+  const handleUpgrade = async () => {
+    if (!receipt) {
+      alert(lang === 'id' ? 'Harap upload bukti transfer terlebih dahulu.' : 'Please upload transfer receipt first.');
+      return;
+    }
     setLoading(true);
-    setTimeout(() => {
-      onUpgrade();
-      setLoading(false);
+    try {
+      await onUpgrade(receipt);
       onClose();
-    }, 1500);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -98,8 +106,27 @@ export default function PremiumModal({ onClose, onUpgrade, isPremium, lang = 'id
                     </div>
                     <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
                       <div style={{ width: 20, height: 20, borderRadius: 10, background: 'rgba(255,255,255,0.1)', color: '#fff', fontSize: 11, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>2</div>
-                      <div style={{ fontSize: 13, color: '#e2e8f0', lineHeight: 1.5 }}>{lang === 'id' ? 'Kirimkan bukti transfer & Email akunmu via WhatsApp' : 'Send proof & Email via WhatsApp'}</div>
+                      <div style={{ fontSize: 13, color: '#e2e8f0', lineHeight: 1.5 }}>{lang === 'id' ? 'Upload bukti transfer di bawah ini' : 'Upload transfer receipt below'}</div>
                     </div>
+                  </div>
+                  
+                  <div style={{ marginTop: 16 }}>
+                    <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%', height: '80px', border: '1px dashed rgba(255,255,255,0.3)', borderRadius: 12, cursor: 'pointer', background: 'rgba(0,0,0,0.2)', transition: 'background 0.2s' }}>
+                      <UploadCloud size={24} color={receipt ? '#10b981' : 'var(--text-muted)'} style={{ marginBottom: 4 }} />
+                      <span style={{ fontSize: 12, color: receipt ? '#10b981' : 'var(--text-muted)', fontWeight: 600 }}>
+                        {receipt ? receipt.name : (lang === 'id' ? 'Pilih Gambar Bukti Transfer' : 'Select Receipt Image')}
+                      </span>
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        onChange={(e) => {
+                          if (e.target.files && e.target.files[0]) {
+                            setReceipt(e.target.files[0]);
+                          }
+                        }}
+                        style={{ display: 'none' }} 
+                      />
+                    </label>
                   </div>
                 </div>
               </div>

@@ -26,12 +26,14 @@ import { translations } from './translations';
 import {
   auth,
   db,
+  storage,
   signOut,
   deleteUser,
   onAuthStateChanged,
   isConfigured as isFirebaseConfigured
 } from './firebase';
 import { doc, getDoc, setDoc, deleteDoc, increment, collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 // ─── Toast component ──────────────────────────────────────────────────────────
 function Toast({ toasts }) {
@@ -4239,17 +4241,28 @@ export default function App() {
           onClose={() => setShowPremiumModal(false)} 
           isPremium={isPremium}
           lang={lang}
-          onUpgrade={async () => {
+          onUpgrade={async (receiptFile) => {
             try {
               if (!auth.currentUser) {
                 addToast('Harap login terlebih dahulu untuk upgrade.');
                 return;
               }
               const userEmail = auth.currentUser.email || auth.currentUser.displayName || currentUser;
+              const userId = auth.currentUser.email ? auth.currentUser.email.toLowerCase() : auth.currentUser.uid;
+              
+              let receiptUrl = '';
+              if (receiptFile) {
+                addToast(lang === 'id' ? 'Mengupload bukti transfer...' : 'Uploading receipt...');
+                const storageRef = ref(storage, `upgrade_receipts/${userId}_${Date.now()}_${receiptFile.name}`);
+                await uploadBytes(storageRef, receiptFile);
+                receiptUrl = await getDownloadURL(storageRef);
+              }
+
               await addDoc(collection(db, "upgrade_requests"), {
-                userId: auth.currentUser.email ? auth.currentUser.email.toLowerCase() : auth.currentUser.uid,
+                userId: userId,
                 email: userEmail,
                 displayName: displayName,
+                receiptUrl: receiptUrl,
                 requestedAt: serverTimestamp(),
                 status: 'pending'
               });

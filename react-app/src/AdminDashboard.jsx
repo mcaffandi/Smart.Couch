@@ -701,6 +701,7 @@ export default function AdminDashboard({ onBack }) {
                     <th style={{ padding: '12px 16px' }}>Tanggal Request</th>
                     <th style={{ padding: '12px 16px' }}>Email / ID</th>
                     <th style={{ padding: '12px 16px' }}>Nama</th>
+                    <th style={{ padding: '12px 16px' }}>Bukti Trf</th>
                     <th style={{ padding: '12px 16px' }}>Status</th>
                     <th style={{ padding: '12px 16px', textAlign: 'center' }}>Aksi</th>
                   </tr>
@@ -716,6 +717,13 @@ export default function AdminDashboard({ onBack }) {
                       </td>
                       <td style={{ padding: '16px', fontSize: 14 }}>
                         {r.displayName || 'Anonim'}
+                      </td>
+                      <td style={{ padding: '16px', fontSize: 14 }}>
+                        {r.receiptUrl ? (
+                          <a href={r.receiptUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', textDecoration: 'underline' }}>Lihat Bukti</a>
+                        ) : (
+                          <span style={{ color: 'var(--text-muted)' }}>-</span>
+                        )}
                       </td>
                       <td style={{ padding: '16px', fontSize: 14 }}>
                         <span style={{ 
