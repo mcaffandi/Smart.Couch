@@ -44,6 +44,13 @@ service cloud.firestore {
       allow read, write: if request.auth != null && (request.auth.uid == userId || request.auth.token.email.lower() == userId || isAdmin());
     }
     
+    match /settings/{doc} {
+      // Semua orang boleh membaca settings (seperti goal_race_date)
+      allow read: if true;
+      // Hanya Admin yang boleh mengubah pengaturan global
+      allow write: if isAdmin();
+    }
+    
     match /stats/{doc} {
       // Semua orang boleh membaca dan mengupdate statistik visitor
       allow read, write: if true;
