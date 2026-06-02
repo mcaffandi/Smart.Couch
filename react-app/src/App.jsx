@@ -297,6 +297,8 @@ export default function App() {
     score: 80,
     sleepHours: 7,
     sleepMinutes: 0,
+    napHours: 0,
+    napMinutes: 0,
   });
 
   // ── State: active tab ────────────────────────────────────────────────────────
@@ -2102,12 +2104,15 @@ export default function App() {
       if (score < 10) score = 10;
     }
     
-    const duration = (manualSleep.sleepHours || 0) + ((manualSleep.sleepMinutes || 0) / 60);
+    const sleepDur = (manualSleep.sleepHours || 0) + ((manualSleep.sleepMinutes || 0) / 60);
+    const napDur = (manualSleep.napHours || 0) + ((manualSleep.napMinutes || 0) / 60);
+    const totalDuration = sleepDur + napDur;
+
     const updated = {
       ...data,
       sleep_records: {
         ...data.sleep_records,
-        [manualSleep.date]: { score, duration: duration },
+        [manualSleep.date]: { score, duration: totalDuration, nightDuration: sleepDur, napDuration: napDur },
       },
       profile: { ...(data.profile || {}), age, goal, programStyle, targetPace, selectedDays }
     };
@@ -4025,9 +4030,20 @@ export default function App() {
               </div>
             )}
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 24 }}>
-              <NumberInput label={lang === 'id' ? 'Jam' : 'Hours'} value={manualSleep.sleepHours} onChange={v => setManualSleep(s => ({ ...s, sleepHours: v }))} min={0} max={24} step={1} />
-              <NumberInput label={lang === 'id' ? 'Menit' : 'Minutes'} value={manualSleep.sleepMinutes} onChange={v => setManualSleep(s => ({ ...s, sleepMinutes: v }))} min={0} max={59} step={1} />
+            <div className="form-group" style={{ marginBottom: 16 }}>
+              <label className="form-label" style={{ marginBottom: 8 }}>{lang === 'id' ? 'Tidur Semalam' : 'Night Sleep'}</label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <NumberInput label={lang === 'id' ? 'Jam' : 'Hours'} value={manualSleep.sleepHours} onChange={v => setManualSleep(s => ({ ...s, sleepHours: v }))} min={0} max={24} step={1} />
+                <NumberInput label={lang === 'id' ? 'Menit' : 'Minutes'} value={manualSleep.sleepMinutes} onChange={v => setManualSleep(s => ({ ...s, sleepMinutes: v }))} min={0} max={59} step={1} />
+              </div>
+            </div>
+
+            <div className="form-group" style={{ marginBottom: 24 }}>
+              <label className="form-label" style={{ marginBottom: 8 }}>{lang === 'id' ? 'Tidur Siang (Nap)' : 'Daytime Nap'}</label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <NumberInput label={lang === 'id' ? 'Jam' : 'Hours'} value={manualSleep.napHours} onChange={v => setManualSleep(s => ({ ...s, napHours: v }))} min={0} max={12} step={1} />
+                <NumberInput label={lang === 'id' ? 'Menit' : 'Minutes'} value={manualSleep.napMinutes} onChange={v => setManualSleep(s => ({ ...s, napMinutes: v }))} min={0} max={59} step={1} />
+              </div>
             </div>
             <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: -16, marginBottom: 20, textAlign: 'center' }}>
               {lang === 'id' ? '*Durasi disarankan agar penghitungan recovery optimal.' : '*Duration is recommended for optimal recovery calculation.'}
