@@ -317,7 +317,7 @@ export default function AdminDashboard({ onBack }) {
               <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 8, fontWeight: 600 }}>Total Pelari Aktif</div>
               <div style={{ fontSize: 36, fontWeight: '800', color: 'var(--accent-purple)' }}>{totalUsers}</div>
             </div>
-            <div className="stat-card" style={{ background: 'var(--bg-card)', padding: 24, borderRadius: 12, border: '1px solid var(--border)' }} onClick={() => setAdminTab('blogs')} style={{ cursor: 'pointer' }}>
+            <div className="stat-card" style={{ background: 'var(--bg-card)', padding: 24, borderRadius: 12, border: '1px solid var(--border)', cursor: 'pointer' }} onClick={() => setAdminTab('blogs')}>
               <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 8, fontWeight: 600 }}>Total Artikel Blog</div>
               <div style={{ fontSize: 36, fontWeight: '800', color: '#10b981' }}>{totalBlogs}</div>
             </div>

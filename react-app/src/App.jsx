@@ -3903,7 +3903,13 @@ export default function App() {
                                 {runDates.has(date) && <span className="badge badge-easy" style={{ marginLeft: 8, padding: '1px 6px', fontSize: 10 }}>{lang === 'id' ? 'Lari' : 'Ran'}</span>}
                               </div>
                               {rec.duration && (
-                                <div className="sleep-card-dur">{rec.duration.toFixed(1)} {lang === 'id' ? 'jam tidur' : 'hrs sleep'}</div>
+                                <div className="sleep-card-dur">
+                                  {(() => {
+                                    const h = Math.floor(rec.duration);
+                                    const m = Math.round((rec.duration - h) * 60);
+                                    return lang === 'id' ? `${h} jam ${m} menit tidur` : `${h}h ${m}m sleep`;
+                                  })()}
+                                </div>
                               )}
                             </div>
                             <div className="sleep-card-right" style={{ color }}>
