@@ -4175,7 +4175,7 @@ export default function App() {
               )}
             </div>
 
-            {isAdmin && (
+            {(isAdmin || isPremium) && (
               <>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, margin: '16px 0' }}>
                   <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
@@ -4219,7 +4219,7 @@ export default function App() {
                   )}
                   {data.profile?.stravaConnected 
                     ? (lang === 'id' ? 'Strava Terhubung (Klik untuk Sync)' : 'Strava Connected (Click to Sync)')
-                    : 'Connect with Strava (Admin Only)'}
+                    : 'Connect with Strava'}
                 </button>
               </>
             )}

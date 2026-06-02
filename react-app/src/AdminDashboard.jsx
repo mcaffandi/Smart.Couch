@@ -342,11 +342,19 @@ export default function AdminDashboard({ onBack }) {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 20, marginBottom: 40 }}>
             <div className="stat-card" style={{ background: 'var(--bg-card)', padding: 24, borderRadius: 12, border: '1px solid var(--border)' }}>
               <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 8, fontWeight: 600 }}>Total Pelari Aktif</div>
-              <div style={{ fontSize: 36, fontWeight: '800', color: 'var(--accent-purple)' }}>{totalUsers}</div>
+              <div style={{ fontSize: 36, fontWeight: '800', color: 'var(--text-primary)' }}>{totalUsers}</div>
+            </div>
+            <div className="stat-card" style={{ background: 'var(--bg-card)', padding: 24, borderRadius: 12, border: '1px solid var(--border)' }}>
+              <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 8, fontWeight: 600 }}>User PRO</div>
+              <div style={{ fontSize: 36, fontWeight: '800', color: '#f59e0b' }}>{users.filter(u => u.data?.profile?.isPremium).length}</div>
+            </div>
+            <div className="stat-card" style={{ background: 'var(--bg-card)', padding: 24, borderRadius: 12, border: '1px solid var(--border)' }}>
+              <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 8, fontWeight: 600 }}>Estimasi Revenue / Bln</div>
+              <div style={{ fontSize: 36, fontWeight: '800', color: '#10b981' }}>Rp {(users.filter(u => u.data?.profile?.isPremium).length * 29000).toLocaleString('id-ID')}</div>
             </div>
             <div className="stat-card" style={{ background: 'var(--bg-card)', padding: 24, borderRadius: 12, border: '1px solid var(--border)', cursor: 'pointer' }} onClick={() => setAdminTab('blogs')}>
               <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 8, fontWeight: 600 }}>Total Artikel Blog</div>
-              <div style={{ fontSize: 36, fontWeight: '800', color: '#10b981' }}>{totalBlogs}</div>
+              <div style={{ fontSize: 36, fontWeight: '800', color: 'var(--accent-purple)' }}>{totalBlogs}</div>
             </div>
           </div>
 
