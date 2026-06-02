@@ -3920,9 +3920,23 @@ export default function App() {
                                 {new Date(date).toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-US', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
                                 {runDates.has(date) && <span className="badge badge-easy" style={{ marginLeft: 8, padding: '1px 6px', fontSize: 10 }}>{lang === 'id' ? 'Lari' : 'Ran'}</span>}
                               </div>
-                              {rec.duration && (
+                              {rec.duration !== undefined && (
                                 <div className="sleep-card-dur">
                                   {(() => {
+                                    if (rec.nightDuration !== undefined && rec.napDuration !== undefined) {
+                                      let parts = [];
+                                      if (rec.nightDuration > 0) {
+                                        const h = Math.floor(rec.nightDuration);
+                                        const m = Math.round((rec.nightDuration - h) * 60);
+                                        parts.push(lang === 'id' ? `Malam: ${h}j ${m}m` : `Night: ${h}h ${m}m`);
+                                      }
+                                      if (rec.napDuration > 0) {
+                                        const h = Math.floor(rec.napDuration);
+                                        const m = Math.round((rec.napDuration - h) * 60);
+                                        parts.push(lang === 'id' ? `Nap: ${h}j ${m}m` : `Nap: ${h}h ${m}m`);
+                                      }
+                                      if (parts.length > 0) return parts.join(' | ');
+                                    }
                                     const h = Math.floor(rec.duration);
                                     const m = Math.round((rec.duration - h) * 60);
                                     return lang === 'id' ? `${h} jam ${m} menit tidur` : `${h}h ${m}m sleep`;
