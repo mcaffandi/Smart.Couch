@@ -2982,7 +2982,20 @@ export default function App() {
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--accent-purple)' }}><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
               {lang === 'id' ? 'Tambah Lari Manual' : 'Add Run Session'}
             </button>
-            <button className="btn btn-secondary" onClick={() => setShowSleepModal(true)} style={{ justifyContent: 'flex-start', padding: '12px 16px', background: 'var(--bg-card)', borderRadius: 10 }}>
+            <button className="btn btn-secondary" onClick={() => {
+              const today = new Date().toISOString().split('T')[0];
+              const existing = data.sleep_records?.[today];
+              setManualSleep(prev => ({
+                ...prev,
+                date: today,
+                sleepHours: existing?.nightDuration !== undefined ? Math.floor(existing.nightDuration) : (existing?.duration ? Math.floor(existing.duration) : 7),
+                sleepMinutes: existing?.nightDuration !== undefined ? Math.round((existing.nightDuration % 1) * 60) : (existing?.duration ? Math.round((existing.duration % 1) * 60) : 0),
+                napHours: existing?.napDuration !== undefined ? Math.floor(existing.napDuration) : 0,
+                napMinutes: existing?.napDuration !== undefined ? Math.round((existing.napDuration % 1) * 60) : 0,
+                score: existing?.score || prev.score
+              }));
+              setShowSleepModal(true);
+            }} style={{ justifyContent: 'flex-start', padding: '12px 16px', background: 'var(--bg-card)', borderRadius: 10 }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#38bdf8' }}><path d="M2 4v16"></path><path d="M2 8h18a2 2 0 0 1 2 2v10"></path><path d="M2 17h20"></path><path d="M6 8v9"></path></svg>
               {lang === 'id' ? 'Catat Tidur / Nap' : 'Log Sleep / Nap'}
             </button>
@@ -4000,7 +4013,19 @@ export default function App() {
 
             <div className="form-group" style={{ marginBottom: 12 }}>
               <label className="form-label">{lang === 'id' ? 'Tanggal' : 'Date'}</label>
-              <input className="form-input" type="date" value={manualSleep.date} onChange={e => setManualSleep(s => ({ ...s, date: e.target.value }))} />
+              <input className="form-input" type="date" value={manualSleep.date} onChange={e => {
+                const newDate = e.target.value;
+                const existing = data.sleep_records?.[newDate];
+                setManualSleep(s => ({ 
+                  ...s, 
+                  date: newDate,
+                  sleepHours: existing?.nightDuration !== undefined ? Math.floor(existing.nightDuration) : (existing?.duration ? Math.floor(existing.duration) : 7),
+                  sleepMinutes: existing?.nightDuration !== undefined ? Math.round((existing.nightDuration % 1) * 60) : (existing?.duration ? Math.round((existing.duration % 1) * 60) : 0),
+                  napHours: existing?.napDuration !== undefined ? Math.floor(existing.napDuration) : 0,
+                  napMinutes: existing?.napDuration !== undefined ? Math.round((existing.napDuration % 1) * 60) : 0,
+                  score: existing?.score || s.score
+                }));
+              }} />
             </div>
 
             {manualSleep.inputType === 'score' ? (
