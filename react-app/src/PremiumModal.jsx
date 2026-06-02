@@ -86,7 +86,7 @@ export default function PremiumModal({ onClose, onUpgrade, isPremium, lang = 'id
                   <div style={{ fontSize: 16, color: 'var(--text-muted)', fontWeight: 500 }}>/bln</div>
                 </div>
                 <div style={{ fontSize: 13, color: '#34d399', fontWeight: 600, marginTop: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-                  ✨ Lebih murah dari secangkir kopi!
+                  Lebih murah dari secangkir kopi!
                 </div>
                 
                 <div style={{ marginTop: 24, paddingTop: 20, borderTop: '1px dashed rgba(255,255,255,0.1)', textAlign: 'left' }}>
