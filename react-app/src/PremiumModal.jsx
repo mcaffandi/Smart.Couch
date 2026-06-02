@@ -6,8 +6,8 @@ export default function PremiumModal({ onClose, onUpgrade, isPremium, lang = 'id
   const [receipt, setReceipt] = useState(null);
   const [step, setStep] = useState(1); // 1 = Info, 2 = Checkout
   
-  // Generate a random 3-digit unique code between 100 and 999
-  const uniqueCode = useMemo(() => Math.floor(100 + Math.random() * 900), []);
+  // Generate a random unique code between 11 and 99
+  const uniqueCode = useMemo(() => Math.floor(11 + Math.random() * 88), []);
   const basePrice = 29000;
   const totalPrice = basePrice + uniqueCode;
 
@@ -134,9 +134,9 @@ export default function PremiumModal({ onClose, onUpgrade, isPremium, lang = 'id
                   <div style={{ color: '#f59e0b', marginTop: 2 }}>⚠️</div>
                   <div style={{ lineHeight: 1.5 }}>
                     {lang === 'id' ? (
-                      <>Pastikan nominal transfer sesuai hingga <strong>3 digit terakhir</strong> ({uniqueCode}) untuk mempercepat proses verifikasi otomatis.</>
+                      <>Pastikan nominal transfer sesuai hingga <strong>2 digit terakhir</strong> ({uniqueCode}) untuk mempercepat proses verifikasi otomatis.</>
                     ) : (
-                      <>Ensure the transfer amount matches exactly to the <strong>last 3 digits</strong> ({uniqueCode}) to speed up automatic verification.</>
+                      <>Ensure the transfer amount matches exactly to the <strong>last 2 digits</strong> ({uniqueCode}) to speed up automatic verification.</>
                     )}
                   </div>
                 </div>
