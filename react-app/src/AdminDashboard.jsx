@@ -402,7 +402,7 @@ export default function AdminDashboard({ onBack }) {
   const totalBlogs = blogs.length;
 
   return (
-    <div style={{ padding: '40px 20px', maxWidth: adminTab === 'blogs' && showBlogForm ? 1200 : 900, margin: '0 auto', color: 'var(--text-primary)', transition: 'max-width 0.3s ease' }}>
+    <div style={{ padding: '40px 20px', maxWidth: '100%', margin: '0 auto', color: 'var(--text-primary)', transition: 'max-width 0.3s ease' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24, flexWrap: 'wrap', gap: 16 }}>
         <div>
           <h2 style={{ margin: 0, marginBottom: 8 }}>EnduraUP - Admin</h2>
