@@ -306,6 +306,18 @@ export default function AdminDashboard({ onBack }) {
   const totalUsers = users.length;
   const totalBlogs = blogs.length;
 
+  const filteredUsers = useMemo(() => {
+    if (!searchQuery) return users;
+    const lowerQ = searchQuery.toLowerCase();
+    return users.filter(u => {
+      const email = (u.data?.email || u.id).toLowerCase();
+      const name = (u.data?.displayName || u.data?.profile?.displayName || '').toLowerCase();
+      return email.includes(lowerQ) || name.includes(lowerQ);
+    });
+  }, [users, searchQuery]);
+
+  const displayedUsers = showAllUsers || searchQuery ? filteredUsers : filteredUsers.slice(0, 10);
+
   return (
     <div style={{ padding: '40px 20px', maxWidth: adminTab === 'blogs' && showBlogForm ? 1200 : 900, margin: '0 auto', color: 'var(--text-primary)', transition: 'max-width 0.3s ease' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24, flexWrap: 'wrap', gap: 16 }}>
@@ -381,16 +393,25 @@ export default function AdminDashboard({ onBack }) {
           </div>
 
           <div style={{ background: 'var(--bg-card)', padding: 24, borderRadius: 12, border: '1px solid var(--border)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
               <h3 style={{ margin: 0 }}>Daftar Pengguna Terbaru</h3>
-              {users.length > 10 && (
-                <button 
-                  onClick={() => setShowAllUsers(!showAllUsers)}
-                  style={{ background: 'transparent', border: '1px solid var(--border)', color: 'var(--text-primary)', padding: '6px 12px', borderRadius: 20, fontSize: 13, cursor: 'pointer' }}
-                >
-                  {showAllUsers ? 'Tampilkan Lebih Sedikit' : 'Lihat Semua Pengguna'}
-                </button>
-              )}
+              <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+                <input 
+                  type="text" 
+                  placeholder="Cari email / nama..." 
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-primary)', padding: '6px 12px', borderRadius: 20, fontSize: 13, outline: 'none', minWidth: 200 }}
+                />
+                {(users.length > 10 || searchQuery) && (
+                  <button 
+                    onClick={() => setShowAllUsers(!showAllUsers)}
+                    style={{ background: 'transparent', border: '1px solid var(--border)', color: 'var(--text-primary)', padding: '6px 12px', borderRadius: 20, fontSize: 13, cursor: 'pointer' }}
+                  >
+                    {showAllUsers ? 'Tampilkan Lebih Sedikit' : 'Lihat Semua Pengguna'}
+                  </button>
+                )}
+              </div>
             </div>
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
@@ -398,19 +419,24 @@ export default function AdminDashboard({ onBack }) {
                   <tr style={{ borderBottom: '1px solid var(--border)', color: 'var(--text-secondary)', fontSize: 13 }}>
                     <th style={{ padding: '12px 16px' }}>Email / ID</th>
                     <th style={{ padding: '12px 16px' }}>Nama</th>
+                    <th style={{ padding: '12px 16px' }}>Login Terakhir</th>
                     <th style={{ padding: '12px 16px' }}>Tujuan</th>
                     <th style={{ padding: '12px 16px' }}>Target Pace</th>
+                    <th style={{ padding: '12px 16px' }}>Status PRO</th>
                     <th style={{ padding: '12px 16px', textAlign: 'center' }}>Aksi</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {(showAllUsers ? users : users.slice(0, 10)).map(u => (
+                  {displayedUsers.map(u => (
                     <tr key={u.id} style={{ borderBottom: '1px dashed rgba(128,128,128,0.1)' }}>
                       <td style={{ padding: '16px', fontSize: 14, wordBreak: 'break-all' }}>
                         {u.data?.email || (u.id.substring(0, 10) + '...')}
                       </td>
                       <td style={{ padding: '16px', fontSize: 14 }}>
                         {u.data?.displayName || u.data?.profile?.displayName || 'Anonim'}
+                      </td>
+                      <td style={{ padding: '16px', fontSize: 13, color: 'var(--text-muted)' }}>
+                        {u.data?.lastLogin ? new Date(u.data.lastLogin.seconds ? u.data.lastLogin.seconds * 1000 : u.data.lastLogin).toLocaleDateString('id-ID') : '-'}
                       </td>
                       <td style={{ padding: '16px', fontSize: 14 }}>
                         <span style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', padding: '4px 8px', borderRadius: 4 }}>
@@ -420,12 +446,22 @@ export default function AdminDashboard({ onBack }) {
                       <td style={{ padding: '16px', fontSize: 14 }}>
                         {u.data?.profile?.targetPace ? `${Math.floor(u.data.profile.targetPace)}:${String(Math.round((u.data.profile.targetPace % 1) * 60)).padStart(2, '0')}/km` : '-'}
                       </td>
+                      <td style={{ padding: '16px', fontSize: 13 }}>
+                        {(() => {
+                          const isPro = u.data?.profile?.isPremium || (u.data?.profile?.premiumUntil && u.data.profile.premiumUntil > Date.now());
+                          if (!isPro) return '-';
+                          if (u.data?.profile?.premiumUntil) {
+                            return <span style={{ color: '#10b981', fontWeight: 600 }}>s/d {new Date(u.data.profile.premiumUntil).toLocaleDateString('id-ID')}</span>;
+                          }
+                          return <span style={{ color: '#10b981', fontWeight: 600 }}>Aktif (Permanen)</span>;
+                        })()}
+                      </td>
                       <td style={{ padding: '16px', textAlign: 'center', display: 'flex', gap: '8px', justifyContent: 'center' }}>
                         <button 
-                          onClick={() => handleTogglePremium(u.id, u.data?.profile?.isPremium)}
-                          style={{ background: u.data?.profile?.isPremium ? '#f59e0b' : '#10b981', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
+                          onClick={() => handleTogglePremium(u.id, u.data?.profile)}
+                          style={{ background: (u.data?.profile?.isPremium || (u.data?.profile?.premiumUntil && u.data.profile.premiumUntil > Date.now())) ? '#f59e0b' : '#10b981', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', whiteSpace: 'nowrap' }}
                         >
-                          {u.data?.profile?.isPremium ? 'Cabut PRO' : 'Jadikan PRO'}
+                          {(u.data?.profile?.isPremium || (u.data?.profile?.premiumUntil && u.data.profile.premiumUntil > Date.now())) ? 'Cabut PRO' : '+ Jadikan PRO'}
                         </button>
                         <button 
                           onClick={() => handleDeleteUser(u.id)}
