@@ -96,8 +96,8 @@ export default function AICoachChat({ lang, goal, programStyle, targetPace, curr
         }
       }
 
-      // Prepare conversation history for LLM
-      const chatHistory = newMessages.map(m => ({
+      // Prepare conversation history for LLM (Compact to max last 6 messages to save tokens/context)
+      const chatHistory = newMessages.slice(-6).map(m => ({
         role: m.role,
         content: m.content
       }));
@@ -263,7 +263,10 @@ STRICT RULES (MUST FOLLOW):
                 <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{lang === 'id' ? 'Selalu siap membantu' : 'Always ready to help'}</div>
               </div>
             </div>
-            <div style={{ display: 'flex', gap: 8 }}>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <button onClick={() => { setMessages([]); setInput(''); }} style={{ background: 'var(--hover-overlay)', border: '1px solid var(--border)', color: 'var(--text-secondary)', cursor: 'pointer', padding: '4px 10px', fontSize: 12, borderRadius: 12, fontWeight: 600 }}>
+                {lang === 'id' ? 'Clear' : 'Clear'}
+              </button>
               <button onClick={() => setIsOpen(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--hover-overlay)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>
                 <X size={20} />
               </button>
