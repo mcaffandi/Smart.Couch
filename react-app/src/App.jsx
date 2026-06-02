@@ -297,8 +297,7 @@ export default function App() {
     score: 80,
     sleepHours: 7,
     sleepMinutes: 0,
-    napHours: 0,
-    napMinutes: 0,
+    sleepType: 'night', // 'night' or 'nap'
   });
 
   // ── State: active tab ────────────────────────────────────────────────────────
@@ -2104,15 +2103,14 @@ export default function App() {
       if (score < 10) score = 10;
     }
     
-    const sleepDur = (manualSleep.sleepHours || 0) + ((manualSleep.sleepMinutes || 0) / 60);
-    const napDur = (manualSleep.napHours || 0) + ((manualSleep.napMinutes || 0) / 60);
-    const totalDuration = sleepDur + napDur;
+    const duration = (manualSleep.sleepHours || 0) + ((manualSleep.sleepMinutes || 0) / 60);
+    const key = `${manualSleep.date}_${Date.now()}`;
 
     const updated = {
       ...data,
       sleep_records: {
         ...data.sleep_records,
-        [manualSleep.date]: { score, duration: totalDuration, nightDuration: sleepDur, napDuration: napDur },
+        [key]: { score, duration, type: manualSleep.sleepType, dateStr: manualSleep.date },
       },
       profile: { ...(data.profile || {}), age, goal, programStyle, targetPace, selectedDays }
     };
@@ -2988,11 +2986,9 @@ export default function App() {
               setManualSleep(prev => ({
                 ...prev,
                 date: today,
-                sleepHours: existing?.nightDuration !== undefined ? Math.floor(existing.nightDuration) : (existing?.duration ? Math.floor(existing.duration) : 7),
-                sleepMinutes: existing?.nightDuration !== undefined ? Math.round((existing.nightDuration % 1) * 60) : (existing?.duration ? Math.round((existing.duration % 1) * 60) : 0),
-                napHours: existing?.napDuration !== undefined ? Math.floor(existing.napDuration) : 0,
-                napMinutes: existing?.napDuration !== undefined ? Math.round((existing.napDuration % 1) * 60) : 0,
-                score: existing?.score || prev.score
+                sleepHours: 7,
+                sleepMinutes: 0,
+                sleepType: 'night'
               }));
               setShowSleepModal(true);
             }} style={{ justifyContent: 'flex-start', padding: '12px 16px', background: 'var(--bg-card)', borderRadius: 10 }}>
@@ -3910,36 +3906,43 @@ export default function App() {
                     )}
 
                     <div className="sleep-history-grid">
-                      {Object.entries(sleepRecs).sort(([a], [b]) => b.localeCompare(a)).map(([date, rec]) => {
+                      {Object.entries(sleepRecs).sort(([a], [b]) => b.localeCompare(a)).map(([key, rec]) => {
+                        const dateForDisplay = rec.dateStr || key.split('_')[0];
                         const s = rec.score;
                         const color = s >= 80 ? '#10b981' : s >= 60 ? '#f59e0b' : '#ef4444';
                         return (
-                          <div className="sleep-history-card" key={date}>
+                          <div className="sleep-history-card" key={key}>
                             <div className="sleep-card-left">
                               <div className="sleep-card-date">
-                                {new Date(date).toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-US', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
-                                {runDates.has(date) && <span className="badge badge-easy" style={{ marginLeft: 8, padding: '1px 6px', fontSize: 10 }}>{lang === 'id' ? 'Lari' : 'Ran'}</span>}
+                                {new Date(dateForDisplay).toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-US', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
+                                {runDates.has(dateForDisplay) && <span className="badge badge-easy" style={{ marginLeft: 8, padding: '1px 6px', fontSize: 10 }}>{lang === 'id' ? 'Lari' : 'Ran'}</span>}
                               </div>
                               {rec.duration !== undefined && (
                                 <div className="sleep-card-dur">
                                   {(() => {
+                                    const h = Math.floor(rec.duration);
+                                    const m = Math.round((rec.duration - h) * 60);
+                                    let typeStr = "";
+                                    if (rec.type === 'nap') typeStr = 'Nap: ';
+                                    else if (rec.type === 'night') typeStr = lang === 'id' ? 'Malam: ' : 'Night: ';
+                                    
+                                    // Fallback to legacy format
                                     if (rec.nightDuration !== undefined && rec.napDuration !== undefined) {
                                       let parts = [];
                                       if (rec.nightDuration > 0) {
-                                        const h = Math.floor(rec.nightDuration);
-                                        const m = Math.round((rec.nightDuration - h) * 60);
-                                        parts.push(lang === 'id' ? `Malam: ${h}j ${m}m` : `Night: ${h}h ${m}m`);
+                                        const h1 = Math.floor(rec.nightDuration);
+                                        const m1 = Math.round((rec.nightDuration - h1) * 60);
+                                        parts.push(lang === 'id' ? `Malam: ${h1}j ${m1}m` : `Night: ${h1}h ${m1}m`);
                                       }
                                       if (rec.napDuration > 0) {
-                                        const h = Math.floor(rec.napDuration);
-                                        const m = Math.round((rec.napDuration - h) * 60);
-                                        parts.push(lang === 'id' ? `Nap: ${h}j ${m}m` : `Nap: ${h}h ${m}m`);
+                                        const h2 = Math.floor(rec.napDuration);
+                                        const m2 = Math.round((rec.napDuration - h2) * 60);
+                                        parts.push(`Nap: ${h2}j ${m2}m`);
                                       }
                                       if (parts.length > 0) return parts.join(' | ');
                                     }
-                                    const h = Math.floor(rec.duration);
-                                    const m = Math.round((rec.duration - h) * 60);
-                                    return lang === 'id' ? `${h} jam ${m} menit tidur` : `${h}h ${m}m sleep`;
+                                    
+                                    return lang === 'id' ? `${typeStr}${h} jam ${m} menit` : `${typeStr}${h}h ${m}m`;
                                   })()}
                                 </div>
                               )}
@@ -4029,15 +4032,9 @@ export default function App() {
               <label className="form-label">{lang === 'id' ? 'Tanggal' : 'Date'}</label>
               <input className="form-input" type="date" value={manualSleep.date} onChange={e => {
                 const newDate = e.target.value;
-                const existing = data.sleep_records?.[newDate];
                 setManualSleep(s => ({ 
                   ...s, 
-                  date: newDate,
-                  sleepHours: existing?.nightDuration !== undefined ? Math.floor(existing.nightDuration) : (existing?.duration ? Math.floor(existing.duration) : 7),
-                  sleepMinutes: existing?.nightDuration !== undefined ? Math.round((existing.nightDuration % 1) * 60) : (existing?.duration ? Math.round((existing.duration % 1) * 60) : 0),
-                  napHours: existing?.napDuration !== undefined ? Math.floor(existing.napDuration) : 0,
-                  napMinutes: existing?.napDuration !== undefined ? Math.round((existing.napDuration % 1) * 60) : 0,
-                  score: existing?.score || s.score
+                  date: newDate
                 }));
               }} />
             </div>
@@ -4070,18 +4067,28 @@ export default function App() {
             )}
 
             <div className="form-group" style={{ marginBottom: 16 }}>
-              <label className="form-label" style={{ marginBottom: 8 }}>{lang === 'id' ? 'Tidur Semalam' : 'Night Sleep'}</label>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                <NumberInput label={lang === 'id' ? 'Jam' : 'Hours'} value={manualSleep.sleepHours} onChange={v => setManualSleep(s => ({ ...s, sleepHours: v }))} min={0} max={24} step={1} />
-                <NumberInput label={lang === 'id' ? 'Menit' : 'Minutes'} value={manualSleep.sleepMinutes} onChange={v => setManualSleep(s => ({ ...s, sleepMinutes: v }))} min={0} max={59} step={1} />
+              <label className="form-label" style={{ marginBottom: 8 }}>{lang === 'id' ? 'Jenis Tidur' : 'Sleep Type'}</label>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button
+                  style={{ flex: 1, padding: '10px', borderRadius: 8, border: manualSleep.sleepType === 'night' ? '1.5px solid var(--accent-purple)' : '1px solid var(--border)', background: manualSleep.sleepType === 'night' ? 'rgba(167, 139, 250, 0.1)' : 'var(--bg-card)', color: manualSleep.sleepType === 'night' ? 'var(--accent-purple)' : 'var(--text-secondary)', fontWeight: 600, fontSize: 13, cursor: 'pointer', transition: 'all 0.2s' }}
+                  onClick={() => setManualSleep(s => ({ ...s, sleepType: 'night' }))}
+                >
+                  {lang === 'id' ? 'Tidur Semalam' : 'Night Sleep'}
+                </button>
+                <button
+                  style={{ flex: 1, padding: '10px', borderRadius: 8, border: manualSleep.sleepType === 'nap' ? '1.5px solid #38bdf8' : '1px solid var(--border)', background: manualSleep.sleepType === 'nap' ? 'rgba(56, 189, 248, 0.1)' : 'var(--bg-card)', color: manualSleep.sleepType === 'nap' ? '#38bdf8' : 'var(--text-secondary)', fontWeight: 600, fontSize: 13, cursor: 'pointer', transition: 'all 0.2s' }}
+                  onClick={() => setManualSleep(s => ({ ...s, sleepType: 'nap' }))}
+                >
+                  {lang === 'id' ? 'Tidur Siang (Nap)' : 'Daytime Nap'}
+                </button>
               </div>
             </div>
 
             <div className="form-group" style={{ marginBottom: 24 }}>
-              <label className="form-label" style={{ marginBottom: 8 }}>{lang === 'id' ? 'Tidur Siang (Nap)' : 'Daytime Nap'}</label>
+              <label className="form-label" style={{ marginBottom: 8 }}>{lang === 'id' ? 'Durasi' : 'Duration'}</label>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                <NumberInput label={lang === 'id' ? 'Jam' : 'Hours'} value={manualSleep.napHours} onChange={v => setManualSleep(s => ({ ...s, napHours: v }))} min={0} max={12} step={1} />
-                <NumberInput label={lang === 'id' ? 'Menit' : 'Minutes'} value={manualSleep.napMinutes} onChange={v => setManualSleep(s => ({ ...s, napMinutes: v }))} min={0} max={59} step={1} />
+                <NumberInput label={lang === 'id' ? 'Jam' : 'Hours'} value={manualSleep.sleepHours} onChange={v => setManualSleep(s => ({ ...s, sleepHours: v }))} min={0} max={24} step={1} />
+                <NumberInput label={lang === 'id' ? 'Menit' : 'Minutes'} value={manualSleep.sleepMinutes} onChange={v => setManualSleep(s => ({ ...s, sleepMinutes: v }))} min={0} max={59} step={1} />
               </div>
             </div>
             <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: -16, marginBottom: 20, textAlign: 'center' }}>
