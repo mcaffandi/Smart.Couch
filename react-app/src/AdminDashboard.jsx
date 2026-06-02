@@ -701,6 +701,7 @@ export default function AdminDashboard({ onBack }) {
                     <th style={{ padding: '12px 16px' }}>Tanggal Request</th>
                     <th style={{ padding: '12px 16px' }}>Email / ID</th>
                     <th style={{ padding: '12px 16px' }}>Nama</th>
+                    <th style={{ padding: '12px 16px' }}>Nominal</th>
                     <th style={{ padding: '12px 16px' }}>Bukti Trf</th>
                     <th style={{ padding: '12px 16px' }}>Status</th>
                     <th style={{ padding: '12px 16px', textAlign: 'center' }}>Aksi</th>
@@ -717,6 +718,9 @@ export default function AdminDashboard({ onBack }) {
                       </td>
                       <td style={{ padding: '16px', fontSize: 14 }}>
                         {r.displayName || 'Anonim'}
+                      </td>
+                      <td style={{ padding: '16px', fontSize: 14, fontWeight: 600, color: '#10b981' }}>
+                        {r.amount ? `Rp ${r.amount.toLocaleString('id-ID')}` : '-'}
                       </td>
                       <td style={{ padding: '16px', fontSize: 14 }}>
                         {r.receiptUrl ? (

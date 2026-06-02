@@ -4241,7 +4241,7 @@ export default function App() {
           onClose={() => setShowPremiumModal(false)} 
           isPremium={isPremium}
           lang={lang}
-          onUpgrade={async (receiptFile) => {
+          onUpgrade={async (receiptFile, amount) => {
             try {
               if (!auth.currentUser) {
                 addToast('Harap login terlebih dahulu untuk upgrade.');
@@ -4263,6 +4263,7 @@ export default function App() {
                 email: userEmail,
                 displayName: displayName,
                 receiptUrl: receiptUrl,
+                amount: amount || 29000,
                 requestedAt: serverTimestamp(),
                 status: 'pending'
               });
