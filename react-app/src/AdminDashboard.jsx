@@ -276,6 +276,18 @@ export default function AdminDashboard({ onBack }) {
     }
   };
 
+  const filteredUsers = useMemo(() => {
+    if (!searchQuery) return users;
+    const lowerQ = searchQuery.toLowerCase();
+    return users.filter(u => {
+      const email = (u.data?.email || u.id).toLowerCase();
+      const name = (u.data?.displayName || u.data?.profile?.displayName || '').toLowerCase();
+      return email.includes(lowerQ) || name.includes(lowerQ);
+    });
+  }, [users, searchQuery]);
+
+  const displayedUsers = showAllUsers || searchQuery ? filteredUsers : filteredUsers.slice(0, 10);
+
   if (!isAuthenticated) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', color: 'var(--text-primary)' }}>
@@ -305,18 +317,6 @@ export default function AdminDashboard({ onBack }) {
 
   const totalUsers = users.length;
   const totalBlogs = blogs.length;
-
-  const filteredUsers = useMemo(() => {
-    if (!searchQuery) return users;
-    const lowerQ = searchQuery.toLowerCase();
-    return users.filter(u => {
-      const email = (u.data?.email || u.id).toLowerCase();
-      const name = (u.data?.displayName || u.data?.profile?.displayName || '').toLowerCase();
-      return email.includes(lowerQ) || name.includes(lowerQ);
-    });
-  }, [users, searchQuery]);
-
-  const displayedUsers = showAllUsers || searchQuery ? filteredUsers : filteredUsers.slice(0, 10);
 
   return (
     <div style={{ padding: '40px 20px', maxWidth: adminTab === 'blogs' && showBlogForm ? 1200 : 900, margin: '0 auto', color: 'var(--text-primary)', transition: 'max-width 0.3s ease' }}>
