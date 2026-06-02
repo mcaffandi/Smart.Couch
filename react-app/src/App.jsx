@@ -21,7 +21,7 @@ import Logo from './Logo';
 import ExportGuideModal from './ExportGuideModal';
 import FeedbackModal from './FeedbackModal';
 import PremiumModal from './PremiumModal';
-import { Sun, Moon, Coffee } from 'lucide-react';
+import { Sun, Moon, Coffee, Crown } from 'lucide-react';
 import { translations } from './translations';
 import {
   auth,
@@ -2939,7 +2939,10 @@ export default function App() {
             )}
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 13, fontWeight: 650, color: displayName ? 'var(--text-primary)' : 'var(--text-muted)', fontStyle: displayName ? 'normal' : 'italic', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {displayName || t.fillProfileName} {isPremium && '👑'}
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                  {displayName || t.fillProfileName}
+                  {isPremium && <Crown size={16} color="#fbbf24" fill="#fbbf24" style={{ marginLeft: 6, flexShrink: 0 }} />}
+                </div>
               </div>
               <div style={{ fontSize: 10, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 1 }}>{currentUser}</div>
             </div>
