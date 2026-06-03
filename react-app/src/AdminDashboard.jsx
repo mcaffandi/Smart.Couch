@@ -352,6 +352,7 @@ export default function AdminDashboard({ onBack }) {
           content: finalContent,
           thumbnail: finalThumbnail,
           tags: tagsArray,
+          author: blogForm.author || 'EnduraUP Coach',
           seoTitle: blogForm.seoTitle || '',
           seoDescription: blogForm.seoDescription || '',
           isDraft: isDraft
@@ -364,6 +365,7 @@ export default function AdminDashboard({ onBack }) {
           content: finalContent,
           thumbnail: finalThumbnail,
           tags: tagsArray,
+          author: blogForm.author || 'EnduraUP Coach',
           seoTitle: blogForm.seoTitle || '',
           seoDescription: blogForm.seoDescription || '',
           isDraft: isDraft,
