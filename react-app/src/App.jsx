@@ -18,6 +18,7 @@ import LandingPage from './LandingPage';
 import OnboardingWizard from './OnboardingWizard';
 import AdminDashboard from './AdminDashboard';
 import BlogModule from './Blog';
+import { AboutPage, PrivacyPage, ContactPage } from './StaticPages';
 import Logo from './Logo';
 import ExportGuideModal from './ExportGuideModal';
 import FeedbackModal from './FeedbackModal';
@@ -308,11 +309,16 @@ export default function App() {
 
   // ── State: active tab ────────────────────────────────────────────────────────
   const [tab, setTab] = useState(() => {
-    if (window.location.pathname.startsWith('/blog')) return 'blog';
+    const path = window.location.pathname;
+    if (path.startsWith('/blog')) return 'blog';
+    if (path === '/about') return 'about';
+    if (path === '/privacy') return 'privacy';
+    if (path === '/contact') return 'contact';
     return 'dashboard';
   });
   const [showLanding, setShowLanding] = useState(() => {
-    return !window.location.pathname.startsWith('/blog');
+    const path = window.location.pathname;
+    return !(path.startsWith('/blog') || path === '/about' || path === '/privacy' || path === '/contact');
   });
   const [blogView, setBlogView] = useState('list');
   const [blogSearch, setBlogSearch] = useState('');
@@ -321,12 +327,11 @@ export default function App() {
   useEffect(() => {
     const handlePopState = () => {
       const path = window.location.pathname;
-      if (path.startsWith('/blog')) {
-        setTab('blog');
-        setShowLanding(false);
-      } else {
-        setTab('dashboard');
-      }
+      if (path.startsWith('/blog')) { setTab('blog'); setShowLanding(false); }
+      else if (path === '/about') { setTab('about'); setShowLanding(false); }
+      else if (path === '/privacy') { setTab('privacy'); setShowLanding(false); }
+      else if (path === '/contact') { setTab('contact'); setShowLanding(false); }
+      else { setTab('dashboard'); }
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
@@ -334,8 +339,13 @@ export default function App() {
 
   // Sync tab state to URL
   useEffect(() => {
-    const targetPath = tab === 'blog' ? '/blog' : '/';
-    if (window.location.pathname !== targetPath) {
+    let targetPath = '/';
+    if (tab === 'blog') targetPath = '/blog';
+    else if (tab === 'about') targetPath = '/about';
+    else if (tab === 'privacy') targetPath = '/privacy';
+    else if (tab === 'contact') targetPath = '/contact';
+    
+    if (window.location.pathname !== targetPath && !window.location.pathname.startsWith('/blog/')) {
       window.history.pushState(null, '', targetPath);
     }
   }, [tab]);
@@ -2193,6 +2203,32 @@ export default function App() {
         <div style={{ padding: '16px 20px', maxWidth: 1000, margin: '0 auto' }}>
           <ErrorBoundary>
             <BlogModule isAdmin={showAdmin} lang={lang} onViewChange={setBlogView} currentUser={currentUser} searchQuery={blogSearch} />
+          </ErrorBoundary>
+        </div>
+      </div>
+    );
+  }
+
+  // ─────────────────── STATIC PAGES ───────────────────
+  if (['about', 'privacy', 'contact'].includes(tab)) {
+    return (
+      <div className="landing-container" style={{ minHeight: '100vh', paddingTop: 56, overflowY: 'auto', background: 'var(--bg-base)' }}>
+        <nav className="landing-nav" style={{ position: 'fixed', top: 0, left: 0, right: 0, width: '100%', maxWidth: '100%', padding: '16px 5%', background: 'var(--glass-bg)', backdropFilter: 'blur(12px)', zIndex: 100, borderBottom: '1px solid var(--border)' }}>
+          <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+            <div className="nav-logo" onClick={() => { setTab('dashboard'); window.history.pushState(null, '', '/'); window.dispatchEvent(new Event('popstate')); }} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Logo size={24} />
+              <span className="logo-text" style={{ fontSize: 20, letterSpacing: '-0.5px' }}>EnduraUP</span>
+            </div>
+            <button className="nav-btn-primary" onClick={() => { setTab('dashboard'); window.history.pushState(null, '', '/'); window.dispatchEvent(new Event('popstate')); }} style={{ padding: '8px 16px', borderRadius: 20, fontSize: 13, background: 'transparent', border: '1px solid var(--border)', color: 'var(--text-primary)', fontWeight: 600 }}>
+              Kembali ke Dasbor
+            </button>
+          </div>
+        </nav>
+        <div style={{ padding: '16px 20px', maxWidth: 1000, margin: '0 auto' }}>
+          <ErrorBoundary>
+            {tab === 'about' && <AboutPage lang={lang} />}
+            {tab === 'privacy' && <PrivacyPage lang={lang} />}
+            {tab === 'contact' && <ContactPage lang={lang} />}
           </ErrorBoundary>
         </div>
       </div>

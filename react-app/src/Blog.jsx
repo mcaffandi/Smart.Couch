@@ -482,9 +482,9 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
             Platform AI pelatih lari pintar yang membantu pelari mencapai personal best dengan program adaptif berbasis data.
           </p>
           <div style={{ display: 'flex', gap: 20, marginBottom: 24 }}>
-            <a href="#" style={{ color: 'var(--text-muted)', textDecoration: 'none', fontSize: 13, fontWeight: 500, transition: 'color 0.2s' }}>Tentang Kami</a>
-            <a href="#" style={{ color: 'var(--text-muted)', textDecoration: 'none', fontSize: 13, fontWeight: 500, transition: 'color 0.2s' }}>Kebijakan Privasi</a>
-            <a href="#" style={{ color: 'var(--text-muted)', textDecoration: 'none', fontSize: 13, fontWeight: 500, transition: 'color 0.2s' }}>Hubungi Pelatih</a>
+            <a href="/about" onClick={(e) => { e.preventDefault(); window.history.pushState(null, '', '/about'); window.dispatchEvent(new Event('popstate')); }} style={{ color: 'var(--text-muted)', textDecoration: 'none', fontSize: 13, fontWeight: 500, transition: 'color 0.2s' }}>Tentang Kami</a>
+            <a href="/privacy" onClick={(e) => { e.preventDefault(); window.history.pushState(null, '', '/privacy'); window.dispatchEvent(new Event('popstate')); }} style={{ color: 'var(--text-muted)', textDecoration: 'none', fontSize: 13, fontWeight: 500, transition: 'color 0.2s' }}>Kebijakan Privasi</a>
+            <a href="/contact" onClick={(e) => { e.preventDefault(); window.history.pushState(null, '', '/contact'); window.dispatchEvent(new Event('popstate')); }} style={{ color: 'var(--text-muted)', textDecoration: 'none', fontSize: 13, fontWeight: 500, transition: 'color 0.2s' }}>Hubungi Pelatih</a>
           </div>
           <div style={{ fontSize: 12, color: 'var(--text-muted)', borderTop: '1px solid var(--border)', paddingTop: 20, width: '100%', maxWidth: 400 }}>
             &copy; {new Date().getFullYear()} EnduraUP. All rights reserved.
