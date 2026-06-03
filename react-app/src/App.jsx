@@ -588,7 +588,7 @@ export default function App() {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get('code');
-    if (code && isAdmin) {
+    if (code && currentUser) {
       window.history.replaceState({}, document.title, window.location.pathname);
       
       const clientId = import.meta.env.VITE_STRAVA_CLIENT_ID;
@@ -743,7 +743,7 @@ export default function App() {
         setIsUploading(false);
       });
     }
-  }, [isAdmin, saveAndSyncData, lang, addToast]);
+  }, [currentUser, saveAndSyncData, lang, addToast]);
 
   // ── Derived data ─────────────────────────────────────────────────────────────
   const runActs = data.running_activities ?? [];
