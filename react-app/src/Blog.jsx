@@ -228,6 +228,8 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
 
 
   const filteredBlogs = blogs.filter(b => {
+    // Hide drafts if not admin
+    if (b.isDraft && !isAdmin) return false;
     // Filter by saved
     if (showSavedOnly && !savedBlogs.includes(b.id)) return false;
     // Filter by tag

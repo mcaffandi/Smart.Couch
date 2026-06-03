@@ -22,7 +22,7 @@ export default function AdminDashboard({ onBack }) {
 
   const [showBlogForm, setShowBlogForm] = useState(false);
   const [blogPosting, setBlogPosting] = useState(false);
-  const [blogForm, setBlogForm] = useState({ title: '', content: '', tags: '', thumbnail: '' });
+  const [blogForm, setBlogForm] = useState({ title: '', content: '', tags: '', thumbnail: '', seoTitle: '', seoDescription: '' });
   const [editingBlogId, setEditingBlogId] = useState(null);
   const [showAllUsers, setShowAllUsers] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -304,8 +304,8 @@ export default function AdminDashboard({ onBack }) {
     }
   };
 
-  const handlePostBlog = async (e) => {
-    e.preventDefault();
+  const handlePostBlog = async (e, isDraft = false) => {
+    if (e) e.preventDefault();
     if (!blogForm.title || !blogForm.content || !blogForm.tags) return;
     setBlogPosting(true);
     try {
@@ -318,32 +318,41 @@ export default function AdminDashboard({ onBack }) {
           title: blogForm.title,
           content: blogForm.content,
           thumbnail: blogForm.thumbnail,
-          tags: tagsArray
+          tags: tagsArray,
+          metaTitle: blogForm.metaTitle || '',
+          metaDescription: blogForm.metaDescription || '',
+          isDraft: isDraft
         });
-        alert("Artikel berhasil di-update!");
-        setBlogs(blogs.map(b => b.id === editingBlogId ? { ...b, title: blogForm.title, content: blogForm.content, thumbnail: blogForm.thumbnail, tags: tagsArray } : b));
+        alert(isDraft ? "Draft berhasil disimpan!" : "Artikel berhasil di-update!");
+        setBlogs(blogs.map(b => b.id === editingBlogId ? { ...b, title: blogForm.title, content: blogForm.content, thumbnail: blogForm.thumbnail, tags: tagsArray, seoTitle: blogForm.seoTitle, seoDescription: blogForm.seoDescription, isDraft } : b));
       } else {
         const newDocRef = await addDoc(collection(db, "blogs"), {
           title: blogForm.title,
           content: blogForm.content,
           thumbnail: blogForm.thumbnail,
           tags: tagsArray,
+          seoTitle: blogForm.seoTitle || '',
+          seoDescription: blogForm.seoDescription || '',
+          isDraft: isDraft,
           createdAt: serverTimestamp(),
           author: "Admin EnduraUP"
         });
-        alert("Artikel berhasil di-publish!");
+        alert(isDraft ? "Draft berhasil disimpan!" : "Artikel berhasil di-publish!");
         setBlogs([{ 
           id: newDocRef.id, 
           title: blogForm.title, 
           content: blogForm.content, 
           thumbnail: blogForm.thumbnail, 
-          tags: tagsArray, 
+          tags: tagsArray,
+          seoTitle: blogForm.seoTitle,
+          seoDescription: blogForm.seoDescription,
+          isDraft: isDraft,
           createdAt: new Date(), 
           author: "Admin EnduraUP" 
         }, ...blogs]);
       }
       
-      setBlogForm({ title: '', content: '', tags: '', thumbnail: '' });
+      setBlogForm({ title: '', content: '', tags: '', thumbnail: '', metaTitle: '', metaDescription: '' });
       setEditingBlogId(null);
       setShowBlogForm(false);
     } catch (err) {
@@ -358,6 +367,8 @@ export default function AdminDashboard({ onBack }) {
       title: blog.title || '',
       content: blog.content || '',
       thumbnail: blog.thumbnail || '',
+      seoTitle: blog.seoTitle || '',
+      seoDescription: blog.seoDescription || '',
       tags: blog.tags ? blog.tags.join(', ') : ''
     });
     setEditingBlogId(blog.id);
@@ -613,6 +624,26 @@ export default function AdminDashboard({ onBack }) {
         <div className="animate-fade-in" style={{ background: 'var(--bg-card)', padding: 32, borderRadius: 16, border: '1px solid var(--border)' }}>
           <h3 style={{ margin: 0, fontSize: 24, marginBottom: 24 }}>Pengaturan Sistem</h3>
           
+          <div style={{ marginBottom: 24, padding: 16, border: '1px solid var(--border)', borderRadius: 12, background: 'var(--bg-surface)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <div>
+                <label style={{ display: 'block', fontWeight: 600, fontSize: 15, marginBottom: 4 }}>Master Toggle: Strava Sync (PRO Users)</label>
+                <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: 0 }}>Aktifkan atau matikan sinkronisasi Strava untuk semua user PRO. Berguna jika terjadi error pada API Strava.</p>
+              </div>
+              <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', position: 'relative' }}>
+                <input 
+                  type="checkbox" 
+                  checked={globalSettings.stravaSyncEnabled !== false} 
+                  onChange={e => setGlobalSettings({...globalSettings, stravaSyncEnabled: e.target.checked})}
+                  style={{ opacity: 0, position: 'absolute', width: 0, height: 0 }}
+                />
+                <div style={{ width: 44, height: 24, background: globalSettings.stravaSyncEnabled !== false ? '#10b981' : '#ef4444', borderRadius: 24, position: 'relative', transition: 'background 0.3s' }}>
+                  <div style={{ position: 'absolute', top: 2, left: globalSettings.stravaSyncEnabled !== false ? 22 : 2, width: 20, height: 20, background: '#fff', borderRadius: '50%', transition: 'left 0.3s' }}></div>
+                </div>
+              </label>
+            </div>
+          </div>
+
           <div style={{ marginBottom: 24 }}>
             <label style={{ display: 'block', marginBottom: 8, fontWeight: 600, fontSize: 14 }}>Strava Sync Mode</label>
             <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 12 }}>Pilih berapa banyak aktivitas yang ditarik setiap kali pengguna login atau memicu sync.</p>
@@ -736,7 +767,7 @@ export default function AdminDashboard({ onBack }) {
             <button className="btn btn-primary" onClick={() => {
               if (showBlogForm) {
                 setEditingBlogId(null);
-                setBlogForm({ title: '', content: '', tags: '', thumbnail: '' });
+                setBlogForm({ title: '', content: '', tags: '', thumbnail: '', seoTitle: '', seoDescription: '' });
               }
               setShowBlogForm(!showBlogForm);
             }} style={{ padding: '8px 20px', fontSize: 14, width: 'auto', borderRadius: 24 }}>
@@ -765,9 +796,18 @@ export default function AdminDashboard({ onBack }) {
                 />
               </div>
 
+              <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--accent-purple)', marginBottom: 8, marginTop: 16 }}>
+                🔍 SEO Pengaturan (Opsional)
+              </div>
+              <input className="form-input" placeholder="Meta Title (Maks 60 Karakter, default: Judul Artikel)" value={blogForm.seoTitle} onChange={e => setBlogForm({...blogForm, seoTitle: e.target.value})} style={{ width: '100%', padding: '14px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-surface)', color: 'var(--text-primary)', fontSize: 14 }} />
+              <textarea className="form-input" placeholder="Meta Description (Maks 160 Karakter)" value={blogForm.seoDescription} onChange={e => setBlogForm({...blogForm, seoDescription: e.target.value})} style={{ width: '100%', padding: '14px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-surface)', color: 'var(--text-primary)', fontSize: 14, minHeight: 80, resize: 'vertical' }} />
+
               <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
-                <button type="submit" className="btn btn-primary" disabled={blogPosting} style={{ padding: '14px', flex: 1, fontSize: 16 }}>
-                  {blogPosting ? 'Menyimpan...' : (editingBlogId ? 'Update Artikel' : 'Publish Artikel')}
+                <button type="button" onClick={(e) => handlePostBlog(e, true)} className="btn btn-secondary" disabled={blogPosting} style={{ padding: '14px', flex: 1, fontSize: 16 }}>
+                  {blogPosting ? 'Menyimpan...' : 'Simpan Draft'}
+                </button>
+                <button type="button" onClick={(e) => handlePostBlog(e, false)} className="btn btn-primary" disabled={blogPosting} style={{ padding: '14px', flex: 1, fontSize: 16 }}>
+                  {blogPosting ? 'Menyimpan...' : (editingBlogId ? 'Update & Publish' : 'Publish Artikel')}
                 </button>
               </div>
             </form>
@@ -785,7 +825,10 @@ export default function AdminDashboard({ onBack }) {
                 <tbody>
                   {blogs.map(b => (
                     <tr key={b.id} style={{ borderBottom: '1px solid var(--border)', transition: 'background 0.2s' }} className="hover-lift">
-                      <td style={{ padding: '20px 16px', fontSize: 15, fontWeight: 700 }}>{b.title}</td>
+                      <td style={{ padding: '20px 16px', fontSize: 15, fontWeight: 700 }}>
+                        {b.title}
+                        {b.isDraft && <span style={{ marginLeft: 8, background: '#f59e0b', color: '#fff', fontSize: 11, padding: '2px 8px', borderRadius: 12 }}>DRAFT</span>}
+                      </td>
                       <td style={{ padding: '20px 16px', fontSize: 14, color: 'var(--text-secondary)' }}>{new Date(b.createdAt?.toDate ? b.createdAt.toDate() : b.createdAt).toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'})}</td>
                       <td style={{ padding: '20px 16px', fontSize: 13 }}>
                         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>

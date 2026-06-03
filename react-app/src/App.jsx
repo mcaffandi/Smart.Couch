@@ -3807,13 +3807,13 @@ export default function App() {
                           {lang === 'id' ? (
                             <>
                               Estimasi Max HR berdasarkan umur ({age} tahun) adalah <strong>{220 - age} bpm</strong>,
-                              tapi data mencatat hingga <strong style={{ color: '#fbbf24' }}>{actualMaxHR} bpm</strong>.
+                              tapi data mencatat hingga <strong style={{ color: '#f97316' }}>{actualMaxHR} bpm</strong>.
                               Zona latihan lo dikalkulasi pakai data aktual yang lebih akurat.
                             </>
                           ) : (
                             <>
                               Estimated Max HR based on age ({age} years) is <strong>{220 - age} bpm</strong>,
-                              but your data recorded up to <strong style={{ color: '#fbbf24' }}>{actualMaxHR} bpm</strong>.
+                              but your data recorded up to <strong style={{ color: '#f97316' }}>{actualMaxHR} bpm</strong>.
                               Your training zones are calculated using your more accurate actual data.
                             </>
                           )}
