@@ -4376,6 +4376,23 @@ export default function App() {
           lang={lang} 
           stravaAccessToken={data.profile?.stravaAccessToken}
           isPremium={isPremium}
+          onEdit={(actTime, newName) => {
+            handleEditRunName(actTime, newName);
+            setSelectedRunForDetails(prev => ({ ...prev, name: newName }));
+          }}
+          onDelete={(actTime) => {
+            if (window.confirm(lang === 'id' ? 'Hapus sesi lari ini?' : 'Delete this run session?')) {
+              setData(prev => {
+                const updated = {
+                  ...prev,
+                  running_activities: prev.running_activities.filter(a => a.startTimeLocal !== actTime)
+                };
+                saveAndSyncData(updated);
+                return updated;
+              });
+              setSelectedRunForDetails(null);
+            }
+          }}
         />
       )}
       <Toast toasts={toasts} />

@@ -1,9 +1,21 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Activity, Zap, TrendingUp, Heart } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { X, Activity, Zap, TrendingUp, Edit2, Trash2, Map as MapIcon } from 'lucide-react';
+import { MapContainer, TileLayer, Polyline, useMap } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 
-export default function RunDetailsModal({ act, onClose, lang = 'id', stravaAccessToken, isPremium }) {
+function MapBounds({ points }) {
+  const map = useMap();
+  useEffect(() => {
+    if (points && points.length > 0) {
+      map.fitBounds(L.latLngBounds(points), { padding: [20, 20] });
+    }
+  }, [map, points]);
+  return null;
+}
+
+export default function RunDetailsModal({ act, onClose, lang = 'id', stravaAccessToken, isPremium, onEdit, onDelete }) {
   const [laps, setLaps] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -86,8 +98,23 @@ export default function RunDetailsModal({ act, onClose, lang = 'id', stravaAcces
           style={{ maxWidth: 500, width: '100%', maxHeight: '90vh', display: 'flex', flexDirection: 'column', background: 'var(--bg-surface)' }}
         >
           <div style={{ padding: '20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>
-              <h2 style={{ fontSize: 18, fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>{act.name || (lang === 'id' ? 'Sesi Lari' : 'Run Session')}</h2>
+            <div style={{ flex: 1, minWidth: 0, paddingRight: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <h2 style={{ fontSize: 18, fontWeight: 800, margin: 0, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {act.name || (lang === 'id' ? 'Sesi Lari' : 'Run Session')}
+                </h2>
+                {onEdit && (
+                  <button 
+                    onClick={() => {
+                      const newName = window.prompt(lang === 'id' ? 'Masukkan nama baru:' : 'Enter new name:', act.name || '');
+                      if (newName) onEdit(act.startTimeLocal, newName);
+                    }}
+                    style={{ background: 'rgba(167, 139, 250, 0.1)', border: 'none', color: 'var(--accent-purple)', cursor: 'pointer', padding: 6, borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  >
+                    <Edit2 size={14} />
+                  </button>
+                )}
+              </div>
               <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>{msToDate(act.startTimeLocal)}</div>
             </div>
             <button onClick={onClose} className="btn-close" style={{ background: 'var(--bg-card)', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 8, borderRadius: '50%' }}>
@@ -113,6 +140,27 @@ export default function RunDetailsModal({ act, onClose, lang = 'id', stravaAcces
                 <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>/km</div>
               </div>
             </div>
+
+            {act.route && act.route.length > 0 && (
+              <div style={{ marginBottom: 24 }}>
+                <h3 style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <MapIcon size={16} color="#818cf8" />
+                  Route Map
+                </h3>
+                <div style={{ height: 200, width: '100%', borderRadius: 12, overflow: 'hidden', border: '1px solid var(--border)', background: 'var(--bg-card)' }}>
+                  <MapContainer center={[0,0]} zoom={13} style={{ height: '100%', width: '100%' }} zoomControl={false} attributionControl={false}>
+                    <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
+                    <Polyline 
+                      positions={act.route.map(pt => [pt.lat !== undefined ? pt.lat : pt[0], pt.lon !== undefined ? pt.lon : pt[1]])} 
+                      color="#818cf8" 
+                      weight={4}
+                      opacity={0.8}
+                    />
+                    <MapBounds points={act.route.map(pt => [pt.lat !== undefined ? pt.lat : pt[0], pt.lon !== undefined ? pt.lon : pt[1]])} />
+                  </MapContainer>
+                </div>
+              </div>
+            )}
 
             {act.stravaId ? (
               <div style={{ marginTop: 8 }}>
@@ -188,8 +236,20 @@ export default function RunDetailsModal({ act, onClose, lang = 'id', stravaAcces
             
             <style>{`
               @keyframes spin { 100% { transform: rotate(360deg); } }
+              .leaflet-container { background: var(--bg-card) !important; }
             `}</style>
           </div>
+
+          {onDelete && (
+            <div style={{ padding: '16px 20px', borderTop: '1px solid var(--border)', background: 'rgba(239, 68, 68, 0.05)', display: 'flex', justifyContent: 'center' }}>
+              <button 
+                onClick={() => onDelete(act.startTimeLocal)}
+                style={{ background: 'transparent', border: '1px solid #ef4444', color: '#ef4444', padding: '10px 24px', borderRadius: '8px', fontSize: 14, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}
+              >
+                <Trash2 size={16} /> {lang === 'id' ? 'Hapus Sesi Lari Ini' : 'Delete This Run Session'}
+              </button>
+            </div>
+          )}
         </motion.div>
       </div>
     </AnimatePresence>

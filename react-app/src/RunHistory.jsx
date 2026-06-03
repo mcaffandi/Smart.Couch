@@ -8,7 +8,6 @@ const ITEMS_PER_PAGE = 10;
 
 export default function RunHistory({ activities, lang = 'id', onEdit, onDelete, onViewDetails }) {
   const [page, setPage] = useState(0);
-  const [selectedAct, setSelectedAct] = useState(null);
 
   const sorted = [...activities].sort((a, b) =>
     (b.startTimeLocal ?? 0) - (a.startTimeLocal ?? 0)
@@ -149,7 +148,8 @@ export default function RunHistory({ activities, lang = 'id', onEdit, onDelete, 
             <div 
               className="history-item animate-fade-in" 
               key={i} 
-              style={{ animationDelay: `${i * 0.04}s`, position: 'relative', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}
+              onClick={() => onViewDetails && onViewDetails(act)}
+              style={{ animationDelay: `${i * 0.04}s`, position: 'relative', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, cursor: onViewDetails ? 'pointer' : 'default' }}
             >
               <div className="history-meta" style={{ flex: '1 1 auto', minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                 <span className="history-date">{msToDate(act.startTimeLocal)}</span>
@@ -184,65 +184,6 @@ export default function RunHistory({ activities, lang = 'id', onEdit, onDelete, 
                 </div>
               </div>
 
-              {selectedAct === act.startTimeLocal ? (
-                <div 
-                  className="history-actions-overlay"
-                  style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(30, 41, 59, 0.95)', backdropFilter: 'blur(4px)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, zIndex: 10 }}
-                  onClick={() => setSelectedAct(null)}
-                >
-                  {onViewDetails && (
-                    <button 
-                      className="btn btn-primary"
-                      style={{ padding: '6px 16px', fontSize: 13, height: 'auto', width: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onViewDetails(act);
-                        setSelectedAct(null);
-                      }}
-                    >
-                      <Zap size={14} /> {lang === 'id' ? 'Detail Laps' : 'Laps Detail'}
-                    </button>
-                  )}
-                  {onEdit && (
-                    <button 
-                      className="btn btn-secondary"
-                      style={{ padding: '6px 16px', fontSize: 13, height: 'auto', width: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const newName = window.prompt(lang === 'id' ? 'Masukkan nama baru:' : 'Enter new name:', act.name || '');
-                        if (newName) onEdit(act.startTimeLocal, newName);
-                        setSelectedAct(null);
-                      }}
-                    >
-                      <Edit2 size={14} /> {lang === 'id' ? 'Ganti Nama' : 'Edit'}
-                    </button>
-                  )}
-                  {onDelete && (
-                    <button 
-                      className="btn"
-                      style={{ padding: '6px 16px', fontSize: 13, height: 'auto', width: 'auto', display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(239, 68, 68, 0.15)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.3)' }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onDelete(act.startTimeLocal);
-                        setSelectedAct(null);
-                      }}
-                    >
-                      <Trash2 size={14} /> {lang === 'id' ? 'Hapus' : 'Delete'}
-                    </button>
-                  )}
-                  <button 
-                    style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: 13, cursor: 'pointer', padding: '6px 12px' }}
-                    onClick={(e) => { e.stopPropagation(); setSelectedAct(null); }}
-                  >
-                    Batal
-                  </button>
-                </div>
-              ) : (
-                <div 
-                  style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, cursor: (onEdit || onDelete) ? 'pointer' : 'default', zIndex: 5 }}
-                  onClick={() => { if(onEdit || onDelete) setSelectedAct(act.startTimeLocal); }}
-                />
-              )}
             </div>
           );
         })}
