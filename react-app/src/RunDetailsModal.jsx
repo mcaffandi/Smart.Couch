@@ -69,16 +69,22 @@ export default function RunDetailsModal({ act, onClose, lang = 'id', stravaAcces
   const s = totalSecs % 60;
   const formattedDur = `${m}:${s.toString().padStart(2, '0')}`;
   
-  const pace = act.distance && act.duration
-    ? ((act.duration / 60000) / (act.distance / 100000)).toFixed(2)
-    : '–';
+  const overallSecPerKm = act.distance && act.duration
+    ? (act.duration / 1000) / (act.distance / 100000)
+    : null;
     
   const formatPace = (secPerM) => {
     if (!secPerM) return '–';
-    const paceMins = Math.floor(secPerM / 60);
-    const paceSecs = Math.round(secPerM % 60);
+    let paceMins = Math.floor(secPerM / 60);
+    let paceSecs = Math.round(secPerM % 60);
+    if (paceSecs === 60) {
+      paceMins += 1;
+      paceSecs = 0;
+    }
     return `${paceMins}:${paceSecs.toString().padStart(2, '0')}`;
   };
+
+  const pace = formatPace(overallSecPerKm);
 
   const formatSecs = (total) => {
     const min = Math.floor(total / 60);
@@ -127,17 +133,17 @@ export default function RunDetailsModal({ act, onClose, lang = 'id', stravaAcces
               <div style={{ background: 'var(--bg-card)', padding: 16, borderRadius: 12, textAlign: 'center', border: '1px solid var(--border)' }}>
                 <Activity size={20} color="#818cf8" style={{ marginBottom: 8 }} />
                 <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text-primary)' }}>{distKm}</div>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>km</div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>{lang === 'id' ? 'Jarak (km)' : 'Distance'}</div>
               </div>
               <div style={{ background: 'var(--bg-card)', padding: 16, borderRadius: 12, textAlign: 'center', border: '1px solid var(--border)' }}>
                 <TrendingUp size={20} color="#34d399" style={{ marginBottom: 8 }} />
                 <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text-primary)' }}>{formattedDur}</div>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>waktu</div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>{lang === 'id' ? 'Durasi' : 'Time'}</div>
               </div>
               <div style={{ background: 'var(--bg-card)', padding: 16, borderRadius: 12, textAlign: 'center', border: '1px solid var(--border)' }}>
                 <Zap size={20} color="#f59e0b" style={{ marginBottom: 8 }} />
                 <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text-primary)' }}>{pace}</div>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>/km</div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>{lang === 'id' ? 'Pace (/km)' : 'Pace'}</div>
               </div>
             </div>
 
