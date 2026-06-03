@@ -627,6 +627,50 @@ export default function AdminDashboard({ onBack }) {
             </select>
           </div>
 
+          <div style={{ marginBottom: 24 }}>
+            <label style={{ display: 'block', marginBottom: 8, fontWeight: 600, fontSize: 14 }}>Sisa Kuota PRO (Ditampilkan di Popup)</label>
+            <input 
+              type="number"
+              className="form-input" 
+              value={globalSettings.proQuotaRemaining ?? 9} 
+              onChange={e => setGlobalSettings({...globalSettings, proQuotaRemaining: parseInt(e.target.value) || 0})}
+              style={{ width: '100%', padding: '12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-surface)', color: 'var(--text-primary)', fontSize: 15 }}
+            />
+          </div>
+
+          <div style={{ marginBottom: 24, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
+            <div>
+              <label style={{ display: 'block', marginBottom: 8, fontWeight: 600, fontSize: 14 }}>Harga PRO 1 Bulan (Rp)</label>
+              <input 
+                type="number"
+                className="form-input" 
+                value={globalSettings.proPrice1Month ?? 29000} 
+                onChange={e => setGlobalSettings({...globalSettings, proPrice1Month: parseInt(e.target.value) || 0})}
+                style={{ width: '100%', padding: '12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-surface)', color: 'var(--text-primary)', fontSize: 15 }}
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', marginBottom: 8, fontWeight: 600, fontSize: 14 }}>Harga PRO 3 Bulan (Rp)</label>
+              <input 
+                type="number"
+                className="form-input" 
+                value={globalSettings.proPrice3Months ?? 79000} 
+                onChange={e => setGlobalSettings({...globalSettings, proPrice3Months: parseInt(e.target.value) || 0})}
+                style={{ width: '100%', padding: '12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-surface)', color: 'var(--text-primary)', fontSize: 15 }}
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', marginBottom: 8, fontWeight: 600, fontSize: 14 }}>Harga PRO 6 Bulan (Rp)</label>
+              <input 
+                type="number"
+                className="form-input" 
+                value={globalSettings.proPrice6Months ?? 149000} 
+                onChange={e => setGlobalSettings({...globalSettings, proPrice6Months: parseInt(e.target.value) || 0})}
+                style={{ width: '100%', padding: '12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-surface)', color: 'var(--text-primary)', fontSize: 15 }}
+              />
+            </div>
+          </div>
+
           <button 
             className="btn btn-primary" 
             onClick={handleSaveSettings}

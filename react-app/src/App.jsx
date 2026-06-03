@@ -4288,6 +4288,7 @@ export default function App() {
           onClose={() => setShowPremiumModal(false)} 
           isPremium={isPremium}
           lang={lang}
+          globalSettings={globalSettings}
           onUpgrade={async (receiptFile, amount) => {
             try {
               if (!auth.currentUser) {

@@ -1,12 +1,13 @@
 import { useState, useMemo, useEffect } from 'react';
 import { ShieldCheck, UploadCloud, ChevronDown, ChevronUp, Copy, CheckCircle, Clock } from 'lucide-react';
 
-export default function PremiumModal({ onClose, onUpgrade, isPremium, lang = 'id' }) {
+export default function PremiumModal({ onClose, onUpgrade, isPremium, lang = 'id', globalSettings = {} }) {
   const [loading, setLoading] = useState(false);
   const [receipt, setReceipt] = useState(null);
   const [step, setStep] = useState(1); // 1 = Product Page, 2 = Payment Gateway (Xendit style)
   const [showOrderSummary, setShowOrderSummary] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [selectedPackage, setSelectedPackage] = useState(1);
   
   // Timer state
   const [timeLeft, setTimeLeft] = useState(24 * 60 * 60 - 1); // 24 hours in seconds
@@ -27,11 +28,17 @@ export default function PremiumModal({ onClose, onUpgrade, isPremium, lang = 'id
     return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  // Generate a random unique code between 11 and 99
   const uniqueCode = useMemo(() => Math.floor(11 + Math.random() * 88), []);
   const orderId = useMemo(() => `INV-ENDURA-${Math.floor(10000 + Math.random() * 90000)}`, []);
-  const basePrice = 29000;
+  
+  const price1Month = globalSettings?.proPrice1Month ?? 29000;
+  const price3Months = globalSettings?.proPrice3Months ?? 79000;
+  const price6Months = globalSettings?.proPrice6Months ?? 149000;
+  
+  const basePrice = selectedPackage === 6 ? price6Months : selectedPackage === 3 ? price3Months : price1Month;
   const totalPrice = basePrice + uniqueCode;
+  
+  const quotaRemaining = globalSettings?.proQuotaRemaining ?? 9;
 
   const handleUpgrade = async () => {
     if (!receipt) {
@@ -81,15 +88,64 @@ export default function PremiumModal({ onClose, onUpgrade, isPremium, lang = 'id
 
           <div style={{ padding: '30px' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20, marginBottom: 32 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: 16, borderBottom: '1px solid var(--border)' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)' }}>1Bln Berlangganan PRO</span>
-                  <span style={{ fontSize: 11, background: 'rgba(245, 158, 11, 0.15)', color: '#d97706', padding: '3px 8px', borderRadius: 12, width: 'fit-content', fontWeight: 700 }}>
-                    {lang === 'id' ? '🔥 Sisa Kuota: 9/10' : '🔥 Remaining Quota: 9/10'}
-                  </span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: 0.5 }}>Pilih Paket Berlangganan</span>
+                
+                {/* Package Options */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <div 
+                    onClick={() => setSelectedPackage(1)}
+                    style={{ padding: 16, borderRadius: 12, border: `2px solid ${selectedPackage === 1 ? 'var(--accent-purple)' : 'var(--border)'}`, background: selectedPackage === 1 ? 'rgba(167, 139, 250, 0.05)' : 'var(--bg-surface)', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: 'all 0.2s' }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <div style={{ width: 18, height: 18, borderRadius: '50%', border: `2px solid ${selectedPackage === 1 ? 'var(--accent-purple)' : 'var(--text-muted)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {selectedPackage === 1 && <div style={{ width: 10, height: 10, borderRadius: '50%', background: 'var(--accent-purple)' }} />}
+                      </div>
+                      <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)' }}>1 Bulan</span>
+                    </div>
+                    <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)' }}>{formatCurrency(price1Month)}</span>
+                  </div>
+
+                  <div 
+                    onClick={() => setSelectedPackage(3)}
+                    style={{ padding: 16, borderRadius: 12, border: `2px solid ${selectedPackage === 3 ? 'var(--accent-purple)' : 'var(--border)'}`, background: selectedPackage === 3 ? 'rgba(167, 139, 250, 0.05)' : 'var(--bg-surface)', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: 'all 0.2s' }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <div style={{ width: 18, height: 18, borderRadius: '50%', border: `2px solid ${selectedPackage === 3 ? 'var(--accent-purple)' : 'var(--text-muted)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {selectedPackage === 3 && <div style={{ width: 10, height: 10, borderRadius: '50%', background: 'var(--accent-purple)' }} />}
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)' }}>3 Bulan</span>
+                        <span style={{ fontSize: 11, color: '#10b981', fontWeight: 600 }}>Lebih Hemat</span>
+                      </div>
+                    </div>
+                    <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)' }}>{formatCurrency(price3Months)}</span>
+                  </div>
+
+                  <div 
+                    onClick={() => setSelectedPackage(6)}
+                    style={{ padding: 16, borderRadius: 12, border: `2px solid ${selectedPackage === 6 ? 'var(--accent-purple)' : 'var(--border)'}`, background: selectedPackage === 6 ? 'rgba(167, 139, 250, 0.05)' : 'var(--bg-surface)', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: 'all 0.2s' }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <div style={{ width: 18, height: 18, borderRadius: '50%', border: `2px solid ${selectedPackage === 6 ? 'var(--accent-purple)' : 'var(--text-muted)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {selectedPackage === 6 && <div style={{ width: 10, height: 10, borderRadius: '50%', background: 'var(--accent-purple)' }} />}
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)' }}>6 Bulan</span>
+                        <span style={{ fontSize: 11, color: '#10b981', fontWeight: 600 }}>Paling Hemat</span>
+                      </div>
+                    </div>
+                    <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)' }}>{formatCurrency(price6Months)}</span>
+                  </div>
                 </div>
-                <span style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)' }}>Rp 29.000</span>
               </div>
+              
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <span style={{ fontSize: 12, background: 'rgba(245, 158, 11, 0.15)', color: '#d97706', padding: '4px 12px', borderRadius: 12, fontWeight: 700 }}>
+                  {lang === 'id' ? `🔥 Promo Terbatas! Sisa Kuota: ${quotaRemaining}` : `🔥 Limited Time! Remaining Quota: ${quotaRemaining}`}
+                </span>
+              </div>
+
               <ul style={{ margin: 0, paddingLeft: 20, color: 'var(--text-secondary)', fontSize: 14, lineHeight: 1.8, display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <li>Analisis AI Lanjutan tanpa batas</li>
                 <li>Riwayat data & statistik performa penuh</li>
@@ -103,7 +159,7 @@ export default function PremiumModal({ onClose, onUpgrade, isPremium, lang = 'id
               className="btn" 
               style={{ width: '100%', height: 54, fontSize: 15, fontWeight: 700, background: 'var(--text-primary)', color: 'var(--bg-base)', border: 'none', borderRadius: 12, cursor: 'pointer' }}
             >
-              {lang === 'id' ? 'Beli Sekarang (Rp 29.000)' : 'Buy Now (Rp 29.000)'}
+              {lang === 'id' ? `Beli Sekarang (${formatCurrency(basePrice)})` : `Buy Now (${formatCurrency(basePrice)})`}
             </button>
           </div>
         </div>
