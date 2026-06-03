@@ -6,7 +6,7 @@ import { Edit2, Trash2 } from 'lucide-react';
 
 const ITEMS_PER_PAGE = 10;
 
-export default function RunHistory({ activities, lang = 'id', onEdit, onDelete }) {
+export default function RunHistory({ activities, lang = 'id', onEdit, onDelete, onViewDetails }) {
   const [page, setPage] = useState(0);
   const [selectedAct, setSelectedAct] = useState(null);
 
@@ -190,6 +190,19 @@ export default function RunHistory({ activities, lang = 'id', onEdit, onDelete }
                   style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(30, 41, 59, 0.95)', backdropFilter: 'blur(4px)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, zIndex: 10 }}
                   onClick={() => setSelectedAct(null)}
                 >
+                  {onViewDetails && (
+                    <button 
+                      className="btn btn-primary"
+                      style={{ padding: '6px 16px', fontSize: 13, height: 'auto', width: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onViewDetails(act);
+                        setSelectedAct(null);
+                      }}
+                    >
+                      <Zap size={14} /> {lang === 'id' ? 'Detail Laps' : 'Laps Detail'}
+                    </button>
+                  )}
                   {onEdit && (
                     <button 
                       className="btn btn-secondary"

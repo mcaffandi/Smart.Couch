@@ -8,6 +8,7 @@ import {
 } from './utils';
 import { TrendChart, HRZoneChart } from './Charts';
 import RunHistory from './RunHistory';
+import RunDetailsModal from './RunDetailsModal';
 import TrainingPlan from './TrainingPlan';
 import RacePrediction from './RacePrediction';
 import LoginScreen from './LoginScreen';
@@ -340,15 +341,16 @@ export default function App() {
 
   // ── State: share performance card modal ──────────────────────────────────────
   const [showShareModal, setShowShareModal] = useState(false);
+  const [selectedRunForDetails, setSelectedRunForDetails] = useState(null);
 
   useEffect(() => {
-    if (showShareModal || showProfileModal || showAddRunModal || showSleepModal || showUploadModal) {
+    if (showShareModal || showProfileModal || showAddRunModal || showSleepModal || showUploadModal || selectedRunForDetails) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
     }
     return () => { document.body.style.overflow = ''; };
-  }, [showShareModal, showProfileModal, showAddRunModal, showSleepModal, showUploadModal]);
+  }, [showShareModal, showProfileModal, showAddRunModal, showSleepModal, showUploadModal, selectedRunForDetails]);
   const [shareTemplate, setShareTemplate] = useState('vo2');
   const [shareStatsPeriod, setShareStatsPeriod] = useState('yearly');
   const [shareTheme, setShareTheme] = useState('dark');
@@ -3899,6 +3901,7 @@ export default function App() {
                 <RunHistory 
                   activities={runActs} 
                   lang={lang}
+                  onViewDetails={setSelectedRunForDetails}
                   onDelete={(actTime) => {
                     if (window.confirm(lang === 'id' ? 'Hapus sesi lari ini?' : 'Delete this run session?')) {
                       setData(prev => {
@@ -4366,6 +4369,15 @@ export default function App() {
         isPremium={isPremium}
         setShowPremiumModal={setShowPremiumModal}
       />
+      {selectedRunForDetails && (
+        <RunDetailsModal 
+          act={selectedRunForDetails} 
+          onClose={() => setSelectedRunForDetails(null)} 
+          lang={lang} 
+          stravaAccessToken={data.profile?.stravaAccessToken}
+          isPremium={isPremium}
+        />
+      )}
       <Toast toasts={toasts} />
     </div>
   );
