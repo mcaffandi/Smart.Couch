@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { Lock, PenTool, Edit3 } from 'lucide-react';
+import { Lock, PenTool, Edit3, Search } from 'lucide-react';
 import { collection, getDocs, getDocsFromServer, getDoc, setDoc, deleteDoc, doc, addDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage, auth } from './firebase';
@@ -805,8 +805,8 @@ export default function AdminDashboard({ onBack }) {
                 />
               </div>
 
-              <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--accent-purple)', marginBottom: 8, marginTop: 16 }}>
-                🔍 SEO Pengaturan (Opsional)
+              <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--accent-purple)', marginBottom: 8, marginTop: 16, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <Search size={18} /> SEO Pengaturan (Opsional)
               </div>
               <input className="form-input" placeholder="Meta Title (Maks 60 Karakter, default: Judul Artikel)" value={blogForm.seoTitle} onChange={e => setBlogForm({...blogForm, seoTitle: e.target.value})} style={{ width: '100%', padding: '14px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-surface)', color: 'var(--text-primary)', fontSize: 14 }} />
               <textarea className="form-input" placeholder="Meta Description (Maks 160 Karakter)" value={blogForm.seoDescription} onChange={e => setBlogForm({...blogForm, seoDescription: e.target.value})} style={{ width: '100%', padding: '14px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-surface)', color: 'var(--text-primary)', fontSize: 14, minHeight: 80, resize: 'vertical' }} />
