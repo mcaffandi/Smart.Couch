@@ -130,7 +130,7 @@ export default function PremiumModal({ onClose, onUpgrade, isPremium, lang = 'id
             <div style={{ fontSize: 36, fontWeight: 800, color: '#111827', letterSpacing: '-1px' }}>
               {formatCurrency(totalPrice)}
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 12, fontSize: 13, color: '#d97706', background: '#fef3c7', padding: '6px 12px', borderRadius: 20, display: 'inline-flex' }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 12, fontSize: 13, color: '#d97706', background: '#fef3c7', padding: '6px 12px', borderRadius: 20 }}>
               <Clock size={14} />
               <span style={{ fontWeight: 600 }}>Selesaikan dalam {formatTime(timeLeft)}</span>
             </div>

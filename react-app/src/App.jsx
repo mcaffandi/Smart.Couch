@@ -791,8 +791,9 @@ export default function App() {
       }
     });
     
-    Object.entries(sleepRecs || {}).forEach(([dateStr, sleep]) => {
-      const d = new Date(dateStr + 'T08:00:00');
+    Object.entries(sleepRecs || {}).forEach(([key, sleep]) => {
+      const actualDate = sleep.dateStr || key.split('_')[0];
+      const d = new Date(actualDate + 'T08:00:00');
       events.push({ type: 'sleep', time: d.getTime(), data: sleep });
     });
     
@@ -863,8 +864,8 @@ export default function App() {
   }, [latestSleepScore, recoveryRemainingHours]);
 
   const runDates = new Set(runActs.map(a => a.startTimeLocal ? msToDate(a.startTimeLocal) : null).filter(Boolean));
-  const runDayScores = Object.entries(sleepRecs).filter(([d]) => runDates.has(d)).map(([, v]) => v.score);
-  const nonRunDayScores = Object.entries(sleepRecs).filter(([d]) => !runDates.has(d)).map(([, v]) => v.score);
+  const runDayScores = Object.entries(sleepRecs).filter(([k, v]) => runDates.has(v.dateStr || k.split('_')[0])).map(([, v]) => v.score);
+  const nonRunDayScores = Object.entries(sleepRecs).filter(([k, v]) => !runDates.has(v.dateStr || k.split('_')[0])).map(([, v]) => v.score);
   const avgRunSleep = runDayScores.length ? (runDayScores.reduce((s, v) => s + v, 0) / runDayScores.length).toFixed(1) : null;
   const avgNonRunSleep = nonRunDayScores.length ? (nonRunDayScores.reduce((s, v) => s + v, 0) / nonRunDayScores.length).toFixed(1) : null;
 
@@ -2279,9 +2280,10 @@ export default function App() {
 
   const getReadinessDesc = () => {
     const isId = lang === 'id';
+    const latestSleepDateForDisplay = latestSleepDate ? (sleepRecs[latestSleepDate]?.dateStr || latestSleepDate.split('_')[0]) : '';
     const sleepPart = isId 
-      ? `Berdasarkan rekaman tidur terakhir (${latestSleepDate}), kualitas tidur lo berada di skor ${latestSleepScore}%. `
-      : `Based on your latest sleep record (${latestSleepDate}), your sleep quality score is ${latestSleepScore}%. `;
+      ? `Berdasarkan rekaman tidur terakhir (${latestSleepDateForDisplay}), kualitas tidur lo berada di skor ${latestSleepScore}%. `
+      : `Based on your latest sleep record (${latestSleepDateForDisplay}), your sleep quality score is ${latestSleepScore}%. `;
 
     let restPart;
     if (!recoveryEndTimestamp) {
