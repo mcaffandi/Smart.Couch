@@ -82,13 +82,19 @@ export default function PremiumModal({ onClose, onUpgrade, isPremium, lang = 'id
           <div style={{ padding: '30px' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20, marginBottom: 32 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: 16, borderBottom: '1px solid var(--border)' }}>
-                <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)' }}>1Bln Berlangganan PRO</span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)' }}>1Bln Berlangganan PRO</span>
+                  <span style={{ fontSize: 11, background: 'rgba(245, 158, 11, 0.15)', color: '#d97706', padding: '3px 8px', borderRadius: 12, width: 'fit-content', fontWeight: 700 }}>
+                    {lang === 'id' ? '🔥 Sisa Kuota: 9/10' : '🔥 Remaining Quota: 9/10'}
+                  </span>
+                </div>
                 <span style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)' }}>Rp 29.000</span>
               </div>
               <ul style={{ margin: 0, paddingLeft: 20, color: 'var(--text-secondary)', fontSize: 14, lineHeight: 1.8, display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <li>Analisis AI Lanjutan tanpa batas</li>
                 <li>Riwayat data & statistik performa penuh</li>
                 <li>Rencana latihan terpersonalisasi</li>
+                <li style={{ color: '#10b981', fontWeight: 600 }}>{lang === 'id' ? 'Bonus: Integrasi Strava Sync' : 'Bonus: Strava Sync Integration'}</li>
               </ul>
             </div>
 

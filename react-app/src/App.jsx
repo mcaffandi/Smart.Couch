@@ -3027,7 +3027,9 @@ export default function App() {
           <button
             onClick={() => setShowPremiumModal(true)}
             className="btn btn-secondary"
+            style={{ position: 'relative' }}
           >
+            {!isPremium && <span style={{ position: 'absolute', top: -8, right: -8, background: '#f59e0b', color: '#fff', fontSize: 10, fontWeight: 800, padding: '2px 6px', borderRadius: 10 }}>Sisa 9</span>}
             {isPremium ? 'PRO Member' : (lang === 'id' ? 'Upgrade ke PRO' : 'Upgrade to PRO')}
           </button>
 
