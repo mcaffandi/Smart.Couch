@@ -174,6 +174,7 @@ export default function App() {
   const [targetPace, setTargetPace] = useState(() => data.profile?.targetPace ?? null);
   const [selectedDays, setSelectedDays] = useState(() => data.profile?.selectedDays ?? ['Selasa', 'Kamis', 'Sabtu']);
   const [globalSettings, setGlobalSettings] = useState({ stravaSyncMode: 'fast' });
+  const [dashboardTimeRange, setDashboardTimeRange] = useState('all');
 
   useEffect(() => {
     const handleHashChange = () => {
@@ -3660,6 +3661,38 @@ export default function App() {
                       paceDesc = lang === 'id' ? 'Zona Lari Optimal' : 'Optimal Run Zone';
                     }
 
+                    let filteredDist = 0;
+                    let distDesc = lang === 'id' ? 'Total sepanjang masa' : 'All time distance';
+                    
+                    const timeRanges = {
+                      '1w': now.getTime() - 7 * 24 * 60 * 60 * 1000,
+                      '1m': now.getTime() - 30 * 24 * 60 * 60 * 1000,
+                      '3m': now.getTime() - 90 * 24 * 60 * 60 * 1000,
+                      '6m': now.getTime() - 180 * 24 * 60 * 60 * 1000,
+                      '1y': now.getTime() - 365 * 24 * 60 * 60 * 1000,
+                    };
+
+                    if (dashboardTimeRange === 'all') {
+                      filteredDist = totalDist;
+                    } else {
+                      const limit = timeRanges[dashboardTimeRange];
+                      for (const a of data.running_activities) {
+                        if (!a.startTimeLocal) continue;
+                        if (new Date(a.startTimeLocal).getTime() >= limit) {
+                          filteredDist += (a.distance || 0) / 100000;
+                        }
+                      }
+                      
+                      const mapDesc = {
+                        '1w': lang === 'id' ? 'Dalam 1 minggu terakhir' : 'In the last 1 week',
+                        '1m': lang === 'id' ? 'Dalam 1 bulan terakhir' : 'In the last 1 month',
+                        '3m': lang === 'id' ? 'Dalam 3 bulan terakhir' : 'In the last 3 months',
+                        '6m': lang === 'id' ? 'Dalam 6 bulan terakhir' : 'In the last 6 months',
+                        '1y': lang === 'id' ? 'Dalam 1 tahun terakhir' : 'In the last 1 year',
+                      };
+                      distDesc = mapDesc[dashboardTimeRange] || distDesc;
+                    }
+
                     return [
                       { 
                         label: lang === 'id' ? 'Jarak Minggu Ini' : 'Weekly Mileage', 
@@ -3688,9 +3721,9 @@ export default function App() {
                       },
                       { 
                         label: t.totalDistance, 
-                        value: totalDist.toFixed(1), 
+                        value: filteredDist.toFixed(1), 
                         unit: 'km', 
-                        desc: lang === 'id' ? 'Total sepanjang masa' : 'All time distance',
+                        desc: distDesc,
                         color: '#fbbf24' 
                       },
                     ].map((m, i) => (
@@ -3768,7 +3801,7 @@ export default function App() {
                       </div>
                     )}
 
-                    <TrendChart activities={runActs} lang={lang} />
+                    <TrendChart activities={runActs} lang={lang} externalTimeRange={dashboardTimeRange} setExternalTimeRange={setDashboardTimeRange} />
                     <AICoach activities={data.running_activities} profile={{ age, goal, targetPace }} lang={lang} isPremium={isPremium} setShowPremiumModal={setShowPremiumModal} />
                   </div>
 

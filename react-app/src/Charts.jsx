@@ -3,9 +3,12 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { msToDate } from './utils';
 
 // ─── Trend chart (monthly/weekly distance) ──────────────────────────────────
-export function TrendChart({ activities, lang = 'id' }) {
+export function TrendChart({ activities, lang = 'id', externalTimeRange, setExternalTimeRange }) {
   const [viewMode, setViewMode] = useState('month'); // 'month', 'week', 'day'
-  const [timeRange, setTimeRange] = useState('all');
+  const [internalTimeRange, setInternalTimeRange] = useState('all');
+  
+  const timeRange = externalTimeRange !== undefined ? externalTimeRange : internalTimeRange;
+  const setTimeRange = setExternalTimeRange !== undefined ? setExternalTimeRange : setInternalTimeRange;
 
   const now = new Date().getTime();
   const ranges = {
