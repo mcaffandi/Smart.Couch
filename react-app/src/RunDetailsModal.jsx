@@ -165,14 +165,14 @@ export default function RunDetailsModal({ act, onClose, lang = 'id', stravaAcces
             {act.stravaId ? (
               <div style={{ marginTop: 8 }}>
                 <h3 style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fc4c02" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"></path></svg>
-                  Strava Laps/Splits
+                  <Zap size={16} color="#a78bfa" />
+                  Laps / Splits
                 </h3>
 
                 {loading ? (
                   <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-muted)', fontSize: 13 }}>
                     <div className="spinner" style={{ width: 24, height: 24, border: '3px solid rgba(129, 140, 248, 0.2)', borderTopColor: 'var(--accent-purple)', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 12px' }} />
-                    {lang === 'id' ? 'Mengambil data laps dari Strava...' : 'Fetching laps from Strava...'}
+                    {lang === 'id' ? 'Mengambil data laps...' : 'Fetching laps...'}
                   </div>
                 ) : error ? (
                   <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', padding: 16, borderRadius: 8, color: '#ef4444', fontSize: 13, textAlign: 'center' }}>
