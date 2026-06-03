@@ -94,14 +94,24 @@ export default function RunDetailsModal({ act, onClose, lang = 'id', stravaAcces
 
   return (
     <AnimatePresence>
-      <div className="modal-backdrop" onClick={onClose} style={{ zIndex: 9999 }}>
+      <div className="profile-modal-backdrop" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }} style={{ zIndex: 99999 }}>
         <motion.div 
-          className="modal-content"
           initial={{ y: 50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 50, opacity: 0 }}
           onClick={(e) => e.stopPropagation()}
-          style={{ maxWidth: 500, width: '100%', maxHeight: '90vh', display: 'flex', flexDirection: 'column', background: 'var(--bg-surface)' }}
+          style={{ 
+            maxWidth: 500, 
+            width: '100%', 
+            maxHeight: '90vh', 
+            display: 'flex', 
+            flexDirection: 'column', 
+            background: 'var(--bg-surface)',
+            borderRadius: 16,
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+            border: '1px solid var(--border)',
+            overflow: 'hidden'
+          }}
         >
           <div style={{ padding: '20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ flex: 1, minWidth: 0, paddingRight: 16 }}>
