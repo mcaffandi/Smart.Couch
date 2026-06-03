@@ -343,13 +343,21 @@ export default function AdminDashboard({ onBack }) {
       if (finalThumbnail && finalThumbnail.includes('drive.google.com/file/d/')) {
         const match = finalThumbnail.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
         if (match && match[1]) {
-          finalThumbnail = `https://drive.google.com/uc?export=view&id=${match[1]}`;
+          finalThumbnail = `https://lh3.googleusercontent.com/d/${match[1]}`;
+        }
+      } else if (finalThumbnail && finalThumbnail.includes('drive.google.com/uc')) {
+        const match = finalThumbnail.match(/id=([a-zA-Z0-9_-]+)/);
+        if (match && match[1]) {
+          finalThumbnail = `https://lh3.googleusercontent.com/d/${match[1]}`;
         }
       }
 
       let finalContent = blogForm.content;
-      if (finalContent && finalContent.includes('drive.google.com/file/d/')) {
-        finalContent = finalContent.replace(/https:\/\/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)(?:\/[^"'\s<]*)?/g, 'https://drive.google.com/uc?export=view&id=$1');
+      if (finalContent) {
+        finalContent = finalContent
+          .replace(/https:\/\/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)(?:\/[^"'\s<]*)?/g, 'https://lh3.googleusercontent.com/d/$1')
+          .replace(/https:\/\/drive\.google\.com\/uc\?export=view&amp;id=([a-zA-Z0-9_-]+)/g, 'https://lh3.googleusercontent.com/d/$1')
+          .replace(/https:\/\/drive\.google\.com\/uc\?export=view&id=([a-zA-Z0-9_-]+)/g, 'https://lh3.googleusercontent.com/d/$1');
       }
 
       if (editingBlogId) {

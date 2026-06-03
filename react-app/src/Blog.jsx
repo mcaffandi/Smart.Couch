@@ -9,12 +9,20 @@ import { BookOpen, Edit3, Trash2 } from 'lucide-react';
 // Helper to fix google drive links on the fly
 const parseImageUrl = (url) => {
   if (!url) return '';
+  let driveId = null;
+  
   if (url.includes('drive.google.com/file/d/')) {
     const match = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
-    if (match && match[1]) {
-      return `https://drive.google.com/uc?export=view&id=${match[1]}`;
-    }
+    if (match && match[1]) driveId = match[1];
+  } else if (url.includes('drive.google.com/uc')) {
+    const match = url.match(/id=([a-zA-Z0-9_-]+)/);
+    if (match && match[1]) driveId = match[1];
   }
+
+  if (driveId) {
+    return `https://lh3.googleusercontent.com/d/${driveId}`;
+  }
+  
   return url;
 };
 
