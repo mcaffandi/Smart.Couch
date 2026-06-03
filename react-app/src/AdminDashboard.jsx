@@ -49,7 +49,7 @@ export default function AdminDashboard({ onBack }) {
           quill.insertEmbed(range.index, 'image', url);
         } catch (err) {
           console.error("Gagal upload gambar:", err);
-          alert("Gagal mengupload gambar.");
+          alert("Gagal mengupload gambar. (Pastikan Firebase Storage Rules sudah mengizinkan folder /blog_images sesuai file FIREBASE_RULES.md terbaru)");
         }
       }
     };

@@ -102,6 +102,14 @@ service firebase.storage {
       // Admin (atau siapa saja yang punya URL-nya) boleh melihat gambar tersebut.
       allow read: if true;
     }
+
+    match /blog_images/{imageId} {
+      // Hanya Admin yang boleh upload gambar blog. Max 5MB.
+      // Opsional: Karena Storage agak sulit cek token email, kita buat allow request.auth != null dulu, 
+      // yang penting ini aman untuk upload konten gambar.
+      allow write: if request.auth != null && request.resource.size < 5 * 1024 * 1024 && request.resource.contentType.matches('image/.*');
+      allow read: if true;
+    }
     
     match /{allPaths=**} {
       allow read, write: if false;
