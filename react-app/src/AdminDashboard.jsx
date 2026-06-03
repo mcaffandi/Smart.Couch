@@ -313,23 +313,36 @@ export default function AdminDashboard({ onBack }) {
         ? blogForm.tags.split(',').map(t => t.trim()).filter(Boolean)
         : blogForm.tags;
 
+      let finalThumbnail = blogForm.thumbnail;
+      if (finalThumbnail && finalThumbnail.includes('drive.google.com/file/d/')) {
+        const match = finalThumbnail.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+        if (match && match[1]) {
+          finalThumbnail = `https://drive.google.com/uc?export=view&id=${match[1]}`;
+        }
+      }
+
+      let finalContent = blogForm.content;
+      if (finalContent && finalContent.includes('drive.google.com/file/d/')) {
+        finalContent = finalContent.replace(/https:\/\/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)(?:\/[^"'\s<]*)?/g, 'https://drive.google.com/uc?export=view&id=$1');
+      }
+
       if (editingBlogId) {
         await updateDoc(doc(db, "blogs", editingBlogId), {
           title: blogForm.title,
-          content: blogForm.content,
-          thumbnail: blogForm.thumbnail,
+          content: finalContent,
+          thumbnail: finalThumbnail,
           tags: tagsArray,
-          metaTitle: blogForm.metaTitle || '',
-          metaDescription: blogForm.metaDescription || '',
+          seoTitle: blogForm.seoTitle || '',
+          seoDescription: blogForm.seoDescription || '',
           isDraft: isDraft
         });
         alert(isDraft ? "Draft berhasil disimpan!" : "Artikel berhasil di-update!");
-        setBlogs(blogs.map(b => b.id === editingBlogId ? { ...b, title: blogForm.title, content: blogForm.content, thumbnail: blogForm.thumbnail, tags: tagsArray, seoTitle: blogForm.seoTitle, seoDescription: blogForm.seoDescription, isDraft } : b));
+        setBlogs(blogs.map(b => b.id === editingBlogId ? { ...b, title: blogForm.title, content: finalContent, thumbnail: finalThumbnail, tags: tagsArray, seoTitle: blogForm.seoTitle, seoDescription: blogForm.seoDescription, isDraft } : b));
       } else {
         const newDocRef = await addDoc(collection(db, "blogs"), {
           title: blogForm.title,
-          content: blogForm.content,
-          thumbnail: blogForm.thumbnail,
+          content: finalContent,
+          thumbnail: finalThumbnail,
           tags: tagsArray,
           seoTitle: blogForm.seoTitle || '',
           seoDescription: blogForm.seoDescription || '',
@@ -341,8 +354,8 @@ export default function AdminDashboard({ onBack }) {
         setBlogs([{ 
           id: newDocRef.id, 
           title: blogForm.title, 
-          content: blogForm.content, 
-          thumbnail: blogForm.thumbnail, 
+          content: finalContent, 
+          thumbnail: finalThumbnail, 
           tags: tagsArray,
           seoTitle: blogForm.seoTitle,
           seoDescription: blogForm.seoDescription,
