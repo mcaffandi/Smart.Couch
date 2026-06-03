@@ -3583,57 +3583,97 @@ export default function App() {
               <div className="animate-fade-in">
                 {/* Metrics */}
                 <div className="metrics-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))' }}>
-                  {[
-                    { 
-                      label: lang === 'id' ? 'Jarak Minggu Ini' : 'Weekly Mileage', 
-                      value: (() => {
-                        const now = new Date();
-                        const day = now.getDay();
-                        const diff = now.getDate() - day + (day === 0 ? -6 : 1);
-                        const startOfWeek = new Date(now.setDate(diff));
-                        startOfWeek.setHours(0,0,0,0);
-                        let wDist = 0;
-                        for (const a of data.running_activities) {
-                          if (!a.startTimeLocal) continue;
-                          const d = new Date(a.startTimeLocal);
-                          if (d >= startOfWeek) wDist += (a.distance || 0) / 100000;
-                        }
-                        return wDist.toFixed(1);
-                      })(), 
-                      unit: 'km', 
-                      color: '#818cf8' 
-                    },
-                    { 
-                      label: lang === 'id' ? 'Skor Tidur (Kesiapan)' : 'Sleep Score (Readiness)', 
-                      value: latestSleepScore || '–', 
-                      unit: '/100', 
-                      color: '#a78bfa' 
-                    },
-                    { 
-                      label: lang === 'id' ? 'Target Pace' : 'Pace Target', 
-                      value: targetPace ? (() => {
-                        const min = Math.floor(targetPace);
-                        const sec = Math.round((targetPace - min) * 60);
-                        return `${min}:${sec.toString().padStart(2, '0')}`;
-                      })() : '–', 
-                      unit: '/km', 
-                      color: '#34d399' 
-                    },
-                    { 
-                      label: t.totalDistance, 
-                      value: totalDist.toFixed(1), 
-                      unit: 'km', 
-                      color: '#fbbf24' 
-                    },
-                  ].map((m, i) => (
-                    <div className="metric-card animate-fade-in" key={i} style={{ '--accent-color': m.color, animationDelay: `${i * 0.06}s` }}>
-                      <div className="metric-label">{m.label}</div>
-                      <div className="metric-value">
-                        {m.value}
-                        <span className="metric-unit">{m.unit}</span>
+                  {(() => {
+                    const now = new Date();
+                    const day = now.getDay();
+                    const diffToMonday = now.getDate() - day + (day === 0 ? -6 : 1);
+                    const startOfThisWeek = new Date(now);
+                    startOfThisWeek.setDate(diffToMonday);
+                    startOfThisWeek.setHours(0,0,0,0);
+                    
+                    const startOfLastWeek = new Date(startOfThisWeek);
+                    startOfLastWeek.setDate(startOfLastWeek.getDate() - 7);
+
+                    let thisWeekDist = 0;
+                    let lastWeekDist = 0;
+                    for (const a of data.running_activities) {
+                      if (!a.startTimeLocal) continue;
+                      const d = new Date(a.startTimeLocal);
+                      if (d >= startOfThisWeek) {
+                        thisWeekDist += (a.distance || 0) / 100000;
+                      } else if (d >= startOfLastWeek && d < startOfThisWeek) {
+                        lastWeekDist += (a.distance || 0) / 100000;
+                      }
+                    }
+
+                    let distDiffText = '–';
+                    if (lastWeekDist > 0) {
+                      const perc = ((thisWeekDist - lastWeekDist) / lastWeekDist) * 100;
+                      distDiffText = perc >= 0 
+                        ? `▲ ${perc.toFixed(0)}% vs last week`
+                        : `▼ ${Math.abs(perc).toFixed(0)}% vs last week`;
+                    } else if (thisWeekDist > 0) {
+                      distDiffText = `▲ 100% vs last week`;
+                    }
+
+                    let sleepDesc = lang === 'id' ? 'Menunggu Data' : 'Waiting for Data';
+                    if (latestSleepScore) {
+                      if (latestSleepScore >= 80) sleepDesc = lang === 'id' ? 'Pemulihan Sangat Baik' : 'Excellent Recovery';
+                      else if (latestSleepScore >= 60) sleepDesc = lang === 'id' ? 'Pemulihan Cukup' : 'Good Recovery';
+                      else sleepDesc = lang === 'id' ? 'Pemulihan Kurang' : 'Poor Recovery';
+                    }
+
+                    let paceDesc = lang === 'id' ? 'Belum Ada Target' : 'No Target Set';
+                    if (targetPace) {
+                      paceDesc = lang === 'id' ? 'Zona Lari Optimal' : 'Optimal Run Zone';
+                    }
+
+                    return [
+                      { 
+                        label: lang === 'id' ? 'Jarak Minggu Ini' : 'Weekly Mileage', 
+                        value: thisWeekDist.toFixed(1), 
+                        unit: 'km', 
+                        desc: distDiffText,
+                        color: '#818cf8' 
+                      },
+                      { 
+                        label: lang === 'id' ? 'Skor Tidur (Kesiapan)' : 'Sleep Score (Readiness)', 
+                        value: latestSleepScore || '–', 
+                        unit: '/100', 
+                        desc: sleepDesc,
+                        color: '#a78bfa' 
+                      },
+                      { 
+                        label: lang === 'id' ? 'Target Pace' : 'Pace Target', 
+                        value: targetPace ? (() => {
+                          const min = Math.floor(targetPace);
+                          const sec = Math.round((targetPace - min) * 60);
+                          return `${min}:${sec.toString().padStart(2, '0')}`;
+                        })() : '–', 
+                        unit: '/km', 
+                        desc: paceDesc,
+                        color: '#34d399' 
+                      },
+                      { 
+                        label: t.totalDistance, 
+                        value: totalDist.toFixed(1), 
+                        unit: 'km', 
+                        desc: lang === 'id' ? 'Total sepanjang masa' : 'All time distance',
+                        color: '#fbbf24' 
+                      },
+                    ].map((m, i) => (
+                      <div className="metric-card animate-fade-in" key={i} style={{ '--accent-color': m.color, animationDelay: `${i * 0.06}s`, display: 'flex', flexDirection: 'column' }}>
+                        <div className="metric-label">{m.label}</div>
+                        <div className="metric-value">
+                          {m.value}
+                          <span className="metric-unit">{m.unit}</span>
+                        </div>
+                        <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 'auto', paddingTop: 10, fontWeight: 500 }}>
+                          {m.desc}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ));
+                  })()}
                 </div>
 
                 <div className="dashboard-layout" style={{ marginTop: 20 }}>
