@@ -363,7 +363,7 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
               style={{ overflow: 'hidden', display: 'flex', flexDirection: window.innerWidth < 768 ? 'column' : 'row', cursor: 'pointer', padding: '16px', margin: '-16px -16px 40px -16px', borderBottom: '1px solid var(--border)', paddingBottom: 40, alignItems: 'center' }}
             >
               <div className="blog-img-container" style={{ flex: 1, width: '100%', minHeight: window.innerWidth < 768 ? 200 : 300 }}>
-                <div className="blog-img-inner" style={{ background: filteredBlogs[0].coverImage ? `url(${filteredBlogs[0].coverImage}) center/cover` : 'var(--bg-surface)' }}></div>
+                <div className="blog-img-inner" style={{ background: (filteredBlogs[0].coverImage || filteredBlogs[0].thumbnail) ? `url(${filteredBlogs[0].coverImage || filteredBlogs[0].thumbnail}) center/cover` : 'var(--bg-surface)' }}></div>
               </div>
               <div style={{ flex: 1.2, padding: window.innerWidth < 768 ? '24px 0 0 0' : '0 0 0 40px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                 <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
@@ -462,9 +462,9 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
                       </div>
                     </div>
                   </div>
-                  {b.coverImage && (
+                  {(b.coverImage || b.thumbnail) && (
                     <div className="blog-img-container" style={{ width: window.innerWidth < 768 ? '100%' : 144, height: window.innerWidth < 768 ? 160 : 90, flexShrink: 0 }}>
-                      <div className="blog-img-inner" style={{ background: `url(${b.coverImage}) center/cover` }}></div>
+                      <div className="blog-img-inner" style={{ background: `url(${b.coverImage || b.thumbnail}) center/cover` }}></div>
                     </div>
                   )}
                 </div>
@@ -719,9 +719,9 @@ function BlogReader({ blog, onBack, onTagClick, lang, onProps, currentUser, save
         </div>
       </div>
 
-      {blog.coverImage && (
+      {(blog.coverImage || blog.thumbnail) && (
         <img 
-          src={blog.coverImage} 
+          src={blog.coverImage || blog.thumbnail} 
           alt={safeTitle}
           style={{ width: '100%', height: 400, objectFit: 'cover', borderRadius: 8, marginBottom: 40, display: 'block' }}
           onError={(e) => e.currentTarget.style.display = 'none'}
@@ -757,7 +757,7 @@ function BlogEditor({ blog, onSave, onCancel, lang }) {
   const [seoDescription, setSeoDescription] = useState(blog?.seoDescription || '');
   const [content, setContent] = useState(blog?.content || '');
   const [tagsStr, setTagsStr] = useState(blog?.tags ? blog.tags.join(', ') : '');
-  const [coverImage, setCoverImage] = useState(blog?.coverImage || '');
+  const [coverImage, setCoverImage] = useState(blog?.coverImage || blog?.thumbnail || '');
   const [author, setAuthor] = useState(blog?.author || 'Admin EnduraUP');
 
   const quillRef = useRef(null);
