@@ -22,31 +22,12 @@ export default function AdminDashboard({ onBack }) {
 
   const [showBlogForm, setShowBlogForm] = useState(false);
   const [blogPosting, setBlogPosting] = useState(false);
-  const [coverUploading, setCoverUploading] = useState(false);
   const [blogForm, setBlogForm] = useState({ title: '', content: '', tags: '', thumbnail: '', seoTitle: '', seoDescription: '', author: 'EnduraUP Coach' });
   const [editingBlogId, setEditingBlogId] = useState(null);
   const [showAllUsers, setShowAllUsers] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   const quillRef = useRef(null);
-
-  const handleCoverUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    try {
-      setCoverUploading(true);
-      const loadingId = Date.now();
-      const fileRef = ref(storage, `blog_images/cover_${loadingId}_${file.name}`);
-      await uploadBytes(fileRef, file);
-      const url = await getDownloadURL(fileRef);
-      setBlogForm(prev => ({ ...prev, thumbnail: url }));
-      setCoverUploading(false);
-    } catch (err) {
-      console.error(err);
-      alert("Gagal upload cover. Pastikan ukuran file < 10MB dan Rules Firebase sudah benar.");
-      setCoverUploading(false);
-    }
-  };
 
   const imageHandler = () => {
     const input = document.createElement('input');
@@ -56,22 +37,47 @@ export default function AdminDashboard({ onBack }) {
 
     input.onchange = async () => {
       const file = input.files[0];
-      if (file) {
-        try {
-          const loadingId = Date.now();
-          const fileRef = ref(storage, `blog_images/${loadingId}_${file.name}`);
-          await uploadBytes(fileRef, file);
-          const url = await getDownloadURL(fileRef);
+      if (!file) return;
+
+      // Compress image using Canvas
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (e) => {
+        const img = new Image();
+        img.src = e.target.result;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const MAX_WIDTH = 800;
+          const MAX_HEIGHT = 800;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height *= MAX_WIDTH / width;
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width *= MAX_HEIGHT / height;
+              height = MAX_HEIGHT;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // Convert to Base64 (compress to ~70% quality JPEG)
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
 
           const quill = quillRef.current.getEditor();
           let range = quill.getSelection(true);
           const index = range ? range.index : quill.getLength();
-          quill.insertEmbed(index, 'image', url);
-        } catch (err) {
-          console.error("Gagal upload gambar:", err);
-          alert("Gagal mengupload gambar. (Pastikan Firebase Storage Rules sudah mengizinkan folder /blog_images sesuai file FIREBASE_RULES.md terbaru)");
-        }
-      }
+          quill.insertEmbed(index, 'image', dataUrl);
+        };
+      };
     };
   };
 
@@ -825,18 +831,14 @@ export default function AdminDashboard({ onBack }) {
                 {editingBlogId ? <><Edit3 size={18} /> Edit Artikel</> : <><PenTool size={18} /> Tulis Artikel Baru</>}
               </div>
               <input className="form-input" placeholder="Judul Artikel" required value={blogForm.title} onChange={e => setBlogForm({...blogForm, title: e.target.value})} style={{ width: '100%', padding: '14px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-surface)', color: 'var(--text-primary)', fontSize: 16 }} />
-              <div style={{ display: 'flex', gap: 12 }}>
-                <input className="form-input" placeholder="URL Gambar Cover (Atau klik tombol Upload 👉)" value={blogForm.thumbnail} onChange={e => {
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <input className="form-input" placeholder="URL Gambar Cover (Contoh: https://drive.google.com/file/d/.../view)" value={blogForm.thumbnail} onChange={e => {
                   const val = e.target.value;
                   setBlogForm({...blogForm, thumbnail: val});
-                  if (val.includes('drive.google.com/drive/u/0/folders/') || val.includes('drive.google.com/drive/folders/')) {
-                    alert("Peringatan: Sepertinya Anda memasukkan link FOLDER Google Drive. Harap buka folder tersebut, klik dua kali pada file gambarnya, lalu klik 'Share/Copy Link' untuk mendapatkan link FILE-nya.");
-                  }
-                }} style={{ flex: 1, padding: '14px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-surface)', color: 'var(--text-primary)' }} />
-                <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--accent-purple)', color: 'white', padding: '0 20px', borderRadius: 8, cursor: coverUploading ? 'not-allowed' : 'pointer', fontWeight: 600, opacity: coverUploading ? 0.7 : 1, whiteSpace: 'nowrap' }}>
-                  {coverUploading ? 'Mengupload...' : 'Upload Foto'}
-                  <input type="file" accept="image/*" onChange={handleCoverUpload} disabled={coverUploading} style={{ display: 'none' }} />
-                </label>
+                }} style={{ width: '100%', padding: '14px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-surface)', color: 'var(--text-primary)' }} />
+                {(blogForm.thumbnail && (blogForm.thumbnail.includes('/folders/') || !blogForm.thumbnail.includes('/file/d/'))) && (
+                  <span style={{ fontSize: 12, color: '#ef4444', fontWeight: 600 }}>⚠️ Peringatan: Link salah! Lo pake link FOLDER, bukan link FILE. Buka foldernya, klik kanan fotonya -> pilih Share -> Copy Link.</span>
+                )}
               </div>
               <input className="form-input" placeholder="Penulis Artikel (Misal: EnduraUP Coach, dr. Tirta, dll)" required value={blogForm.author} onChange={e => setBlogForm({...blogForm, author: e.target.value})} style={{ width: '100%', padding: '14px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-surface)', color: 'var(--text-primary)' }} />
               <input className="form-input" placeholder="Tags (pisahkan dengan koma, misal: Tips, Recovery, Nutrisi)" required value={blogForm.tags} onChange={e => setBlogForm({...blogForm, tags: e.target.value})} style={{ width: '100%', padding: '14px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-surface)', color: 'var(--text-primary)' }} />
