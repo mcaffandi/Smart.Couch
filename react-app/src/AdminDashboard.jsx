@@ -12,6 +12,7 @@ export default function AdminDashboard({ onBack }) {
   const [users, setUsers] = useState([]);
   const [blogs, setBlogs] = useState([]);
   const [requests, setRequests] = useState([]);
+  const [feedbacks, setFeedbacks] = useState([]);
   const [loading, setLoading] = useState(true);
   
   const [adminTab, setAdminTab] = useState('overview');
@@ -122,6 +123,21 @@ export default function AdminDashboard({ onBack }) {
         setRequests(reqData);
       } catch (err) {
         console.error("Gagal ambil data requests:", err);
+      }
+
+      // Fetch feedbacks
+      try {
+        const fbSnap = await getDocsFromServer(collection(db, "feedback"));
+        const fbData = [];
+        fbSnap.forEach((doc) => fbData.push({ id: doc.id, ...doc.data() }));
+        fbData.sort((a, b) => {
+          const tA = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+          const tB = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+          return tB - tA;
+        });
+        setFeedbacks(fbData);
+      } catch (err) {
+        console.error("Gagal ambil data feedbacks:", err);
       }
 
       // Fetch settings
@@ -438,6 +454,12 @@ export default function AdminDashboard({ onBack }) {
               )}
             </button>
             <button 
+              onClick={() => { setAdminTab('feedbacks'); setShowBlogForm(false); }} 
+              style={{ background: adminTab === 'feedbacks' ? 'var(--text-primary)' : 'transparent', color: adminTab === 'feedbacks' ? 'var(--bg-base)' : 'var(--text-secondary)', border: 'none', padding: '6px 16px', borderRadius: 20, cursor: 'pointer', fontWeight: 600, fontSize: 13, transition: 'all 0.2s' }}
+            >
+              Reviews
+            </button>
+            <button 
               onClick={() => { setAdminTab('settings'); setShowBlogForm(false); }} 
               style={{ background: adminTab === 'settings' ? 'var(--text-primary)' : 'transparent', color: adminTab === 'settings' ? 'var(--bg-base)' : 'var(--text-secondary)', border: 'none', padding: '6px 16px', borderRadius: 20, cursor: 'pointer', fontWeight: 600, fontSize: 13, transition: 'all 0.2s' }}
             >
@@ -613,6 +635,53 @@ export default function AdminDashboard({ onBack }) {
           >
             {savingSettings ? 'Menyimpan...' : 'Simpan Pengaturan'}
           </button>
+        </div>
+      )}
+
+      {adminTab === 'feedbacks' && (
+        <div className="animate-fade-in">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+            <h3 style={{ margin: 0, fontSize: 18 }}>Kelola Review (Landing Page)</h3>
+          </div>
+          {feedbacks.length === 0 ? (
+            <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>Belum ada review dari pengguna.</div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20 }}>
+              {feedbacks.map(fb => (
+                <div key={fb.id} className="stat-card" style={{ background: 'var(--bg-card)', padding: 20, borderRadius: 12, border: '1px solid var(--border)', display: 'flex', flexDirection: 'column' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+                    <div>
+                      <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{fb.name}</div>
+                      <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{fb.createdAt?.toDate ? fb.createdAt.toDate().toLocaleDateString('id-ID') : fb.date}</div>
+                    </div>
+                    <div style={{ display: 'flex', gap: 2 }}>
+                      {[...Array(fb.rating || 5)].map((_, i) => (
+                        <svg key={i} width="14" height="14" viewBox="0 0 24 24" fill="#fbbf24" stroke="#fbbf24" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                      ))}
+                    </div>
+                  </div>
+                  <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.5, flex: 1, fontStyle: 'italic', marginBottom: 16 }}>"{fb.feedback}"</p>
+                  <button 
+                    onClick={async () => {
+                      if (window.confirm('Yakin ingin menghapus review ini?')) {
+                        try {
+                          await deleteDoc(doc(db, 'feedback', fb.id));
+                          setFeedbacks(prev => prev.filter(f => f.id !== fb.id));
+                        } catch (err) {
+                          alert('Gagal menghapus review: ' + err.message);
+                        }
+                      }
+                    }}
+                    style={{ padding: '8px 12px', background: '#ef444420', color: '#ef4444', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 12, alignSelf: 'flex-end', transition: 'background 0.2s' }}
+                    onMouseOver={e => e.currentTarget.style.background = '#ef444430'}
+                    onMouseOut={e => e.currentTarget.style.background = '#ef444420'}
+                  >
+                    Hapus Review
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
