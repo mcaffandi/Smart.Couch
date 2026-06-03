@@ -45,8 +45,9 @@ export default function AdminDashboard({ onBack }) {
           const url = await getDownloadURL(fileRef);
 
           const quill = quillRef.current.getEditor();
-          const range = quill.getSelection(true);
-          quill.insertEmbed(range.index, 'image', url);
+          let range = quill.getSelection(true);
+          const index = range ? range.index : quill.getLength();
+          quill.insertEmbed(index, 'image', url);
         } catch (err) {
           console.error("Gagal upload gambar:", err);
           alert("Gagal mengupload gambar. (Pastikan Firebase Storage Rules sudah mengizinkan folder /blog_images sesuai file FIREBASE_RULES.md terbaru)");

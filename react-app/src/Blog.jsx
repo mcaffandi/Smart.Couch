@@ -793,8 +793,9 @@ function BlogEditor({ blog, onSave, onCancel, lang }) {
           const url = await getDownloadURL(fileRef);
 
           const editor = quillRef.current.getEditor();
-          const range = editor.getSelection();
-          editor.insertEmbed(range.index, 'image', url);
+          let range = editor.getSelection(true);
+          const index = range ? range.index : editor.getLength();
+          editor.insertEmbed(index, 'image', url);
         } catch (e) {
           console.error("Image upload failed", e);
           alert("Gagal upload gambar.");
