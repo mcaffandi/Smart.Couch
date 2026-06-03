@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { Lock } from 'lucide-react';
+import { Lock, PenTool, Edit3 } from 'lucide-react';
 import { collection, getDocs, getDocsFromServer, getDoc, setDoc, deleteDoc, doc, addDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage, auth } from './firebase';
@@ -786,8 +786,8 @@ export default function AdminDashboard({ onBack }) {
           
           {showBlogForm ? (
             <form onSubmit={handlePostBlog} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--accent-purple)', marginBottom: 8 }}>
-                {editingBlogId ? '✍️ Edit Artikel' : '📝 Tulis Artikel Baru'}
+              <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--accent-purple)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                {editingBlogId ? <><Edit3 size={18} /> Edit Artikel</> : <><PenTool size={18} /> Tulis Artikel Baru</>}
               </div>
               <input className="form-input" placeholder="Judul Artikel" required value={blogForm.title} onChange={e => setBlogForm({...blogForm, title: e.target.value})} style={{ width: '100%', padding: '14px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-surface)', color: 'var(--text-primary)', fontSize: 16 }} />
               <input className="form-input" placeholder="URL Gambar Cover (Opsional)" value={blogForm.thumbnail} onChange={e => setBlogForm({...blogForm, thumbnail: e.target.value})} style={{ width: '100%', padding: '14px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-surface)', color: 'var(--text-primary)' }} />

@@ -2972,7 +2972,6 @@ export default function App() {
                   {isPremium && <Crown size={16} color="#fbbf24" fill="#fbbf24" style={{ marginLeft: 6, flexShrink: 0 }} />}
                 </div>
               </div>
-              <div style={{ fontSize: 10, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 1 }}>{currentUser}</div>
             </div>
             {/* Edit indicator */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 22, height: 22, borderRadius: '50%', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border)', flexShrink: 0 }}>
