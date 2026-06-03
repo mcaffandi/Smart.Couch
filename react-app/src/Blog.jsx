@@ -5,6 +5,18 @@ import { db, storage, auth, googleProvider, signInWithPopup } from './firebase';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 
+// Helper to fix google drive links on the fly
+const parseImageUrl = (url) => {
+  if (!url) return '';
+  if (url.includes('drive.google.com/file/d/')) {
+    const match = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+    if (match && match[1]) {
+      return `https://drive.google.com/uc?export=view&id=${match[1]}`;
+    }
+  }
+  return url;
+};
+
 export default function BlogModule({ isAdmin, lang = 'id', onViewChange, currentUser, searchQuery = '' }) {
   const [blogs, setBlogs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -363,7 +375,7 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
               style={{ overflow: 'hidden', display: 'flex', flexDirection: window.innerWidth < 768 ? 'column' : 'row', cursor: 'pointer', padding: '16px', margin: '-16px -16px 40px -16px', borderBottom: '1px solid var(--border)', paddingBottom: 40, alignItems: 'center' }}
             >
               <div className="blog-img-container" style={{ flex: 1, width: '100%', minHeight: window.innerWidth < 768 ? 200 : 300 }}>
-                <div className="blog-img-inner" style={{ background: (filteredBlogs[0].coverImage || filteredBlogs[0].thumbnail) ? `url(${filteredBlogs[0].coverImage || filteredBlogs[0].thumbnail}) center/cover` : 'var(--bg-surface)' }}></div>
+                <div className="blog-img-inner" style={{ background: (filteredBlogs[0].coverImage || filteredBlogs[0].thumbnail) ? `url('${parseImageUrl(filteredBlogs[0].coverImage || filteredBlogs[0].thumbnail)}') center/cover` : 'var(--bg-surface)' }}></div>
               </div>
               <div style={{ flex: 1.2, padding: window.innerWidth < 768 ? '24px 0 0 0' : '0 0 0 40px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                 <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
@@ -464,7 +476,7 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
                   </div>
                   {(b.coverImage || b.thumbnail) && (
                     <div className="blog-img-container" style={{ width: window.innerWidth < 768 ? '100%' : 144, height: window.innerWidth < 768 ? 160 : 90, flexShrink: 0 }}>
-                      <div className="blog-img-inner" style={{ background: `url(${b.coverImage || b.thumbnail}) center/cover` }}></div>
+                      <div className="blog-img-inner" style={{ background: `url('${parseImageUrl(b.coverImage || b.thumbnail)}') center/cover` }}></div>
                     </div>
                   )}
                 </div>
@@ -721,7 +733,7 @@ function BlogReader({ blog, onBack, onTagClick, lang, onProps, currentUser, save
 
       {(blog.coverImage || blog.thumbnail) && (
         <img 
-          src={blog.coverImage || blog.thumbnail} 
+          src={parseImageUrl(blog.coverImage || blog.thumbnail)} 
           alt={safeTitle}
           style={{ width: '100%', height: 400, objectFit: 'cover', borderRadius: 8, marginBottom: 40, display: 'block' }}
           onError={(e) => e.currentTarget.style.display = 'none'}
