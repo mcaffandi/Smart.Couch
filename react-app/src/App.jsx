@@ -4,7 +4,7 @@ import * as XLSX from 'xlsx';
 import {
   loadUsersList, saveUsersList, getCurrentUser, saveCurrentUser,
   loadUserData, saveUserData, deleteUserData,
-  msToDate, getPaceRecommendations, getHRZones, mergeData, parseGarminZip, parseGpxFile, decodePolyline
+  getLocalDateStr, msToDate, getPaceRecommendations, getHRZones, mergeData, parseGarminZip, parseGpxFile, decodePolyline
 } from './utils';
 import { TrendChart, HRZoneChart } from './Charts';
 import RunHistory from './RunHistory';
@@ -287,7 +287,7 @@ export default function App() {
   // ── State: manual inputs ─────────────────────────────────────────────────────
   const [manualRun, setManualRun] = useState({
     name: '',
-    date: new Date().toISOString().split('T')[0],
+    date: getLocalDateStr(),
     time: '06:00',
     distance: 5.0,
     duration: 30,
@@ -296,7 +296,7 @@ export default function App() {
   });
   const [manualSleep, setManualSleep] = useState({
     inputType: 'score', // 'quality' or 'score'
-    date: new Date().toISOString().split('T')[0],
+    date: getLocalDateStr(),
     quality: 'cukup',
     score: 80,
     sleepHours: 7,
@@ -771,7 +771,7 @@ export default function App() {
       .reverse();
     if (runDatesArray.length === 0) return null;
     const lastRunDate = runDatesArray[0];
-    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStr = getLocalDateStr();
     const dToday = new Date(todayStr);
     const dRun = new Date(lastRunDate);
     const diffTime = dToday - dRun;
@@ -2014,7 +2014,7 @@ export default function App() {
 
                 // Write to newSleep if we have a valid score
                 if (scoreVal !== null) {
-                  const dateStr = parsedDate.toISOString().split('T')[0];
+                  const dateStr = getLocalDateStr(parsedDate);
                   newSleep[dateStr] = {
                     score: scoreVal,
                     duration: durValParsed !== null ? durValParsed : 7.0
@@ -2986,12 +2986,15 @@ export default function App() {
 
           {/* Manual Run */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <button className="btn btn-secondary" onClick={() => setShowAddRunModal(true)} style={{ justifyContent: 'flex-start', padding: '12px 16px', background: 'var(--bg-card)', borderRadius: 10 }}>
+            <button className="btn btn-secondary" onClick={() => {
+              setManualRun(prev => ({ ...prev, date: getLocalDateStr() }));
+              setShowAddRunModal(true);
+            }} style={{ justifyContent: 'flex-start', padding: '12px 16px', background: 'var(--bg-card)', borderRadius: 10 }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--accent-purple)' }}><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
               {lang === 'id' ? 'Tambah Lari Manual' : 'Add Run Session'}
             </button>
             <button className="btn btn-secondary" onClick={() => {
-              const today = new Date().toISOString().split('T')[0];
+              const today = getLocalDateStr();
               const existing = data.sleep_records?.[today];
               setManualSleep(prev => ({
                 ...prev,

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
 import { db, isConfigured as isFirebaseConfigured } from './firebase';
 import './LandingPage.css';
 import Logo from './Logo';

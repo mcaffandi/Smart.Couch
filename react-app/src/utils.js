@@ -106,8 +106,12 @@ export const deleteUserData = (username) => {
 // ──────────────────────────────────────────────
 // Date Helpers
 // ──────────────────────────────────────────────
+export const getLocalDateStr = (d = new Date()) => {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+
 export const msToDate = (ms) => {
-  return new Date(ms).toISOString().split('T')[0];
+  return getLocalDateStr(new Date(ms));
 };
 
 export const formatDate = (dateStr) => {
