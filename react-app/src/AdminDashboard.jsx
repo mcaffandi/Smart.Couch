@@ -836,7 +836,7 @@ export default function AdminDashboard({ onBack }) {
                   const val = e.target.value;
                   setBlogForm({...blogForm, thumbnail: val});
                 }} style={{ width: '100%', padding: '14px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-surface)', color: 'var(--text-primary)' }} />
-                {(blogForm.thumbnail && (blogForm.thumbnail.includes('/folders/') || !blogForm.thumbnail.includes('/file/d/'))) && (
+                {(blogForm.thumbnail && blogForm.thumbnail.includes('/folders/')) && (
                   <span style={{ fontSize: 12, color: '#ef4444', fontWeight: 600 }}>⚠️ Peringatan: Link salah! Lo pake link FOLDER, bukan link FILE. Buka foldernya, klik kanan fotonya -> pilih Share -> Copy Link.</span>
                 )}
               </div>
