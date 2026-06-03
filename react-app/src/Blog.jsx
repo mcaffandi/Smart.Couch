@@ -208,12 +208,40 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
 
   // Extract unique tags
   const allTags = useMemo(() => {
-    const tagsSet = new Set();
+    const tags = new Set();
     blogs.forEach(b => {
-      if (b.tags && Array.isArray(b.tags)) b.tags.forEach(t => tagsSet.add(t));
+      if (b.tags && Array.isArray(b.tags)) {
+        b.tags.forEach(t => tags.add(t));
+      } else if (typeof b.tags === 'string') {
+        b.tags.split(',').forEach(t => tags.add(t.trim()));
+      }
     });
-    return ['Semua', ...Array.from(tagsSet)];
+    return Array.from(tags).filter(t => t);
   }, [blogs]);
+
+  // Handle viewing a blog (increment view count)
+  const handleViewBlog = async (blog) => {
+    setCurrentBlog(blog);
+    setView('read');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    // Track views
+    if (blog.id) {
+      try {
+        const viewedBlogs = JSON.parse(localStorage.getItem('enduraup_viewed_blogs') || '[]');
+        if (!viewedBlogs.includes(blog.id)) {
+          viewedBlogs.push(blog.id);
+          localStorage.setItem('enduraup_viewed_blogs', JSON.stringify(viewedBlogs));
+          
+          await updateDoc(doc(db, 'blogs', blog.id), {
+            views: increment(1)
+          });
+        }
+      } catch (e) {
+        console.error("Error updating view count:", e);
+      }
+    }
+  };
 
   if (view === 'edit' && isAdmin) {
     return <BlogEditor blog={currentBlog} onSave={handleSave} onCancel={() => { setView('list'); setCurrentBlog(null); }} lang={lang} />;
@@ -374,7 +402,7 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
           {filteredBlogs.length > 0 && selectedTag === 'Semua' && !searchQuery && !showSavedOnly && (
             <div 
               className="blog-list-item"
-              onClick={() => { setCurrentBlog(filteredBlogs[0]); setView('read'); }}
+              onClick={() => handleViewBlog(filteredBlogs[0])}
               style={{ overflow: 'hidden', display: 'flex', flexDirection: window.innerWidth < 768 ? 'column' : 'row', cursor: 'pointer', padding: '16px', margin: '-16px -16px 40px -16px', borderBottom: '1px solid var(--border)', paddingBottom: 40, alignItems: 'center' }}
             >
               <div className="blog-img-container" style={{ flex: 1, width: '100%', minHeight: window.innerWidth < 768 ? 200 : 300 }}>
@@ -440,7 +468,7 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
           <div style={{ maxWidth: 800, margin: '0 auto', width: '100%', paddingBottom: 60, paddingTop: searchQuery ? 0 : 20 }}>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               {filteredBlogs.slice(!searchQuery && selectedTag === 'Semua' && !showSavedOnly ? 1 : 0).map(b => (
-                <div key={b.id} className="blog-list-item" onClick={() => { setCurrentBlog(b); setView('read'); }} style={{ display: 'flex', gap: window.innerWidth < 768 ? 16 : 32, paddingBottom: 24, paddingTop: 24, paddingLeft: 16, paddingRight: 16, margin: '0 -16px', borderBottom: '1px solid var(--border)', cursor: 'pointer', alignItems: 'flex-start', flexDirection: window.innerWidth < 768 ? 'column-reverse' : 'row' }}>
+                <div key={b.id} className="blog-list-item" onClick={() => handleViewBlog(b)} style={{ display: 'flex', gap: window.innerWidth < 768 ? 16 : 32, paddingBottom: 24, paddingTop: 24, paddingLeft: 16, paddingRight: 16, margin: '0 -16px', borderBottom: '1px solid var(--border)', cursor: 'pointer', alignItems: 'flex-start', flexDirection: window.innerWidth < 768 ? 'column-reverse' : 'row' }}>
                   <div style={{ flex: 1 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                       <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--accent-purple)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 10, fontWeight: 'bold' }}>E</div>
@@ -682,6 +710,20 @@ function BlogReader({ blog, onBack, onTagClick, lang, onProps, currentUser, save
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
             <span style={{ fontSize: 14, fontWeight: 500 }}>{commentCount}</span>
           </button>
+
+          {/* View Count */}
+          <div 
+            style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 8, 
+              color: 'var(--text-secondary)'
+            }}
+            title={lang === 'id' ? 'Dilihat' : 'Views'}
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+            <span style={{ fontSize: 14, fontWeight: 500 }}>{blog.views || 1}</span>
+          </div>
         </div>
 
         <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
