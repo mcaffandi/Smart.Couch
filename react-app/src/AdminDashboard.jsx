@@ -644,18 +644,27 @@ export default function AdminDashboard({ onBack }) {
             </div>
           </div>
 
-          <div style={{ marginBottom: 24 }}>
-            <label style={{ display: 'block', marginBottom: 8, fontWeight: 600, fontSize: 14 }}>Strava Sync Mode</label>
-            <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 12 }}>Pilih berapa banyak aktivitas yang ditarik setiap kali pengguna login atau memicu sync.</p>
-            <select 
-              className="form-input" 
-              value={globalSettings.stravaSyncMode || 'fast'} 
-              onChange={e => setGlobalSettings({...globalSettings, stravaSyncMode: e.target.value})}
-              style={{ width: '100%', padding: '12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-surface)', color: 'var(--text-primary)', fontSize: 15 }}
-            >
-              <option value="fast">Fast Sync (5 Aktivitas Terbaru) - Rekomendasi</option>
-              <option value="full">Full Sync (200 Aktivitas)</option>
-            </select>
+          <div style={{ marginBottom: 24, padding: 16, border: '1px solid var(--border)', borderRadius: 12, background: 'var(--bg-surface)' }}>
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ display: 'block', marginBottom: 4, fontWeight: 600, fontSize: 15 }}>Mode Penarikan Data (Strava Sync Mode)</label>
+              <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: 0 }}>Pilih seberapa banyak aktivitas yang ditarik saat profil di-refresh.</p>
+            </div>
+            <div style={{ display: 'flex', gap: 8, background: 'var(--bg-base)', padding: 6, borderRadius: 12, border: '1px solid var(--border)', width: 'fit-content' }}>
+              <button 
+                type="button"
+                onClick={() => setGlobalSettings({...globalSettings, stravaSyncMode: 'fast'})}
+                style={{ background: globalSettings.stravaSyncMode !== 'full' ? 'var(--accent-purple)' : 'transparent', color: globalSettings.stravaSyncMode !== 'full' ? '#fff' : 'var(--text-secondary)', border: 'none', padding: '10px 20px', borderRadius: 8, fontWeight: 600, fontSize: 14, cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: 6 }}
+              >
+                🚀 Fast Sync (Top 5)
+              </button>
+              <button 
+                type="button"
+                onClick={() => setGlobalSettings({...globalSettings, stravaSyncMode: 'full'})}
+                style={{ background: globalSettings.stravaSyncMode === 'full' ? '#ef4444' : 'transparent', color: globalSettings.stravaSyncMode === 'full' ? '#fff' : 'var(--text-secondary)', border: 'none', padding: '10px 20px', borderRadius: 8, fontWeight: 600, fontSize: 14, cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: 6 }}
+              >
+                🐢 Full Sync (Semua Data)
+              </button>
+            </div>
           </div>
 
           <div style={{ marginBottom: 24 }}>
