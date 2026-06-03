@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { Lock, PenTool, Edit3, Search } from 'lucide-react';
+import { Lock, PenTool, Edit3, Search, Zap, Database, AlertTriangle } from 'lucide-react';
 import { collection, getDocs, getDocsFromServer, getDoc, setDoc, deleteDoc, doc, addDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage, auth } from './firebase';
@@ -22,7 +22,7 @@ export default function AdminDashboard({ onBack }) {
 
   const [showBlogForm, setShowBlogForm] = useState(false);
   const [blogPosting, setBlogPosting] = useState(false);
-  const [blogForm, setBlogForm] = useState({ title: '', content: '', tags: '', thumbnail: '', seoTitle: '', seoDescription: '' });
+  const [blogForm, setBlogForm] = useState({ title: '', content: '', tags: '', thumbnail: '', seoTitle: '', seoDescription: '', author: 'EnduraUP Coach' });
   const [editingBlogId, setEditingBlogId] = useState(null);
   const [showAllUsers, setShowAllUsers] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -668,14 +668,14 @@ export default function AdminDashboard({ onBack }) {
                 onClick={() => setGlobalSettings({...globalSettings, stravaSyncMode: 'fast'})}
                 style={{ background: globalSettings.stravaSyncMode !== 'full' ? 'var(--accent-purple)' : 'transparent', color: globalSettings.stravaSyncMode !== 'full' ? '#fff' : 'var(--text-secondary)', border: 'none', padding: '10px 20px', borderRadius: 8, fontWeight: 600, fontSize: 14, cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: 6 }}
               >
-                🚀 Fast Sync (Top 5)
+                <Zap size={16} /> Fast Sync (Top 5)
               </button>
               <button 
                 type="button"
                 onClick={() => setGlobalSettings({...globalSettings, stravaSyncMode: 'full'})}
                 style={{ background: globalSettings.stravaSyncMode === 'full' ? '#ef4444' : 'transparent', color: globalSettings.stravaSyncMode === 'full' ? '#fff' : 'var(--text-secondary)', border: 'none', padding: '10px 20px', borderRadius: 8, fontWeight: 600, fontSize: 14, cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: 6 }}
               >
-                🐢 Full Sync (Semua Data)
+                <Database size={16} /> Full Sync (Semua Data)
               </button>
             </div>
           </div>
@@ -789,7 +789,7 @@ export default function AdminDashboard({ onBack }) {
             <button className="btn btn-primary" onClick={() => {
               if (showBlogForm) {
                 setEditingBlogId(null);
-                setBlogForm({ title: '', content: '', tags: '', thumbnail: '', seoTitle: '', seoDescription: '' });
+                setBlogForm({ title: '', content: '', tags: '', thumbnail: '', seoTitle: '', seoDescription: '', author: 'EnduraUP Coach' });
               }
               setShowBlogForm(!showBlogForm);
             }} style={{ padding: '8px 20px', fontSize: 14, width: 'auto', borderRadius: 24 }}>
@@ -803,7 +803,14 @@ export default function AdminDashboard({ onBack }) {
                 {editingBlogId ? <><Edit3 size={18} /> Edit Artikel</> : <><PenTool size={18} /> Tulis Artikel Baru</>}
               </div>
               <input className="form-input" placeholder="Judul Artikel" required value={blogForm.title} onChange={e => setBlogForm({...blogForm, title: e.target.value})} style={{ width: '100%', padding: '14px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-surface)', color: 'var(--text-primary)', fontSize: 16 }} />
-              <input className="form-input" placeholder="URL Gambar Cover (Opsional)" value={blogForm.thumbnail} onChange={e => setBlogForm({...blogForm, thumbnail: e.target.value})} style={{ width: '100%', padding: '14px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-surface)', color: 'var(--text-primary)' }} />
+              <input className="form-input" placeholder="URL Gambar Cover (Opsional)" value={blogForm.thumbnail} onChange={e => {
+                const val = e.target.value;
+                setBlogForm({...blogForm, thumbnail: val});
+                if (val.includes('drive.google.com/drive/u/0/folders/') || val.includes('drive.google.com/drive/folders/')) {
+                  alert("Peringatan: Sepertinya Anda memasukkan link FOLDER Google Drive. Harap buka folder tersebut, klik dua kali pada file gambarnya, lalu klik 'Share/Copy Link' untuk mendapatkan link FILE-nya.");
+                }
+              }} style={{ width: '100%', padding: '14px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-surface)', color: 'var(--text-primary)' }} />
+              <input className="form-input" placeholder="Penulis Artikel (Misal: EnduraUP Coach, dr. Tirta, dll)" required value={blogForm.author} onChange={e => setBlogForm({...blogForm, author: e.target.value})} style={{ width: '100%', padding: '14px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-surface)', color: 'var(--text-primary)' }} />
               <input className="form-input" placeholder="Tags (pisahkan dengan koma, misal: Tips, Recovery, Nutrisi)" required value={blogForm.tags} onChange={e => setBlogForm({...blogForm, tags: e.target.value})} style={{ width: '100%', padding: '14px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-surface)', color: 'var(--text-primary)' }} />
               
               <div style={{ marginTop: 8, background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 8, overflow: 'hidden' }}>

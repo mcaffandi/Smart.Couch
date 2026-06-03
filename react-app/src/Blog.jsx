@@ -4,6 +4,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage, auth, googleProvider, signInWithPopup } from './firebase';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
+import { BookOpen, Edit3, Trash2 } from 'lucide-react';
 
 // Helper to fix google drive links on the fly
 const parseImageUrl = (url) => {
@@ -359,7 +360,9 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
         <div style={{ padding: 60, textAlign: 'center', color: 'var(--text-muted)' }}>Memuat artikel...</div>
       ) : filteredBlogs.length === 0 ? (
         <div className="glass-panel" style={{ padding: 60, textAlign: 'center', marginTop: 20 }}>
-          <div style={{ fontSize: 48, marginBottom: 16, opacity: 0.8 }}>📚</div>
+          <div style={{ marginBottom: 16, opacity: 0.8, color: 'var(--text-muted)', display: 'flex', justifyContent: 'center' }}>
+            <BookOpen size={48} />
+          </div>
           <h3 style={{ fontSize: 20, color: 'var(--text-primary)', marginBottom: 8 }}>Belum ada artikel</h3>
           <p style={{ color: 'var(--text-secondary)' }}>
             {searchQuery ? 'Tidak ada artikel yang cocok dengan pencarian Anda.' : 'Nantikan konten edukasi menarik dari EnduraUP!'}
@@ -393,7 +396,7 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--accent-purple)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 12, fontWeight: 'bold' }}>E</div>
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
-                       <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>EnduraUP Coach</span>
+                       <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>{filteredBlogs[0].author || 'EnduraUP Coach'}</span>
                        <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>
                          {filteredBlogs[0].createdAt?.toDate ? filteredBlogs[0].createdAt.toDate().toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'}) : ''}
                        </span>
@@ -414,8 +417,8 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
                     </button>
                     {isAdmin && (
                       <>
-                        <button onClick={() => { setCurrentBlog(filteredBlogs[0]); setView('edit'); }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', padding: 0 }} title="Edit">✏️</button>
-                        <button onClick={() => handleDelete(filteredBlogs[0].id)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--accent-rose)', padding: 0 }} title="Hapus">🗑️</button>
+                        <button onClick={() => { setCurrentBlog(filteredBlogs[0]); setView('edit'); }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', padding: 0 }} title="Edit"><Edit3 size={16} /></button>
+                        <button onClick={() => handleDelete(filteredBlogs[0].id)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--accent-rose)', padding: 0 }} title="Hapus"><Trash2 size={16} /></button>
                       </>
                     )}
                   </div>
@@ -441,7 +444,7 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
                   <div style={{ flex: 1 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                       <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--accent-purple)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 10, fontWeight: 'bold' }}>E</div>
-                      <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-primary)' }}>EnduraUP Coach</span>
+                      <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-primary)' }}>{b.author || 'EnduraUP Coach'}</span>
                       <span style={{ color: 'var(--text-muted)' }}>·</span>
                       <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>{b.createdAt?.toDate ? b.createdAt.toDate().toLocaleDateString('id-ID', {day: 'numeric', month: 'short'}) : ''}</span>
                     </div>
@@ -467,8 +470,8 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
                         </button>
                         {isAdmin && (
                           <>
-                            <button onClick={(e) => { e.stopPropagation(); setCurrentBlog(b); setView('edit'); }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', padding: 0 }} title="Edit">✏️</button>
-                            <button onClick={(e) => { e.stopPropagation(); handleDelete(b.id); }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--accent-rose)', padding: 0 }} title="Hapus">🗑️</button>
+                            <button onClick={(e) => { e.stopPropagation(); setCurrentBlog(b); setView('edit'); }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', padding: 0 }} title="Edit"><Edit3 size={16} /></button>
+                            <button onClick={(e) => { e.stopPropagation(); handleDelete(b.id); }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--accent-rose)', padding: 0 }} title="Hapus"><Trash2 size={16} /></button>
                           </>
                         )}
                       </div>

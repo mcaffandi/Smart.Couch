@@ -1,6 +1,6 @@
 # EnduraUP - Firestore Security Rules
 
-*(Terakhir diupdate: 3 Juni 2026, 05:15 WIB)*
+*(Terakhir diupdate: 3 Juni 2026, 05:15 WIB)*unt
 
 Copy dan paste seluruh kode di bawah ini ke tab **Rules** di Firebase Console (bagian Firestore Database). 
 
