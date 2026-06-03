@@ -622,7 +622,10 @@ export default function App() {
           stravaTokenExpiresAt: tokenData.expires_at * 1000
         };
         
-        const perPage = globalSettings.stravaSyncMode === 'full' ? 200 : 5;
+        const isPremiumUser = data.profile?.isPremium;
+        const userSyncMode = data.profile?.stravaSyncMode || 'fast';
+        const effectiveSyncMode = isPremiumUser ? userSyncMode : (globalSettings?.stravaSyncMode || 'fast');
+        const perPage = effectiveSyncMode === 'full' ? 200 : 5;
         return fetch(`https://www.strava.com/api/v3/athlete/activities?per_page=${perPage}`, {
           headers: { 'Authorization': `Bearer ${tokenData.access_token}` }
         })
@@ -637,6 +640,7 @@ export default function App() {
           if (act.type === 'Run') {
             const startDateLocal = new Date(act.start_date).getTime();
             newRuns.push({
+              stravaId: act.id,
               name: act.name || null,
               startTimeLocal: startDateLocal,
               distance: act.distance * 100, // meters to cm
@@ -1622,7 +1626,11 @@ export default function App() {
         };
       }
 
-      const perPage = globalSettings.stravaSyncMode === 'full' ? 200 : 5;
+      const isPremiumUser = data.profile?.isPremium;
+      const userSyncMode = data.profile?.stravaSyncMode || 'fast';
+      const effectiveSyncMode = isPremiumUser ? userSyncMode : (globalSettings?.stravaSyncMode || 'fast');
+      const perPage = effectiveSyncMode === 'full' ? 200 : 5;
+      
       const actsRes = await fetch(`https://www.strava.com/api/v3/athlete/activities?per_page=${perPage}`, {
         headers: { 'Authorization': `Bearer ${accessToken}` }
       });
@@ -1635,6 +1643,7 @@ export default function App() {
         if (act.type === 'Run') {
           const startDateLocal = new Date(act.start_date).getTime();
           newRuns.push({
+            stravaId: act.id,
             name: act.name || null,
             startTimeLocal: startDateLocal,
             distance: act.distance * 100,
@@ -2509,7 +2518,7 @@ export default function App() {
                     )}
                   </div>
                   <div style={{ display: 'flex', gap: 8, width: '100%' }}>
-                    <button onClick={() => { setEditDraft({ displayName: curName, age: curAge, gender: curGender, weight: curWeight, height: curHeight, avatar: avatar, goal: goal, programStyle: programStyle, targetPace: targetPace, selectedDays: selectedDays }); setProfileEditMode(true); }}
+                    <button onClick={() => { setEditDraft({ displayName: curName, age: curAge, gender: curGender, weight: curWeight, height: curHeight, avatar: avatar, goal: goal, programStyle: programStyle, targetPace: targetPace, selectedDays: selectedDays, stravaSyncMode: data.profile?.stravaSyncMode || 'fast' }); setProfileEditMode(true); }}
                       style={{ flex: 1, padding: '10px', borderRadius: 8, background: 'var(--accent-purple)', border: 'none', color: '#fff', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13, fontWeight: 700 }}
                     >Edit Profil</button>
                     {!currentUser?.startsWith('Anonim-') && (
@@ -2728,11 +2737,28 @@ export default function App() {
                             );
                           })}
                         </div>
-                      </div>
                     </div>
+                    
+                    {data.profile?.isPremium && (
+                      <div style={{ marginTop: 14 }}>
+                        <label style={{ ...lbl, color: '#f59e0b', display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                          Mode Sinkronisasi Strava (PRO)
+                        </label>
+                        <select 
+                          style={inp} 
+                          value={d.stravaSyncMode || 'fast'}
+                          onChange={e => setEditDraft(p => ({ ...p, stravaSyncMode: e.target.value }))}
+                        >
+                          <option value="fast">Fast Sync (5 Aktivitas Terbaru) - Cepat</option>
+                          <option value="full">Full Sync (200 Aktivitas Terbaru) - Lambat</option>
+                        </select>
+                      </div>
+                    )}
                     </div>
                   </div>
                 </div>
+              </div>
 
                   {/* Live BMI in edit mode */}
                   {(() => { const ew = d.weight; const eh = d.height; if (!ew || !eh) return null; const eb = (ew / ((eh / 100) ** 2)).toFixed(1); const ec = eb < 18.5 ? { l: 'Underweight', c: '#60a5fa' } : eb < 25 ? { l: 'Normal', c: '#34d399' } : eb < 30 ? { l: 'Overweight', c: '#fbbf24' } : { l: 'Obese', c: '#fb7185' }; return <div style={{ background: `${ec.c}12`, border: `1px solid ${ec.c}40`, borderRadius: 8, padding: '10px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 14 }}><span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>BMI</span><span style={{ fontSize: 15, fontWeight: 800, color: ec.c }}>{eb} <span style={{ fontSize: 11, fontWeight: 600 }}>— {ec.l}</span></span></div>; })()}
@@ -2752,6 +2778,7 @@ export default function App() {
                       const finalProgramStyle = d.programStyle !== undefined ? d.programStyle : programStyle;
                       const finalTargetPace = d.targetPace !== undefined ? d.targetPace : targetPace;
                       const finalSelectedDays = d.selectedDays !== undefined ? d.selectedDays : selectedDays;
+                      const finalStravaSyncMode = d.stravaSyncMode !== undefined ? d.stravaSyncMode : (data.profile?.stravaSyncMode || 'fast');
 
                       if (finalAge !== null && finalAge !== undefined && finalAge < 10) {
                         addToast('Umur tidak boleh kurang dari 10 tahun.', 'error');
@@ -2787,7 +2814,8 @@ export default function App() {
                           goal: finalGoal,
                           programStyle: finalProgramStyle,
                           targetPace: finalTargetPace,
-                          selectedDays: finalSelectedDays
+                          selectedDays: finalSelectedDays,
+                          stravaSyncMode: finalStravaSyncMode
                         }
                       };
                       saveAndSyncData(updated);
