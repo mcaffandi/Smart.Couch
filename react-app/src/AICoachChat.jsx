@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Bot, MessageSquare, Send, X } from 'lucide-react';
+import { formatPace } from './utils';
 
 export default function AICoachChat({ lang, goal, programStyle, targetPace, currentUser, runActs, selectedDays, latestSleepScore, recoveryRemainingHours, trainingReadinessScore, isPremium, setShowPremiumModal }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -113,12 +114,7 @@ export default function AICoachChat({ lang, goal, programStyle, targetPace, curr
       }).length;
       const consistencyScore = Math.min(100, Math.round((last7DaysRuns / Math.max(1, planRunDays)) * 100));
 
-      const formatPace = (p) => {
-        if (!p) return '0:00';
-        const min = Math.floor(p);
-        const sec = Math.round((p - min) * 60);
-        return `${min}:${sec.toString().padStart(2, '0')}`;
-      };
+
       
       const formattedPace = formatPace(targetPace);
 

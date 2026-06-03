@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Sparkles } from 'lucide-react';
+import { formatPace } from './utils';
 
 export default function AICoach({ activities, profile, lang = 'id', isPremium, setShowPremiumModal }) {
   const [loading, setLoading] = useState(false);
@@ -70,12 +71,7 @@ export default function AICoach({ activities, profile, lang = 'id', isPremium, s
           : `- ${date}: Dist ${dist}km, Dur ${dur}m, Pace ${pace}m/km, HR ${a.avgHr || 0}bpm`;
       }).join('\n');
 
-      const formatPace = (p) => {
-        if(!p) return "0:00";
-        const m = Math.floor(p);
-        const s = Math.round((p - m) * 60);
-        return `${m}:${s.toString().padStart(2, '0')}`;
-      };
+
 
       const prompt = lang === 'id'
         ? `Lo adalah seorang pelatih lari elit (EnduraUP) dengan gaya bicara lugas, cerdas, dan to the point (pakai bahasa pergaulan profesional Indonesia seperti "lo" dan "gue").

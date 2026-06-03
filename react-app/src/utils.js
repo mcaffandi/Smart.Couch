@@ -122,6 +122,18 @@ export const formatDate = (dateStr) => {
 // ──────────────────────────────────────────────
 // Pace Helpers
 // ──────────────────────────────────────────────
+export const formatPace = (p) => {
+  const val = typeof p === 'string' ? parseFloat(p) : p;
+  if (typeof val !== 'number' || isNaN(val)) return '—';
+  let mins = Math.floor(val);
+  let secs = Math.round((val - mins) * 60);
+  if (secs >= 60) {
+    mins += 1;
+    secs = 0;
+  }
+  return `${mins}:${String(secs).padStart(2, '0')}`;
+};
+
 export const getPaceRecommendations = (targetPace) => {
   if (!targetPace) {
     return {
@@ -132,13 +144,6 @@ export const getPaceRecommendations = (targetPace) => {
   }
   const baseSecs = targetPace * 60;
 
-  const formatP = (p) => {
-    const mins = Math.floor(p);
-    const secs = Math.round((p - mins) * 60);
-    if (secs >= 60) return `${mins + 1}:00`;
-    return `${mins}:${String(secs).padStart(2, '0')}`;
-  };
-
   const pushMin = (baseSecs - 30) / 60;
   const pushMax = (baseSecs - 10) / 60;
   const steadyMin = (baseSecs + 30) / 60;
@@ -147,9 +152,9 @@ export const getPaceRecommendations = (targetPace) => {
   const easyMax = (baseSecs + 120) / 60;
 
   return {
-    ngepush: `${formatP(pushMin)} – ${formatP(pushMax)}`,
-    sedang: `${formatP(steadyMin)} – ${formatP(steadyMax)}`,
-    santai: `${formatP(easyMin)} – ${formatP(easyMax)}`,
+    ngepush: `${formatPace(pushMin)} – ${formatPace(pushMax)}`,
+    sedang: `${formatPace(steadyMin)} – ${formatPace(steadyMax)}`,
+    santai: `${formatPace(easyMin)} – ${formatPace(easyMax)}`,
   };
 };
 

@@ -4,6 +4,7 @@ import { X, Activity, Zap, TrendingUp, Edit2, Trash2, Map as MapIcon } from 'luc
 import { MapContainer, TileLayer, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { formatPace } from './utils';
 
 function MapBounds({ points }) {
   const map = useMap();
@@ -73,18 +74,7 @@ export default function RunDetailsModal({ act, onClose, lang = 'id', stravaAcces
     ? (act.duration / 1000) / (act.distance / 100000)
     : null;
     
-  const formatPace = (secPerM) => {
-    if (!secPerM) return '–';
-    let paceMins = Math.floor(secPerM / 60);
-    let paceSecs = Math.round(secPerM % 60);
-    if (paceSecs === 60) {
-      paceMins += 1;
-      paceSecs = 0;
-    }
-    return `${paceMins}:${paceSecs.toString().padStart(2, '0')}`;
-  };
-
-  const pace = formatPace(overallSecPerKm);
+  const pace = formatPace(overallSecPerKm / 60);
 
   const formatSecs = (total) => {
     const min = Math.floor(total / 60);
@@ -211,7 +201,7 @@ export default function RunDetailsModal({ act, onClose, lang = 'id', stravaAcces
                           const distKm = lap.distance ? (lap.distance / 1000).toFixed(2) : '-';
                           const timeStr = lap.moving_time ? formatSecs(lap.moving_time) : '-';
                           const p = lap.moving_time && lap.distance ? (lap.moving_time / (lap.distance / 1000)) : null;
-                          const paceStr = formatPace(p);
+                          const paceStr = formatPace(p ? p / 60 : null);
                           
                           return (
                             <tr key={lap.id} style={{ borderBottom: idx === laps.length - 1 ? 'none' : '1px solid var(--border)' }}>

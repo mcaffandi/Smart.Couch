@@ -8,6 +8,7 @@ import { translations } from './translations';
 export default function LandingPage({ onGetStarted, onViewBlog, lang, setLang, visitorCount }) {
   const t = translations[lang] || translations.id;
   const [testimonials, setTestimonials] = useState([]);
+  const [activeMockupTab, setActiveMockupTab] = useState(0);
 
   useEffect(() => {
     const fetchTestimonials = async () => {
@@ -109,57 +110,122 @@ export default function LandingPage({ onGetStarted, onViewBlog, lang, setLang, v
               <div className="mockup-layout">
                 {/* Mockup Sidebar */}
                 <div className="mockup-sidebar">
-                  <div className="mockup-sidebar-item active" title="Dashboard">
+                  <div className={`mockup-sidebar-item ${activeMockupTab === 0 ? 'active' : ''}`} onClick={() => setActiveMockupTab(0)} title="Dashboard">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{width: 14, height: 14}}><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
                   </div>
-                  <div className="mockup-sidebar-item" title="Jadwal Latihan">
+                  <div className={`mockup-sidebar-item ${activeMockupTab === 1 ? 'active' : ''}`} onClick={() => setActiveMockupTab(1)} title="Jadwal Latihan">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{width: 14, height: 14}}><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
                   </div>
-                  <div className="mockup-sidebar-item" title="Riwayat Lari">
+                  <div className={`mockup-sidebar-item ${activeMockupTab === 2 ? 'active' : ''}`} onClick={() => setActiveMockupTab(2)} title="Riwayat Lari">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{width: 14, height: 14}}><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
                   </div>
-                  <div className="mockup-sidebar-item" title="Profil">
+                  <div className={`mockup-sidebar-item ${activeMockupTab === 3 ? 'active' : ''}`} onClick={() => setActiveMockupTab(3)} title="Profil">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{width: 14, height: 14}}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                   </div>
                 </div>
                 {/* Mockup Main Panel */}
-                <div className="mockup-panel">
-                  <div className="mockup-grid">
-                    <div className="mockup-card highlight">
-                      <div className="card-label">{t.weeklyMileage}</div>
-                      <div className="card-value">42.8 <span className="card-unit">km</span></div>
-                      <div className="card-desc">▲ 12% vs last week</div>
-                    </div>
-                    <div className="mockup-card">
-                      <div className="card-label">{t.sleepScore}</div>
-                      <div className="card-value color-purple">88<span className="card-unit">/100</span></div>
-                      <div className="card-desc">{t.excellentRecovery}</div>
-                    </div>
-                    <div className="mockup-card">
-                      <div className="card-label">{t.paceTarget}</div>
-                      <div className="card-value color-blue">5:15 <span className="card-unit">/km</span></div>
-                      <div className="card-desc">{t.easyRunZone}</div>
-                    </div>
-                  </div>
-                  {/* Mockup Chart Area */}
-                  <div className="mockup-chart-container">
-                    <div className="mockup-chart-header">
-                      <div className="chart-label">{t.fitnessProgress}</div>
-                      <div className="chart-legend">
-                        <span className="legend-dot color-purple"></span> {t.run}
-                        <span className="legend-dot color-blue"></span> {t.sleep}
+                <div className="mockup-panel animate-fade-in" key={activeMockupTab}>
+                  {activeMockupTab === 0 && (
+                    <>
+                      <div className="mockup-grid">
+                        <div className="mockup-card highlight">
+                          <div className="card-label">{t.weeklyMileage}</div>
+                          <div className="card-value">42.8 <span className="card-unit">km</span></div>
+                          <div className="card-desc">▲ 12% vs last week</div>
+                        </div>
+                        <div className="mockup-card">
+                          <div className="card-label">{t.sleepScore}</div>
+                          <div className="card-value color-purple">88<span className="card-unit">/100</span></div>
+                          <div className="card-desc">{t.excellentRecovery}</div>
+                        </div>
+                        <div className="mockup-card">
+                          <div className="card-label">{t.paceTarget}</div>
+                          <div className="card-value color-blue">5:15 <span className="card-unit">/km</span></div>
+                          <div className="card-desc">{t.easyRunZone}</div>
+                        </div>
+                      </div>
+                      <div className="mockup-chart-container">
+                        <div className="mockup-chart-header">
+                          <div className="chart-label">{t.fitnessProgress}</div>
+                          <div className="chart-legend">
+                            <span className="legend-dot color-purple"></span> {t.run}
+                            <span className="legend-dot color-blue"></span> {t.sleep}
+                          </div>
+                        </div>
+                        <div className="mockup-chart-bars">
+                          <div className="bar-wrapper"><div className="bar bar-1"></div><span className="bar-day">M</span></div>
+                          <div className="bar-wrapper"><div className="bar bar-2"></div><span className="bar-day">S</span></div>
+                          <div className="bar-wrapper"><div className="bar bar-3"></div><span className="bar-day">S</span></div>
+                          <div className="bar-wrapper"><div className="bar bar-4"></div><span className="bar-day">R</span></div>
+                          <div className="bar-wrapper"><div className="bar bar-5"></div><span className="bar-day">K</span></div>
+                          <div className="bar-wrapper"><div className="bar bar-6"></div><span className="bar-day">J</span></div>
+                          <div className="bar-wrapper"><div className="bar bar-7"></div><span className="bar-day">S</span></div>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                  {activeMockupTab === 1 && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, height: '100%' }}>
+                      <div className="mockup-card" style={{ padding: '12px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <div>
+                            <div className="card-label">TUE</div>
+                            <div style={{ fontSize: 13, fontWeight: 700, color: '#34d399' }}>Easy Run</div>
+                          </div>
+                          <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>45 min</div>
+                        </div>
+                      </div>
+                      <div className="mockup-card" style={{ padding: '12px', background: 'rgba(167, 139, 250, 0.1)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <div>
+                            <div className="card-label">THU</div>
+                            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--accent-purple)' }}>Tempo Run</div>
+                          </div>
+                          <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>8 km</div>
+                        </div>
+                      </div>
+                      <div className="mockup-card" style={{ padding: '12px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <div>
+                            <div className="card-label">SUN</div>
+                            <div style={{ fontSize: 13, fontWeight: 700, color: '#fbbf24' }}>Long Run</div>
+                          </div>
+                          <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>21 km</div>
+                        </div>
                       </div>
                     </div>
-                    <div className="mockup-chart-bars">
-                      <div className="bar-wrapper"><div className="bar bar-1"></div><span className="bar-day">M</span></div>
-                      <div className="bar-wrapper"><div className="bar bar-2"></div><span className="bar-day">S</span></div>
-                      <div className="bar-wrapper"><div className="bar bar-3"></div><span className="bar-day">S</span></div>
-                      <div className="bar-wrapper"><div className="bar bar-4"></div><span className="bar-day">R</span></div>
-                      <div className="bar-wrapper"><div className="bar bar-5"></div><span className="bar-day">K</span></div>
-                      <div className="bar-wrapper"><div className="bar bar-6"></div><span className="bar-day">J</span></div>
-                      <div className="bar-wrapper"><div className="bar bar-7"></div><span className="bar-day">S</span></div>
+                  )}
+                  {activeMockupTab === 2 && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                      {[...Array(4)].map((_, i) => (
+                        <div key={i} className="mockup-card" style={{ padding: '10px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div>
+                            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>Morning Run</div>
+                            <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>Yesterday</div>
+                          </div>
+                          <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontSize: 13, fontWeight: 700, color: '#818cf8' }}>{(5 + i * 2.5).toFixed(1)} km</div>
+                            <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{5 + i}:15 /km</div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  </div>
+                  )}
+                  {activeMockupTab === 3 && (
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, height: '100%', justifyContent: 'center' }}>
+                      <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'var(--hover-overlay)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                         <svg viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" strokeWidth="2" style={{width: 32, height: 32}}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                      </div>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)' }}>Runner</div>
+                        <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Marathon Training</div>
+                      </div>
+                      <div style={{ width: '100%', height: '1px', background: 'var(--border)' }}></div>
+                      <div className="mockup-card" style={{ width: '100%', textAlign: 'center', padding: '10px' }}>
+                        <div style={{ fontSize: 13, color: '#a78bfa', fontWeight: 700 }}>PRO Member</div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

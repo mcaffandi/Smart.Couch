@@ -4,7 +4,7 @@ import * as XLSX from 'xlsx';
 import {
   loadUsersList, saveUsersList, getCurrentUser, saveCurrentUser,
   loadUserData, saveUserData, deleteUserData,
-  getLocalDateStr, msToDate, getPaceRecommendations, getHRZones, mergeData, parseGarminZip, parseGpxFile, decodePolyline
+  getLocalDateStr, msToDate, getPaceRecommendations, getHRZones, mergeData, parseGarminZip, parseGpxFile, decodePolyline, formatPace
 } from './utils';
 import { TrendChart, HRZoneChart } from './Charts';
 import RunHistory from './RunHistory';
@@ -2415,7 +2415,7 @@ export default function App() {
                       goal === 'health' ? 'Kesehatan' : goal
                     } unit="" color="#ef4444" icon={<svg {...iconProps}><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>} />
                     <Stat label="Style" value={programStyle === 'ngepush' ? 'Ngepush' : programStyle === 'sedang' ? 'Sedang' : programStyle === 'santai' ? 'Santai' : programStyle} unit="" color="#f97316" icon={<svg {...iconProps}><path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 2.5z"></path></svg>} />
-                    <Stat label="Pace" value={targetPace ? `${Math.floor(targetPace)}:${String(Math.round((targetPace % 1) * 60)).padStart(2, '0')}` : null} unit="/km" color="#0ea5e9" icon={<svg {...iconProps}><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>} />
+                    <Stat label="Pace" value={targetPace ? formatPace(targetPace) : null} unit="/km" color="#0ea5e9" icon={<svg {...iconProps}><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>} />
                     <Stat label="Hari" value={selectedDays.length === 0 ? 'Auto' : selectedDays.length} unit={selectedDays.length === 0 ? '' : 'x / mgg'} color="#8b5cf6" icon={<svg {...iconProps}><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>} />
                   </div>
 
@@ -2695,14 +2695,7 @@ export default function App() {
                           padding: '2px 8px', borderRadius: '6px',
                           border: d.targetPace === null ? '1px dashed var(--border)' : '1px solid rgba(167, 139, 250, 0.2)'
                         }}>
-                          {(() => {
-                            const p = d.targetPace ?? 5.5;
-                            const mins = Math.floor(p);
-                            const secs = Math.round((p - mins) * 60);
-                            const finalMins = secs >= 60 ? mins + 1 : mins;
-                            const finalSecs = secs >= 60 ? 0 : secs;
-                            return `${finalMins}:${String(finalSecs).padStart(2, '0')} /km`;
-                          })()}
+                          {d.targetPace !== null ? formatPace(d.targetPace || 5.5) + ' /km' : '5:30 /km'}
                         </span>
                       </div>
                       <input
@@ -3710,11 +3703,7 @@ export default function App() {
                       },
                       { 
                         label: lang === 'id' ? 'Target Pace' : 'Pace Target', 
-                        value: targetPace ? (() => {
-                          const min = Math.floor(targetPace);
-                          const sec = Math.round((targetPace - min) * 60);
-                          return `${min}:${sec.toString().padStart(2, '0')}`;
-                        })() : '–', 
+                        value: targetPace ? formatPace(targetPace) : '–', 
                         unit: '/km', 
                         desc: paceDesc,
                         color: '#34d399' 

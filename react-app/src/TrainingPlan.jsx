@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { buildTrainingPlan, buildAdaptiveCalendar } from './utils';
+import { buildTrainingPlan, buildAdaptiveCalendar, formatPace } from './utils';
 
 const dayTranslations = {
   'Senin': 'Monday',
@@ -96,12 +96,7 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
   const basePlan = buildTrainingPlan(programStyle, goal, paces, selectedDays);
   const plan = aiPlan || basePlan;
 
-  const formatPace = (minKm) => {
-    if (!minKm) return null;
-    const m = Math.floor(minKm);
-    const s = Math.round((minKm - m) * 60);
-    return `${m}:${String(s).padStart(2, '0')}`;
-  };
+
 
   const getHRForZone = (minPct, maxPct) => {
     if (!age) return null;

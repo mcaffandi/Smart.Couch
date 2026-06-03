@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { formatPace } from './utils';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const RACES = [
@@ -17,12 +18,6 @@ function secsToTime(s) {
   const sec = Math.round(s % 60);
   if (h > 0) return `${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
   return `${m}:${String(sec).padStart(2,'0')}`;
-}
-
-function formatPace(minKm) {
-  const m = Math.floor(minKm);
-  const s = Math.round((minKm - m) * 60);
-  return `${m}:${String(s).padStart(2,'0')}`;
 }
 
 function timeToSecs(h, m, s) { return h * 3600 + m * 60 + s; }
