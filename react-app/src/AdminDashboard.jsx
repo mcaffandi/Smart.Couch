@@ -401,6 +401,13 @@ export default function AdminDashboard({ onBack }) {
   const totalUsers = users.length;
   const totalBlogs = blogs.length;
 
+  const ADMIN_EMAILS = ['m.c.affandi@gmail.com', 'affanbelajar@gmail.com'];
+  const paidProUsers = users.filter(u => {
+    if (!u.data?.profile?.isPremium) return false;
+    const email = (u.data?.email || u.id || '').toLowerCase();
+    return !ADMIN_EMAILS.includes(email);
+  });
+
   return (
     <div style={{ padding: '40px 20px', maxWidth: '100%', margin: '0 auto', color: 'var(--text-primary)', transition: 'max-width 0.3s ease' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24, flexWrap: 'wrap', gap: 16 }}>
@@ -474,20 +481,12 @@ export default function AdminDashboard({ onBack }) {
             </div>
             <div className="stat-card" style={{ background: 'var(--bg-card)', padding: 24, borderRadius: 12, border: '1px solid var(--border)' }}>
               <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 8, fontWeight: 600 }}>User PRO</div>
-              <div style={{ fontSize: 36, fontWeight: '800', color: '#f59e0b' }}>{users.filter(u => u.data?.profile?.isPremium).length}</div>
+              <div style={{ fontSize: 36, fontWeight: '800', color: '#f59e0b' }}>{paidProUsers.length}</div>
             </div>
             <div className="stat-card" style={{ background: 'var(--bg-card)', padding: 24, borderRadius: 12, border: '1px solid var(--border)' }}>
               <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 8, fontWeight: 600 }}>Estimasi Revenue / Bln</div>
               <div style={{ fontSize: 36, fontWeight: '800', color: '#10b981' }}>
-                Rp {(() => {
-                  const ADMIN_EMAILS = ['m.c.affandi@gmail.com', 'affanbelajar@gmail.com'];
-                  const paidPros = users.filter(u => {
-                    if (!u.data?.profile?.isPremium) return false;
-                    const email = (u.data?.email || u.id || '').toLowerCase();
-                    return !ADMIN_EMAILS.includes(email);
-                  });
-                  return (paidPros.length * 29000).toLocaleString('id-ID');
-                })()}
+                Rp {(paidProUsers.length * 29000).toLocaleString('id-ID')}
               </div>
             </div>
             <div className="stat-card" style={{ background: 'var(--bg-card)', padding: 24, borderRadius: 12, border: '1px solid var(--border)', cursor: 'pointer' }} onClick={() => setAdminTab('blogs')}>
