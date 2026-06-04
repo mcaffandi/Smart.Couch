@@ -550,8 +550,7 @@ export default function AdminDashboard({ onBack }) {
         <div style={{ display: 'flex', gap: 10 }}>
           {adminTab === 'blogs' && (
             <button className="btn btn-primary" style={{ width: 'auto', padding: '8px 16px' }} onClick={async () => {
-              const { addDoc, collection, serverTimestamp } = await import('firebase/firestore');
-              const { db } = await import('./firebase');
+
               const dummyData = [
                 {
                   title: 'Panduan Lari 5K Pertama untuk Pemula',

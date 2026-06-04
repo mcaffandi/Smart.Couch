@@ -261,6 +261,37 @@ export default function App() {
     }
   }, [theme]);
 
+  const t = translations[lang] || translations.id;
+
+  // ── State: profile ───────────────────────────────────────────────────────────
+  const [age, setAge] = useState(() => data.profile?.age ?? null);
+  const [displayName, setDisplayName] = useState(() => data.profile?.displayName ?? '');
+  const [weight, setWeight] = useState(() => data.profile?.weight ?? null);
+  const [height, setHeight] = useState(() => data.profile?.height ?? null);
+  const [gender, setGender] = useState(() => data.profile?.gender ?? '');
+  const [avatar, setAvatar] = useState(() => data.profile?.avatar ?? null);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showAddRunModal, setShowAddRunModal] = useState(false);
+  const [showSleepModal, setShowSleepModal] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showSyncModal, setShowSyncModal] = useState(false);
+  const [syncedRuns, setSyncedRuns] = useState([]);
+  const [notifications, setNotifications] = useState([]);
+  const [showNotifMenu, setShowNotifMenu] = useState(false);
+  const [showExportGuide, setShowExportGuide] = useState(false);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [showAdmin, setShowAdmin] = useState(window.location.hash.toLowerCase() === '#hq-enduraup-secure');
+  const [visitorCount, setVisitorCount] = useState(null);
+  const [editDraft, setEditDraft] = useState({});
+  const [profileEditMode, setProfileEditMode] = useState(false);
+  const [goal, setGoal] = useState(() => data.profile?.goal ?? 'maintenance');
+  const [programStyle, setProgramStyle] = useState(() => data.profile?.programStyle ?? 'sedang');
+  const [targetPace, setTargetPace] = useState(() => data.profile?.targetPace ?? null);
+  const [selectedDays, setSelectedDays] = useState(() => data.profile?.selectedDays ?? ['Selasa', 'Kamis', 'Sabtu']);
+  const [globalSettings, setGlobalSettings] = useState({ stravaSyncMode: 'fast' });
+  const [dashboardTimeRange, setDashboardTimeRange] = useState('all');
+
   useEffect(() => {
     if (!globalSettings) return;
 
@@ -305,37 +336,6 @@ export default function App() {
       }
     }
   }, [globalSettings]);
-
-  const t = translations[lang] || translations.id;
-
-  // ── State: profile ───────────────────────────────────────────────────────────
-  const [age, setAge] = useState(() => data.profile?.age ?? null);
-  const [displayName, setDisplayName] = useState(() => data.profile?.displayName ?? '');
-  const [weight, setWeight] = useState(() => data.profile?.weight ?? null);
-  const [height, setHeight] = useState(() => data.profile?.height ?? null);
-  const [gender, setGender] = useState(() => data.profile?.gender ?? '');
-  const [avatar, setAvatar] = useState(() => data.profile?.avatar ?? null);
-  const [showProfileModal, setShowProfileModal] = useState(false);
-  const [showAddRunModal, setShowAddRunModal] = useState(false);
-  const [showSleepModal, setShowSleepModal] = useState(false);
-  const [showUploadModal, setShowUploadModal] = useState(false);
-  const [showSyncModal, setShowSyncModal] = useState(false);
-  const [syncedRuns, setSyncedRuns] = useState([]);
-  const [notifications, setNotifications] = useState([]);
-  const [showNotifMenu, setShowNotifMenu] = useState(false);
-  const [showExportGuide, setShowExportGuide] = useState(false);
-  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
-  const [showPremiumModal, setShowPremiumModal] = useState(false);
-  const [showAdmin, setShowAdmin] = useState(window.location.hash.toLowerCase() === '#hq-enduraup-secure');
-  const [visitorCount, setVisitorCount] = useState(null);
-  const [editDraft, setEditDraft] = useState({});
-  const [profileEditMode, setProfileEditMode] = useState(false);
-  const [goal, setGoal] = useState(() => data.profile?.goal ?? 'maintenance');
-  const [programStyle, setProgramStyle] = useState(() => data.profile?.programStyle ?? 'sedang');
-  const [targetPace, setTargetPace] = useState(() => data.profile?.targetPace ?? null);
-  const [selectedDays, setSelectedDays] = useState(() => data.profile?.selectedDays ?? ['Selasa', 'Kamis', 'Sabtu']);
-  const [globalSettings, setGlobalSettings] = useState({ stravaSyncMode: 'fast' });
-  const [dashboardTimeRange, setDashboardTimeRange] = useState('all');
 
   useEffect(() => {
     const handleHashChange = () => {
