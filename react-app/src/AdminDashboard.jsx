@@ -1041,6 +1041,8 @@ export default function AdminDashboard({ onBack }) {
                   <tr style={{ borderBottom: '2px solid var(--border)', color: 'var(--text-secondary)', fontSize: 13 }}>
                     <th style={{ padding: '16px' }}>Judul Artikel</th>
                     <th style={{ padding: '16px' }}>Tanggal</th>
+                    <th style={{ padding: '16px', textAlign: 'center' }}>Views</th>
+                    <th style={{ padding: '16px', textAlign: 'center' }}>Reacts</th>
                     <th style={{ padding: '16px' }}>Tags</th>
                     <th style={{ padding: '16px', textAlign: 'center' }}>Aksi</th>
                   </tr>
@@ -1053,6 +1055,8 @@ export default function AdminDashboard({ onBack }) {
                         {b.isDraft && <span style={{ marginLeft: 8, background: '#f59e0b', color: '#fff', fontSize: 11, padding: '2px 8px', borderRadius: 12 }}>DRAFT</span>}
                       </td>
                       <td style={{ padding: '20px 16px', fontSize: 14, color: 'var(--text-secondary)' }}>{new Date(b.createdAt?.toDate ? b.createdAt.toDate() : b.createdAt).toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'})}</td>
+                      <td style={{ padding: '20px 16px', textAlign: 'center', fontSize: 14, fontWeight: 600, color: 'var(--accent-purple)' }}>{b.views || 0}</td>
+                      <td style={{ padding: '20px 16px', textAlign: 'center', fontSize: 14, fontWeight: 600, color: '#f59e0b' }}>{b.propsCount || 0}</td>
                       <td style={{ padding: '20px 16px', fontSize: 13 }}>
                         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                           {b.tags?.map(t => <span key={t} style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', padding: '2px 8px', borderRadius: 12 }}>{t}</span>)}
@@ -1066,7 +1070,7 @@ export default function AdminDashboard({ onBack }) {
                   ))}
                   {blogs.length === 0 && (
                     <tr>
-                      <td colSpan="4" style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>Belum ada artikel blog. Mulai menulis sekarang!</td>
+                      <td colSpan="6" style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>Belum ada artikel blog. Mulai menulis sekarang!</td>
                     </tr>
                   )}
                 </tbody>
