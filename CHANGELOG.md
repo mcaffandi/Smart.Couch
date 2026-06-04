@@ -2,6 +2,23 @@
 
 ---
 
+## [ebc6cfd3] — 2026-06-04 · Dynamic Admin Settings, Rotating Blog Hero & Auth Modernization
+
+### ✨ Fitur Baru & Optimasi
+- **Manajemen Dashboard Dinamis**: Menambahkan kemampuan bagi Admin untuk mengatur Nomor Rekening Bank, Nama Pemilik Rekening, link URL QRIS Pembayaran, ID Google Analytics, Script Iklan (Adsense), dan URL Media Sosial secara *real-time* langsung dari Dashboard tanpa *hardcode*.
+- **Integrasi Pembayaran PRO Dinamis**: *Modal* pendaftaran akun PRO kini otomatis mengambil data Rekening Bank dan QRIS dari pengaturan global Admin.
+- **Halaman "Hubungi Kami" Dinamis**: Menata ulang halaman statis *Contact Coach* menjadi *Hubungi Kami*, terintegrasi dengan Nomor WhatsApp, Email, Instagram, dan Twitter/X yang dikonfigurasi melalui Admin Dashboard.
+- **Suntik Skrip Analitik Otomatis**: Mendukung injeksi *script* Google Analytics dan kode iklan AdSense secara dinamis ke seluruh *website* langsung setelah diatur melalui Admin.
+- **Modernisasi Login & Google One Tap**: Mengubah alur otentikasi dengan mengganti halaman login *full-screen* menjadi *overlay modal* yang elegan. Mengintegrasikan **Google One Tap** agar proses *sign-in* menjadi jauh lebih cepat dan mulus.
+- **Interaksi Guest di Blog (Props/Burn)**: Memperbarui logika di komponen blog dan aturan keamanan Firestore supaya pembaca tamu (yang tidak login) tetap dapat berinteraksi memberikan reaksi *Props* dan *Burn* tanpa paksaan login.
+- **Bypass Google Drive CORS**: Mengubah metode *fetching* gambar Google Drive menggunakan format *endpoint* `lh3.googleusercontent.com` untuk mem-bypass blokir CORS dan layar konfirmasi *virus scan*. Semua gambar kini bisa dimuat langsung secara reliabel.
+
+### 🎨 UI / UX
+- **Rotating Hero Carousel (Blog)**: Merombak tampilan *Hero* halaman Blog. Menampilkan rotasi otomatis (setiap 5 detik) untuk menonjolkan artikel **"🔥 TERBARU"** dan 2 artikel **"🚀 TERPOPULER"** (berdasarkan kalkulasi metrik *views* dan *props* tertinggi). Dilengkapi dengan indikator navigasi *dots*.
+- **Penyempurnaan Navigasi Global**: Menambahkan dukungan navigasi *keyboard* (menutup modal dengan tombol `Esc`) dan menghaluskan transisi visual antar komponen agar pengalaman antarmuka lebih *seamless*.
+
+---
+
 ## [Uncommitted] — 2026-05-31 · Dynamic Recovery, Notification Center & Analytics UI
 
 ### ✨ Fitur Baru & Optimasi
