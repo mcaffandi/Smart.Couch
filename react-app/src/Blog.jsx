@@ -463,10 +463,10 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
           {/* Featured Hero Article */}
           {currentHero && selectedTag === 'Semua' && !searchQuery && !showSavedOnly && (
             <div style={{ position: 'relative', marginBottom: 40 }}>
-              <div 
+              <a href={`/blog/${currentHero.slug}`}
                 className="blog-list-item"
-                onClick={() => handleViewBlog(currentHero)}
-                style={{ overflow: 'hidden', display: 'flex', flexDirection: window.innerWidth < 768 ? 'column' : 'row', cursor: 'pointer', padding: '16px', margin: '-16px -16px 20px -16px', borderBottom: '1px solid var(--border)', paddingBottom: 40, alignItems: 'center' }}
+                onClick={(e) => { e.preventDefault(); handleViewBlog(currentHero); }}
+                style={{ textDecoration: 'none', overflow: 'hidden', display: 'flex', flexDirection: window.innerWidth < 768 ? 'column' : 'row', cursor: 'pointer', padding: '16px', margin: '-16px -16px 20px -16px', borderBottom: '1px solid var(--border)', paddingBottom: 40, alignItems: 'center' }}
               >
                 <div className="blog-img-container" style={{ flex: 1, width: '100%', minHeight: window.innerWidth < 768 ? 200 : 300, position: 'relative', overflow: 'hidden', borderRadius: 8 }}>
                   {getThumbnailUrl(currentHero) ? (
@@ -523,21 +523,21 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
                         </div>
                       )}
                       <button 
-                        onClick={() => handleSaveBlog(currentHero.id)}
+                        onClick={(e) => { e.preventDefault(); handleSaveBlog(currentHero.id); }}
                         style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, color: savedBlogs.includes(currentHero.id) ? 'var(--text-primary)' : 'var(--text-muted)' }} 
                       >
                         <svg width="20" height="20" viewBox="0 0 24 24" fill={savedBlogs.includes(currentHero.id) ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
                       </button>
                       {isAdmin && (
                         <>
-                          <button onClick={() => { setCurrentBlog(currentHero); setView('edit'); }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', padding: 0 }} title="Edit"><Edit3 size={16} /></button>
-                          <button onClick={() => handleDelete(currentHero.id)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--accent-rose)', padding: 0 }} title="Hapus"><Trash2 size={16} /></button>
+                          <button onClick={(e) => { e.preventDefault(); setCurrentBlog(currentHero); setView('edit'); }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', padding: 0 }} title="Edit"><Edit3 size={16} /></button>
+                          <button onClick={(e) => { e.preventDefault(); handleDelete(currentHero.id); }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--accent-rose)', padding: 0 }} title="Hapus"><Trash2 size={16} /></button>
                         </>
                       )}
                     </div>
                   </div>
                 </div>
-              </div>
+              </a>
 
               {/* Carousel Dots */}
               {heroBlogs.length > 1 && (
@@ -577,7 +577,7 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
           <div style={{ maxWidth: 800, margin: '0 auto', width: '100%', paddingBottom: 60, paddingTop: searchQuery ? 0 : 20 }}>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               {filteredBlogs.slice(!searchQuery && selectedTag === 'Semua' && !showSavedOnly ? 1 : 0).map(b => (
-                <div key={b.id} className="blog-list-item" onClick={() => handleViewBlog(b)} style={{ display: 'flex', gap: window.innerWidth < 768 ? 16 : 32, paddingBottom: 24, paddingTop: 24, paddingLeft: 16, paddingRight: 16, margin: '0 -16px', borderBottom: '1px solid var(--border)', cursor: 'pointer', alignItems: 'flex-start', flexDirection: window.innerWidth < 768 ? 'column-reverse' : 'row' }}>
+                <a href={`/blog/${b.slug}`} key={b.id} className="blog-list-item" onClick={(e) => { e.preventDefault(); handleViewBlog(b); }} style={{ textDecoration: 'none', display: 'flex', gap: window.innerWidth < 768 ? 16 : 32, paddingBottom: 24, paddingTop: 24, paddingLeft: 16, paddingRight: 16, margin: '0 -16px', borderBottom: '1px solid var(--border)', cursor: 'pointer', alignItems: 'flex-start', flexDirection: window.innerWidth < 768 ? 'column-reverse' : 'row' }}>
                   <div style={{ flex: 1 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                       <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--accent-purple)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 10, fontWeight: 'bold' }}>E</div>
@@ -624,7 +624,7 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
                       />
                     </div>
                   )}
-                </div>
+                </a>
               ))}
             </div>
           </div>
@@ -641,7 +641,7 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
           <div style={{ display: 'flex', gap: 20, marginBottom: 24 }}>
             <a href="/about" onClick={(e) => { e.preventDefault(); window.history.pushState(null, '', '/about'); window.dispatchEvent(new Event('popstate')); }} style={{ color: 'var(--text-muted)', textDecoration: 'none', fontSize: 13, fontWeight: 500, transition: 'color 0.2s' }}>Tentang Kami</a>
             <a href="/privacy" onClick={(e) => { e.preventDefault(); window.history.pushState(null, '', '/privacy'); window.dispatchEvent(new Event('popstate')); }} style={{ color: 'var(--text-muted)', textDecoration: 'none', fontSize: 13, fontWeight: 500, transition: 'color 0.2s' }}>Kebijakan Privasi</a>
-            <a href="/contact" onClick={(e) => { e.preventDefault(); window.history.pushState(null, '', '/contact'); window.dispatchEvent(new Event('popstate')); }} style={{ color: 'var(--text-muted)', textDecoration: 'none', fontSize: 13, fontWeight: 500, transition: 'color 0.2s' }}>Hubungi Pelatih</a>
+            <a href="/contact" onClick={(e) => { e.preventDefault(); window.history.pushState(null, '', '/contact'); window.dispatchEvent(new Event('popstate')); }} style={{ color: 'var(--text-muted)', textDecoration: 'none', fontSize: 13, fontWeight: 500, transition: 'color 0.2s' }}>Hubungi Kami</a>
           </div>
           <div style={{ fontSize: 12, color: 'var(--text-muted)', borderTop: '1px solid var(--border)', paddingTop: 20, width: '100%', maxWidth: 400 }}>
             &copy; {new Date().getFullYear()} EnduraUP. All rights reserved.
