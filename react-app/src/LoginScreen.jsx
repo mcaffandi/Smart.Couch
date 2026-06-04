@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Logo from './Logo';
 import {
   isConfigured as isFirebaseConfigured,
@@ -10,13 +10,22 @@ import {
   signInAnonymously
 } from './firebase';
 
-export default function LoginScreen({ onLoginSuccess, usersList, addToast, lang = 'id' }) {
+export default function LoginScreen({ onLoginSuccess, usersList, addToast, lang = 'id', onClose, isModal = false }) {
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(() => {
+    if (!onClose || !isModal) return;
+    const handleEsc = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [onClose, isModal]);
 
   // Local storage auth legacy fallback
   const getAuthDb = () => {
@@ -192,8 +201,16 @@ export default function LoginScreen({ onLoginSuccess, usersList, addToast, lang 
   };
 
   return (
-    <div className="login-container">
-      <div className="login-card">
+    <div className={isModal ? "profile-modal-backdrop" : "login-container"} style={isModal ? { zIndex: 9999 } : {}} onClick={e => { if (isModal && e.target === e.currentTarget && onClose) onClose(); }}>
+      <div className="login-card" style={isModal ? { position: 'relative', marginTop: '10vh' } : {}}>
+        {isModal && onClose && (
+          <button 
+            onClick={onClose}
+            style={{ position: 'absolute', top: 16, right: 16, background: 'none', border: '1px solid var(--border)', borderRadius: 6, color: 'var(--text-muted)', cursor: 'pointer', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, zIndex: 10 }}
+          >
+            &times;
+          </button>
+        )}
         <div className="login-header">
           <div className="login-logo-icon" style={{ background: 'transparent', width: 'auto', height: 'auto' }}>
             <Logo size={48} />

@@ -24,6 +24,25 @@ export default function AdminDashboard({ onBack }) {
   const [blogPosting, setBlogPosting] = useState(false);
   const [blogForm, setBlogForm] = useState({ title: '', content: '', tags: '', thumbnail: '', seoTitle: '', seoDescription: '', author: 'EnduraUP Coach' });
   const [editingBlogId, setEditingBlogId] = useState(null);
+  const [uploadingThumbnail, setUploadingThumbnail] = useState(false);
+
+  const handleThumbnailUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setUploadingThumbnail(true);
+    try {
+      const storageRef = ref(storage, `blog_thumbnails/${Date.now()}_${file.name}`);
+      const snapshot = await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      setBlogForm(prev => ({ ...prev, thumbnail: downloadURL }));
+    } catch (error) {
+      console.error("Gagal upload thumbnail:", error);
+      alert("Gagal mengupload gambar. Pastikan Firebase Storage sudah diatur dengan benar.");
+    } finally {
+      setUploadingThumbnail(false);
+    }
+  };
   const [showAllUsers, setShowAllUsers] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -372,7 +391,7 @@ export default function AdminDashboard({ onBack }) {
           isDraft: isDraft
         });
         alert(isDraft ? "Draft berhasil disimpan!" : "Artikel berhasil di-update!");
-        setBlogs(blogs.map(b => b.id === editingBlogId ? { ...b, title: blogForm.title, content: finalContent, thumbnail: finalThumbnail, tags: tagsArray, seoTitle: blogForm.seoTitle, seoDescription: blogForm.seoDescription, isDraft } : b));
+        setBlogs(blogs.map(b => b.id === editingBlogId ? { ...b, title: blogForm.title, content: finalContent, thumbnail: finalThumbnail, tags: tagsArray, seoTitle: blogForm.seoTitle, seoDescription: blogForm.seoDescription, isDraft, author: blogForm.author || 'EnduraUP Coach' } : b));
       } else {
         const newDocRef = await addDoc(collection(db, "blogs"), {
           title: blogForm.title,
@@ -383,8 +402,7 @@ export default function AdminDashboard({ onBack }) {
           seoTitle: blogForm.seoTitle || '',
           seoDescription: blogForm.seoDescription || '',
           isDraft: isDraft,
-          createdAt: serverTimestamp(),
-          author: "Admin EnduraUP"
+          createdAt: serverTimestamp()
         });
         alert(isDraft ? "Draft berhasil disimpan!" : "Artikel berhasil di-publish!");
         setBlogs([{ 
@@ -397,7 +415,7 @@ export default function AdminDashboard({ onBack }) {
           seoDescription: blogForm.seoDescription,
           isDraft: isDraft,
           createdAt: new Date(), 
-          author: "Admin EnduraUP" 
+          author: blogForm.author || 'EnduraUP Coach'
         }, ...blogs]);
       }
       
@@ -415,10 +433,11 @@ export default function AdminDashboard({ onBack }) {
     setBlogForm({
       title: blog.title || '',
       content: blog.content || '',
-      thumbnail: blog.thumbnail || '',
+      thumbnail: blog.thumbnail || blog.coverImage || '',
       seoTitle: blog.seoTitle || '',
       seoDescription: blog.seoDescription || '',
-      tags: blog.tags ? blog.tags.join(', ') : ''
+      tags: blog.tags ? blog.tags.join(', ') : '',
+      author: blog.author || 'EnduraUP Coach'
     });
     setEditingBlogId(blog.id);
     setShowBlogForm(true);
@@ -760,6 +779,124 @@ export default function AdminDashboard({ onBack }) {
             </div>
           </div>
 
+          <h4 style={{ marginTop: 32, marginBottom: 16, fontSize: 18, color: 'var(--accent-purple)' }}>Pembayaran Manual (PRO)</h4>
+          <div style={{ marginBottom: 24, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
+            <div>
+              <label style={{ display: 'block', marginBottom: 8, fontWeight: 600, fontSize: 14 }}>Nama Bank (mis. BCA, Mandiri)</label>
+              <input 
+                type="text"
+                className="form-input" 
+                value={globalSettings.bankName ?? ''} 
+                onChange={e => setGlobalSettings({...globalSettings, bankName: e.target.value})}
+                placeholder="BCA"
+                style={{ width: '100%', padding: '12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-surface)', color: 'var(--text-primary)', fontSize: 15 }}
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', marginBottom: 8, fontWeight: 600, fontSize: 14 }}>Nomor Rekening</label>
+              <input 
+                type="text"
+                className="form-input" 
+                value={globalSettings.bankAccount ?? ''} 
+                onChange={e => setGlobalSettings({...globalSettings, bankAccount: e.target.value})}
+                placeholder="1234 5678 90"
+                style={{ width: '100%', padding: '12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-surface)', color: 'var(--text-primary)', fontSize: 15 }}
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', marginBottom: 8, fontWeight: 600, fontSize: 14 }}>Atas Nama (A.N)</label>
+              <input 
+                type="text"
+                className="form-input" 
+                value={globalSettings.bankAccountName ?? ''} 
+                onChange={e => setGlobalSettings({...globalSettings, bankAccountName: e.target.value})}
+                placeholder="EnduraUP App"
+                style={{ width: '100%', padding: '12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-surface)', color: 'var(--text-primary)', fontSize: 15 }}
+              />
+            </div>
+            <div style={{ gridColumn: '1 / -1' }}>
+              <label style={{ display: 'block', marginBottom: 8, fontWeight: 600, fontSize: 14 }}>URL Gambar QRIS (Opsional)</label>
+              <input 
+                type="text"
+                className="form-input" 
+                value={globalSettings.qrisImageUrl ?? ''} 
+                onChange={e => setGlobalSettings({...globalSettings, qrisImageUrl: e.target.value})}
+                placeholder="https://..."
+                style={{ width: '100%', padding: '12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-surface)', color: 'var(--text-primary)', fontSize: 15 }}
+              />
+            </div>
+          </div>
+
+          <h4 style={{ marginTop: 32, marginBottom: 16, fontSize: 18, color: 'var(--accent-purple)' }}>Kontak (Hubungi Kami)</h4>
+          <div style={{ marginBottom: 24, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
+            <div>
+              <label style={{ display: 'block', marginBottom: 8, fontWeight: 600, fontSize: 14 }}>No HP / WhatsApp</label>
+              <input 
+                type="text"
+                className="form-input" 
+                value={globalSettings.contactPhone ?? ''} 
+                onChange={e => setGlobalSettings({...globalSettings, contactPhone: e.target.value})}
+                placeholder="+62 812-3456-7890"
+                style={{ width: '100%', padding: '12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-surface)', color: 'var(--text-primary)', fontSize: 15 }}
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', marginBottom: 8, fontWeight: 600, fontSize: 14 }}>Email Support</label>
+              <input 
+                type="text"
+                className="form-input" 
+                value={globalSettings.contactEmail ?? ''} 
+                onChange={e => setGlobalSettings({...globalSettings, contactEmail: e.target.value})}
+                placeholder="hello@enduraup.space"
+                style={{ width: '100%', padding: '12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-surface)', color: 'var(--text-primary)', fontSize: 15 }}
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', marginBottom: 8, fontWeight: 600, fontSize: 14 }}>Instagram URL</label>
+              <input 
+                type="text"
+                className="form-input" 
+                value={globalSettings.contactInstagram ?? ''} 
+                onChange={e => setGlobalSettings({...globalSettings, contactInstagram: e.target.value})}
+                placeholder="https://instagram.com/..."
+                style={{ width: '100%', padding: '12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-surface)', color: 'var(--text-primary)', fontSize: 15 }}
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', marginBottom: 8, fontWeight: 600, fontSize: 14 }}>Twitter / X URL</label>
+              <input 
+                type="text"
+                className="form-input" 
+                value={globalSettings.contactTwitter ?? ''} 
+                onChange={e => setGlobalSettings({...globalSettings, contactTwitter: e.target.value})}
+                placeholder="https://x.com/..."
+                style={{ width: '100%', padding: '12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-surface)', color: 'var(--text-primary)', fontSize: 15 }}
+              />
+            </div>
+          </div>
+
+          <h4 style={{ marginTop: 32, marginBottom: 16, fontSize: 18, color: 'var(--accent-purple)' }}>Analisis Blog & Iklan</h4>
+          <div style={{ marginBottom: 24 }}>
+            <label style={{ display: 'block', marginBottom: 8, fontWeight: 600, fontSize: 14 }}>ID / Script Google Analytics (Opsional)</label>
+            <textarea 
+              className="form-input" 
+              value={globalSettings.googleAnalyticsCode ?? ''} 
+              onChange={e => setGlobalSettings({...globalSettings, googleAnalyticsCode: e.target.value})}
+              placeholder="G-XXXXXXXXXX atau <script>...</script>"
+              style={{ width: '100%', padding: '12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-surface)', color: 'var(--text-primary)', fontSize: 15, minHeight: 80, resize: 'vertical' }}
+            />
+          </div>
+          <div style={{ marginBottom: 24 }}>
+            <label style={{ display: 'block', marginBottom: 8, fontWeight: 600, fontSize: 14 }}>Kode Script Iklan (AdSense dll)</label>
+            <textarea 
+              className="form-input" 
+              value={globalSettings.adsenseCode ?? ''} 
+              onChange={e => setGlobalSettings({...globalSettings, adsenseCode: e.target.value})}
+              placeholder="<script async src='...'></script>"
+              style={{ width: '100%', padding: '12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-surface)', color: 'var(--text-primary)', fontSize: 15, minHeight: 80, resize: 'vertical' }}
+            />
+          </div>
+
           <button 
             className="btn btn-primary" 
             onClick={handleSaveSettings}
@@ -839,14 +976,34 @@ export default function AdminDashboard({ onBack }) {
                 {editingBlogId ? <><Edit3 size={18} /> Edit Artikel</> : <><PenTool size={18} /> Tulis Artikel Baru</>}
               </div>
               <input className="form-input" placeholder="Judul Artikel" required value={blogForm.title} onChange={e => setBlogForm({...blogForm, title: e.target.value})} style={{ width: '100%', padding: '14px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-surface)', color: 'var(--text-primary)', fontSize: 16 }} />
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <input className="form-input" placeholder="URL Gambar Cover (Contoh: https://drive.google.com/file/d/.../view)" value={blogForm.thumbnail} onChange={e => {
-                  const val = e.target.value;
-                  setBlogForm({...blogForm, thumbnail: val});
-                }} style={{ width: '100%', padding: '14px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-surface)', color: 'var(--text-primary)' }} />
-                {(blogForm.thumbnail && blogForm.thumbnail.includes('/folders/')) && (
-                  <span style={{ fontSize: 12, color: '#ef4444', fontWeight: 600 }}>⚠️ Peringatan: Link salah! Lo pake link FOLDER, bukan link FILE. Buka foldernya, klik kanan fotonya -> pilih Share -> Copy Link.</span>
-                )}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '14px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-surface)' }}>
+                <label style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-secondary)' }}>Thumbnail / Cover Artikel</label>
+                <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                  {blogForm.thumbnail && (
+                    <img 
+                      src={blogForm.thumbnail.includes('drive.google.com') 
+                        ? `https://lh3.googleusercontent.com/d/${blogForm.thumbnail.match(/id=([^&]+)/)?.[1] || blogForm.thumbnail.match(/d\/([a-zA-Z0-9_-]+)/)?.[1]}` 
+                        : blogForm.thumbnail} 
+                      alt="Preview" 
+                      style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 8, border: '1px solid var(--border)' }} 
+                      onError={(e) => e.target.style.display='none'} 
+                    />
+                  )}
+                  <div style={{ flex: 1 }}>
+                    <input type="file" accept="image/*" id="thumbnail-upload" style={{ display: 'none' }} onChange={handleThumbnailUpload} />
+                    <button 
+                      type="button" 
+                      onClick={() => document.getElementById('thumbnail-upload').click()}
+                      className="btn btn-secondary"
+                      style={{ padding: '8px 16px', fontSize: 14 }}
+                      disabled={uploadingThumbnail}
+                    >
+                      {uploadingThumbnail ? 'Mengupload...' : 'Upload Gambar Thumbnail'}
+                    </button>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 8 }}>URL Gambar (Opsional jika sudah upload):</div>
+                    <input className="form-input" placeholder="https://..." value={blogForm.thumbnail} onChange={e => setBlogForm({...blogForm, thumbnail: e.target.value})} style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--bg-base)', color: 'var(--text-primary)', marginTop: 4, fontSize: 13 }} />
+                  </div>
+                </div>
               </div>
               <input className="form-input" placeholder="Penulis Artikel (Misal: EnduraUP Coach, dr. Tirta, dll)" required value={blogForm.author} onChange={e => setBlogForm({...blogForm, author: e.target.value})} style={{ width: '100%', padding: '14px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-surface)', color: 'var(--text-primary)' }} />
               <input className="form-input" placeholder="Tags (pisahkan dengan koma, misal: Tips, Recovery, Nutrisi)" required value={blogForm.tags} onChange={e => setBlogForm({...blogForm, tags: e.target.value})} style={{ width: '100%', padding: '14px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-surface)', color: 'var(--text-primary)' }} />

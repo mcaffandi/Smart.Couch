@@ -1,5 +1,5 @@
 import React from 'react';
-import { Mail, MessageCircle } from 'lucide-react';
+import { Mail, MessageCircle, Instagram, Twitter } from 'lucide-react';
 
 export function AboutPage({ lang }) {
   return (
@@ -51,11 +51,16 @@ export function PrivacyPage({ lang }) {
   );
 }
 
-export function ContactPage({ lang }) {
+export function ContactPage({ lang, globalSettings = {} }) {
+  const contactPhone = globalSettings?.contactPhone || '+62 812-3456-7890';
+  const contactEmail = globalSettings?.contactEmail || 'hello@enduraup.space';
+  const contactInstagram = globalSettings?.contactInstagram || '';
+  const contactTwitter = globalSettings?.contactTwitter || '';
+
   return (
     <div className="animate-fade-in" style={{ maxWidth: 800, margin: '40px auto', padding: '0 20px', minHeight: '60vh' }}>
       <h1 style={{ fontSize: 36, fontWeight: 800, marginBottom: 24, color: 'var(--text-primary)' }}>
-        {lang === 'id' ? 'Hubungi Pelatih' : 'Contact Coach'}
+        {lang === 'id' ? 'Hubungi Kami' : 'Contact Us'}
       </h1>
       <div style={{ fontSize: 16, color: 'var(--text-secondary)', lineHeight: 1.8, display: 'flex', flexDirection: 'column', gap: 20 }}>
         <p>
@@ -71,7 +76,7 @@ export function ContactPage({ lang }) {
               </span>
               <div>
                 <strong style={{ display: 'block', color: 'var(--text-primary)' }}>Email</strong>
-                <span>hello@enduraup.space</span>
+                <span>{contactEmail}</span>
               </div>
             </li>
             <li style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
@@ -79,10 +84,32 @@ export function ContactPage({ lang }) {
                 <MessageCircle size={18} />
               </span>
               <div>
-                <strong style={{ display: 'block', color: 'var(--text-primary)' }}>WhatsApp Layanan Pelanggan</strong>
-                <span>+62 812-3456-7890</span>
+                <strong style={{ display: 'block', color: 'var(--text-primary)' }}>WhatsApp / Telepon</strong>
+                <span>{contactPhone}</span>
               </div>
             </li>
+            {contactInstagram && (
+              <li style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                <span style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', width: 40, height: 40, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
+                  <Instagram size={18} />
+                </span>
+                <div>
+                  <strong style={{ display: 'block', color: 'var(--text-primary)' }}>Instagram</strong>
+                  <a href={contactInstagram} target="_blank" rel="noreferrer" style={{ color: 'var(--accent-purple)', textDecoration: 'none' }}>@{contactInstagram.replace(/https?:\/\/(www\.)?instagram\.com\//, '').replace(/\//g, '') || 'Kunjungi Profil'}</a>
+                </div>
+              </li>
+            )}
+            {contactTwitter && (
+              <li style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                <span style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', width: 40, height: 40, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
+                  <Twitter size={18} />
+                </span>
+                <div>
+                  <strong style={{ display: 'block', color: 'var(--text-primary)' }}>Twitter / X</strong>
+                  <a href={contactTwitter} target="_blank" rel="noreferrer" style={{ color: 'var(--accent-purple)', textDecoration: 'none' }}>@{contactTwitter.replace(/https?:\/\/(www\.)?(twitter|x)\.com\//, '').replace(/\//g, '') || 'Kunjungi Profil'}</a>
+                </div>
+              </li>
+            )}
           </ul>
         </div>
         

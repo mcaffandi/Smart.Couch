@@ -40,6 +40,11 @@ export default function PremiumModal({ onClose, onUpgrade, isPremium, lang = 'id
   
   const quotaRemaining = globalSettings?.proQuotaRemaining ?? 9;
 
+  const bankName = globalSettings?.bankName || 'BCA';
+  const bankAccount = globalSettings?.bankAccount || '1234567890';
+  const bankAccountName = globalSettings?.bankAccountName || 'EnduraUP App';
+  const qrisImageUrl = globalSettings?.qrisImageUrl || '';
+
   const handleUpgrade = async () => {
     if (!receipt) {
       alert(lang === 'id' ? 'Harap upload bukti transfer terlebih dahulu.' : 'Please upload transfer receipt first.');
@@ -232,20 +237,27 @@ export default function PremiumModal({ onClose, onUpgrade, isPremium, lang = 'id
               
               <div style={{ border: '1px solid #e5e7eb', borderRadius: 8, padding: '16px', marginBottom: 24 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                  <div style={{ fontSize: 14, fontWeight: 800, color: '#1d4ed8', fontStyle: 'italic' }}>BCA</div>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: '#1d4ed8', fontStyle: 'italic' }}>{bankName}</div>
                   <div style={{ fontSize: 12, background: '#e0e7ff', color: '#4338ca', padding: '2px 8px', borderRadius: 4, fontWeight: 600 }}>Bank Transfer</div>
                 </div>
                 
                 <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 4 }}>Nomor Rekening</div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ fontSize: 20, fontWeight: 700, color: '#111827', letterSpacing: '1px' }}>1234 5678 90</div>
-                  <button onClick={() => copyToClipboard('1234567890')} style={{ background: 'transparent', border: 'none', color: '#2563eb', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <div style={{ fontSize: 20, fontWeight: 700, color: '#111827', letterSpacing: '1px' }}>{bankAccount}</div>
+                  <button onClick={() => copyToClipboard(bankAccount.replace(/\D/g, ''))} style={{ background: 'transparent', border: 'none', color: '#2563eb', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
                     {copied ? <CheckCircle size={14} color="#10b981" /> : <Copy size={14} />}
                     {copied ? 'Tersalin' : 'Salin'}
                   </button>
                 </div>
-                <div style={{ fontSize: 12, color: '#6b7280', marginTop: 8 }}>A/N <span style={{ fontWeight: 600, color: '#374151' }}>EnduraUP App</span></div>
+                <div style={{ fontSize: 12, color: '#6b7280', marginTop: 8 }}>A/N <span style={{ fontWeight: 600, color: '#374151' }}>{bankAccountName}</span></div>
               </div>
+
+              {qrisImageUrl && (
+                <div style={{ border: '1px solid #e5e7eb', borderRadius: 8, padding: '16px', marginBottom: 24, textAlign: 'center' }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#111827', marginBottom: 12 }}>Atau Scan QRIS</div>
+                  <img src={qrisImageUrl} alt="QRIS Payment" style={{ maxWidth: '100%', maxHeight: 250, objectFit: 'contain', borderRadius: 8 }} />
+                </div>
+              )}
 
               {/* Upload Receipt */}
               <div style={{ fontSize: 14, fontWeight: 700, color: '#111827', marginBottom: 12 }}>Konfirmasi Pembayaran</div>

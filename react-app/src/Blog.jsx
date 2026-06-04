@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { collection, query, orderBy, getDocs, getDocsFromServer, addDoc, serverTimestamp, deleteDoc, doc, updateDoc, increment, arrayUnion, onSnapshot, arrayRemove } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { db, storage, auth, googleProvider, signInWithPopup } from './firebase';
+import { db, storage, auth, googleProvider, signInWithPopup, signInAnonymously } from './firebase';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import { BookOpen, Edit3, Trash2 } from 'lucide-react';
@@ -26,6 +26,21 @@ const parseImageUrl = (url) => {
   return url;
 };
 
+const getThumbnailUrl = (blog) => {
+  if (!blog) return '';
+  // Trim and check — empty string counts as no thumbnail
+  let url = (blog.coverImage || blog.thumbnail || '').trim();
+  
+  // If no explicit thumbnail, try to extract first non-base64 image from content
+  if (!url && blog.content) {
+    const match = blog.content.match(/<img[^>]+src=["']([^"']+)["']/i);
+    if (match && match[1] && !match[1].startsWith('data:')) {
+      url = match[1];
+    }
+  }
+  return url ? parseImageUrl(url) : '';
+};
+
 export default function BlogModule({ isAdmin, lang = 'id', onViewChange, currentUser, searchQuery = '' }) {
   const [blogs, setBlogs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -35,6 +50,7 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
   const [selectedTag, setSelectedTag] = useState('Semua');
   const [savedBlogs, setSavedBlogs] = useState([]);
   const [showSavedOnly, setShowSavedOnly] = useState(false);
+  const [heroIndex, setHeroIndex] = useState(0);
   
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [pendingAction, setPendingAction] = useState(null);
@@ -167,51 +183,64 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
   };
 
   const handleProps = async (blogId) => {
-    requireAuth(async () => {
-      // Determine user identifier: UID
-      const userId = currentUser.uid || currentUser.email || `user_${Date.now()}`;
-      
-      // Check local storage if this device already liked it to prevent spamming
-      const likedStr = localStorage.getItem('enduraup_blog_props') || '[]';
-      const likedArr = JSON.parse(likedStr);
-      
-      // If they already liked it locally, don't allow again
-      if (likedArr.includes(blogId)) return;
-      
-      // Save to local storage
-      likedArr.push(blogId);
-      localStorage.setItem('enduraup_blog_props', JSON.stringify(likedArr));
+    // Generate a stable anonymous ID for non-logged-in users
+    let userId;
+    if (currentUser?.uid) {
+      userId = currentUser.uid;
+    } else if (currentUser?.email) {
+      userId = currentUser.email;
+    } else {
+      // Guest: use/create a persistent anonymous ID in localStorage
+      let anonId = localStorage.getItem('enduraup_anon_id');
+      if (!anonId) {
+        anonId = `guest_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+        localStorage.setItem('enduraup_anon_id', anonId);
+      }
+      userId = anonId;
+    }
 
-      // Optimistic UI update
-      setBlogs(prev => prev.map(b => {
-        if (b.id === blogId) {
-          return {
-            ...b,
-            propsCount: (b.propsCount || 0) + 1,
-            propsUsers: [...(b.propsUsers || []), userId]
-          };
-        }
-        return b;
+    // Check local storage to prevent double-tap spam
+    const likedStr = localStorage.getItem('enduraup_blog_props') || '[]';
+    const likedArr = JSON.parse(likedStr);
+
+    if (likedArr.includes(blogId)) return; // already liked from this device
+
+    // Save to local storage immediately
+    likedArr.push(blogId);
+    localStorage.setItem('enduraup_blog_props', JSON.stringify(likedArr));
+
+    // Optimistic UI update
+    setBlogs(prev => prev.map(b => {
+      if (b.id === blogId) {
+        return {
+          ...b,
+          propsCount: (b.propsCount || 0) + 1,
+          propsUsers: [...(b.propsUsers || []), userId]
+        };
+      }
+      return b;
+    }));
+
+    if (currentBlog?.id === blogId) {
+      setCurrentBlog(prev => ({
+        ...prev,
+        propsCount: (prev.propsCount || 0) + 1,
+        propsUsers: [...(prev.propsUsers || []), userId]
       }));
-      
-      if (currentBlog?.id === blogId) {
-        setCurrentBlog(prev => ({
-          ...prev,
-          propsCount: (prev.propsCount || 0) + 1,
-          propsUsers: [...(prev.propsUsers || []), userId]
-        }));
-      }
+    }
 
-      // Update in Firestore
-      try {
-        await updateDoc(doc(db, 'blogs', blogId), {
-          propsCount: increment(1),
-          propsUsers: arrayUnion(userId)
-        });
-      } catch (e) {
-        console.error("Error adding props:", e);
+    // Update in Firestore
+    try {
+      if (!auth.currentUser) {
+        try { await signInAnonymously(auth); } catch (e) { console.warn("Anon Auth failed", e); }
       }
-    });
+      await updateDoc(doc(db, 'blogs', blogId), {
+        propsCount: increment(1),
+        propsUsers: arrayUnion(userId)
+      });
+    } catch (e) {
+      console.error("Error adding props:", e);
+    }
   };
 
   // Extract unique tags
@@ -292,6 +321,31 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
       (b.tags && b.tags.some(tag => tag.toLowerCase().includes(lower)))
     );
   });
+
+  const heroBlogs = useMemo(() => {
+    if (filteredBlogs.length === 0) return [];
+    if (filteredBlogs.length === 1) return [filteredBlogs[0]];
+    const newest = filteredBlogs[0];
+    const popular = [...filteredBlogs]
+      .filter(b => b.id !== newest.id)
+      .sort((a, b) => {
+        const scoreA = (a.views || 0) + (a.propsCount || 0) * 5;
+        const scoreB = (b.views || 0) + (b.propsCount || 0) * 5;
+        return scoreB - scoreA;
+      })
+      .slice(0, 2);
+    return [newest, ...popular];
+  }, [filteredBlogs]);
+
+  useEffect(() => {
+    if (heroBlogs.length <= 1 || view !== 'list' || selectedTag !== 'Semua' || searchQuery || showSavedOnly) return;
+    const interval = setInterval(() => {
+      setHeroIndex(prev => (prev + 1) % heroBlogs.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [heroBlogs.length, view, selectedTag, searchQuery, showSavedOnly]);
+
+  const currentHero = heroBlogs[heroIndex] || filteredBlogs[0];
 
   // LIST VIEW
   return (
@@ -407,59 +461,106 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
       ) : (
         <>
           {/* Featured Hero Article */}
-          {filteredBlogs.length > 0 && selectedTag === 'Semua' && !searchQuery && !showSavedOnly && (
-            <div 
-              className="blog-list-item"
-              onClick={() => handleViewBlog(filteredBlogs[0])}
-              style={{ overflow: 'hidden', display: 'flex', flexDirection: window.innerWidth < 768 ? 'column' : 'row', cursor: 'pointer', padding: '16px', margin: '-16px -16px 40px -16px', borderBottom: '1px solid var(--border)', paddingBottom: 40, alignItems: 'center' }}
-            >
-              <div className="blog-img-container" style={{ flex: 1, width: '100%', minHeight: window.innerWidth < 768 ? 200 : 300 }}>
-                <div className="blog-img-inner" style={{ background: (filteredBlogs[0].coverImage || filteredBlogs[0].thumbnail) ? `url('${parseImageUrl(filteredBlogs[0].coverImage || filteredBlogs[0].thumbnail)}') center/cover` : 'var(--bg-surface)' }}></div>
-              </div>
-              <div style={{ flex: 1.2, padding: window.innerWidth < 768 ? '24px 0 0 0' : '0 0 0 40px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
-                  {filteredBlogs[0].tags && filteredBlogs[0].tags.slice(0, 3).map((tag, i) => (
-                    <span key={i} onClick={(e) => { e.stopPropagation(); setSelectedTag(tag); }} style={{ fontSize: 13, color: 'var(--text-secondary)', padding: '4px 12px', borderRadius: 20, fontWeight: 500, cursor: 'pointer', background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-                      {tag}
-                    </span>
-                  ))}
+          {currentHero && selectedTag === 'Semua' && !searchQuery && !showSavedOnly && (
+            <div style={{ position: 'relative', marginBottom: 40 }}>
+              <div 
+                className="blog-list-item"
+                onClick={() => handleViewBlog(currentHero)}
+                style={{ overflow: 'hidden', display: 'flex', flexDirection: window.innerWidth < 768 ? 'column' : 'row', cursor: 'pointer', padding: '16px', margin: '-16px -16px 20px -16px', borderBottom: '1px solid var(--border)', paddingBottom: 40, alignItems: 'center' }}
+              >
+                <div className="blog-img-container" style={{ flex: 1, width: '100%', minHeight: window.innerWidth < 768 ? 200 : 300, position: 'relative', overflow: 'hidden', borderRadius: 8 }}>
+                  {getThumbnailUrl(currentHero) ? (
+                    <img 
+                      key={currentHero.id} // force re-render for animation on change
+                      src={getThumbnailUrl(currentHero)} 
+                      alt={currentHero.title}
+                      style={{ width: '100%', height: '100%', minHeight: window.innerWidth < 768 ? 200 : 300, objectFit: 'cover', display: 'block', animation: 'fadeIn 0.5s ease', transition: 'transform 0.8s cubic-bezier(0.16, 1, 0.3, 1)' }}
+                      onError={(e) => { e.target.style.display='none'; e.target.nextSibling.style.display='flex'; }}
+                    />
+                  ) : null}
+                  <div style={{ display: getThumbnailUrl(currentHero) ? 'none' : 'flex', width: '100%', minHeight: window.innerWidth < 768 ? 200 : 300, background: 'linear-gradient(135deg, var(--bg-card) 0%, var(--bg-surface) 100%)', alignItems: 'center', justifyContent: 'center', borderRadius: 8 }}>
+                    <BookOpen size={48} style={{ opacity: 0.2 }} />
+                  </div>
+                  
+                  {/* Badge for Trending/Newest */}
+                  <div style={{ position: 'absolute', top: 16, left: 16, background: heroIndex === 0 ? 'var(--accent-purple)' : '#f97316', color: '#fff', padding: '6px 12px', borderRadius: 20, fontSize: 12, fontWeight: 700, letterSpacing: '0.5px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', zIndex: 10 }}>
+                    {heroIndex === 0 ? (lang === 'id' ? '🔥 TERBARU' : '🔥 NEWEST') : (lang === 'id' ? '🚀 TERPOPULER' : '🚀 TRENDING')}
+                  </div>
                 </div>
-                <h2 className="blog-title-text" style={{ fontFamily: '"Inter", sans-serif', fontSize: window.innerWidth < 768 ? 28 : 38, fontWeight: 800, marginBottom: 16, lineHeight: 1.2, color: 'var(--text-primary)', letterSpacing: '-0.5px' }}>{filteredBlogs[0].title}</h2>
-                <p style={{ fontSize: 16, color: 'var(--text-secondary)', marginBottom: 24, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.6 }}>
-                  {filteredBlogs[0].excerpt || (filteredBlogs[0].content || '').replace(/<[^>]+>/g, '').substring(0, 200) + '...'}
-                </p>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', paddingTop: 20 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--accent-purple)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 12, fontWeight: 'bold' }}>E</div>
-                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                       <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>{filteredBlogs[0].author || 'EnduraUP Coach'}</span>
-                       <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>
-                         {filteredBlogs[0].createdAt?.toDate ? filteredBlogs[0].createdAt.toDate().toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'}) : ''}
-                       </span>
+                <div style={{ flex: 1.2, padding: window.innerWidth < 768 ? '24px 0 0 0' : '0 0 0 40px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                  <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+                    {currentHero.tags && currentHero.tags.slice(0, 3).map((tag, i) => (
+                      <span key={i} onClick={(e) => { e.stopPropagation(); setSelectedTag(tag); }} style={{ fontSize: 13, color: 'var(--text-secondary)', padding: '4px 12px', borderRadius: 20, fontWeight: 500, cursor: 'pointer', background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                  <h2 className="blog-title-text" style={{ fontFamily: '"Inter", sans-serif', fontSize: window.innerWidth < 768 ? 28 : 38, fontWeight: 800, marginBottom: 16, lineHeight: 1.2, color: 'var(--text-primary)', letterSpacing: '-0.5px' }}>{currentHero.title}</h2>
+                  <p style={{ fontSize: 16, color: 'var(--text-secondary)', marginBottom: 24, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.6 }}>
+                    {currentHero.excerpt || (currentHero.content || '').replace(/<[^>]+>/g, '').substring(0, 200) + '...'}
+                  </p>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', paddingTop: 20 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--accent-purple)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 12, fontWeight: 'bold' }}>E</div>
+                      <div style={{ display: 'flex', flexDirection: 'column' }}>
+                         <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>{currentHero.author || 'EnduraUP Coach'}</span>
+                         <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+                           {currentHero.createdAt?.toDate ? currentHero.createdAt.toDate().toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'}) : ''}
+                         </span>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: 16, alignItems: 'center' }} onClick={e => e.stopPropagation()}>
+                      {currentHero.views > 0 && (
+                        <div style={{ fontSize: 14, color: 'var(--text-muted)', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 6 }} title="Views">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                          {currentHero.views}
+                        </div>
+                      )}
+                      {currentHero.propsCount > 0 && (
+                        <div style={{ fontSize: 14, color: 'var(--text-muted)', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 6 }} title="Props">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 2.5z"></path></svg>
+                          {currentHero.propsCount}
+                        </div>
+                      )}
+                      <button 
+                        onClick={() => handleSaveBlog(currentHero.id)}
+                        style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, color: savedBlogs.includes(currentHero.id) ? 'var(--text-primary)' : 'var(--text-muted)' }} 
+                      >
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill={savedBlogs.includes(currentHero.id) ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+                      </button>
+                      {isAdmin && (
+                        <>
+                          <button onClick={() => { setCurrentBlog(currentHero); setView('edit'); }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', padding: 0 }} title="Edit"><Edit3 size={16} /></button>
+                          <button onClick={() => handleDelete(currentHero.id)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--accent-rose)', padding: 0 }} title="Hapus"><Trash2 size={16} /></button>
+                        </>
+                      )}
                     </div>
                   </div>
-                  <div style={{ display: 'flex', gap: 16, alignItems: 'center' }} onClick={e => e.stopPropagation()}>
-                    {filteredBlogs[0].propsCount > 0 && (
-                      <div style={{ fontSize: 14, color: 'var(--text-muted)', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 2.5z"></path></svg>
-                        {filteredBlogs[0].propsCount}
-                      </div>
-                    )}
-                    <button 
-                      onClick={() => handleSaveBlog(filteredBlogs[0].id)}
-                      style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, color: savedBlogs.includes(filteredBlogs[0].id) ? 'var(--text-primary)' : 'var(--text-muted)' }} 
-                    >
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill={savedBlogs.includes(filteredBlogs[0].id) ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
-                    </button>
-                    {isAdmin && (
-                      <>
-                        <button onClick={() => { setCurrentBlog(filteredBlogs[0]); setView('edit'); }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', padding: 0 }} title="Edit"><Edit3 size={16} /></button>
-                        <button onClick={() => handleDelete(filteredBlogs[0].id)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--accent-rose)', padding: 0 }} title="Hapus"><Trash2 size={16} /></button>
-                      </>
-                    )}
-                  </div>
                 </div>
               </div>
+
+              {/* Carousel Dots */}
+              {heroBlogs.length > 1 && (
+                <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: -10 }}>
+                  {heroBlogs.map((hb, i) => (
+                    <button 
+                      key={hb.id}
+                      onClick={() => setHeroIndex(i)}
+                      style={{ 
+                        width: heroIndex === i ? 24 : 8, 
+                        height: 8, 
+                        borderRadius: 4, 
+                        background: heroIndex === i ? 'var(--accent-purple)' : 'var(--border)',
+                        border: 'none',
+                        cursor: 'pointer',
+                        transition: 'all 0.3s ease',
+                        padding: 0
+                      }}
+                      aria-label={`Show ${i === 0 ? 'Newest' : 'Trending'} Article`}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
@@ -513,9 +614,14 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
                       </div>
                     </div>
                   </div>
-                  {(b.coverImage || b.thumbnail) && (
-                    <div className="blog-img-container" style={{ width: window.innerWidth < 768 ? '100%' : 144, height: window.innerWidth < 768 ? 160 : 90, flexShrink: 0 }}>
-                      <div className="blog-img-inner" style={{ background: `url('${parseImageUrl(b.coverImage || b.thumbnail)}') center/cover` }}></div>
+                  {getThumbnailUrl(b) && (
+                    <div style={{ width: window.innerWidth < 768 ? '100%' : 144, height: window.innerWidth < 768 ? 160 : 90, flexShrink: 0, borderRadius: 6, overflow: 'hidden' }}>
+                      <img 
+                        src={getThumbnailUrl(b)} 
+                        alt={b.title}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                        onError={(e) => e.target.parentElement.style.display='none'}
+                      />
                     </div>
                   )}
                 </div>
@@ -823,7 +929,26 @@ function BlogEditor({ blog, onSave, onCancel, lang }) {
   const [content, setContent] = useState(blog?.content || '');
   const [tagsStr, setTagsStr] = useState(blog?.tags ? blog.tags.join(', ') : '');
   const [coverImage, setCoverImage] = useState(blog?.coverImage || blog?.thumbnail || '');
-  const [author, setAuthor] = useState(blog?.author || 'Admin EnduraUP');
+  const [author, setAuthor] = useState(blog?.author || 'EnduraUP Coach');
+  const [uploadingThumbnail, setUploadingThumbnail] = useState(false);
+
+  const handleThumbnailUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setUploadingThumbnail(true);
+    try {
+      const storageRef = ref(storage, `blog_thumbnails/${Date.now()}_${file.name}`);
+      const snapshot = await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      setCoverImage(downloadURL);
+    } catch (error) {
+      console.error("Gagal upload thumbnail:", error);
+      alert("Gagal mengupload gambar. Pastikan Firebase Storage sudah diatur dengan benar.");
+    } finally {
+      setUploadingThumbnail(false);
+    }
+  };
 
   const quillRef = useRef(null);
 
@@ -935,9 +1060,34 @@ function BlogEditor({ blog, onSave, onCancel, lang }) {
           </div>
         </div>
 
-        <div className="form-group">
-          <label className="form-label">URL Cover Image (Opsional)</label>
-          <input type="url" className="form-input" value={coverImage} onChange={e => setCoverImage(e.target.value)} placeholder="https://..." />
+        <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <label className="form-label">Thumbnail / Cover Artikel</label>
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+            {coverImage && (
+              <img 
+                src={coverImage.includes('drive.google.com') 
+                  ? parseImageUrl(coverImage)
+                  : coverImage} 
+                alt="Preview" 
+                style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 8, border: '1px solid var(--border)' }} 
+                onError={(e) => e.target.style.display='none'} 
+              />
+            )}
+            <div style={{ flex: 1 }}>
+              <input type="file" accept="image/*" id="thumbnail-upload-blog" style={{ display: 'none' }} onChange={handleThumbnailUpload} />
+              <button 
+                type="button" 
+                onClick={() => document.getElementById('thumbnail-upload-blog').click()}
+                className="btn btn-secondary"
+                style={{ padding: '8px 16px', fontSize: 14 }}
+                disabled={uploadingThumbnail}
+              >
+                {uploadingThumbnail ? 'Mengupload...' : 'Upload Gambar Thumbnail'}
+              </button>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 8 }}>URL Gambar (Opsional jika sudah upload):</div>
+              <input type="url" className="form-input" value={coverImage} onChange={e => setCoverImage(e.target.value)} placeholder="https://..." style={{ marginTop: 4 }} />
+            </div>
+          </div>
         </div>
 
         <div className="form-group" style={{ marginBottom: 40 }}>
@@ -982,8 +1132,11 @@ function BlogComments({ blogId, currentUser, onRequireAuth, lang }) {
   const handlePostComment = async () => {
     if (!newComment.trim()) return;
     try {
-      const uid = auth.currentUser?.uid || currentUser;
-      const name = auth.currentUser?.displayName || (typeof currentUser === 'string' ? currentUser.split('@')[0] : 'User');
+      if (!auth.currentUser) {
+        try { await signInAnonymously(auth); } catch (e) { console.warn("Anon Auth failed", e); }
+      }
+      const uid = auth.currentUser?.uid || currentUser || getAnonId();
+      const name = auth.currentUser?.displayName || (typeof currentUser === 'string' && !currentUser.startsWith('Anonim-') ? currentUser.split('@')[0] : 'Anonim');
       await addDoc(collection(db, 'blogs', blogId, 'comments'), {
         text: newComment,
         authorId: uid,
@@ -1003,8 +1156,11 @@ function BlogComments({ blogId, currentUser, onRequireAuth, lang }) {
   const handleReply = async (commentId) => {
     if (!replyText.trim()) return;
     try {
-      const uid = auth.currentUser?.uid || currentUser;
-      const name = auth.currentUser?.displayName || (typeof currentUser === 'string' ? currentUser.split('@')[0] : 'User');
+      if (!auth.currentUser) {
+        try { await signInAnonymously(auth); } catch (e) { console.warn("Anon Auth failed", e); }
+      }
+      const uid = auth.currentUser?.uid || currentUser || getAnonId();
+      const name = auth.currentUser?.displayName || (typeof currentUser === 'string' && !currentUser.startsWith('Anonim-') ? currentUser.split('@')[0] : 'Anonim');
       
       await updateDoc(doc(db, 'blogs', blogId, 'comments', commentId), {
         replies: arrayUnion({
@@ -1025,16 +1181,44 @@ function BlogComments({ blogId, currentUser, onRequireAuth, lang }) {
     }
   };
 
+  // Get local anon ID or create one
+  const getAnonId = () => {
+    let anonId = localStorage.getItem('enduraup_anon_id');
+    if (!anonId) {
+      anonId = `guest_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+      localStorage.setItem('enduraup_anon_id', anonId);
+    }
+    return anonId;
+  };
+
+  const currentUid = auth.currentUser?.uid || (currentUser && !currentUser.startsWith('Anonim-') ? currentUser : getAnonId());
+
   const handleBurn = async (commentId, isReply, replyId, currentBurnUsers) => {
-    const uid = auth.currentUser?.uid || currentUser;
-    if (currentBurnUsers?.includes(uid)) return; // Already burned
+    if (currentBurnUsers?.includes(currentUid)) return; // Already burned
+
+    // Optimistic UI for comments
+    setComments(prev => prev.map(c => {
+      if (!isReply && c.id === commentId) {
+        return { ...c, burns: (c.burns || 0) + 1, burnUsers: [...(c.burnUsers || []), currentUid] };
+      }
+      if (isReply && c.id === commentId && c.replies) {
+        return {
+          ...c,
+          replies: c.replies.map(r => r.id === replyId ? { ...r, burns: (r.burns || 0) + 1, burnUsers: [...(r.burnUsers || []), currentUid] } : r)
+        };
+      }
+      return c;
+    }));
 
     try {
+      if (!auth.currentUser) {
+        try { await signInAnonymously(auth); } catch (e) { console.warn("Anon Auth failed", e); }
+      }
       const commentRef = doc(db, 'blogs', blogId, 'comments', commentId);
       if (!isReply) {
         await updateDoc(commentRef, {
           burns: increment(1),
-          burnUsers: arrayUnion(uid)
+          burnUsers: arrayUnion(currentUid)
         });
       } else {
         // Find the reply and update it (This requires reading, modifying, writing since arrayUnion doesn't support nested object updates easily)
@@ -1043,7 +1227,7 @@ function BlogComments({ blogId, currentUser, onRequireAuth, lang }) {
         if (comment) {
           const updatedReplies = comment.replies.map(r => {
             if (r.id === replyId) {
-              return { ...r, burns: (r.burns || 0) + 1, burnUsers: [...(r.burnUsers || []), uid] };
+              return { ...r, burns: (r.burns || 0) + 1, burnUsers: [...(r.burnUsers || []), currentUid] };
             }
             return r;
           });
@@ -1104,7 +1288,7 @@ function BlogComments({ blogId, currentUser, onRequireAuth, lang }) {
       {comments.length > 0 ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
           {comments.map((c) => {
-            const isBurned = c.burnUsers?.includes(auth.currentUser?.uid || currentUser);
+            const isBurned = c.burnUsers?.includes(currentUid);
             return (
               <div key={c.id} style={{ display: 'flex', gap: 12 }}>
                 <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--bg-card)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', flexShrink: 0 }}>
@@ -1123,7 +1307,7 @@ function BlogComments({ blogId, currentUser, onRequireAuth, lang }) {
                     {c.replies && c.replies.length > 0 && (
                       <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 12, borderLeft: '2px solid var(--border)', paddingLeft: 14 }}>
                         {c.replies.map(r => {
-                          const isReplyBurned = r.burnUsers?.includes(auth.currentUser?.uid || currentUser);
+                          const isReplyBurned = r.burnUsers?.includes(currentUid);
                           return (
                             <div key={r.id}>
                               <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
@@ -1137,10 +1321,7 @@ function BlogComments({ blogId, currentUser, onRequireAuth, lang }) {
                                   </div>
                                   <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{r.text}</div>
                                   <button 
-                                    onClick={() => {
-                                      if (!currentUser && onRequireAuth) onRequireAuth(() => handleBurn(c.id, true, r.id, r.burnUsers));
-                                      else handleBurn(c.id, true, r.id, r.burnUsers);
-                                    }}
+                                    onClick={() => handleBurn(c.id, true, r.id, r.burnUsers)}
                                     style={{ background: 'none', border: 'none', padding: 0, marginTop: 4, fontSize: 11, fontWeight: 600, color: isReplyBurned ? '#f97316' : 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
                                   >
                                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -1160,10 +1341,7 @@ function BlogComments({ blogId, currentUser, onRequireAuth, lang }) {
                   {/* Actions below bubble */}
                   <div style={{ display: 'flex', gap: 16, marginTop: 6, marginLeft: 4, alignItems: 'center' }}>
                     <button 
-                      onClick={() => {
-                        if (!currentUser && onRequireAuth) onRequireAuth(() => handleBurn(c.id, false, null, c.burnUsers));
-                        else handleBurn(c.id, false, null, c.burnUsers);
-                      }}
+                      onClick={() => handleBurn(c.id, false, null, c.burnUsers)}
                       style={{ background: 'none', border: 'none', padding: 0, fontSize: 12, fontWeight: 600, color: isBurned ? '#f97316' : 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
                     >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">

@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Star, Flame, Medal, Crown, Zap, Trophy } from 'lucide-react';
 
 import { Edit2, Trash2 } from 'lucide-react';
-const ITEMS_PER_PAGE = 9;
+const ITEMS_PER_PAGE = 12;
 
 export default function RunHistory({ activities, lang = 'id', onEdit, onDelete, onViewDetails }) {
   const [page, setPage] = useState(0);
