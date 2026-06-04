@@ -604,7 +604,7 @@ export default function App() {
         localStorage.setItem(`smartcoach_data_user_${username}`, JSON.stringify(safeData));
 
         // Push the merged safeData back to Firestore to ensure it stays fully synchronized
-        setDoc(userDocRef, safeData).catch(e => {
+        setDoc(userDocRef, { ...safeData, lastLogin: serverTimestamp() }, { merge: true }).catch(e => {
           console.error('Failed to update synced data back to Firestore:', e);
         });
       } else {
@@ -650,7 +650,7 @@ export default function App() {
         } else {
           dataToSave = loadUserData(username);
         }
-        await setDoc(userDocRef, dataToSave);
+        await setDoc(userDocRef, { ...dataToSave, lastLogin: serverTimestamp() }, { merge: true });
       }
     } catch (e) {
       console.error('Failed to sync from Firestore:', e);
@@ -687,7 +687,7 @@ export default function App() {
 
         const userDocId = auth.currentUser.email ? auth.currentUser.email.toLowerCase() : auth.currentUser.uid;
         const userDocRef = doc(db, 'users', userDocId);
-        setDoc(userDocRef, dataToSave).catch(e => {
+        setDoc(userDocRef, dataToSave, { merge: true }).catch(e => {
           console.error('Failed to sync save to Firestore:', e);
         });
       }
