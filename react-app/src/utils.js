@@ -406,7 +406,7 @@ export const buildTrainingPlan = (programStyle, goal, paces, selectedDays = ['Se
 // ──────────────────────────────────────────────
 // Adaptive Calendar Builder
 // ──────────────────────────────────────────────
-export const buildAdaptiveCalendar = (weeklyPlan, activities = [], isPaused = false) => {
+export const buildAdaptiveCalendar = (weeklyPlan, activities = [], isPaused = false, isAdaptiveActive = false) => {
   const today = new Date();
   today.setHours(0,0,0,0);
   
@@ -471,6 +471,8 @@ export const buildAdaptiveCalendar = (weeklyPlan, activities = [], isPaused = fa
     } else {
       if (isPast && hasRun) {
         workout.completed = true;
+      } else if (isPast && !hasRun) {
+        workout.missed = true;
       }
     }
 
@@ -483,6 +485,61 @@ export const buildAdaptiveCalendar = (weeklyPlan, activities = [], isPaused = fa
       isPaused,
       workout
     });
+  }
+
+  // Adaptive Logic: Shift missed runs from the current week to today/future
+  if (isAdaptiveActive && !isPaused) {
+    const todayTime = today.getTime();
+    let missedRuns = [];
+    
+    // 1. Collect missed runs from the past (only within the current week to avoid snowballing)
+    for (let i = 0; i < calendar.length; i++) {
+      const day = calendar[i];
+      // Only look at days in the past, starting from 7 days ago up to yesterday
+      if (day.isPast && day.workout.missed) {
+        const isRunWorkout = day.workout.jenis.includes('Run') || day.workout.jenis.includes('Interval') || day.workout.jenis.includes('Tempo') || day.workout.jenis.includes('Jog');
+        if (isRunWorkout) {
+          missedRuns.push({ ...day.workout, originalHari: day.workout.hari });
+          // Mark the past day as Rest since they missed it
+          day.workout = {
+            hari: day.workout.hari,
+            jenis: 'Total Rest',
+            durasi: '–',
+            tujuan: 'Missed workout (Shifted by AI)'
+          };
+          day.workout.missed = true; // keep missed visual
+        }
+      }
+    }
+
+    // 2. Shift them into today and future days
+    if (missedRuns.length > 0) {
+      let todayIdx = calendar.findIndex(d => d.isToday);
+      if (todayIdx !== -1) {
+        // We will insert missed runs starting today.
+        // We shift the existing schedule rightwards.
+        let insertIdx = todayIdx;
+        
+        while (missedRuns.length > 0 && insertIdx < calendar.length) {
+          const missed = missedRuns.shift();
+          missed.rescheduled = true;
+          
+          // Push the current day's workout down if it's a Run, 
+          // or just overwrite it if it's a Rest day.
+          let currentWorkout = calendar[insertIdx].workout;
+          const isCurrentRun = currentWorkout.jenis.includes('Run') || currentWorkout.jenis.includes('Interval') || currentWorkout.jenis.includes('Tempo') || currentWorkout.jenis.includes('Jog');
+          
+          calendar[insertIdx].workout = missed;
+          
+          if (isCurrentRun) {
+            // Need to shift the current run to the next day
+            missedRuns.unshift(currentWorkout); // put it back at the front of the queue to be placed tomorrow
+          }
+          
+          insertIdx++;
+        }
+      }
+    }
   }
 
   return calendar;
