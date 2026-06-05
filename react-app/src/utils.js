@@ -533,6 +533,9 @@ export const buildAdaptiveCalendar = (weeklyPlan, activities = [], isPaused = fa
           
           if (isCurrentRun) {
             // Need to shift the current run to the next day
+            if (!currentWorkout.originalHari) {
+              currentWorkout.originalHari = currentWorkout.hari;
+            }
             missedRuns.unshift(currentWorkout); // put it back at the front of the queue to be placed tomorrow
           }
           

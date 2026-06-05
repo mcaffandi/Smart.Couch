@@ -544,9 +544,10 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
                     <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 4, lineHeight: 1.2 }}>
                       {getJenis(dItem.workout.jenis)}
                     </div>
-                    {isRescheduled && (
-                      <div style={{ fontSize: 9, fontWeight: 700, color: '#fbbf24', background: 'rgba(251, 191, 36, 0.1)', padding: '2px 6px', borderRadius: 4, display: 'inline-block', marginBottom: 4 }}>
-                        {lang === 'id' ? `🔄 Geseran dari ${dItem.workout.originalHari}` : `🔄 Moved from ${dItem.workout.originalHari}`}
+                    {isRescheduled && dItem.workout.originalHari && (
+                      <div style={{ fontSize: 9, fontWeight: 700, color: '#fbbf24', background: 'rgba(251, 191, 36, 0.1)', padding: '2px 6px', borderRadius: 4, display: 'flex', alignItems: 'center', gap: '4px', marginBottom: 4, width: 'fit-content' }}>
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
+                        {lang === 'id' ? `Geseran dari ${dItem.workout.originalHari}` : `Moved from ${getHari(dItem.workout.originalHari)}`}
                       </div>
                     )}
 
