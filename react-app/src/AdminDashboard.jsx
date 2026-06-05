@@ -25,6 +25,7 @@ export default function AdminDashboard({ onBack }) {
   const [blogForm, setBlogForm] = useState({ title: '', content: '', tags: '', thumbnail: '', seoTitle: '', seoDescription: '', author: 'EnduraUP Coach' });
   const [editingBlogId, setEditingBlogId] = useState(null);
   const [uploadingThumbnail, setUploadingThumbnail] = useState(false);
+  const [blogFilter, setBlogFilter] = useState('all');
 
   const handleThumbnailUpload = async (e) => {
     const file = e.target.files[0];
@@ -503,6 +504,19 @@ export default function AdminDashboard({ onBack }) {
     return !ADMIN_EMAILS.includes(email);
   });
 
+  const now = Date.now();
+  const dau = users.filter(u => {
+    if (!u.data?.lastLogin) return false;
+    const lastLoginTime = u.data.lastLogin.seconds ? u.data.lastLogin.seconds * 1000 : u.data.lastLogin;
+    return (now - lastLoginTime) < 24 * 60 * 60 * 1000;
+  }).length;
+
+  const mau = users.filter(u => {
+    if (!u.data?.lastLogin) return false;
+    const lastLoginTime = u.data.lastLogin.seconds ? u.data.lastLogin.seconds * 1000 : u.data.lastLogin;
+    return (now - lastLoginTime) < 30 * 24 * 60 * 60 * 1000;
+  }).length;
+
   return (
     <div style={{ padding: '40px 20px', maxWidth: '100%', margin: '0 auto', color: 'var(--text-primary)', transition: 'max-width 0.3s ease' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24, flexWrap: 'wrap', gap: 16 }}>
@@ -576,12 +590,24 @@ export default function AdminDashboard({ onBack }) {
         <div className="animate-fade-in">
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 20, marginBottom: 40 }}>
             <div className="stat-card" style={{ background: 'var(--bg-card)', padding: 24, borderRadius: 12, border: '1px solid var(--border)' }}>
-              <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 8, fontWeight: 600 }}>Total Pelari Aktif</div>
+              <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 8, fontWeight: 600 }}>Total Pengguna</div>
               <div style={{ fontSize: 36, fontWeight: '800', color: 'var(--text-primary)' }}>{totalUsers}</div>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 8 }}>Terdaftar di sistem</div>
+            </div>
+            <div className="stat-card" style={{ background: 'var(--bg-card)', padding: 24, borderRadius: 12, border: '1px solid var(--border)' }}>
+              <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 8, fontWeight: 600 }}>Aktif Harian (DAU)</div>
+              <div style={{ fontSize: 36, fontWeight: '800', color: '#3b82f6' }}>{dau}</div>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 8 }}>Login dlm 24 jam</div>
+            </div>
+            <div className="stat-card" style={{ background: 'var(--bg-card)', padding: 24, borderRadius: 12, border: '1px solid var(--border)' }}>
+              <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 8, fontWeight: 600 }}>Aktif Bulanan (MAU)</div>
+              <div style={{ fontSize: 36, fontWeight: '800', color: '#8b5cf6' }}>{mau}</div>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 8 }}>Login dlm 30 hari</div>
             </div>
             <div className="stat-card" style={{ background: 'var(--bg-card)', padding: 24, borderRadius: 12, border: '1px solid var(--border)' }}>
               <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 8, fontWeight: 600 }}>User PRO</div>
               <div style={{ fontSize: 36, fontWeight: '800', color: '#f59e0b' }}>{paidProUsers.length}</div>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 8 }}>Berlangganan aktif</div>
             </div>
             <div className="stat-card" style={{ background: 'var(--bg-card)', padding: 24, borderRadius: 12, border: '1px solid var(--border)' }}>
               <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 8, fontWeight: 600 }}>Estimasi Revenue / Bln</div>
@@ -930,23 +956,38 @@ export default function AdminDashboard({ onBack }) {
                     </div>
                   </div>
                   <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.5, flex: 1, fontStyle: 'italic', marginBottom: 16 }}>"{fb.feedback}"</p>
-                  <button 
-                    onClick={async () => {
-                      if (window.confirm('Yakin ingin menghapus review ini?')) {
+                  <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+                    <button 
+                      onClick={async () => {
                         try {
-                          await deleteDoc(doc(db, 'feedback', fb.id));
-                          setFeedbacks(prev => prev.filter(f => f.id !== fb.id));
+                          await updateDoc(doc(db, 'feedback', fb.id), { isFeatured: !fb.isFeatured });
+                          setFeedbacks(prev => prev.map(f => f.id === fb.id ? { ...f, isFeatured: !f.isFeatured } : f));
                         } catch (err) {
-                          alert('Gagal menghapus review: ' + err.message);
+                          alert('Gagal mengupdate status: ' + err.message);
                         }
-                      }
-                    }}
-                    style={{ padding: '8px 12px', background: '#ef444420', color: '#ef4444', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 12, alignSelf: 'flex-end', transition: 'background 0.2s' }}
-                    onMouseOver={e => e.currentTarget.style.background = '#ef444430'}
-                    onMouseOut={e => e.currentTarget.style.background = '#ef444420'}
-                  >
-                    Hapus Review
-                  </button>
+                      }}
+                      style={{ padding: '8px 12px', background: fb.isFeatured ? '#10b98120' : 'var(--bg-surface)', color: fb.isFeatured ? '#10b981' : 'var(--text-secondary)', border: '1px solid ' + (fb.isFeatured ? '#10b98150' : 'var(--border)'), borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 12, transition: 'all 0.2s' }}
+                    >
+                      {fb.isFeatured ? '★ Ditampilkan' : 'Tampilkan di Web'}
+                    </button>
+                    <button 
+                      onClick={async () => {
+                        if (window.confirm('Yakin ingin menghapus review ini?')) {
+                          try {
+                            await deleteDoc(doc(db, 'feedback', fb.id));
+                            setFeedbacks(prev => prev.filter(f => f.id !== fb.id));
+                          } catch (err) {
+                            alert('Gagal menghapus review: ' + err.message);
+                          }
+                        }
+                      }}
+                      style={{ padding: '8px 12px', background: '#ef444420', color: '#ef4444', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 12, transition: 'background 0.2s' }}
+                      onMouseOver={e => e.currentTarget.style.background = '#ef444430'}
+                      onMouseOut={e => e.currentTarget.style.background = '#ef444420'}
+                    >
+                      Hapus
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -1035,7 +1076,13 @@ export default function AdminDashboard({ onBack }) {
               </div>
             </form>
           ) : (
-            <div style={{ overflowX: 'auto' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button onClick={() => setBlogFilter('all')} style={{ padding: '6px 16px', background: blogFilter === 'all' ? 'var(--text-primary)' : 'var(--bg-surface)', color: blogFilter === 'all' ? 'var(--bg-base)' : 'var(--text-secondary)', border: '1px solid var(--border)', borderRadius: 20, cursor: 'pointer', fontSize: 13, fontWeight: 600, transition: 'all 0.2s' }}>Semua ({blogs.length})</button>
+                <button onClick={() => setBlogFilter('published')} style={{ padding: '6px 16px', background: blogFilter === 'published' ? 'var(--text-primary)' : 'var(--bg-surface)', color: blogFilter === 'published' ? 'var(--bg-base)' : 'var(--text-secondary)', border: '1px solid var(--border)', borderRadius: 20, cursor: 'pointer', fontSize: 13, fontWeight: 600, transition: 'all 0.2s' }}>Published ({blogs.filter(b => !b.isDraft).length})</button>
+                <button onClick={() => setBlogFilter('draft')} style={{ padding: '6px 16px', background: blogFilter === 'draft' ? 'var(--text-primary)' : 'var(--bg-surface)', color: blogFilter === 'draft' ? 'var(--bg-base)' : 'var(--text-secondary)', border: '1px solid var(--border)', borderRadius: 20, cursor: 'pointer', fontSize: 13, fontWeight: 600, transition: 'all 0.2s' }}>Drafts ({blogs.filter(b => b.isDraft).length})</button>
+              </div>
+              <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ borderBottom: '2px solid var(--border)', color: 'var(--text-secondary)', fontSize: 13 }}>
@@ -1048,7 +1095,11 @@ export default function AdminDashboard({ onBack }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {blogs.map(b => (
+                  {blogs.filter(b => {
+                    if (blogFilter === 'published') return !b.isDraft;
+                    if (blogFilter === 'draft') return b.isDraft;
+                    return true;
+                  }).map(b => (
                     <tr key={b.id} style={{ borderBottom: '1px solid var(--border)', transition: 'background 0.2s' }} className="hover-lift">
                       <td style={{ padding: '20px 16px', fontSize: 15, fontWeight: 700 }}>
                         {b.title}
@@ -1075,6 +1126,7 @@ export default function AdminDashboard({ onBack }) {
                   )}
                 </tbody>
               </table>
+              </div>
             </div>
           )}
         </div>

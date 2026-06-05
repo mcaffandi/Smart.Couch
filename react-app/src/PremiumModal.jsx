@@ -4,10 +4,11 @@ import { ShieldCheck, UploadCloud, ChevronDown, ChevronUp, Copy, CheckCircle, Cl
 export default function PremiumModal({ onClose, onUpgrade, isPremium, lang = 'id', globalSettings = {} }) {
   const [loading, setLoading] = useState(false);
   const [receipt, setReceipt] = useState(null);
-  const [step, setStep] = useState(1); // 1 = Product Page, 2 = Payment Gateway (Xendit style)
+  const [step, setStep] = useState(1); // 1 = Product Page, 2 = Payment Gateway
   const [showOrderSummary, setShowOrderSummary] = useState(false);
   const [copied, setCopied] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState(1);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('midtrans');
   
   // Timer state
   const [timeLeft, setTimeLeft] = useState(24 * 60 * 60 - 1); // 24 hours in seconds
@@ -231,78 +232,135 @@ export default function PremiumModal({ onClose, onUpgrade, isPremium, lang = 'id
               )}
             </div>
 
-            {/* Payment Instructions */}
-            <div style={{ padding: '24px' }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: '#111827', marginBottom: 16 }}>Transfer Bank (Verifikasi Manual)</div>
-              
-              <div style={{ border: '1px solid #e5e7eb', borderRadius: 8, padding: '16px', marginBottom: 24 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                  <div style={{ fontSize: 14, fontWeight: 800, color: '#1d4ed8', fontStyle: 'italic' }}>{bankName}</div>
-                  <div style={{ fontSize: 12, background: '#e0e7ff', color: '#4338ca', padding: '2px 8px', borderRadius: 4, fontWeight: 600 }}>Bank Transfer</div>
+            {/* Payment Method Selector */}
+            <div style={{ padding: '24px', borderBottom: '1px solid #f3f4f6' }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#111827', marginBottom: 16 }}>Pilih Metode Pembayaran</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {/* Midtrans Option */}
+                <div 
+                  onClick={() => setSelectedPaymentMethod('midtrans')}
+                  style={{ border: `1px solid ${selectedPaymentMethod === 'midtrans' ? '#2563eb' : '#e5e7eb'}`, borderRadius: 8, padding: '16px', cursor: 'pointer', background: selectedPaymentMethod === 'midtrans' ? '#eff6ff' : '#ffffff', transition: 'all 0.2s' }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: selectedPaymentMethod === 'midtrans' ? 12 : 0 }}>
+                    <div style={{ width: 18, height: 18, borderRadius: '50%', border: `2px solid ${selectedPaymentMethod === 'midtrans' ? '#2563eb' : '#d1d5db'}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      {selectedPaymentMethod === 'midtrans' && <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#2563eb' }} />}
+                    </div>
+                    <div style={{ flex: 1, fontSize: 14, fontWeight: 700, color: '#111827', display: 'flex', alignItems: 'center', gap: 8 }}>
+                      Otomatis via Midtrans
+                      <span style={{ background: '#10b981', color: '#fff', fontSize: 10, padding: '2px 6px', borderRadius: 4, fontWeight: 800 }}>Rekomendasi</span>
+                    </div>
+                  </div>
+                  {selectedPaymentMethod === 'midtrans' && (
+                    <div className="animate-fade-in" style={{ paddingLeft: 30, fontSize: 12, color: '#4b5563', lineHeight: 1.6 }}>
+                      Pembayaran otomatis dikonfirmasi via Midtrans. Metode yang didukung:
+                      <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
+                        <span style={{ border: '1px solid #d1d5db', background: '#fff', padding: '4px 8px', borderRadius: 6, fontWeight: 600, color: '#374151', display: 'flex', alignItems: 'center', gap: 6 }}><img src="https://gopay.co.id/icon.png" alt="GoPay" style={{ height: 12, width: 12, objectFit: 'contain' }} onError={e=>e.target.style.display='none'} /> GoPay</span>
+                        <span style={{ border: '1px solid #d1d5db', background: '#fff', padding: '4px 8px', borderRadius: 6, fontWeight: 600, color: '#374151', display: 'flex', alignItems: 'center', gap: 6 }}><img src="https://shopeepay.co.id/icon.png" alt="ShopeePay" style={{ height: 12, width: 12, objectFit: 'contain' }} onError={e=>e.target.style.display='none'} /> ShopeePay</span>
+                        <span style={{ border: '1px solid #d1d5db', background: '#fff', padding: '4px 8px', borderRadius: 6, fontWeight: 600, color: '#374151' }}>Virtual Account (BCA, Mandiri, BNI)</span>
+                        <span style={{ border: '1px solid #d1d5db', background: '#fff', padding: '4px 8px', borderRadius: 6, fontWeight: 600, color: '#374151' }}>Kartu Kredit</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
-                
-                <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 4 }}>Nomor Rekening</div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ fontSize: 20, fontWeight: 700, color: '#111827', letterSpacing: '1px' }}>{bankAccount}</div>
-                  <button onClick={() => copyToClipboard(bankAccount.replace(/\D/g, ''))} style={{ background: 'transparent', border: 'none', color: '#2563eb', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
-                    {copied ? <CheckCircle size={14} color="#10b981" /> : <Copy size={14} />}
-                    {copied ? 'Tersalin' : 'Salin'}
-                  </button>
+
+                {/* Manual Option */}
+                <div 
+                  onClick={() => setSelectedPaymentMethod('manual')}
+                  style={{ border: `1px solid ${selectedPaymentMethod === 'manual' ? '#2563eb' : '#e5e7eb'}`, borderRadius: 8, padding: '16px', cursor: 'pointer', background: selectedPaymentMethod === 'manual' ? '#eff6ff' : '#ffffff', transition: 'all 0.2s' }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ width: 18, height: 18, borderRadius: '50%', border: `2px solid ${selectedPaymentMethod === 'manual' ? '#2563eb' : '#d1d5db'}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      {selectedPaymentMethod === 'manual' && <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#2563eb' }} />}
+                    </div>
+                    <div style={{ flex: 1, fontSize: 14, fontWeight: 600, color: '#111827' }}>Transfer Bank Manual</div>
+                  </div>
                 </div>
-                <div style={{ fontSize: 12, color: '#6b7280', marginTop: 8 }}>A/N <span style={{ fontWeight: 600, color: '#374151' }}>{bankAccountName}</span></div>
               </div>
-
-              {qrisImageUrl && (
-                <div style={{ border: '1px solid #e5e7eb', borderRadius: 8, padding: '16px', marginBottom: 24, textAlign: 'center' }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: '#111827', marginBottom: 12 }}>Atau Scan QRIS</div>
-                  <img src={qrisImageUrl} alt="QRIS Payment" style={{ maxWidth: '100%', maxHeight: 250, objectFit: 'contain', borderRadius: 8 }} />
-                </div>
-              )}
-
-              {/* Upload Receipt */}
-              <div style={{ fontSize: 14, fontWeight: 700, color: '#111827', marginBottom: 12 }}>Konfirmasi Pembayaran</div>
-              <div style={{ fontSize: 13, color: '#6b7280', marginBottom: 16, lineHeight: 1.5 }}>
-                Setelah melakukan transfer sesuai nominal <strong>{formatCurrency(totalPrice)}</strong>, harap unggah bukti transfer untuk verifikasi.
-              </div>
-
-              <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100px', border: receipt ? '1px solid #10b981' : '1px dashed #d1d5db', borderRadius: 8, cursor: 'pointer', background: receipt ? '#f0fdf4' : '#f9fafb', transition: 'all 0.2s' }}>
-                {receipt ? (
-                  <>
-                    <CheckCircle size={28} color="#10b981" style={{ marginBottom: 8 }} />
-                    <span style={{ fontSize: 13, color: '#059669', fontWeight: 600, maxWidth: '90%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {receipt.name}
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <UploadCloud size={28} color="#9ca3af" style={{ marginBottom: 8 }} />
-                    <span style={{ fontSize: 13, color: '#4b5563', fontWeight: 600 }}>Unggah Bukti Transfer</span>
-                    <span style={{ fontSize: 11, color: '#9ca3af', marginTop: 4 }}>JPG, PNG (Maks 5MB)</span>
-                  </>
-                )}
-                <input 
-                  type="file" 
-                  accept="image/*" 
-                  onChange={(e) => {
-                    if (e.target.files && e.target.files[0]) {
-                      setReceipt(e.target.files[0]);
-                    }
-                  }}
-                  style={{ display: 'none' }} 
-                />
-              </label>
             </div>
+
+            {/* Manual Payment Instructions */}
+            {selectedPaymentMethod === 'manual' && (
+              <div className="animate-fade-in" style={{ padding: '24px' }}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: '#111827', marginBottom: 16 }}>Instruksi Transfer Manual</div>
+                
+                <div style={{ border: '1px solid #e5e7eb', borderRadius: 8, padding: '16px', marginBottom: 24 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: '#1d4ed8', fontStyle: 'italic' }}>{bankName}</div>
+                    <div style={{ fontSize: 12, background: '#e0e7ff', color: '#4338ca', padding: '2px 8px', borderRadius: 4, fontWeight: 600 }}>Bank Transfer</div>
+                  </div>
+                  
+                  <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 4 }}>Nomor Rekening</div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ fontSize: 20, fontWeight: 700, color: '#111827', letterSpacing: '1px' }}>{bankAccount}</div>
+                    <button onClick={() => copyToClipboard(bankAccount.replace(/\D/g, ''))} style={{ background: 'transparent', border: 'none', color: '#2563eb', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+                      {copied ? <CheckCircle size={14} color="#10b981" /> : <Copy size={14} />}
+                      {copied ? 'Tersalin' : 'Salin'}
+                    </button>
+                  </div>
+                  <div style={{ fontSize: 12, color: '#6b7280', marginTop: 8 }}>A/N <span style={{ fontWeight: 600, color: '#374151' }}>{bankAccountName}</span></div>
+                </div>
+
+                {qrisImageUrl && (
+                  <div style={{ border: '1px solid #e5e7eb', borderRadius: 8, padding: '16px', marginBottom: 24, textAlign: 'center' }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: '#111827', marginBottom: 12 }}>Atau Scan QRIS</div>
+                    <img src={qrisImageUrl} alt="QRIS Payment" style={{ maxWidth: '100%', maxHeight: 250, objectFit: 'contain', borderRadius: 8 }} />
+                  </div>
+                )}
+
+                {/* Upload Receipt */}
+                <div style={{ fontSize: 14, fontWeight: 700, color: '#111827', marginBottom: 12 }}>Konfirmasi Pembayaran</div>
+                <div style={{ fontSize: 13, color: '#6b7280', marginBottom: 16, lineHeight: 1.5 }}>
+                  Setelah melakukan transfer sesuai nominal <strong>{formatCurrency(totalPrice)}</strong>, harap unggah bukti transfer untuk verifikasi.
+                </div>
+
+                <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100px', border: receipt ? '1px solid #10b981' : '1px dashed #d1d5db', borderRadius: 8, cursor: 'pointer', background: receipt ? '#f0fdf4' : '#f9fafb', transition: 'all 0.2s' }}>
+                  {receipt ? (
+                    <>
+                      <CheckCircle size={28} color="#10b981" style={{ marginBottom: 8 }} />
+                      <span style={{ fontSize: 13, color: '#059669', fontWeight: 600, maxWidth: '90%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {receipt.name}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <UploadCloud size={28} color="#9ca3af" style={{ marginBottom: 8 }} />
+                      <span style={{ fontSize: 13, color: '#4b5563', fontWeight: 600 }}>Unggah Bukti Transfer</span>
+                      <span style={{ fontSize: 11, color: '#9ca3af', marginTop: 4 }}>JPG, PNG (Maks 5MB)</span>
+                    </>
+                  )}
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        setReceipt(e.target.files[0]);
+                      }
+                    }}
+                    style={{ display: 'none' }} 
+                  />
+                </label>
+              </div>
+            )}
           </div>
 
           {/* Sticky Footer */}
           <div style={{ padding: '16px 24px', borderTop: '1px solid #f3f4f6', background: '#ffffff' }}>
-            <button 
-              onClick={handleUpgrade}
-              disabled={loading || !receipt}
-              style={{ width: '100%', height: 48, fontSize: 15, fontWeight: 700, background: (!receipt || loading) ? '#e5e7eb' : '#2563eb', color: (!receipt || loading) ? '#9ca3af' : '#ffffff', border: 'none', borderRadius: 8, transition: 'all 0.2s', cursor: (!receipt || loading) ? 'not-allowed' : 'pointer' }}
-            >
-              {loading ? 'Memproses...' : 'Saya Sudah Bayar'}
-            </button>
+            {selectedPaymentMethod === 'midtrans' ? (
+              <button 
+                onClick={() => alert("Midtrans sedang dalam proses verifikasi (Onboarding). Fitur otomatis akan aktif setelah disetujui. Silakan gunakan Transfer Manual untuk saat ini.")}
+                style={{ width: '100%', height: 48, fontSize: 15, fontWeight: 700, background: '#2563eb', color: '#ffffff', border: 'none', borderRadius: 8, transition: 'all 0.2s', cursor: 'pointer' }}
+              >
+                Bayar via Midtrans
+              </button>
+            ) : (
+              <button 
+                onClick={handleUpgrade}
+                disabled={loading || !receipt}
+                style={{ width: '100%', height: 48, fontSize: 15, fontWeight: 700, background: (!receipt || loading) ? '#e5e7eb' : '#2563eb', color: (!receipt || loading) ? '#9ca3af' : '#ffffff', border: 'none', borderRadius: 8, transition: 'all 0.2s', cursor: (!receipt || loading) ? 'not-allowed' : 'pointer' }}
+              >
+                {loading ? 'Memproses...' : 'Saya Sudah Bayar'}
+              </button>
+            )}
           </div>
           
         </div>

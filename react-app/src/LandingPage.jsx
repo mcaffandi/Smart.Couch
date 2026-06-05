@@ -14,16 +14,20 @@ export default function LandingPage({ onGetStarted, onViewBlog, lang, setLang, v
     const fetchTestimonials = async () => {
       if (!isFirebaseConfigured) return;
       try {
-        const q = query(collection(db, 'feedback'), orderBy('createdAt', 'desc'), limit(10));
+        const q = query(collection(db, 'feedback'), orderBy('createdAt', 'desc'), limit(50));
         const querySnapshot = await getDocs(q);
         const fetched = [];
         querySnapshot.forEach((doc) => {
           fetched.push({ id: doc.id, ...doc.data() });
         });
         
+        const featured = fetched.filter(fb => fb.isFeatured);
+
         // If we have featured reviews, use them. Otherwise, use dummy ones so it never looks empty.
-        if (fetched.length > 0) {
-          setTestimonials(fetched);
+        if (featured.length > 0) {
+          setTestimonials(featured.slice(0, 10));
+        } else if (fetched.length > 0) {
+          setTestimonials(fetched.slice(0, 10));
         } else {
           setTestimonials([
             { id: 1, name: 'Bima Satriya', rating: 5, date: lang === 'id' ? '25 Mei 2026' : 'May 25, 2026', feedback: lang === 'id' ? 'Gila, fitur prediksi pacenya akurat parah! Sangat ngebantu buat susun strategi HM minggu depan. Selain itu UI-nya juga enteng banget dibuka dari HP.' : 'Insane, the pace prediction feature is incredibly accurate! Very helpful for my HM strategy next week. The UI is also very lightweight on mobile.' },
