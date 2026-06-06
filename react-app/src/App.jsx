@@ -988,8 +988,10 @@ export default function App() {
       borderStroke = 'rgba(255,255,255,0.1)'; glassBg = 'rgba(0,0,0,0.3)';
     }
 
+    const isTransparentLayout = shareTheme === 'transparent' || shareTemplate === 'sticker' || shareTemplate === 'polaroid';
+
     // Draw background
-    if (shareTheme !== 'transparent') {
+    if (!isTransparentLayout) {
       ctx.fillStyle = bgGrad;
       ctx.fillRect(0, 0, W, H);
 
@@ -1025,11 +1027,11 @@ export default function App() {
     }
 
     // ── Main Glass Card ──
-    const cardMargin = shareTheme === 'transparent' ? 20 : 40;
+    const cardMargin = isTransparentLayout ? 20 : 40;
     const cardW = W - cardMargin * 2;
     const cardH = H - cardMargin * 2;
     
-    if (shareTheme === 'transparent') {
+    if (isTransparentLayout) {
       // No glass card, purely transparent
     } else {
       fillRoundedRect(ctx, cardMargin, cardMargin, cardW, cardH, 32, glassBg);
@@ -3412,11 +3414,12 @@ export default function App() {
               </div>
             )}
 
-            {/* Theme Selector */}
-            <div>
-              <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>
-                Pilih Tema Desain
-              </label>
+            {/* Theme Selector - Hidden for purely transparent templates */}
+            {shareTemplate !== 'sticker' && shareTemplate !== 'polaroid' && (
+              <div>
+                <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>
+                  Pilih Tema Desain
+                </label>
               <div style={{ display: 'flex', gap: 8 }}>
                 {[
                   { key: 'dark', label: 'Sleek Dark', color: 'linear-gradient(135deg, #09090b, #18181b)' },
@@ -3446,6 +3449,7 @@ export default function App() {
                   </button>
                 ))}
               </div>
+            )}
               
 
 
@@ -3471,7 +3475,7 @@ export default function App() {
               <div style={{ 
                 width: '100%', 
                 aspectRatio: '1/1', 
-                background: shareTheme === 'transparent' ? 'repeating-conic-gradient(#80808033 0% 25%, transparent 0% 50%) 50% / 20px 20px' : '#000', 
+                background: (shareTheme === 'transparent' || shareTemplate === 'sticker' || shareTemplate === 'polaroid') ? 'repeating-conic-gradient(#80808033 0% 25%, transparent 0% 50%) 50% / 20px 20px' : '#000',
                 borderRadius: 12,  
                 overflow: 'hidden', 
                 border: '1px solid var(--border)',
