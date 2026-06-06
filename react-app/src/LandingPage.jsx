@@ -49,7 +49,7 @@ export default function LandingPage({ onGetStarted, onViewBlog, lang, setLang, v
   }, [lang]);
 
   return (
-    <div className="landing-container">
+    <main className="landing-container">
       {/* Subtle grid pattern background */}
       <div className="grid-overlay"></div>
       
@@ -72,8 +72,8 @@ export default function LandingPage({ onGetStarted, onViewBlog, lang, setLang, v
             {lang === 'id' ? 'Blog' : 'Blog'}
           </button>
           <div className="lang-switcher">
-            <button className={`lang-btn ${lang === 'id' ? 'active' : ''}`} onClick={() => setLang('id')}>ID</button>
-            <button className={`lang-btn ${lang === 'en' ? 'active' : ''}`} onClick={() => setLang('en')}>EN</button>
+            <button aria-label="Switch to Indonesian" className={`lang-btn ${lang === 'id' ? 'active' : ''}`} onClick={() => setLang('id')}>ID</button>
+            <button aria-label="Switch to English" className={`lang-btn ${lang === 'en' ? 'active' : ''}`} onClick={() => setLang('en')}>EN</button>
           </div>
           <button className="nav-btn-primary" onClick={onGetStarted}>{t.signIn}</button>
         </div>
@@ -352,6 +352,29 @@ export default function LandingPage({ onGetStarted, onViewBlog, lang, setLang, v
             <h2 className="section-heading" style={{ fontSize: '2rem' }}>{lang === 'id' ? 'Apa Kata Pelari?' : 'Runner Feedback'}</h2>
             <p className="section-subheading">{lang === 'id' ? 'Review nyata dari komunitas EnduraUP.' : 'Real reviews from the EnduraUP community.'}</p>
           </div>
+          {testimonials.length > 0 && (
+            <script type="application/ld+json" dangerouslySetInnerHTML={{
+              __html: JSON.stringify({
+                "@context": "https://schema.org",
+                "@type": "WebApplication",
+                "name": "EnduraUP",
+                "review": testimonials.map(t => ({
+                  "@type": "Review",
+                  "author": {
+                    "@type": "Person",
+                    "name": t.name
+                  },
+                  "datePublished": t.createdAt?.toDate ? t.createdAt.toDate().toISOString().split('T')[0] : (t.date || new Date().toISOString().split('T')[0]),
+                  "reviewBody": t.feedback,
+                  "reviewRating": {
+                    "@type": "Rating",
+                    "ratingValue": t.rating || 5,
+                    "bestRating": "5"
+                  }
+                }))
+              })
+            }} />
+          )}
           
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24 }}>
           {testimonials.map((testi) => (
@@ -403,6 +426,6 @@ export default function LandingPage({ onGetStarted, onViewBlog, lang, setLang, v
           {t.dataSafe}
         </p>
       </footer>
-    </div>
+    </main>
   );
 }

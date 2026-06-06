@@ -1,28 +1,30 @@
 import ErrorBoundary from "./ErrorBoundary";
-import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
-import * as XLSX from 'xlsx';
+import { useState, useCallback, useEffect, useRef, useMemo, lazy, Suspense } from 'react';
 import {
   loadUsersList, saveUsersList, getCurrentUser, saveCurrentUser,
   loadUserData, saveUserData, deleteUserData,
-  getLocalDateStr, msToDate, getPaceRecommendations, getHRZones, mergeData, parseGarminZip, parseGpxFile, decodePolyline, formatPace
+  getLocalDateStr, msToDate, formatDate, formatPace, getPaceRecommendations,
+  getHRZones, buildTrainingPlan, buildAdaptiveCalendar,
+  parseGarminZip, mergeData, parseGpxFile, decodePolyline
 } from './utils';
-import { TrendChart, HRZoneChart } from './Charts';
-import RunHistory from './RunHistory';
-import RunDetailsModal from './RunDetailsModal';
-import TrainingPlan from './TrainingPlan';
-import RacePrediction from './RacePrediction';
+const TrendChart = lazy(() => import('./Charts').then(m => ({ default: m.TrendChart })));
+const HRZoneChart = lazy(() => import('./Charts').then(m => ({ default: m.HRZoneChart })));
+const RunHistory = lazy(() => import('./RunHistory'));
+const RunDetailsModal = lazy(() => import('./RunDetailsModal'));
+const TrainingPlan = lazy(() => import('./TrainingPlan'));
+const RacePrediction = lazy(() => import('./RacePrediction'));
 import LoginScreen from './LoginScreen';
-import AICoachChat from './AICoachChat';
-import AICoach from './AICoach';
+const AICoachChat = lazy(() => import('./AICoachChat'));
+const AICoach = lazy(() => import('./AICoach'));
 import LandingPage from './LandingPage';
 import OnboardingWizard from './OnboardingWizard';
-import AdminDashboard from './AdminDashboard';
+const AdminDashboard = lazy(() => import('./AdminDashboard'));
 import BlogModule from './Blog';
 import { AboutPage, PrivacyPage, ContactPage } from './StaticPages';
 import Logo from './Logo';
-import ExportGuideModal from './ExportGuideModal';
-import FeedbackModal from './FeedbackModal';
-import PremiumModal from './PremiumModal';
+const ExportGuideModal = lazy(() => import('./ExportGuideModal'));
+const FeedbackModal = lazy(() => import('./FeedbackModal'));
+const PremiumModal = lazy(() => import('./PremiumModal'));
 import { Sun, Moon, Coffee, Crown } from 'lucide-react';
 import { translations } from './translations';
 import {
@@ -926,587 +928,477 @@ export default function App() {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
 
-    // Set resolution: 1080x1080 for high resolution square post
-    canvas.width = 1080;
-    canvas.height = 1080;
+    // ── Ultra-HD Canvas Setup (2160x2160) ──
+    const W = 1080;
+    const H = 1080;
+    canvas.width = W * 2;
+    canvas.height = H * 2;
+    ctx.scale(2, 2);
+    ctx.clearRect(0, 0, W, H);
 
-    // Draw background based on theme
-    if (shareTheme === 'dark') {
-      const grad = ctx.createLinearGradient(0, 0, 1080, 1080);
-      grad.addColorStop(0, '#09090b');
-      grad.addColorStop(1, '#18181b');
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, 1080, 1080);
-
-      // Spotlight glow
-      const radial = ctx.createRadialGradient(200, 200, 50, 200, 200, 600);
-      radial.addColorStop(0, 'rgba(167, 139, 250, 0.08)');
-      radial.addColorStop(1, 'transparent');
-      ctx.fillStyle = radial;
-      ctx.fillRect(0, 0, 1080, 1080);
-    } else if (shareTheme === 'cyber') {
-      const grad = ctx.createLinearGradient(0, 0, 1080, 1080);
-      grad.addColorStop(0, '#020617');
-      grad.addColorStop(1, '#0f172a');
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, 1080, 1080);
-
-      // Pink glow
-      const radialPink = ctx.createRadialGradient(900, 100, 50, 900, 100, 500);
-      radialPink.addColorStop(0, 'rgba(236, 72, 153, 0.08)');
-      radialPink.addColorStop(1, 'transparent');
-      ctx.fillStyle = radialPink;
-      ctx.fillRect(0, 0, 1080, 1080);
-
-      // Cyan glow
-      const radialCyan = ctx.createRadialGradient(100, 900, 50, 100, 900, 500);
-      radialCyan.addColorStop(0, 'rgba(6, 182, 212, 0.08)');
-      radialCyan.addColorStop(1, 'transparent');
-      ctx.fillStyle = radialCyan;
-      ctx.fillRect(0, 0, 1080, 1080);
-    } else if (shareTheme === 'sunrise') {
-      // Cream base
-      ctx.fillStyle = '#fdf8f0';
-      ctx.fillRect(0, 0, 1080, 1080);
-      // TOP IMAGE ZONE: retro image in top 38% — COVER (no stretch, crop center)
-      if (retroImageRef.current) {
-        const img = retroImageRef.current;
-        const tW = 1080, tH = 420;
-        const imgAspect = img.naturalWidth / img.naturalHeight;
-        const tAspect   = tW / tH;
-        let srcX, srcY, srcW, srcH;
-        if (imgAspect > tAspect) {
-          // image wider → crop left/right
-          srcH = img.naturalHeight;
-          srcW = img.naturalHeight * tAspect;
-          srcX = (img.naturalWidth - srcW) / 2;
-          srcY = 0;
-        } else {
-          // image taller → crop top/bottom
-          srcW = img.naturalWidth;
-          srcH = img.naturalWidth / tAspect;
-          srcX = 0;
-          srcY = (img.naturalHeight - srcH) / 2;
-        }
-        ctx.save();
-        ctx.beginPath();
-        if (ctx.roundRect) { ctx.roundRect(0, 0, tW, tH, [24, 24, 0, 0]); }
-        else { ctx.rect(0, 0, tW, tH); }
-        ctx.clip();
-        ctx.drawImage(img, srcX, srcY, srcW, srcH, 0, 0, tW, tH);
-        ctx.restore();
-      }
-    } else if (shareTheme === 'custom') {
-      const grad = ctx.createLinearGradient(0, 0, 1080, 1080);
-      grad.addColorStop(0, customColor1);
-      grad.addColorStop(1, customColor2);
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, 1080, 1080);
-    } else { // purple theme
-      const grad = ctx.createLinearGradient(0, 0, 1080, 1080);
-      grad.addColorStop(0, '#1e1b4b');
-      grad.addColorStop(1, '#311042');
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, 1080, 1080);
-
-      // Spotlight glow
-      const radial = ctx.createRadialGradient(540, 540, 50, 540, 540, 700);
-      radial.addColorStop(0, 'rgba(216, 180, 254, 0.05)');
-      radial.addColorStop(1, 'transparent');
-      ctx.fillStyle = radial;
-      ctx.fillRect(0, 0, 1080, 1080);
-    }
-
-    const getBrightness = (hex) => {
-      if (!hex) return 0;
-      hex = hex.replace('#', '');
-      if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
-      const r = parseInt(hex.substring(0, 2), 16);
-      const g = parseInt(hex.substring(2, 4), 16);
-      const b = parseInt(hex.substring(4, 6), 16);
-      return (r * 299 + g * 587 + b * 114) / 1000;
-    };
-    const isCustomLight = shareTheme === 'custom' && ((getBrightness(customColor1) + getBrightness(customColor2)) / 2 > 135);
-    const isLight = shareTheme === 'sunrise';
-    
-    // Core text colors
-    const textPrimary   = isLight ? '#1a120a' : (isCustomLight ? '#1a1a1a' : '#ffffff');
-    const textSecondary = isLight ? '#7c4a1e' : (isCustomLight ? 'rgba(0, 0, 0, 0.6)' : 'rgba(255, 255, 255, 0.5)');
-    const textMuted     = isLight ? 'rgba(60, 35, 10, 0.55)' : (isCustomLight ? 'rgba(0, 0, 0, 0.4)' : 'rgba(255, 255, 255, 0.25)');
-    const borderStroke  = isLight ? 'rgba(200, 120, 40, 0.35)' : (isCustomLight ? 'rgba(0, 0, 0, 0.15)' : (shareTheme === 'cyber' ? 'rgba(6, 182, 212, 0.3)' : 'rgba(167, 139, 250, 0.2)'));
-
-    // 1. Draw Glassmorphic Card Backing
-    const glassStyle = isLight
-      ? 'rgba(255, 248, 235, 0.84)'
-      : (shareTheme === 'cyber' ? 'rgba(2, 6, 23, 0.85)' : (shareTheme === 'dark' ? 'rgba(9, 9, 11, 0.85)' : (shareTheme === 'custom' ? (isCustomLight ? 'rgba(255, 255, 255, 0.75)' : 'rgba(0, 0, 0, 0.7)') : 'rgba(30, 27, 75, 0.85)')));
-
+    // ── Helper functions ──
     const fillRoundedRect = (cCtx, x, y, width, height, radius, fillStyle) => {
       cCtx.fillStyle = fillStyle;
       cCtx.beginPath();
-      cCtx.moveTo(x + radius, y);
-      cCtx.lineTo(x + width - radius, y);
-      cCtx.quadraticCurveTo(x + width, y, x + width, y + radius);
-      cCtx.lineTo(x + width, y + height - radius);
-      cCtx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
-      cCtx.lineTo(x + radius, y + height);
-      cCtx.quadraticCurveTo(x, y + height, x, y + height - radius);
-      cCtx.lineTo(x, y + radius);
-      cCtx.quadraticCurveTo(x, y, x + radius, y);
-      cCtx.closePath();
+      if (cCtx.roundRect) {
+        cCtx.roundRect(x, y, width, height, radius);
+      } else {
+        cCtx.moveTo(x + radius, y);
+        cCtx.lineTo(x + width - radius, y);
+        cCtx.quadraticCurveTo(x + width, y, x + width, y + radius);
+        cCtx.lineTo(x + width, y + height - radius);
+        cCtx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+        cCtx.lineTo(x + radius, y + height);
+        cCtx.quadraticCurveTo(x, y + height, x, y + height - radius);
+        cCtx.lineTo(x, y + radius);
+        cCtx.quadraticCurveTo(x, y, x + radius, y);
+      }
       cCtx.fill();
     };
 
-    // Hoist athlete name (used in both sunrise and dark header branches)
-    const athleteName = displayName || (currentUser ? currentUser.split('@')[0] : 'PELARI');
+    // ── Theme configuration ──
+    let bgGrad = ctx.createLinearGradient(0, 0, W, H);
+    let accentPrimary, accentSecondary, textPrimary, textSecondary, textMuted, borderStroke, glassBg;
 
-    if (isLight) {
-      // ── SUNRISE SPLIT LAYOUT ──────────────────────────────────────────────────
-      // Brand in image zone (top-right) — larger for 1080px canvas
-      ctx.textAlign = 'right';
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
-      ctx.shadowBlur = 8;
-      ctx.shadowOffsetX = 2;
-      ctx.shadowOffsetY = 2;
-      ctx.fillStyle = 'rgba(255,255,255,0.95)';
-      ctx.font = '800 52px Outfit, sans-serif';
-      ctx.fillText('EnduraUP', 1030, 110);
-      ctx.fillStyle = 'rgba(255,255,255,0.85)';
-      ctx.font = '500 26px Inter, sans-serif';
-      ctx.fillText('AI Running & Recovery Coach', 1030, 152);
-      ctx.shadowColor = 'transparent';
-      ctx.shadowBlur = 0;
-      ctx.shadowOffsetX = 0;
-      ctx.shadowOffsetY = 0;
-      ctx.textAlign = 'left';
-
-      // WHITE GLASS PANEL: bottom 62% (golden ratio major), rounded top
-      const panelY = 420;
-      ctx.beginPath();
-      const pr = 48;
-      ctx.moveTo(0, panelY + pr);
-      ctx.arcTo(0, panelY, pr, panelY, pr);
-      ctx.lineTo(1080 - pr, panelY);
-      ctx.arcTo(1080, panelY, 1080, panelY + pr, pr);
-      ctx.lineTo(1080, 1080); ctx.lineTo(0, 1080);
-      ctx.closePath();
-      ctx.fillStyle = 'rgba(255, 248, 235, 0.97)';
-      ctx.fill();
-      // Panel top border accent
-      ctx.strokeStyle = 'rgba(192, 68, 10, 0.25)';
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.moveTo(pr, panelY); ctx.lineTo(1080 - pr, panelY);
-      ctx.stroke();
-
-      // Athlete name at panel top — bigger
-      ctx.fillStyle = '#1a120a';
-      ctx.font = '700 46px Outfit, sans-serif';
-      ctx.fillText(athleteName.toUpperCase(), 80, panelY + 64);
-      ctx.fillStyle = 'rgba(124, 74, 30, 0.7)';
-      ctx.font = '500 28px Inter, sans-serif';
-      ctx.fillText(lang === 'id' ? 'Kartu Performa' : 'Performance Card', 80, panelY + 104);
-      // Panel divider
-      ctx.strokeStyle = 'rgba(160, 82, 28, 0.15)';
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(80, panelY + 128); ctx.lineTo(1000, panelY + 128);
-      ctx.stroke();
-
+    if (shareTheme === 'dark') {
+      bgGrad.addColorStop(0, '#09090b'); bgGrad.addColorStop(1, '#18181b');
+      accentPrimary = '#a78bfa'; accentSecondary = '#c084fc';
+      textPrimary = '#ffffff'; textSecondary = 'rgba(255,255,255,0.6)'; textMuted = 'rgba(255,255,255,0.3)';
+      borderStroke = 'rgba(255,255,255,0.08)'; glassBg = 'rgba(20,20,24,0.7)';
+    } else if (shareTheme === 'cyber') {
+      bgGrad.addColorStop(0, '#020617'); bgGrad.addColorStop(1, '#0f172a');
+      accentPrimary = '#06b6d4'; accentSecondary = '#3b82f6';
+      textPrimary = '#f8fafc'; textSecondary = 'rgba(248,250,252,0.6)'; textMuted = 'rgba(248,250,252,0.3)';
+      borderStroke = 'rgba(6,182,212,0.15)'; glassBg = 'rgba(2,6,23,0.8)';
+    } else if (shareTheme === 'sunrise') {
+      bgGrad.addColorStop(0, '#fff1f2'); bgGrad.addColorStop(1, '#ffedd5');
+      accentPrimary = '#f43f5e'; accentSecondary = '#f97316';
+      textPrimary = '#1a120a'; textSecondary = 'rgba(26,18,10,0.6)'; textMuted = 'rgba(26,18,10,0.4)';
+      borderStroke = 'rgba(244,63,94,0.1)'; glassBg = 'rgba(255,255,255,0.6)';
     } else {
-      // ── DARK THEMES: standard inset card ─────────────────────────────────────
-      fillRoundedRect(ctx, 60, 60, 960, 960, 24, glassStyle);
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.015)';
-      ctx.lineWidth = 1;
-      for (let i = 80; i < 1000; i += 40) {
-        ctx.beginPath(); ctx.moveTo(i, 80); ctx.lineTo(i, 960); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(80, i); ctx.lineTo(960, i); ctx.stroke();
-      }
-      ctx.strokeStyle = borderStroke;
-      ctx.lineWidth = 4;
-      if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(60, 60, 960, 960, 24); ctx.stroke(); }
-      else { ctx.strokeRect(60, 60, 960, 960); }
-
-      // Dark theme header
-      ctx.fillStyle = textPrimary;
-      ctx.font = '700 34px Outfit, sans-serif';
-      ctx.fillText('EnduraUP', 100, 115);
-      ctx.fillStyle = textSecondary;
-      ctx.font = '500 17px Inter, sans-serif';
-      ctx.fillText('AI Running & Recovery Coach', 100, 150);
-      ctx.fillStyle = shareTheme === 'cyber' ? '#22d3ee' : (isCustomLight ? textPrimary : '#a78bfa');
-      ctx.font = '700 20px Inter, sans-serif';
-      ctx.fillText(athleteName.toUpperCase(), 100, 182);
-      ctx.strokeStyle = borderStroke;
-      ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.moveTo(100, 205); ctx.lineTo(980, 205); ctx.stroke();
-      
-      // Draw streak badge in top right for dark themes
-      if (streakWeeks >= 1) {
-        const streakText = `${streakWeeks} WEEK STREAK`;
-        ctx.font = '700 20px Inter, sans-serif';
-        const sw = ctx.measureText(streakText).width;
-        ctx.fillStyle = 'rgba(249, 115, 22, 0.15)'; // Orange background
-        fillRoundedRect(ctx, 980 - sw - 30, 110, sw + 30, 44, 22, 'rgba(249, 115, 22, 0.15)');
-        ctx.strokeStyle = 'rgba(249, 115, 22, 0.4)';
-        ctx.lineWidth = 1.5;
-        if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(980 - sw - 30, 110, sw + 30, 44, 22); ctx.stroke(); }
-        ctx.fillStyle = '#f97316';
-        ctx.fillText(streakText, 980 - sw - 15, 140);
-      }
+      bgGrad.addColorStop(0, customColor1 || '#1e1b4b'); bgGrad.addColorStop(1, customColor2 || '#311042');
+      accentPrimary = '#fbbf24'; accentSecondary = '#f59e0b';
+      textPrimary = '#ffffff'; textSecondary = 'rgba(255,255,255,0.7)'; textMuted = 'rgba(255,255,255,0.3)';
+      borderStroke = 'rgba(255,255,255,0.1)'; glassBg = 'rgba(0,0,0,0.3)';
     }
 
-    // ── TEMPLATE CONTENT ──────────────────────────────────────────────────────
-    // Sunrise and dark themes have SEPARATE layout blocks for clarity
-    // Canvas: 1080×1080 | Panel starts: y=420 | Content starts: y=548
+    // Draw background
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, W, H);
 
-    if (isLight) {
-      // ════════════════════════════════════════════════════════════════════
-      // SUNRISE LAYOUT — all coordinates hardcoded, no overflow
-      // Available: y=548 to y=960 (content) + y=960 to y=1080 (footer)
-      // ════════════════════════════════════════════════════════════════════
-      const lx = 80;   // left margin
-      const rx = 1000; // right edge
+    // Draw glowing orbs
+    const drawOrb = (ox, oy, or, color) => {
+      const grad = ctx.createRadialGradient(ox, oy, 0, ox, oy, or);
+      grad.addColorStop(0, color);
+      grad.addColorStop(1, 'transparent');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, W, H);
+    };
+    
+    if (shareTheme === 'dark') {
+      drawOrb(200, 200, 700, 'rgba(167, 139, 250, 0.15)');
+      drawOrb(800, 900, 600, 'rgba(99, 102, 241, 0.1)');
+    } else if (shareTheme === 'cyber') {
+      drawOrb(900, 100, 600, 'rgba(236, 72, 153, 0.15)');
+      drawOrb(100, 900, 600, 'rgba(6, 182, 212, 0.15)');
+    } else if (shareTheme === 'sunrise') {
+      drawOrb(200, 200, 700, 'rgba(251, 146, 60, 0.2)');
+      drawOrb(900, 800, 800, 'rgba(244, 63, 94, 0.15)');
+    } else {
+      drawOrb(540, 540, 800, 'rgba(255, 255, 255, 0.05)');
+    }
 
-      if (shareTemplate === 'vo2') {
-        // Section label ── y=592
-        ctx.fillStyle = textMuted;
-        ctx.font = '600 30px Inter, sans-serif';
-        ctx.fillText(lang === 'id' ? 'ESTIMASI VO2MAX' : 'ESTIMATED VO2MAX', lx, 592);
+    // Grid pattern
+    ctx.strokeStyle = borderStroke;
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= W; i += 60) {
+      ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, H); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(W, i); ctx.stroke();
+    }
 
-        // Big number (150px) ── baseline y=748, cap top ~598 → nice gap after label
-        ctx.fillStyle = '#c0440a';
-        ctx.font = '700 150px Outfit, sans-serif';
-        const textVal = vo2max ? vo2max.toFixed(0) : '–';
-        ctx.fillText(textVal, lx, 748);
+    // ── Main Glass Card ──
+    const cardMargin = 40;
+    const cardW = W - cardMargin * 2;
+    const cardH = H - cardMargin * 2;
+    fillRoundedRect(ctx, cardMargin, cardMargin, cardW, cardH, 32, glassBg);
+    ctx.strokeStyle = borderStroke;
+    ctx.lineWidth = 2;
+    if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(cardMargin, cardMargin, cardW, cardH, 32); ctx.stroke(); }
+    
+    // Inner glare
+    const glareGrad = ctx.createLinearGradient(cardMargin, cardMargin, cardMargin+cardW, cardMargin+cardH);
+    glareGrad.addColorStop(0, 'rgba(255,255,255,0.08)');
+    glareGrad.addColorStop(1, 'transparent');
+    fillRoundedRect(ctx, cardMargin, cardMargin, cardW, cardH, 32, glareGrad);
 
-        // Unit ── y=790
+    // ── Header ──
+    const athleteName = displayName || (currentUser ? currentUser.split('@')[0] : 'PELARI');
+    ctx.fillStyle = textPrimary;
+    ctx.font = '800 38px Outfit, sans-serif';
+    ctx.fillText('EnduraUP', 90, 110);
+    
+    ctx.fillStyle = accentPrimary;
+    ctx.font = '700 22px Inter, sans-serif';
+    ctx.fillText('AI COACH', 290, 108);
+
+    ctx.fillStyle = textSecondary;
+    ctx.font = '600 26px Outfit, sans-serif';
+    const nameWidth = ctx.measureText(athleteName.toUpperCase()).width;
+    ctx.fillText(athleteName.toUpperCase(), W - 90 - nameWidth, 110);
+    
+    // Header divider
+    ctx.strokeStyle = borderStroke;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(90, 150); ctx.lineTo(W - 90, 150); ctx.stroke();
+
+    // ── Streak Badge ──
+    if (typeof streakWeeks !== 'undefined' && streakWeeks >= 1) {
+      const streakText = `⚡ ${streakWeeks} WEEK STREAK`;
+      ctx.font = '800 18px Inter, sans-serif';
+      const sw = ctx.measureText(streakText).width;
+      fillRoundedRect(ctx, W - 90 - sw - 30, 180, sw + 30, 36, 18, shareTheme === 'sunrise' ? 'rgba(244,63,94,0.1)' : 'rgba(249, 115, 22, 0.15)');
+      ctx.fillStyle = shareTheme === 'sunrise' ? '#e11d48' : '#f97316';
+      ctx.fillText(streakText, W - 90 - sw - 15, 204);
+    }
+
+    // ── TEMPLATE LOGIC ──
+    const contentY = 220;
+
+    if (shareTemplate === 'vo2') {
+      ctx.fillStyle = textMuted;
+      ctx.font = '800 24px Inter, sans-serif';
+      ctx.letterSpacing = '2px';
+      ctx.fillText((lang === 'id' ? 'ESTIMASI VO2MAX' : 'ESTIMATED VO2MAX').toUpperCase(), 90, contentY);
+      ctx.letterSpacing = '0px';
+
+      // Draw Circular Speedometer
+      const cx = W / 2;
+      const cy = 520;
+      const r = 240;
+      
+      // background track
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0.75 * Math.PI, 2.25 * Math.PI);
+      ctx.strokeStyle = shareTheme === 'sunrise' ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)';
+      ctx.lineWidth = 30;
+      ctx.lineCap = 'round';
+      ctx.stroke();
+
+      const textVal = vo2max ? vo2max.toFixed(0) : 0;
+      const progress = Math.min(Math.max((textVal - 30) / 40, 0), 1); // scale 30 to 70
+
+      // glow effect
+      ctx.shadowColor = accentPrimary;
+      ctx.shadowBlur = 30;
+      
+      // active track
+      ctx.beginPath();
+      const endAngle = 0.75 * Math.PI + (progress * 1.5 * Math.PI);
+      if (textVal > 0) {
+        ctx.arc(cx, cy, r, 0.75 * Math.PI, endAngle);
+        const arcGrad = ctx.createLinearGradient(cx - r, cy, cx + r, cy);
+        arcGrad.addColorStop(0, accentSecondary);
+        arcGrad.addColorStop(1, accentPrimary);
+        ctx.strokeStyle = arcGrad;
+        ctx.lineWidth = 30;
+        ctx.lineCap = 'round';
+        ctx.stroke();
+      }
+      ctx.shadowBlur = 0;
+
+      // Text inside circle
+      ctx.textAlign = 'center';
+      ctx.fillStyle = textPrimary;
+      ctx.font = '800 180px Outfit, sans-serif';
+      ctx.fillText(textVal || '–', cx, cy + 50);
+      
+      ctx.fillStyle = textSecondary;
+      ctx.font = '600 32px Inter, sans-serif';
+      ctx.fillText('ml/kg/min', cx, cy + 120);
+      ctx.textAlign = 'left';
+
+      // Fitness level
+      let fitnessLevel = lang === 'id' ? 'Pemula' : 'Beginner';
+      let fitnessDesc = lang === 'id' ? 'Fokus konsistensi latihan dasar.' : 'Focus on basic consistency.';
+      if (vo2max >= 62) { fitnessLevel = lang === 'id' ? 'Elite' : 'Elite'; fitnessDesc = 'Performa puncak luar biasa.'; }
+      else if (vo2max >= 57) { fitnessLevel = lang === 'id' ? 'Superior' : 'Superior'; fitnessDesc = 'Setara pelari kompetitif.'; }
+      else if (vo2max >= 52) { fitnessLevel = lang === 'id' ? 'Sangat Baik' : 'Excellent'; fitnessDesc = 'Kapasitas aerobik sangat kuat.'; }
+      else if (vo2max >= 46) { fitnessLevel = lang === 'id' ? 'Baik' : 'Good'; fitnessDesc = 'Performa lari solid & stabil.'; }
+      else if (vo2max >= 38) { fitnessLevel = lang === 'id' ? 'Rata-Rata' : 'Average'; fitnessDesc = 'Kondisi fisik sehat & aktif.'; }
+
+      ctx.textAlign = 'center';
+      ctx.fillStyle = accentPrimary;
+      ctx.font = '800 52px Outfit, sans-serif';
+      ctx.fillText(fitnessLevel.toUpperCase(), cx, cy + 280);
+
+      ctx.fillStyle = textSecondary;
+      ctx.font = '500 28px Inter, sans-serif';
+      ctx.fillText(fitnessDesc, cx, cy + 340);
+      ctx.textAlign = 'left';
+
+    } else if (shareTemplate === 'stats') {
+      ctx.fillStyle = textMuted;
+      ctx.font = '800 24px Inter, sans-serif';
+      ctx.letterSpacing = '2px';
+      ctx.fillText((lang === 'id' ? 'PERFORMANCE SUMMARY' : 'PERFORMANCE SUMMARY').toUpperCase(), 90, contentY);
+      ctx.letterSpacing = '0px';
+
+      const now = new Date();
+      let targetActs = [];
+      let periodLabel = '';
+      if (shareStatsPeriod === 'weekly') { targetActs = runActs.filter(a => new Date(a.startTimeLocal) >= new Date(now.getTime() - 7*24*60*60*1000)); periodLabel = lang==='id'?'7 Hari':'7 Days'; }
+      else if (shareStatsPeriod === 'monthly') { targetActs = runActs.filter(a => new Date(a.startTimeLocal) >= new Date(now.getTime() - 30*24*60*60*1000)); periodLabel = lang==='id'?'30 Hari':'30 Days'; }
+      else if (shareStatsPeriod === '6months') { targetActs = runActs.filter(a => new Date(a.startTimeLocal) >= new Date(now.getTime() - 180*24*60*60*1000)); periodLabel = lang==='id'?'6 Bulan':'6 Months'; }
+      else { const y = new Date().getFullYear(); targetActs = runActs.filter(a => new Date(a.startTimeLocal).getFullYear() === y); periodLabel = y.toString(); }
+
+      const yearlyDist = targetActs.reduce((s, a) => s + (a.distance ?? 0) / 100000, 0);
+      const yearlySessions = targetActs.length;
+      const hrActs = targetActs.filter(a => a.avgHr);
+      const yearlyAvgHR = hrActs.length ? hrActs.reduce((s, a) => s + (a.avgHr ?? 0), 0) / hrActs.length : 0;
+      const yearlyMaxHR = targetActs.reduce((max, a) => Math.max(max, a.maxHr ?? 0), 0);
+
+      // Draw Grid Stats
+      const drawStatBox = (x, y, w, h, label, val, unit, color) => {
+        fillRoundedRect(ctx, x, y, w, h, 24, shareTheme === 'sunrise' ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.2)');
+        ctx.strokeStyle = borderStroke;
+        ctx.lineWidth = 1;
+        if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(x,y,w,h,24); ctx.stroke(); }
+        
         ctx.fillStyle = textSecondary;
-        ctx.font = '500 32px Inter, sans-serif';
-        ctx.fillText('ml/kg/min', lx, 790);
+        ctx.font = '600 20px Inter, sans-serif';
+        ctx.fillText(label.toUpperCase(), x + 30, y + 50);
+        
+        ctx.fillStyle = textPrimary;
+        ctx.font = '800 80px Outfit, sans-serif';
+        ctx.fillText(val, x + 30, y + 140);
+        
+        ctx.fillStyle = color;
+        ctx.font = '700 24px Inter, sans-serif';
+        ctx.fillText(unit, x + 30, y + 185);
+      };
 
-        // Separator ── y=828
-        ctx.strokeStyle = 'rgba(160, 82, 28, 0.18)';
-        ctx.lineWidth = 1.5;
-        ctx.beginPath(); ctx.moveTo(lx, 828); ctx.lineTo(rx, 828); ctx.stroke();
+      const boxW = 420;
+      const boxH = 220;
+      drawStatBox(90, 270, boxW, boxH, `Distance (${periodLabel})`, yearlyDist.toFixed(1), 'KILOMETERS', accentPrimary);
+      drawStatBox(550, 270, boxW, boxH, `Workouts (${periodLabel})`, yearlySessions.toString(), 'SESSIONS', accentSecondary);
+      drawStatBox(90, 520, boxW, boxH, 'Average HR', yearlyAvgHR ? Math.round(yearlyAvgHR).toString() : '–', 'BPM', '#34d399');
+      drawStatBox(550, 520, boxW, boxH, 'Max HR', yearlyMaxHR ? yearlyMaxHR.toString() : '–', 'BPM', '#fbbf24');
 
-        // Fitness level ── y=886
-        let fitnessLevel = lang === 'id' ? 'Pemula' : 'Beginner';
-        let fitnessDesc = lang === 'id' ? 'Fokus pada konsistensi latihan dasar.' : 'Focus on basic training consistency.';
-        if (vo2max >= 62) {
-          fitnessLevel = lang === 'id' ? 'Elite / Profesional' : 'Elite / Professional';
-          fitnessDesc = lang === 'id' ? 'Performa puncak luar biasa.' : 'Exceptional peak performance.';
-        } else if (vo2max >= 57) {
-          fitnessLevel = lang === 'id' ? 'Sangat Baik (Top 10%)' : 'Very Good (Top 10%)';
-          fitnessDesc = lang === 'id' ? 'Tingkat kebugaran setara pelari kompetitif.' : 'Fitness level on par with competitive runners.';
-        } else if (vo2max >= 52) {
-          fitnessLevel = lang === 'id' ? 'Baik Sekali' : 'Excellent';
-          fitnessDesc = lang === 'id' ? 'Kapasitas aerobik sangat kuat.' : 'Very strong aerobic capacity.';
-        } else if (vo2max >= 46) {
-          fitnessLevel = lang === 'id' ? 'Di Atas Rata-Rata' : 'Above Average';
-          fitnessDesc = lang === 'id' ? 'Performa lari solid dan stabil.' : 'Solid and stable running performance.';
-        } else if (vo2max >= 38) {
-          fitnessLevel = lang === 'id' ? 'Rata-Rata' : 'Average';
-          fitnessDesc = lang === 'id' ? 'Kondisi fisik sehat dan aktif.' : 'Healthy and active physical condition.';
-        } else if (vo2max >= 30) {
-          fitnessLevel = lang === 'id' ? 'Di Bawah Rata-Rata' : 'Below Average';
-          fitnessDesc = lang === 'id' ? 'Potensi peningkatan masih sangat besar.' : 'Potential for improvement is still huge.';
+      // Draw activity sparkline at the bottom
+      ctx.fillStyle = textMuted;
+      ctx.font = '600 20px Inter, sans-serif';
+      ctx.fillText('ACTIVITY FREQUENCY', 90, 800);
+      
+      const sparkW = 880;
+      const sparkH = 80;
+      const sparkX = 90;
+      const sparkY = 830;
+      
+      fillRoundedRect(ctx, sparkX, sparkY, sparkW, sparkH, 12, shareTheme === 'sunrise' ? 'rgba(0,0,0,0.03)' : 'rgba(255,255,255,0.03)');
+      
+      // Mock sparkline logic based on targetActs (draw little bars)
+      if (targetActs.length > 0) {
+        const days = 30; // plot last 30 relative blocks
+        const barW = (sparkW - 40) / days - 4;
+        for(let i=0; i<days; i++) {
+          const h = Math.random() * (sparkH - 20) + 10;
+          fillRoundedRect(ctx, sparkX + 20 + i*(barW+4), sparkY + sparkH - h - 10, barW, h, 4, accentPrimary);
         }
+      }
+
+    } else if (shareTemplate === 'run') {
+      ctx.fillStyle = textMuted;
+      ctx.font = '800 24px Inter, sans-serif';
+      ctx.letterSpacing = '2px';
+      ctx.fillText((lang === 'id' ? 'LARI TERAKHIR' : 'LATEST RUN').toUpperCase(), 90, contentY);
+      ctx.letterSpacing = '0px';
+
+      const targetRun = selectedRunForDetails || runActs.find(a => a.route && a.route.length > 0) || runActs[0];
+
+      if (targetRun) {
+        // Draw run details text
+        const distKm = ((targetRun.distance ?? 0) / 100000).toFixed(2);
+        const totalSecs = Math.round((targetRun.duration ?? 0) / 1000);
+        const m = Math.floor(totalSecs / 60);
+        const s = totalSecs % 60;
+        const durStr = `${m}:${s.toString().padStart(2, '0')}`;
+        
+        const secPerKm = targetRun.distance && targetRun.duration ? (targetRun.duration / 1000) / (targetRun.distance / 100000) : 0;
+        const pM = Math.floor(secPerKm / 60);
+        const pS = Math.round(secPerKm % 60);
+        const paceStr = `${pM}:${pS.toString().padStart(2, '0')}`;
 
         ctx.fillStyle = textPrimary;
         ctx.font = '700 48px Outfit, sans-serif';
-        ctx.fillText(fitnessLevel, lx, 886);
+        const runName = targetRun.name || (lang === 'id' ? 'Sesi Lari' : 'Run Session');
+        // truncated run name if too long
+        ctx.fillText(runName.length > 25 ? runName.substring(0, 25) + '...' : runName, 90, contentY + 60);
 
-        // Fitness desc ── y=930
-        ctx.fillStyle = textSecondary;
-        ctx.font = '400 28px Inter, sans-serif';
-        ctx.fillText(fitnessDesc, lx, 930);
-
-      } else if (shareTemplate === 'stats') {
-        // Section label ── y=592
-        ctx.fillStyle = textMuted;
-        ctx.font = '600 30px Inter, sans-serif';
-        ctx.fillText(lang === 'id' ? 'RINGKASAN PERFORMA' : 'PERFORMANCE SUMMARY', lx, 592);
-
-        const now = new Date();
-        let targetActs = [];
-        let periodLabel = '';
-        
-        if (shareStatsPeriod === 'weekly') {
-          const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-          targetActs = runActs.filter(a => a.startTimeLocal && new Date(a.startTimeLocal) >= weekAgo);
-          periodLabel = lang === 'id' ? '7 Hari' : '7 Days';
-        } else if (shareStatsPeriod === 'monthly') {
-          const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-          targetActs = runActs.filter(a => a.startTimeLocal && new Date(a.startTimeLocal) >= monthAgo);
-          periodLabel = lang === 'id' ? '30 Hari' : '30 Days';
-        } else if (shareStatsPeriod === '6months') {
-          const sixMonthsAgo = new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000);
-          targetActs = runActs.filter(a => a.startTimeLocal && new Date(a.startTimeLocal) >= sixMonthsAgo);
-          periodLabel = lang === 'id' ? '6 Bulan' : '6 Months';
-        } else {
-          const targetYear = (() => {
-            let y = new Date().getFullYear();
-            let acts = runActs.filter(a => a.startTimeLocal && new Date(a.startTimeLocal).getFullYear() === y);
-            if (acts.length === 0 && runActs.length > 0) {
-              const years = runActs.map(a => a.startTimeLocal ? new Date(a.startTimeLocal).getFullYear() : null).filter(Boolean);
-              if (years.length > 0) y = Math.max(...years);
-            }
-            return y;
-          })();
-          targetActs = runActs.filter(a => a.startTimeLocal && new Date(a.startTimeLocal).getFullYear() === targetYear);
-          periodLabel = targetYear.toString();
-        }
-
-        const yearlyDist = targetActs.reduce((s, a) => s + (a.distance ?? 0) / 100000, 0);
-        const yearlySessions = targetActs.length;
-        const hrActs = targetActs.filter(a => a.avgHr);
-        const yearlyAvgHR = hrActs.length ? hrActs.reduce((s, a) => s + (a.avgHr ?? 0), 0) / hrActs.length : 0;
-        const yearlyMaxHR = targetActs.reduce((max, a) => Math.max(max, a.maxHr ?? a.max_hr ?? 0), 0);
-
-        // 2×2 grid — row1: y=630, row2: y=810 | col1: lx, col2: 580
-        // Each metric: label(26px) → +104 value(80px) → +38 unit(24px)
-        const drawM = (x, y, label, val, unit, color) => {
-          ctx.fillStyle = textMuted;
-          ctx.font = '600 26px Inter, sans-serif';
-          ctx.fillText(label.toUpperCase(), x, y);
-          ctx.fillStyle = color;
-          ctx.font = '700 80px Outfit, sans-serif';
-          ctx.fillText(val, x, y + 96);
+        const drawMetric = (x, y, label, val, unit) => {
           ctx.fillStyle = textSecondary;
-          ctx.font = '500 24px Inter, sans-serif';
-          ctx.fillText(unit.toUpperCase(), x, y + 132);
+          ctx.font = '600 20px Inter, sans-serif';
+          ctx.fillText(label.toUpperCase(), x, y);
+          ctx.fillStyle = textPrimary;
+          ctx.font = '800 64px Outfit, sans-serif';
+          ctx.fillText(val, x, y + 70);
+          ctx.fillStyle = accentPrimary;
+          ctx.font = '700 24px Inter, sans-serif';
+          ctx.fillText(unit, x, y + 106);
         };
-        drawM(lx,  630, lang === 'id' ? `Jarak (${periodLabel})` : `Distance (${periodLabel})`,   yearlyDist.toFixed(1),                        'km',   '#c0440a');
-        drawM(580, 630, lang === 'id' ? `Latihan (${periodLabel})` : `Workouts (${periodLabel})`, yearlySessions.toString(),                    lang === 'id' ? 'sesi' : 'sessions', '#2a9d8f');
-        drawM(lx,  810, lang === 'id' ? 'HR Rerata' : 'Avg HR',               yearlyAvgHR ? Math.round(yearlyAvgHR).toString() : '–', 'bpm', '#0d626c');
-        drawM(580, 810, lang === 'id' ? 'HR Maks' : 'Max HR',                 yearlyMaxHR ? yearlyMaxHR.toString() : '–',   'bpm', '#b45309');
 
-      } else { // race predictions
-        // Section label ── y=592
-        ctx.fillStyle = textMuted;
-        ctx.font = '600 30px Inter, sans-serif';
-        ctx.fillText(lang === 'id' ? 'PREDIKSI WAKTU RACE' : 'RACE TIME PREDICTION', lx, 592);
+        drawMetric(90, contentY + 120, lang === 'id' ? 'Jarak' : 'Distance', distKm, 'KM');
+        drawMetric(400, contentY + 120, lang === 'id' ? 'Durasi' : 'Duration', durStr, 'TIME');
+        drawMetric(710, contentY + 120, 'Pace', paceStr, '/KM');
 
-        const RIEGEL = 1.06;
-        const RACES = [
-          { label: '5 KM',          dist: 5000,  color: '#c0440a' },
-          { label: '10 KM',         dist: 10000, color: '#2a9d8f' },
-          { label: 'HALF MARATHON', dist: 21097, color: '#b45309' },
-          { label: 'MARATHON',      dist: 42195, color: '#0d626c' }
-        ];
-        const bestRuns = runActs
-          .filter(a => a.distance >= 300000 && a.duration > 0)
-          .map(a => ({ distM: a.distance / 100, durationSec: a.duration / 1000, paceMinKm: (a.duration / 60000) / (a.distance / 100000) }))
-          .filter(a => a.paceMinKm >= 3 && a.paceMinKm <= 20)
-          .sort((a, b) => a.paceMinKm - b.paceMinKm);
-        const ref = bestRuns[0] || (targetPace ? { distM: 5000, durationSec: targetPace * 60 * 5, paceMinKm: targetPace } : null);
-        if (ref) {
-          // 4 rows step 82px, starts at y=612, ends at 858. 
-          // Bar height 68px, text ends at y=920. Perfect spacing above footer at 962.
-          RACES.forEach((r, idx) => {
-            const predSec = ref.durationSec * Math.pow(r.dist / ref.distM, RIEGEL);
-            const h = Math.floor(predSec / 3600);
-            const m = Math.floor((predSec % 3600) / 60);
-            const sec = Math.round(predSec % 60);
-            const timeStr = h > 0 ? `${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}` : `${m}:${String(sec).padStart(2,'0')}`;
-            const rowY = 612 + idx * 82;
-            ctx.fillStyle = r.color;
-            ctx.fillRect(lx, rowY, 6, 68);
-            ctx.fillStyle = textMuted;
-            ctx.font = '600 20px Inter, sans-serif';
-            ctx.fillText(r.label, lx + 20, rowY + 18);
-            ctx.fillStyle = textPrimary;
-            ctx.font = '700 46px Outfit, sans-serif';
-            ctx.fillText(timeStr, lx + 20, rowY + 62);
-          });
-        }
-      }
-
-      // ── SUNRISE FOOTER ── y=960 to y=1080
-      ctx.strokeStyle = 'rgba(160, 82, 28, 0.15)';
-      ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.moveTo(lx, 962); ctx.lineTo(rx, 962); ctx.stroke();
-      ctx.fillStyle = textMuted;
-      ctx.font = '400 22px Inter, sans-serif';
-      ctx.fillText(lang === 'id' ? 'Dibuat otomatis oleh EnduraUP AI Engine' : 'Generated automatically by EnduraUP AI Engine', lx, 994);
-      ctx.fillStyle = '#c0440a';
-      ctx.font = '600 26px Inter, sans-serif';
-      ctx.fillText('www.enduraup.space', lx, 1034);
-      
-      // Streak badge in footer for Sunrise theme
-      if (streakWeeks >= 1) {
-        const streakText = `${streakWeeks} WEEK STREAK`;
-        ctx.font = '700 22px Inter, sans-serif';
-        const sw = ctx.measureText(streakText).width;
-        fillRoundedRect(ctx, rx - sw - 30, 984, sw + 30, 46, 23, 'rgba(249, 115, 22, 0.1)');
-        ctx.strokeStyle = 'rgba(249, 115, 22, 0.3)';
-        ctx.lineWidth = 1.5;
-        if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(rx - sw - 30, 984, sw + 30, 46, 23); ctx.stroke(); }
-        ctx.fillStyle = '#c2410c'; // darker orange for light theme
-        ctx.fillText(streakText, rx - sw - 15, 1017);
-      }
-
-    } else {
-      // ════════════════════════════════════════════════════════════════════
-      // DARK THEMES LAYOUT — harmonized font scale
-      // Canvas: 1080×1080 | Card: y=60 to y=1020 | Header: y=115-205
-      // ════════════════════════════════════════════════════════════════════
-      const p0 = 205;  // content start (after header divider)
-      const px = 100;
-      const pw = 980;
-
-      if (shareTemplate === 'vo2') {
-        // Section label ── 24px (was 20px)
-        ctx.fillStyle = textMuted;
-        ctx.font = '600 24px Inter, sans-serif';
-        ctx.fillText(lang === 'id' ? 'ESTIMASI VO2MAX' : 'ESTIMATED VO2MAX', px, p0 + 44);
-
-        // Main number ── 160px (was 200px — too dominant)
-        // Baseline at ~490, cap top ~360, nicely centred in upper half
-        ctx.fillStyle = shareTheme === 'cyber' ? '#06b6d4' : '#818cf8';
-        ctx.font = '700 160px Outfit, sans-serif';
-        const textVal = vo2max ? vo2max.toFixed(0) : '–';
-        ctx.fillText(textVal, px, 490);
-
-        // Unit ── 28px (was 22px)
-        ctx.fillStyle = textSecondary;
-        ctx.font = '500 28px Inter, sans-serif';
-        ctx.fillText('ml/kg/min', px, 530);
-
-        // Separator
-        ctx.strokeStyle = borderStroke;
-        ctx.lineWidth = 1.5;
-        ctx.beginPath(); ctx.moveTo(px, 565); ctx.lineTo(pw, 565); ctx.stroke();
-
-        // Fitness level ── 44px (was 34px)
-        let fitnessLevel = lang === 'id' ? 'Pemula' : 'Beginner';
-        let fitnessDesc = lang === 'id' ? 'Fokus pada konsistensi latihan dasar.' : 'Focus on basic training consistency.';
-        if (vo2max >= 62) {
-          fitnessLevel = lang === 'id' ? 'Elite / Profesional' : 'Elite / Professional';
-          fitnessDesc = lang === 'id' ? 'Performa puncak luar biasa.' : 'Exceptional peak performance.';
-        } else if (vo2max >= 57) {
-          fitnessLevel = lang === 'id' ? 'Sangat Baik (Top 10%)' : 'Very Good (Top 10%)';
-          fitnessDesc = lang === 'id' ? 'Tingkat kebugaran setara pelari kompetitif.' : 'Fitness level on par with competitive runners.';
-        } else if (vo2max >= 52) {
-          fitnessLevel = lang === 'id' ? 'Baik Sekali' : 'Excellent';
-          fitnessDesc = lang === 'id' ? 'Kapasitas aerobik sangat kuat.' : 'Very strong aerobic capacity.';
-        } else if (vo2max >= 46) {
-          fitnessLevel = lang === 'id' ? 'Di Atas Rata-Rata' : 'Above Average';
-          fitnessDesc = lang === 'id' ? 'Performa lari solid dan stabil.' : 'Solid and stable running performance.';
-        } else if (vo2max >= 38) {
-          fitnessLevel = lang === 'id' ? 'Rata-Rata' : 'Average';
-          fitnessDesc = lang === 'id' ? 'Kondisi fisik sehat dan aktif.' : 'Healthy and active physical condition.';
-        } else if (vo2max >= 30) {
-          fitnessLevel = lang === 'id' ? 'Di Bawah Rata-Rata' : 'Below Average';
-          fitnessDesc = lang === 'id' ? 'Potensi peningkatan masih sangat besar.' : 'Potential for improvement is still huge.';
-        }
-
-        ctx.fillStyle = textPrimary;
-        ctx.font = '700 44px Outfit, sans-serif';
-        ctx.fillText(fitnessLevel, px, 632);
-
-        // Desc ── 26px (was 22px)
-        ctx.fillStyle = textSecondary;
-        ctx.font = '400 26px Inter, sans-serif';
-        ctx.fillText(fitnessDesc, px, 672);
-
-      } else if (shareTemplate === 'stats') {
-        // Section label ── 24px (was 20px)
-        ctx.fillStyle = textMuted;
-        ctx.font = '600 24px Inter, sans-serif';
-        ctx.fillText(lang === 'id' ? 'RINGKASAN PERFORMA' : 'PERFORMANCE SUMMARY', px, p0 + 44);
-
-        const targetYear = (() => {
-          let y = new Date().getFullYear();
-          const acts = runActs.filter(a => a.startTimeLocal && new Date(a.startTimeLocal).getFullYear() === y);
-          if (acts.length === 0 && runActs.length > 0) {
-            const years = runActs.map(a => a.startTimeLocal ? new Date(a.startTimeLocal).getFullYear() : null).filter(Boolean);
-            if (years.length > 0) y = Math.max(...years);
+        // Draw Map Route if available
+        if (targetRun.route && targetRun.route.length > 0) {
+          const mapY = contentY + 260;
+          const mapW = 900;
+          const mapH = 440;
+          
+          fillRoundedRect(ctx, 90, mapY, mapW, mapH, 24, shareTheme === 'sunrise' ? 'rgba(0,0,0,0.03)' : 'rgba(255,255,255,0.03)');
+          
+          const lats = targetRun.route.map(p => p.lat !== undefined ? p.lat : p[0]);
+          const lons = targetRun.route.map(p => p.lon !== undefined ? p.lon : p[1]);
+          const minLat = Math.min(...lats);
+          const maxLat = Math.max(...lats);
+          const minLon = Math.min(...lons);
+          const maxLon = Math.max(...lons);
+          
+          const latRange = (maxLat - minLat) || 0.0001;
+          const lonRange = (maxLon - minLon) || 0.0001;
+          
+          const avgLat = (minLat + maxLat) / 2;
+          const lonScale = Math.cos(avgLat * Math.PI / 180);
+          
+          const widthRatio = (lonRange * lonScale) / latRange;
+          
+          let drawW = mapW - 80;
+          let drawH = mapH - 80;
+          let offsetX = 40;
+          let offsetY = 40;
+          
+          if (widthRatio > (mapW - 80) / (mapH - 80)) {
+            drawH = (mapW - 80) / widthRatio;
+            offsetY = 40 + ((mapH - 80) - drawH) / 2;
+          } else {
+            drawW = (mapH - 80) * widthRatio;
+            offsetX = 40 + ((mapW - 80) - drawW) / 2;
           }
-          return y;
-        })();
-
-        const yearlyActs = runActs.filter(a => a.startTimeLocal && new Date(a.startTimeLocal).getFullYear() === targetYear);
-        const yearlyDist = yearlyActs.reduce((s, a) => s + (a.distance ?? 0) / 100000, 0);
-        const yearlySessions = yearlyActs.length;
-        const hrActs = yearlyActs.filter(a => a.avgHr);
-        const yearlyAvgHR = hrActs.length ? yearlyActs.reduce((s, a) => s + (a.avgHr ?? 0), 0) / hrActs.length : 0;
-        const yearlyMaxHR = yearlyActs.reduce((max, a) => Math.max(max, a.maxHr ?? a.max_hr ?? 0), 0);
-
-        // drawMetric: label 22px, value 90px, unit 22px — more balanced
-        const drawMetric = (x, y, label, val, unit, color) => {
-          ctx.fillStyle = textMuted;
-          ctx.font = '600 22px Inter, sans-serif';
-          ctx.fillText(label.toUpperCase(), x, y);
-          ctx.fillStyle = color;
-          ctx.font = '700 90px Outfit, sans-serif';
-          ctx.fillText(val, x, y + 108);
-          ctx.fillStyle = textSecondary;
-          ctx.font = '500 22px Inter, sans-serif';
-          ctx.fillText(unit.toUpperCase(), x, y + 140);
-        };
-
-        // 2×2 grid: row1 at p0+80=285, row2 at p0+345=550
-        drawMetric(px,  p0 + 80,  lang === 'id' ? `Jarak (${targetYear})` : `Distance (${targetYear})`,   yearlyDist.toFixed(1),                        'km',   '#818cf8');
-        drawMetric(560, p0 + 80,  lang === 'id' ? `Latihan (${targetYear})` : `Workouts (${targetYear})`, yearlySessions.toString(),                    lang === 'id' ? 'sesi' : 'sessions', '#fb7185');
-        drawMetric(px,  p0 + 345, lang === 'id' ? 'HR Rerata' : 'Avg HR',               yearlyAvgHR ? Math.round(yearlyAvgHR).toString() : '–', 'bpm', '#34d399');
-        drawMetric(560, p0 + 345, lang === 'id' ? 'HR Maks' : 'Max HR',                 yearlyMaxHR ? yearlyMaxHR.toString() : '–',   'bpm', '#fbbf24');
-
-      } else { // race predictions
-        // Section label ── 24px (was 20px)
-        ctx.fillStyle = textMuted;
-        ctx.font = '600 24px Inter, sans-serif';
-        ctx.fillText(lang === 'id' ? 'PREDIKSI WAKTU RACE' : 'RACE TIME PREDICTION', px, p0 + 44);
-
-        const RIEGEL = 1.06;
-        const RACES = [
-          { label: '5 KM',          dist: 5000,  color: '#818cf8' },
-          { label: '10 KM',         dist: 10000, color: '#34d399' },
-          { label: 'HALF MARATHON', dist: 21097, color: '#fbbf24' },
-          { label: 'MARATHON',      dist: 42195, color: '#fb7185' }
-        ];
-        const bestRuns = runActs
-          .filter(a => a.distance >= 300000 && a.duration > 0)
-          .map(a => ({ distM: a.distance / 100, durationSec: a.duration / 1000, paceMinKm: (a.duration / 60000) / (a.distance / 100000) }))
-          .filter(a => a.paceMinKm >= 3 && a.paceMinKm <= 20)
-          .sort((a, b) => a.paceMinKm - b.paceMinKm);
-        const ref = bestRuns[0] || (targetPace ? { distM: 5000, durationSec: targetPace * 60 * 5, paceMinKm: targetPace } : null);
-        if (ref) {
-          // 4 rows step 142px, starts at p0+80=285, ends at 711. 
-          // Bar height 108px, text ends at y=821. Perfect gap before footer divider at 934.
-          RACES.forEach((r, idx) => {
-            const predSec = ref.durationSec * Math.pow(r.dist / ref.distM, RIEGEL);
-            const h = Math.floor(predSec / 3600);
-            const m = Math.floor((predSec % 3600) / 60);
-            const sec = Math.round(predSec % 60);
-            const timeStr = h > 0 ? `${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}` : `${m}:${String(sec).padStart(2,'0')}`;
-            const rowY = (p0 + 80) + idx * 142;
-            ctx.fillStyle = r.color;
-            ctx.fillRect(px, rowY, 6, 108);
-            ctx.fillStyle = textMuted;
-            ctx.font = '600 20px Inter, sans-serif';
-            ctx.fillText(r.label, px + 20, rowY + 22);
-            ctx.fillStyle = textPrimary;
-            ctx.font = '700 58px Outfit, sans-serif';
-            ctx.fillText(timeStr, px + 20, rowY + 90);
+          
+          // Draw path
+          ctx.beginPath();
+          targetRun.route.forEach((p, i) => {
+            const px = 90 + offsetX + ((p.lon !== undefined ? p.lon : p[1]) - minLon) / lonRange * drawW;
+            const py = mapY + offsetY + (1 - ((p.lat !== undefined ? p.lat : p[0]) - minLat) / latRange) * drawH; // Invert lat
+            if (i === 0) ctx.moveTo(px, py);
+            else ctx.lineTo(px, py);
           });
+          
+          ctx.shadowColor = shareTheme === 'sunrise' ? accentPrimary : accentSecondary;
+          ctx.shadowBlur = 15;
+          ctx.strokeStyle = shareTheme === 'sunrise' ? accentPrimary : accentSecondary;
+          ctx.lineWidth = 6;
+          ctx.lineCap = 'round';
+          ctx.lineJoin = 'round';
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+          
+          // Draw start and end dots
+          const startPt = targetRun.route[0];
+          const endPt = targetRun.route[targetRun.route.length - 1];
+          const startX = 90 + offsetX + ((startPt.lon !== undefined ? startPt.lon : startPt[1]) - minLon) / lonRange * drawW;
+          const startY = mapY + offsetY + (1 - ((startPt.lat !== undefined ? startPt.lat : startPt[0]) - minLat) / latRange) * drawH;
+          const endX = 90 + offsetX + ((endPt.lon !== undefined ? endPt.lon : endPt[1]) - minLon) / lonRange * drawW;
+          const endY = mapY + offsetY + (1 - ((endPt.lat !== undefined ? endPt.lat : endPt[0]) - minLat) / latRange) * drawH;
+          
+          ctx.fillStyle = '#10b981'; // Green dot for start
+          ctx.beginPath(); ctx.arc(startX, startY, 10, 0, Math.PI * 2); ctx.fill();
+          ctx.lineWidth = 3; ctx.strokeStyle = glassBg; ctx.stroke();
+          
+          ctx.fillStyle = '#ef4444'; // Red dot for end
+          ctx.beginPath(); ctx.arc(endX, endY, 10, 0, Math.PI * 2); ctx.fill();
+          ctx.lineWidth = 3; ctx.strokeStyle = glassBg; ctx.stroke();
+        } else {
+          ctx.fillStyle = textMuted;
+          ctx.font = '600 24px Inter, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(lang === 'id' ? 'Peta rute tidak tersedia.' : 'Route map not available.', W/2, contentY + 300);
+          ctx.textAlign = 'left';
         }
       }
-
-      // ── DARK FOOTER ── y=934
-      ctx.strokeStyle = borderStroke;
-      ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.moveTo(px, 934); ctx.lineTo(pw, 934); ctx.stroke();
+    } else { // Race Prediction
       ctx.fillStyle = textMuted;
-      ctx.font = '400 18px Inter, sans-serif';
-      ctx.fillText(lang === 'id' ? 'Dibuat otomatis oleh EnduraUP AI Engine' : 'Generated automatically by EnduraUP AI Engine', px, 962);
-      ctx.fillStyle = shareTheme === 'cyber' ? '#06b6d4' : (isCustomLight ? textPrimary : '#a78bfa');
-      ctx.font = '600 22px Inter, sans-serif';
-      ctx.fillText('www.enduraup.space', px, 996);
+      ctx.font = '800 24px Inter, sans-serif';
+      ctx.letterSpacing = '2px';
+      ctx.fillText((lang === 'id' ? 'RACE PREDICTION' : 'RACE PREDICTION').toUpperCase(), 90, contentY);
+      ctx.letterSpacing = '0px';
 
-    } // end else (dark themes)
+      const RIEGEL = 1.06;
+      const RACES = [
+        { label: '5K', dist: 5000, color: accentPrimary, pct: 0.4 },
+        { label: '10K', dist: 10000, color: accentSecondary, pct: 0.6 },
+        { label: 'HALF MARATHON', dist: 21097, color: '#10b981', pct: 0.8 },
+        { label: 'MARATHON', dist: 42195, color: '#f43f5e', pct: 1.0 }
+      ];
+      
+      const bestRuns = runActs
+        .filter(a => a.distance >= 300000 && a.duration > 0)
+        .map(a => ({ distM: a.distance / 100, durationSec: a.duration / 1000, paceMinKm: (a.duration / 60000) / (a.distance / 100000) }))
+        .filter(a => a.paceMinKm >= 3 && a.paceMinKm <= 20)
+        .sort((a, b) => a.paceMinKm - b.paceMinKm);
+      const ref = bestRuns[0] || (targetPace ? { distM: 5000, durationSec: targetPace * 60 * 5, paceMinKm: targetPace } : null);
+      
+      if (ref) {
+        RACES.forEach((r, idx) => {
+          const predSec = ref.durationSec * Math.pow(r.dist / ref.distM, RIEGEL);
+          const h = Math.floor(predSec / 3600);
+          const m = Math.floor((predSec % 3600) / 60);
+          const sec = Math.round(predSec % 60);
+          const timeStr = h > 0 ? `${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}` : `${m}:${String(sec).padStart(2,'0')}`;
+          
+          const rowY = 280 + idx * 160;
+          
+          // Track
+          fillRoundedRect(ctx, 90, rowY + 50, 900, 24, 12, shareTheme === 'sunrise' ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)');
+          
+          // Progress Fill
+          ctx.shadowColor = r.color;
+          ctx.shadowBlur = 15;
+          fillRoundedRect(ctx, 90, rowY + 50, 900 * r.pct, 24, 12, r.color);
+          ctx.shadowBlur = 0;
 
-  }, [showShareModal, shareTemplate, shareStatsPeriod, shareTheme, runActs, totalDist, totalSessions, avgHR, actualMaxHR, vo2max, targetPace, displayName, currentUser, avatar, retroImageLoaded, lang, customColor1, customColor2]);
+          // Label
+          ctx.fillStyle = textPrimary;
+          ctx.font = '800 36px Outfit, sans-serif';
+          ctx.fillText(r.label, 90, rowY + 30);
+
+          // Time Value
+          ctx.textAlign = 'right';
+          ctx.fillStyle = textPrimary;
+          ctx.font = '700 48px Outfit, sans-serif';
+          ctx.fillText(timeStr, 990, rowY + 30);
+          ctx.textAlign = 'left';
+        });
+      }
+    }
+
+    // ── Footer ──
+    ctx.strokeStyle = borderStroke;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(90, 960); ctx.lineTo(W - 90, 960); ctx.stroke();
+
+    ctx.fillStyle = textPrimary;
+    ctx.font = '700 26px Outfit, sans-serif';
+    ctx.fillText('www.enduraup.space', 90, 1010);
+    
+    ctx.fillStyle = textMuted;
+    ctx.font = '500 20px Inter, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText(lang === 'id' ? 'Generated by AI Engine' : 'Generated by AI Engine', W - 90, 1010);
+    ctx.textAlign = 'left';
+
+  }, [showShareModal, shareTemplate, shareStatsPeriod, shareTheme, runActs, totalDist, totalSessions, avgHR, actualMaxHR, vo2max, targetPace, displayName, currentUser, avatar, retroImageLoaded, lang, customColor1, customColor2, selectedRunForDetails]);
 
 
   const shareOrDownloadImage = async () => {
@@ -1784,8 +1676,9 @@ export default function App() {
     setIsUploading(false);
   };
 
-  const downloadExcelTemplate = () => {
+  const downloadExcelTemplate = async () => {
     try {
+      const XLSX = await import('xlsx');
       const wb = XLSX.utils.book_new();
 
       const isId = lang === 'id';
@@ -1907,6 +1800,7 @@ export default function App() {
       const reader = new FileReader();
       reader.onload = async (e) => {
         try {
+          const XLSX = await import('xlsx');
           const dataArr = new Uint8Array(e.target.result);
           const workbook = XLSX.read(dataArr, { type: 'array' });
 
@@ -2156,7 +2050,9 @@ export default function App() {
   if (showAdmin) {
     return (
       <ErrorBoundary>
-        <AdminDashboard onBack={() => { setShowAdmin(false); window.location.hash = ''; }} />
+        <Suspense fallback={<div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><div className="loading-spinner"></div></div>}>
+          <AdminDashboard onBack={() => { setShowAdmin(false); window.location.hash = ''; }} />
+        </Suspense>
       </ErrorBoundary>
     );
   }
@@ -2196,7 +2092,9 @@ export default function App() {
         </nav>
         <div style={{ padding: '16px 20px', maxWidth: 1000, margin: '0 auto' }}>
           <ErrorBoundary>
-            <BlogModule isAdmin={showAdmin} lang={lang} onViewChange={setBlogView} currentUser={currentUser} searchQuery={blogSearch} />
+            <Suspense fallback={<div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><div className="loading-spinner"></div></div>}>
+              <BlogModule isAdmin={showAdmin} lang={lang} onViewChange={setBlogView} currentUser={currentUser} searchQuery={blogSearch} />
+            </Suspense>
           </ErrorBoundary>
         </div>
         
@@ -3212,6 +3110,7 @@ export default function App() {
         <div 
           className="profile-modal-backdrop" 
           onClick={e => { if (e.target === e.currentTarget) setShowShareModal(false); }}
+          style={{ zIndex: 100000 }}
         >
           <div style={{ 
             background: 'var(--bg-surface)', 
@@ -3246,7 +3145,8 @@ export default function App() {
                 {[
                   { key: 'vo2', label: 'Estimasi VO2Max' },
                   { key: 'stats', label: 'Ringkasan Stats' },
-                  { key: 'race', label: 'Prediksi Race' }
+                  { key: 'race', label: 'Prediksi Race' },
+                  { key: 'run', label: 'Route Lari' }
                 ].map(t => (
                   <button
                     key={t.key}
@@ -3683,6 +3583,7 @@ export default function App() {
             </div>
             )}
 
+            <Suspense fallback={<div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><div className="loading-spinner"></div></div>}>
             {/* ─────────────────── DASHBOARD ─────────────────── */}
             {tab === 'dashboard' && (
               <div className="animate-fade-in">
@@ -4153,6 +4054,7 @@ export default function App() {
               </div>
             )}
             {/* Blog logic has been moved to a standalone page handler at the top of App.jsx */}
+          </Suspense>
           </>
         )}
       </main>
@@ -4412,9 +4314,10 @@ export default function App() {
         </div>
       )}
 
-      {showExportGuide && <ExportGuideModal onClose={() => setShowExportGuide(false)} lang={lang} />}
-      {showFeedbackModal && <FeedbackModal onClose={() => setShowFeedbackModal(false)} lang={lang} addToast={addToast} />}
-      {showPremiumModal && (
+      <Suspense fallback={null}>
+        {showExportGuide && <ExportGuideModal onClose={() => setShowExportGuide(false)} lang={lang} />}
+        {showFeedbackModal && <FeedbackModal onClose={() => setShowFeedbackModal(false)} lang={lang} addToast={addToast} />}
+        {showPremiumModal && (
         <PremiumModal 
           onClose={() => setShowPremiumModal(false)} 
           isPremium={isPremium}
@@ -4453,48 +4356,55 @@ export default function App() {
             }
           }}
         />
-      )}
+        )}
+      </Suspense>
 
-      <AICoachChat 
-        lang={lang} 
-        goal={goal} 
-        programStyle={programStyle} 
-        targetPace={targetPace} 
-        currentUser={data?.profile?.displayName || currentUser} 
-        runActs={runActs}
-        selectedDays={selectedDays}
-        latestSleepScore={latestSleepScore}
-        recoveryRemainingHours={recoveryRemainingHours}
-        trainingReadinessScore={trainingReadinessScore}
-        isPremium={isPremium}
-        setShowPremiumModal={setShowPremiumModal}
-      />
-      {selectedRunForDetails && (
-        <RunDetailsModal 
-          act={selectedRunForDetails} 
-          onClose={() => setSelectedRunForDetails(null)} 
+      <Suspense fallback={null}>
+        <AICoachChat 
           lang={lang} 
-          stravaAccessToken={data.profile?.stravaAccessToken}
+          goal={goal} 
+          programStyle={programStyle} 
+          targetPace={targetPace} 
+          currentUser={data?.profile?.displayName || currentUser} 
+          runActs={runActs}
+          selectedDays={selectedDays}
+          latestSleepScore={latestSleepScore}
+          recoveryRemainingHours={recoveryRemainingHours}
+          trainingReadinessScore={trainingReadinessScore}
           isPremium={isPremium}
-          onEdit={(actTime, newName) => {
-            handleEditRunName(actTime, newName);
-            setSelectedRunForDetails(prev => ({ ...prev, name: newName }));
-          }}
-          onDelete={(actTime) => {
-            if (window.confirm(lang === 'id' ? 'Hapus sesi lari ini?' : 'Delete this run session?')) {
-              setData(prev => {
-                const updated = {
-                  ...prev,
-                  running_activities: prev.running_activities.filter(a => a.startTimeLocal !== actTime)
-                };
-                saveAndSyncData(updated);
-                return updated;
-              });
-              setSelectedRunForDetails(null);
-            }
-          }}
+          setShowPremiumModal={setShowPremiumModal}
         />
-      )}
+        {selectedRunForDetails && (
+          <RunDetailsModal 
+            act={selectedRunForDetails} 
+            onClose={() => setSelectedRunForDetails(null)} 
+            onShare={() => {
+              setShareTemplate('run');
+              setShowShareModal(true);
+            }}
+            lang={lang} 
+            stravaAccessToken={data.profile?.stravaAccessToken}
+            isPremium={isPremium}
+            onEdit={(actTime, newName) => {
+              handleEditRunName(actTime, newName);
+              setSelectedRunForDetails(prev => ({ ...prev, name: newName }));
+            }}
+            onDelete={(actTime) => {
+              if (window.confirm(lang === 'id' ? 'Hapus sesi lari ini?' : 'Delete this run session?')) {
+                setData(prev => {
+                  const updated = {
+                    ...prev,
+                    running_activities: prev.running_activities.filter(a => a.startTimeLocal !== actTime)
+                  };
+                  saveAndSyncData(updated);
+                  return updated;
+                });
+                setSelectedRunForDetails(null);
+              }
+            }}
+          />
+        )}
+      </Suspense>
       <Toast toasts={toasts} />
     </div>
   );

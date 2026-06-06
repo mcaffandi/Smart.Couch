@@ -44,7 +44,18 @@
     <!-- Preconnect for performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="preconnect" href="https://app.sandbox.midtrans.com" />
+    <link rel="preconnect" href="https://apis.google.com" />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+    <noscript>
+      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    </noscript>
+
+    <!-- Hreflang Tags for SEO -->
+    <link rel="alternate" hreflang="id" href="https://www.enduraup.space/" />
+    <link rel="alternate" hreflang="en" href="https://www.enduraup.space/?lang=en" />
+    <link rel="alternate" hreflang="x-default" href="https://www.enduraup.space/" />
 
     <!-- Structured Data / JSON-LD -->
     <script type="application/ld+json">
@@ -60,11 +71,16 @@
           "@type": "Offer",
           "price": "0",
           "priceCurrency": "IDR"
+        },
+        "aggregateRating": {
+          "@type": "AggregateRating",
+          "ratingValue": "4.9",
+          "ratingCount": "84"
         }
       }
     </script>
     <!-- Midtrans Snap Sandbox -->
-    <script type="text/javascript" src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="Mid-client-mgnxM4WPF5L2mFsv"></script>
+    <script type="text/javascript" src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="Mid-client-mgnxM4WPF5L2mFsv" async defer></script>
   </head>
   <body>
     <div id="root"></div>

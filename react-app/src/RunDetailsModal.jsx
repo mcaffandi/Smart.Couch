@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Activity, Zap, TrendingUp, Edit2, Trash2, Map as MapIcon } from 'lucide-react';
+import { X, Activity, Zap, TrendingUp, Edit2, Trash2, Map as MapIcon, Share } from 'lucide-react';
 import { MapContainer, TileLayer, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -16,7 +16,7 @@ function MapBounds({ points }) {
   return null;
 }
 
-export default function RunDetailsModal({ act, onClose, lang = 'id', stravaAccessToken, isPremium, onEdit, onDelete }) {
+export default function RunDetailsModal({ act, onClose, lang = 'id', stravaAccessToken, isPremium, onEdit, onDelete, onShare }) {
   const [laps, setLaps] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -123,9 +123,16 @@ export default function RunDetailsModal({ act, onClose, lang = 'id', stravaAcces
               </div>
               <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>{msToDate(act.startTimeLocal)}</div>
             </div>
-            <button onClick={onClose} className="btn-close" style={{ background: 'var(--bg-card)', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 8, borderRadius: '50%' }}>
-              <X size={20} />
-            </button>
+            <div style={{ display: 'flex', gap: 8 }}>
+              {onShare && (
+                <button onClick={onShare} className="btn-close" style={{ background: 'var(--accent-purple)', border: 'none', color: '#fff', cursor: 'pointer', padding: 8, borderRadius: '50%', boxShadow: '0 4px 12px rgba(167, 139, 250, 0.4)' }}>
+                  <Share size={18} />
+                </button>
+              )}
+              <button onClick={onClose} className="btn-close" style={{ background: 'var(--bg-card)', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 8, borderRadius: '50%' }}>
+                <X size={20} />
+              </button>
+            </div>
           </div>
 
           <div style={{ padding: '20px', overflowY: 'auto', flex: 1 }} className="hide-scrollbar">
