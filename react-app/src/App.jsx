@@ -1507,91 +1507,107 @@ export default function App() {
         
         const hrVal = targetRun.avgHR ? Math.round(targetRun.avgHR) : '--';
 
-        // Draw Top Bar (White)
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, W, 180);
+        const cardMargin = 80;
+        const cardX = cardMargin;
+        const cardY = cardMargin;
+        const cardW = W - cardMargin * 2;
+        const cardH = H - cardMargin * 2;
 
-        // Draw Bottom Bar (White)
-        ctx.fillRect(0, H - 280, W, 280);
+        // Draw White Card Background
+        fillRoundedRect(ctx, cardX, cardY, cardW, cardH, 32, '#ffffff');
 
-        // Top Bar Content
+        // Punch the transparent hole for the photo
+        const holeMarginX = 40;
+        const holeMarginTop = 150;
+        const holeMarginBot = 230;
+        
+        const holeX = cardX + holeMarginX;
+        const holeY = cardY + holeMarginTop;
+        const holeW = cardW - holeMarginX * 2;
+        const holeH = cardH - holeMarginTop - holeMarginBot;
+
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.fillRect(holeX, holeY, holeW, holeH);
+        ctx.globalCompositeOperation = 'source-over';
+
         // Avatar
+        const avatarX = cardX + 90;
+        const avatarY = cardY + 75;
         if (avatarImgObj) {
           ctx.save();
           ctx.beginPath();
-          ctx.arc(100, 90, 50, 0, Math.PI * 2);
+          ctx.arc(avatarX, avatarY, 40, 0, Math.PI * 2);
           ctx.clip();
-          ctx.drawImage(avatarImgObj, 50, 40, 100, 100);
+          ctx.drawImage(avatarImgObj, avatarX - 40, avatarY - 40, 80, 80);
           ctx.restore();
         } else {
           ctx.beginPath();
-          ctx.arc(100, 90, 50, 0, Math.PI * 2);
+          ctx.arc(avatarX, avatarY, 40, 0, Math.PI * 2);
           ctx.fillStyle = '#f3f4f6';
           ctx.fill();
         }
 
         ctx.fillStyle = '#111827';
-        ctx.font = '800 36px Outfit, sans-serif';
+        ctx.font = '800 32px Outfit, sans-serif';
         const athleteName = displayName || (currentUser ? currentUser.split('@')[0] : 'PELARI');
-        ctx.fillText(`@${athleteName.toUpperCase()}`, 170, 85);
+        ctx.fillText(`@${athleteName.toUpperCase()} 🏃‍♀️`, cardX + 150, cardY + 65);
         
         ctx.fillStyle = '#6b7280';
-        ctx.font = '600 24px Inter, sans-serif';
-        ctx.fillText('ENDURA UP APP', 170, 125);
+        ctx.font = '600 20px Inter, sans-serif';
+        ctx.fillText('ENDURA UP APP', cardX + 150, cardY + 100);
 
         ctx.textAlign = 'right';
         ctx.fillStyle = '#9ca3af';
-        ctx.font = '500 28px Inter, sans-serif';
-        const dateStr = new Date(targetRun.startTimeLocal).toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-US', { month: 'short', day: 'numeric' });
-        ctx.fillText(dateStr, W - 60, 105);
+        ctx.font = '500 24px Inter, sans-serif';
+        ctx.fillText('Just Now', cardX + cardW - 40, cardY + 85);
         ctx.textAlign = 'left';
 
         // Bottom Bar Content (Stats)
-        const botY = H - 280;
+        const botY = cardY + cardH - holeMarginBot;
         
         // Column 1 (Distance)
         ctx.fillStyle = '#6b7280';
-        ctx.font = '600 28px Inter, sans-serif';
-        ctx.fillText('DISTANCE', 90, botY + 80);
+        ctx.font = '600 24px Inter, sans-serif';
+        ctx.fillText('DISTANCE', cardX + 60, botY + 70);
         
         ctx.fillStyle = '#111827';
-        ctx.font = '800 80px Outfit, sans-serif';
+        ctx.font = '800 70px Outfit, sans-serif';
         const distW = ctx.measureText(distKm).width;
-        ctx.fillText(distKm, 90, botY + 180);
-        ctx.font = '600 36px Outfit, sans-serif';
-        ctx.fillText(' KM', 90 + distW, botY + 180);
+        ctx.fillText(distKm, cardX + 60, botY + 150);
+        ctx.font = '600 32px Outfit, sans-serif';
+        ctx.fillText(' KM', cardX + 60 + distW, botY + 150);
 
         // Column 2 (Pace)
         ctx.textAlign = 'center';
         ctx.fillStyle = '#6b7280';
-        ctx.font = '600 28px Inter, sans-serif';
-        ctx.fillText('PACE', W/2, botY + 80);
+        ctx.font = '600 24px Inter, sans-serif';
+        ctx.fillText('PACE', cardX + cardW/2, botY + 70);
         
         ctx.fillStyle = '#111827';
-        ctx.font = '800 80px Outfit, sans-serif';
+        ctx.font = '800 70px Outfit, sans-serif';
         const pW = ctx.measureText(paceVal).width;
-        ctx.fillText(paceVal, W/2 - 20, botY + 180); // shift slightly left to accommodate /km
+        ctx.fillText(paceVal, cardX + cardW/2 - 20, botY + 150); 
         ctx.textAlign = 'left';
-        ctx.font = '600 36px Outfit, sans-serif';
-        ctx.fillText(' /km', W/2 - 20 + pW/2, botY + 180);
+        ctx.font = '600 32px Outfit, sans-serif';
+        ctx.fillText(' /km', cardX + cardW/2 - 20 + pW/2, botY + 150);
 
         // Column 3 (HR or Time)
         ctx.textAlign = 'right';
         ctx.fillStyle = '#6b7280';
-        ctx.font = '600 28px Inter, sans-serif';
-        ctx.fillText(targetRun.avgHR ? 'HR' : 'TIME', W - 90, botY + 80);
+        ctx.font = '600 24px Inter, sans-serif';
+        ctx.fillText(targetRun.avgHR ? 'HR' : 'TIME', cardX + cardW - 60, botY + 70);
         
         ctx.fillStyle = '#111827';
-        ctx.font = '800 80px Outfit, sans-serif';
+        ctx.font = '800 70px Outfit, sans-serif';
         const val3 = targetRun.avgHR ? hrVal.toString() : durStr.split(' ')[0]; // use only min if time
         const unit3 = targetRun.avgHR ? ' bpm' : '';
         ctx.textAlign = 'left';
         const val3W = ctx.measureText(val3).width;
         const u3W = ctx.measureText(unit3).width;
-        const startX3 = W - 90 - (val3W + u3W);
-        ctx.fillText(val3, startX3, botY + 180);
-        ctx.font = '600 36px Outfit, sans-serif';
-        ctx.fillText(unit3, startX3 + val3W, botY + 180);
+        const startX3 = cardX + cardW - 60 - (val3W + u3W);
+        ctx.fillText(val3, startX3, botY + 150);
+        ctx.font = '600 32px Outfit, sans-serif';
+        ctx.fillText(unit3, startX3 + val3W, botY + 150);
         ctx.textAlign = 'left';
       }
     }
