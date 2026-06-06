@@ -1346,7 +1346,7 @@ export default function App() {
           ctx.textAlign = 'left';
         }
       }
-    } else { // Race Prediction
+    } else if (shareTemplate === 'race') { // Race Prediction
       ctx.fillStyle = textMuted;
       ctx.font = '800 24px Inter, sans-serif';
       ctx.letterSpacing = '2px';
@@ -1398,7 +1398,6 @@ export default function App() {
           ctx.font = '700 48px Outfit, sans-serif';
           ctx.fillText(timeStr, 990, rowY + 30);
           ctx.textAlign = 'left';
-        });
         });
       }
     } else if (shareTemplate === 'sticker') {
@@ -3449,10 +3448,7 @@ export default function App() {
                   </button>
                 ))}
               </div>
-            )}
               
-
-
               {shareTheme === 'custom' && (
                 <div className="animate-fade-in" style={{ display: 'flex', gap: 12, marginTop: 12, background: 'rgba(255,255,255,0.03)', padding: 12, borderRadius: 8, border: '1px dashed var(--border)' }}>
                   <div style={{ flex: 1 }}>
@@ -3466,6 +3462,7 @@ export default function App() {
                 </div>
               )}
             </div>
+            )}
 
             {/* Live Canvas Preview */}
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
