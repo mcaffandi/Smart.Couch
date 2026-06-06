@@ -1029,23 +1029,12 @@ export default function App() {
     const cardW = W - cardMargin * 2;
     const cardH = H - cardMargin * 2;
     
-    if (shareTheme === 'transparent' && shareShape === 'none') {
+    if (shareTheme === 'transparent') {
       // No glass card, purely transparent
-    } else if (shareTheme === 'transparent' && shareShape === 'circle') {
-      ctx.beginPath();
-      ctx.arc(W/2, H/2, Math.min(cardW, cardH)/2, 0, Math.PI * 2);
-      ctx.fillStyle = glassBg;
-      ctx.fill();
-      ctx.strokeStyle = borderStroke;
-      ctx.lineWidth = 6;
-      ctx.stroke();
-      
-      ctx.save();
-      ctx.clip();
     } else {
       fillRoundedRect(ctx, cardMargin, cardMargin, cardW, cardH, 32, glassBg);
       ctx.strokeStyle = borderStroke;
-      ctx.lineWidth = shareTheme === 'transparent' ? 6 : 2;
+      ctx.lineWidth = 2;
       if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(cardMargin, cardMargin, cardW, cardH, 32); ctx.stroke(); }
       
       // Inner glare
@@ -1055,11 +1044,6 @@ export default function App() {
       fillRoundedRect(ctx, cardMargin, cardMargin, cardW, cardH, 32, glareGrad);
 
       ctx.save();
-      if (shareTheme === 'transparent' && ctx.roundRect) {
-        ctx.beginPath();
-        ctx.roundRect(cardMargin, cardMargin, cardW, cardH, 32);
-        ctx.clip();
-      }
     }
 
     // ── Header ──
@@ -3463,30 +3447,7 @@ export default function App() {
                 ))}
               </div>
               
-              {shareTheme === 'transparent' && (
-                <div className="animate-fade-in" style={{ marginTop: 12 }}>
-                  <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>
-                    Bentuk Border Transparan
-                  </label>
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    {['square', 'circle', 'none'].map(shape => (
-                      <button
-                        key={shape}
-                        onClick={() => setShareShape(shape)}
-                        style={{
-                          flex: 1, padding: '8px 12px', borderRadius: 8,
-                          border: '1px solid ' + (shareShape === shape ? 'var(--accent-purple)' : 'var(--border)'),
-                          background: shareShape === shape ? 'rgba(167, 139, 250, 0.1)' : 'transparent',
-                          color: shareShape === shape ? 'var(--text-primary)' : 'var(--text-muted)',
-                          fontSize: 12, fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s'
-                        }}
-                      >
-                        {shape === 'square' ? 'Kotak' : shape === 'circle' ? 'Melingkar' : 'Tanpa Border'}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
+
 
               {shareTheme === 'custom' && (
                 <div className="animate-fade-in" style={{ display: 'flex', gap: 12, marginTop: 12, background: 'rgba(255,255,255,0.03)', padding: 12, borderRadius: 8, border: '1px dashed var(--border)' }}>
