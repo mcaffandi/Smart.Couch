@@ -96,8 +96,9 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
   };
 
   const plan = buildTrainingPlan(programStyle, goal, paces, selectedDays);
-
-
+  const adaptiveCalendar = buildAdaptiveCalendar(plan, activities, isPaused, isAdaptiveActive);
+  const todayIdx = adaptiveCalendar.findIndex(d => d.isToday) !== -1 ? adaptiveCalendar.findIndex(d => d.isToday) : 7;
+  const next7Days = adaptiveCalendar.slice(todayIdx, todayIdx + 7);
 
   const getHRForZone = (minPct, maxPct) => {
     if (!age) return null;
@@ -500,9 +501,6 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
 
       {/* ── ADAPTIVE CALENDAR SECTION ── */}
       {(() => {
-        const adaptiveCalendar = buildAdaptiveCalendar(plan, activities, isPaused, isAdaptiveActive);
-        // Only show from yesterday to next 6 days (8 days total) for a concise view
-        const todayIdx = adaptiveCalendar.findIndex(d => d.isToday);
         const startIdx = Math.max(0, todayIdx - 2);
         const displayDays = adaptiveCalendar.slice(startIdx, startIdx + 8);
         
@@ -556,7 +554,7 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
 
       <h3 style={{ fontSize: 15, fontWeight: 800, marginBottom: 12, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-        {lang === 'id' ? 'Template Rencana Mingguan' : 'Weekly Blueprint Template'}
+        {lang === 'id' ? 'Jadwal 7 Hari Kedepan' : 'Next 7 Days Schedule'}
       </h3>
 
 
@@ -572,34 +570,54 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
             </tr>
           </thead>
           <tbody>
-            {plan.map((row, i) => (
-              <tr key={i}>
-                <td style={{ fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>{getHari(row.hari)}</td>
-                <td><span className={`badge ${getBadgeClass(row.jenis)}`}>{getJenis(row.jenis)}</span></td>
-                <td style={{ color: 'var(--text-secondary)', fontSize: 13 }}>{getDurasi(row.durasi)}</td>
-                <td style={{ color: 'var(--text-muted)', fontSize: 13 }}>{getTujuan(row.tujuan)}</td>
-              </tr>
-            ))}
+            {next7Days.map((dItem, i) => {
+              const dateObj = new Date(dItem.date);
+              const dayName = dateObj.toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-US', { weekday: 'long' });
+              const dateStr = dateObj.toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-US', { day: 'numeric', month: 'short' });
+              const row = dItem.workout;
+              
+              return (
+                <tr key={i} style={{ background: dItem.isToday ? 'rgba(167, 139, 250, 0.05)' : 'transparent' }}>
+                  <td style={{ fontWeight: 700, color: dItem.isToday ? 'var(--accent-purple)' : 'var(--text-primary)', whiteSpace: 'nowrap' }}>
+                    {dayName} <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-muted)' }}>{dateStr}</span>
+                    {dItem.isToday && <span style={{ marginLeft: 8, background: 'var(--accent-purple)', color: '#fff', fontSize: 9, padding: '2px 6px', borderRadius: 4 }}>TODAY</span>}
+                  </td>
+                  <td><span className={`badge ${getBadgeClass(row.jenis)}`}>{getJenis(row.jenis)}</span></td>
+                  <td style={{ color: 'var(--text-secondary)', fontSize: 13 }}>{getDurasi(row.durasi)}</td>
+                  <td style={{ color: 'var(--text-muted)', fontSize: 13 }}>{getTujuan(row.tujuan)}</td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
 
       {/* Mobile Cards View */}
       <div className="training-cards-mobile">
-        {plan.map((row, i) => (
-          <div key={i} className="training-card-item">
-            <div className="training-card-header">
-              <span className="training-card-day">{getHari(row.hari)}</span>
-              <span className={`badge ${getBadgeClass(row.jenis)}`}>{getJenis(row.jenis)}</span>
+        {next7Days.map((dItem, i) => {
+          const dateObj = new Date(dItem.date);
+          const dayName = dateObj.toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-US', { weekday: 'short' });
+          const dateStr = dateObj.toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-US', { day: 'numeric', month: 'short' });
+          const row = dItem.workout;
+
+          return (
+            <div key={i} className="training-card-item" style={{ border: dItem.isToday ? '1px solid var(--accent-purple)' : '1px solid var(--border)', background: dItem.isToday ? 'rgba(167, 139, 250, 0.05)' : 'var(--bg-card)' }}>
+              <div className="training-card-header">
+                <span className="training-card-day" style={{ color: dItem.isToday ? 'var(--accent-purple)' : 'var(--text-primary)' }}>
+                  {dayName}, {dateStr}
+                  {dItem.isToday && <span style={{ marginLeft: 8, background: 'var(--accent-purple)', color: '#fff', fontSize: 9, padding: '2px 6px', borderRadius: 4 }}>TODAY</span>}
+                </span>
+                <span className={`badge ${getBadgeClass(row.jenis)}`}>{getJenis(row.jenis)}</span>
+              </div>
+              <div className="training-card-dur">
+                {getDurasi(row.durasi)}
+              </div>
+              <div className="training-card-tujuan">
+                {getTujuan(row.tujuan)}
+              </div>
             </div>
-            <div className="training-card-dur">
-              {getDurasi(row.durasi)}
-            </div>
-            <div className="training-card-tujuan">
-              {getTujuan(row.tujuan)}
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <details style={{ marginTop: 20 }}>
