@@ -3359,7 +3359,8 @@ export default function App() {
               <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>
                 Pilih Statistik
               </label>
-              <div style={{ display: 'flex', gap: 8 }}>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {[
                   { key: 'vo2', label: 'Estimasi VO2Max' },
                   { key: 'stats', label: 'Ringkasan Stats' },
                   { key: 'race', label: 'Prediksi Race' },
