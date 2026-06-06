@@ -372,6 +372,19 @@ export default function App() {
     };
   }, []);
 
+  const [avatarImgObj, setAvatarImgObj] = useState(null);
+  useEffect(() => {
+    if (avatar) {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.src = avatar;
+      img.onload = () => setAvatarImgObj(img);
+      img.onerror = () => setAvatarImgObj(null);
+    } else {
+      setAvatarImgObj(null);
+    }
+  }, [avatar]);
+
   // ── State: user profiles ─────────────────────────────────────────────────────
   const syncFromFirestore = useCallback(async (username) => {
     if (!isFirebaseConfigured || !auth.currentUser) return;
@@ -1503,12 +1516,12 @@ export default function App() {
 
         // Top Bar Content
         // Avatar
-        if (avatar) {
+        if (avatarImgObj) {
           ctx.save();
           ctx.beginPath();
           ctx.arc(100, 90, 50, 0, Math.PI * 2);
           ctx.clip();
-          ctx.drawImage(avatar, 50, 40, 100, 100);
+          ctx.drawImage(avatarImgObj, 50, 40, 100, 100);
           ctx.restore();
         } else {
           ctx.beginPath();
@@ -1601,7 +1614,7 @@ export default function App() {
     }
 
     ctx.restore(); // Restore from clipping
-  }, [showShareModal, shareTemplate, shareStatsPeriod, shareTheme, shareShape, runActs, totalDist, totalSessions, avgHR, actualMaxHR, vo2max, targetPace, displayName, currentUser, avatar, retroImageLoaded, lang, customColor1, customColor2, selectedRunForDetails]);
+  }, [showShareModal, shareTemplate, shareStatsPeriod, shareTheme, shareShape, runActs, totalDist, totalSessions, avgHR, actualMaxHR, vo2max, targetPace, displayName, currentUser, avatarImgObj, retroImageLoaded, lang, customColor1, customColor2, selectedRunForDetails]);
 
 
   const shareOrDownloadImage = async () => {
