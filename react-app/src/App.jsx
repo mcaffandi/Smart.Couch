@@ -1513,8 +1513,14 @@ export default function App() {
         const cardW = W - cardMargin * 2;
         const cardH = H - cardMargin * 2;
 
-        // Draw White Card Background
+        // Draw White Card Background with Drop Shadow
+        ctx.save();
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+        ctx.shadowBlur = 60;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 20;
         fillRoundedRect(ctx, cardX, cardY, cardW, cardH, 32, '#ffffff');
+        ctx.restore();
 
         // Punch the transparent hole for the photo
         const holeMarginX = 40;
@@ -1550,7 +1556,7 @@ export default function App() {
         ctx.fillStyle = '#111827';
         ctx.font = '800 32px Outfit, sans-serif';
         const athleteName = displayName || (currentUser ? currentUser.split('@')[0] : 'PELARI');
-        ctx.fillText(`@${athleteName.toUpperCase()} 🏃‍♀️`, cardX + 150, cardY + 65);
+        ctx.fillText(`@${athleteName.toUpperCase()}`, cardX + 150, cardY + 65);
         
         ctx.fillStyle = '#6b7280';
         ctx.font = '600 20px Inter, sans-serif';
