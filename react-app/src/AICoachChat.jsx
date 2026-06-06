@@ -121,6 +121,22 @@ export default function AICoachChat({ lang, goal, programStyle, targetPace, curr
       const currentDay = now.toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-US', { weekday: 'long' });
       const currentTime = now.toLocaleTimeString(lang === 'id' ? 'id-ID' : 'en-US', { hour: '2-digit', minute: '2-digit' });
 
+      const recentRunsStr = [...(runActs || [])]
+        .filter(a => (a.distance || 0) > 0 || (a.duration || 0) > 0)
+        .sort((a, b) => (b.startTimeLocal || 0) - (a.startTimeLocal || 0))
+        .slice(0, 7)
+        .map((r, i) => {
+          const date = r.startTimeLocal ? new Date(r.startTimeLocal).toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-US', { day: 'numeric', month: 'short' }) : 'Unknown';
+          const distKm = ((r.distance || 0) / 100000).toFixed(2);
+          const durMin = Math.round((r.duration || 0) / 60000);
+          const paceMinPerKm = r.distance > 0 ? (r.duration / 60000) / (r.distance / 100000) : 0;
+          const paceStr = formatPace(paceMinPerKm);
+          return `- Lari pada ${date}: Jarak ${distKm} km, Waktu ${durMin} menit, Pace ${paceStr} min/km` + (r.avgHr ? `, HR ${r.avgHr} bpm` : '');
+        }).join('\n');
+      
+      const recentRunsContextId = recentRunsStr ? `\n\n[DATA LARI TERAKHIR (Max 7 Sesi)]\n${recentRunsStr}` : '\n\n[DATA LARI TERAKHIR]\nBelum ada data lari.';
+      const recentRunsContextEn = recentRunsStr ? `\n\n[RECENT RUNS DATA (Max 7 Sessions)]\n${recentRunsStr}` : '\n\n[RECENT RUNS]\nNo run data yet.';
+
       const systemPrompt = lang === 'id' 
         ? `Lo adalah Coach AI EnduraUP, pelatih lari profesional yang asik (pake bahasa gaul lo/gue).
 WAKTU LOKAL: ${currentDay}, Jam ${currentTime}.
@@ -129,7 +145,7 @@ TARGET USER: ${goal}, Program: ${programStyle}, Pace: ${formattedPace} min/km.
 [DATA FISIK USER SAAT INI]
 - Training Readiness: ${trainingReadinessScore}%
 - Waktu Pemulihan Sisa: ${recoveryRemainingHours} jam
-- Skor Konsistensi: ${consistencyScore}%
+- Skor Konsistensi: ${consistencyScore}%${recentRunsContextId}
 
 ATURAN WAJIB (PATUHI INI):
 1. JIKA READINESS < 60%: User sedang KECAPAIAN. LO DILARANG KERAS menyuruh atau mengizinkan user lari. Wajib paksa user untuk ISTIRAHAT TOTAL hari ini atau maksimal jalan kaki. Jika user nanya soal lari, tolak dan ingatkan readiness-nya masih ${trainingReadinessScore}%.
@@ -137,7 +153,8 @@ ATURAN WAJIB (PATUHI INI):
 3. JIKA KONSISTENSI < 50%: Roasting/tegur halus user karena malas.
 4. JANGAN KRITIK pace lambat. Pahami ilmu Zone 2 / 80/20. Puji lari lambat sebagai "Easy Run" yang bagus buat aerobic base. Jangan judge pelari jelek hanya karena pacenya jauh dari target.
 5. Jawab pertanyaan user dengan singkat, padat, pakai emoji.
-6. JIKA user bahas topik di luar lari/olahraga, tolak dengan sopan.`
+6. JIKA user nanya/bahas tentang hasil lari mereka, BERIKAN ANALISA: puji kalau "Keren!" atau "Mantap!" misal pacenya stabil / HR-nya aman. Kasih teguran halus kalau HR-nya kekencengan (di atas 170). Kasih feedback layaknya pelatih beneran. Jangan cuma nyebutin angka ulang.
+7. JIKA user bahas topik di luar lari/olahraga, tolak dengan sopan.`
         : `You are EnduraUP Coach AI, a professional, friendly running coach.
 LOCAL TIME: ${currentDay}, ${currentTime}.
 USER'S TARGET: ${goal}, Program: ${programStyle}, Pace: ${formattedPace} min/km.
@@ -145,7 +162,7 @@ USER'S TARGET: ${goal}, Program: ${programStyle}, Pace: ${formattedPace} min/km.
 [CURRENT PHYSICAL DATA]
 - Training Readiness: ${trainingReadinessScore}%
 - Remaining Recovery Time: ${recoveryRemainingHours} hours
-- Consistency Score: ${consistencyScore}%
+- Consistency Score: ${consistencyScore}%${recentRunsContextEn}
 
 STRICT RULES (MUST FOLLOW):
 1. IF READINESS < 60%: User is EXHAUSTED. YOU ARE STRICTLY FORBIDDEN to tell them to run. You MUST force them to REST today. If they ask to run, refuse and remind them their readiness is ${trainingReadinessScore}%.
@@ -153,7 +170,8 @@ STRICT RULES (MUST FOLLOW):
 3. IF CONSISTENCY < 50%: Give them a playful roast for being lazy.
 4. DO NOT CRITICIZE slow paces. Understand Zone 2 / 80/20 training. Praise slow running as good "Easy Runs" for building aerobic base.
 5. Answer concisely with emojis.
-6. IF user talks about non-running topics, politely decline.`;
+6. IF user asks about their recent runs, PROVIDE ANALYSIS: praise them if it's "Cool!" or "Awesome!" (e.g., stable pace, good HR). Give gentle feedback if their HR is too high (>170). Act like a real coach giving qualitative feedback, don't just repeat numbers.
+7. IF user talks about non-running topics, politely decline.`;
 
       const endpoint = apiKey ? 'https://api.groq.com/openai/v1/chat/completions' : '/api/coach';
       const headers = { 'Content-Type': 'application/json' };
