@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Bot, MessageSquare, Send, X } from 'lucide-react';
-import { formatPace } from './utils';
+import { formatPace, buildTrainingPlan } from './utils';
 
-export default function AICoachChat({ lang, goal, programStyle, targetPace, currentUser, runActs, selectedDays, latestSleepScore, recoveryRemainingHours, trainingReadinessScore, isPremium, setShowPremiumModal }) {
+export default function AICoachChat({ lang, goal, programStyle, targetPace, currentUser, runActs, selectedDays, latestSleepScore, recoveryRemainingHours, trainingReadinessScore, isPremium, setShowPremiumModal, vo2max }) {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -67,23 +67,7 @@ export default function AICoachChat({ lang, goal, programStyle, targetPace, curr
     const msgLower = userMsg.toLowerCase();
     
     // 1. Check Local Dictionary First (Instant Response based on input language)
-    let matchedRule = null;
-    for (const rule of localDictionary) {
-      if (msgLower.match(rule.match)) {
-        matchedRule = rule;
-        break;
-      }
-    }
-
-    if (matchedRule) {
-      setTimeout(() => {
-        setMessages(p => [...p, { role: 'assistant', content: matchedRule.reply }]);
-        setIsTyping(false);
-      }, 800);
-      return;
-    }
-    
-    // 2. Fallback to Real AI (Groq API)
+    // 2. Real AI (Groq API or Vercel Proxy)
     try {
       let apiKey = localStorage.getItem('groq_api_key');
 
@@ -137,15 +121,37 @@ export default function AICoachChat({ lang, goal, programStyle, targetPace, curr
       const recentRunsContextId = recentRunsStr ? `\n\n[DATA LARI TERAKHIR (Max 7 Sesi)]\n${recentRunsStr}` : '\n\n[DATA LARI TERAKHIR]\nBelum ada data lari.';
       const recentRunsContextEn = recentRunsStr ? `\n\n[RECENT RUNS DATA (Max 7 Sessions)]\n${recentRunsStr}` : '\n\n[RECENT RUNS]\nNo run data yet.';
 
+      let todaysWorkoutId = 'Tidak ada jadwal lari hari ini.';
+      let todaysWorkoutEn = 'No scheduled run today.';
+      try {
+        const paces = { ngepush: formatPace(targetPace*0.8), sedang: formatPace(targetPace*0.9), santai: formatPace(targetPace*1.1) };
+        const plan = buildTrainingPlan(programStyle, goal, paces, selectedDays);
+        const dayOfWeek = lang === 'id' ? currentDay : now.toLocaleDateString('id-ID', { weekday: 'long' }); // plan uses Indonesian days
+        const todayPlan = plan.find(p => p.hari.toLowerCase() === dayOfWeek.toLowerCase());
+        if (todayPlan) {
+          todaysWorkoutId = `${todayPlan.jenis} (${todayPlan.durasi}). Tujuan: ${todayPlan.tujuan}`;
+          todaysWorkoutEn = `${todayPlan.jenis} (${todayPlan.durasi}). Purpose: ${todayPlan.tujuan}`;
+        }
+      } catch (e) {
+        console.warn('Failed to build plan for AI context:', e);
+      }
+
+      const vo2maxContextId = vo2max ? `\n- Estimasi VO2Max: ${vo2max.toFixed(1)}` : '';
+      const vo2maxContextEn = vo2max ? `\n- Estimated VO2Max: ${vo2max.toFixed(1)}` : '';
+
       const systemPrompt = lang === 'id' 
         ? `Lo adalah Coach AI EnduraUP, pelatih lari profesional yang asik (pake bahasa gaul lo/gue).
 WAKTU LOKAL: ${currentDay}, Jam ${currentTime}.
 TARGET USER: ${goal}, Program: ${programStyle}, Pace: ${formattedPace} min/km.
 
+[MENU LATIHAN HARI INI]
+${todaysWorkoutId}
+
 [DATA FISIK USER SAAT INI]
 - Training Readiness: ${trainingReadinessScore}%
 - Waktu Pemulihan Sisa: ${recoveryRemainingHours} jam
-- Skor Konsistensi: ${consistencyScore}%${recentRunsContextId}
+- Skor Tidur Tadi Malam: ${latestSleepScore || 'Tidak ada data'}
+- Skor Konsistensi: ${consistencyScore}%${vo2maxContextId}${recentRunsContextId}
 
 ATURAN WAJIB (PATUHI INI):
 1. JIKA READINESS < 60%: User sedang KECAPAIAN. LO DILARANG KERAS menyuruh atau mengizinkan user lari. Wajib paksa user untuk ISTIRAHAT TOTAL hari ini atau maksimal jalan kaki. Jika user nanya soal lari, tolak dan ingatkan readiness-nya masih ${trainingReadinessScore}%.
@@ -154,15 +160,20 @@ ATURAN WAJIB (PATUHI INI):
 4. JANGAN KRITIK pace lambat. Pahami ilmu Zone 2 / 80/20. Puji lari lambat sebagai "Easy Run" yang bagus buat aerobic base. Jangan judge pelari jelek hanya karena pacenya jauh dari target.
 5. Jawab pertanyaan user dengan singkat, padat, pakai emoji.
 6. JIKA user nanya/bahas tentang hasil lari mereka, BERIKAN ANALISA: puji kalau "Keren!" atau "Mantap!" misal pacenya stabil / HR-nya aman. Kasih teguran halus kalau HR-nya kekencengan (di atas 170). Kasih feedback layaknya pelatih beneran. Jangan cuma nyebutin angka ulang.
-7. JIKA user bahas topik di luar lari/olahraga, tolak dengan sopan.`
+7. JIKA user bahas MENU HARI INI, ingetin menu apa yang harus dia lakuin sesuai jadwal di atas, dan kasih tips singkat cara ngejalaninnya.
+8. JIKA user bahas topik di luar lari/olahraga, tolak dengan sopan.`
         : `You are EnduraUP Coach AI, a professional, friendly running coach.
 LOCAL TIME: ${currentDay}, ${currentTime}.
 USER'S TARGET: ${goal}, Program: ${programStyle}, Pace: ${formattedPace} min/km.
 
+[TODAY'S WORKOUT PLAN]
+${todaysWorkoutEn}
+
 [CURRENT PHYSICAL DATA]
 - Training Readiness: ${trainingReadinessScore}%
 - Remaining Recovery Time: ${recoveryRemainingHours} hours
-- Consistency Score: ${consistencyScore}%${recentRunsContextEn}
+- Last Night's Sleep Score: ${latestSleepScore || 'No data'}
+- Consistency Score: ${consistencyScore}%${vo2maxContextEn}${recentRunsContextEn}
 
 STRICT RULES (MUST FOLLOW):
 1. IF READINESS < 60%: User is EXHAUSTED. YOU ARE STRICTLY FORBIDDEN to tell them to run. You MUST force them to REST today. If they ask to run, refuse and remind them their readiness is ${trainingReadinessScore}%.

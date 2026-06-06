@@ -499,7 +499,9 @@ export const buildAdaptiveCalendar = (weeklyPlan, activities = [], isPaused = fa
       if (day.isPast && day.workout.missed) {
         const isRunWorkout = day.workout.jenis.includes('Run') || day.workout.jenis.includes('Interval') || day.workout.jenis.includes('Tempo') || day.workout.jenis.includes('Jog');
         if (isRunWorkout) {
-          missedRuns.push({ ...day.workout, originalHari: day.workout.hari });
+          const shiftedWorkout = { ...day.workout, originalHari: day.workout.hari };
+          delete shiftedWorkout.missed;
+          missedRuns.push(shiftedWorkout);
           // Mark the past day as Rest since they missed it
           day.workout = {
             hari: day.workout.hari,

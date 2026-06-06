@@ -355,6 +355,7 @@ export default function App() {
   const [shareTemplate, setShareTemplate] = useState('vo2');
   const [shareStatsPeriod, setShareStatsPeriod] = useState('yearly');
   const [shareTheme, setShareTheme] = useState('dark');
+  const [shareShape, setShareShape] = useState('square');
   const [customCaption, setCustomCaption] = useState('Lihat pencapaian lari gue di EnduraUP! Gabung yuk di www.enduraup.space');
   const [retroImageLoaded, setRetroImageLoaded] = useState(false);
   const retroImageRef = useRef(null);
@@ -975,6 +976,11 @@ export default function App() {
       accentPrimary = '#f43f5e'; accentSecondary = '#f97316';
       textPrimary = '#1a120a'; textSecondary = 'rgba(26,18,10,0.6)'; textMuted = 'rgba(26,18,10,0.4)';
       borderStroke = 'rgba(244,63,94,0.1)'; glassBg = 'rgba(255,255,255,0.6)';
+    } else if (shareTheme === 'transparent') {
+      bgGrad = 'transparent';
+      accentPrimary = '#a78bfa'; accentSecondary = '#c084fc';
+      textPrimary = '#ffffff'; textSecondary = 'rgba(255,255,255,0.8)'; textMuted = 'rgba(255,255,255,0.5)';
+      borderStroke = 'rgba(255,255,255,0.3)'; glassBg = 'rgba(0,0,0,0.4)';
     } else {
       bgGrad.addColorStop(0, customColor1 || '#1e1b4b'); bgGrad.addColorStop(1, customColor2 || '#311042');
       accentPrimary = '#fbbf24'; accentSecondary = '#f59e0b';
@@ -983,53 +989,76 @@ export default function App() {
     }
 
     // Draw background
-    ctx.fillStyle = bgGrad;
-    ctx.fillRect(0, 0, W, H);
-
-    // Draw glowing orbs
-    const drawOrb = (ox, oy, or, color) => {
-      const grad = ctx.createRadialGradient(ox, oy, 0, ox, oy, or);
-      grad.addColorStop(0, color);
-      grad.addColorStop(1, 'transparent');
-      ctx.fillStyle = grad;
+    if (shareTheme !== 'transparent') {
+      ctx.fillStyle = bgGrad;
       ctx.fillRect(0, 0, W, H);
-    };
-    
-    if (shareTheme === 'dark') {
-      drawOrb(200, 200, 700, 'rgba(167, 139, 250, 0.15)');
-      drawOrb(800, 900, 600, 'rgba(99, 102, 241, 0.1)');
-    } else if (shareTheme === 'cyber') {
-      drawOrb(900, 100, 600, 'rgba(236, 72, 153, 0.15)');
-      drawOrb(100, 900, 600, 'rgba(6, 182, 212, 0.15)');
-    } else if (shareTheme === 'sunrise') {
-      drawOrb(200, 200, 700, 'rgba(251, 146, 60, 0.2)');
-      drawOrb(900, 800, 800, 'rgba(244, 63, 94, 0.15)');
-    } else {
-      drawOrb(540, 540, 800, 'rgba(255, 255, 255, 0.05)');
-    }
 
-    // Grid pattern
-    ctx.strokeStyle = borderStroke;
-    ctx.lineWidth = 1;
-    for (let i = 0; i <= W; i += 60) {
-      ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, H); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(W, i); ctx.stroke();
+      // Draw glowing orbs
+      const drawOrb = (ox, oy, or, color) => {
+        const grad = ctx.createRadialGradient(ox, oy, 0, ox, oy, or);
+        grad.addColorStop(0, color);
+        grad.addColorStop(1, 'transparent');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, W, H);
+      };
+      
+      if (shareTheme === 'dark') {
+        drawOrb(200, 200, 700, 'rgba(167, 139, 250, 0.15)');
+        drawOrb(800, 900, 600, 'rgba(99, 102, 241, 0.1)');
+      } else if (shareTheme === 'cyber') {
+        drawOrb(900, 100, 600, 'rgba(236, 72, 153, 0.15)');
+        drawOrb(100, 900, 600, 'rgba(6, 182, 212, 0.15)');
+      } else if (shareTheme === 'sunrise') {
+        drawOrb(200, 200, 700, 'rgba(251, 146, 60, 0.2)');
+        drawOrb(900, 800, 800, 'rgba(244, 63, 94, 0.15)');
+      } else {
+        drawOrb(540, 540, 800, 'rgba(255, 255, 255, 0.05)');
+      }
+
+      // Grid pattern
+      ctx.strokeStyle = borderStroke;
+      ctx.lineWidth = 1;
+      for (let i = 0; i <= W; i += 60) {
+        ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, H); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(W, i); ctx.stroke();
+      }
     }
 
     // ── Main Glass Card ──
-    const cardMargin = 40;
+    const cardMargin = shareTheme === 'transparent' ? 20 : 40;
     const cardW = W - cardMargin * 2;
     const cardH = H - cardMargin * 2;
-    fillRoundedRect(ctx, cardMargin, cardMargin, cardW, cardH, 32, glassBg);
-    ctx.strokeStyle = borderStroke;
-    ctx.lineWidth = 2;
-    if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(cardMargin, cardMargin, cardW, cardH, 32); ctx.stroke(); }
     
-    // Inner glare
-    const glareGrad = ctx.createLinearGradient(cardMargin, cardMargin, cardMargin+cardW, cardMargin+cardH);
-    glareGrad.addColorStop(0, 'rgba(255,255,255,0.08)');
-    glareGrad.addColorStop(1, 'transparent');
-    fillRoundedRect(ctx, cardMargin, cardMargin, cardW, cardH, 32, glareGrad);
+    if (shareTheme === 'transparent' && shareShape === 'circle') {
+      ctx.beginPath();
+      ctx.arc(W/2, H/2, Math.min(cardW, cardH)/2, 0, Math.PI * 2);
+      ctx.fillStyle = glassBg;
+      ctx.fill();
+      ctx.strokeStyle = borderStroke;
+      ctx.lineWidth = 6;
+      ctx.stroke();
+      
+      ctx.save();
+      ctx.clip();
+    } else {
+      fillRoundedRect(ctx, cardMargin, cardMargin, cardW, cardH, 32, glassBg);
+      ctx.strokeStyle = borderStroke;
+      ctx.lineWidth = shareTheme === 'transparent' ? 6 : 2;
+      if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(cardMargin, cardMargin, cardW, cardH, 32); ctx.stroke(); }
+      
+      // Inner glare
+      const glareGrad = ctx.createLinearGradient(cardMargin, cardMargin, cardMargin+cardW, cardMargin+cardH);
+      glareGrad.addColorStop(0, 'rgba(255,255,255,0.08)');
+      glareGrad.addColorStop(1, 'transparent');
+      fillRoundedRect(ctx, cardMargin, cardMargin, cardW, cardH, 32, glareGrad);
+
+      ctx.save();
+      if (shareTheme === 'transparent' && ctx.roundRect) {
+        ctx.beginPath();
+        ctx.roundRect(cardMargin, cardMargin, cardW, cardH, 32);
+        ctx.clip();
+      }
+    }
 
     // ── Header ──
     const athleteName = displayName || (currentUser ? currentUser.split('@')[0] : 'PELARI');
@@ -1398,7 +1427,8 @@ export default function App() {
     ctx.fillText(lang === 'id' ? 'Generated by AI Engine' : 'Generated by AI Engine', W - 90, 1010);
     ctx.textAlign = 'left';
 
-  }, [showShareModal, shareTemplate, shareStatsPeriod, shareTheme, runActs, totalDist, totalSessions, avgHR, actualMaxHR, vo2max, targetPace, displayName, currentUser, avatar, retroImageLoaded, lang, customColor1, customColor2, selectedRunForDetails]);
+    ctx.restore(); // Restore from clipping
+  }, [showShareModal, shareTemplate, shareStatsPeriod, shareTheme, shareShape, runActs, totalDist, totalSessions, avgHR, actualMaxHR, vo2max, targetPace, displayName, currentUser, avatar, retroImageLoaded, lang, customColor1, customColor2, selectedRunForDetails]);
 
 
   const shareOrDownloadImage = async () => {
@@ -3217,7 +3247,8 @@ export default function App() {
                 {[
                   { key: 'dark', label: 'Sleek Dark', color: 'linear-gradient(135deg, #09090b, #18181b)' },
                   { key: 'sunrise', label: 'Sunrise Fun', color: 'linear-gradient(135deg, #fff1f2, #ffedd5)' },
-                  { key: 'custom', label: 'Custom', color: `linear-gradient(135deg, ${customColor1}, ${customColor2})` }
+                  { key: 'custom', label: 'Custom', color: `linear-gradient(135deg, ${customColor1}, ${customColor2})` },
+                  { key: 'transparent', label: 'Sticker IG', color: 'transparent', border: '1px dashed var(--border)' }
                 ].map(th => (
                   <button
                     key={th.key}
@@ -3226,14 +3257,14 @@ export default function App() {
                       flex: 1,
                       padding: '10px 4px',
                       borderRadius: 8,
-                      border: '1px solid ' + (shareTheme === th.key ? (th.key === 'sunrise' || th.key === 'custom' ? '#e11d48' : '#ffffff') : 'var(--border)'),
-                      background: th.color,
+                      border: th.border || ('1px solid ' + (shareTheme === th.key ? (th.key === 'sunrise' || th.key === 'custom' ? '#e11d48' : '#ffffff') : 'var(--border)')),
+                      background: shareTheme === th.key && th.key === 'transparent' ? 'rgba(255,255,255,0.05)' : th.color,
                       color: (th.key === 'sunrise' || th.key === 'custom') ? '#be123c' : '#ffffff',
                       fontSize: 11,
                       fontWeight: 600,
                       cursor: 'pointer',
                       fontFamily: 'inherit',
-                      boxShadow: shareTheme === th.key ? ((th.key === 'sunrise' || th.key === 'custom') ? '0 0 10px rgba(225, 29, 72, 0.4)' : '0 0 10px rgba(167, 139, 250, 0.4)') : 'none',
+                      boxShadow: shareTheme === th.key && th.key !== 'transparent' ? ((th.key === 'sunrise' || th.key === 'custom') ? '0 0 10px rgba(225, 29, 72, 0.4)' : '0 0 10px rgba(167, 139, 250, 0.4)') : 'none',
                       transition: 'all 0.15s'
                     }}
                   >
@@ -3242,6 +3273,31 @@ export default function App() {
                 ))}
               </div>
               
+              {shareTheme === 'transparent' && (
+                <div className="animate-fade-in" style={{ marginTop: 12 }}>
+                  <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>
+                    Bentuk Border Transparan
+                  </label>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    {['square', 'circle'].map(shape => (
+                      <button
+                        key={shape}
+                        onClick={() => setShareShape(shape)}
+                        style={{
+                          flex: 1, padding: '8px 12px', borderRadius: 8,
+                          border: '1px solid ' + (shareShape === shape ? 'var(--accent-purple)' : 'var(--border)'),
+                          background: shareShape === shape ? 'rgba(167, 139, 250, 0.1)' : 'transparent',
+                          color: shareShape === shape ? 'var(--text-primary)' : 'var(--text-muted)',
+                          fontSize: 12, fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s'
+                        }}
+                      >
+                        {shape === 'square' ? 'Kotak' : 'Melingkar'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {shareTheme === 'custom' && (
                 <div className="animate-fade-in" style={{ display: 'flex', gap: 12, marginTop: 12, background: 'rgba(255,255,255,0.03)', padding: 12, borderRadius: 8, border: '1px dashed var(--border)' }}>
                   <div style={{ flex: 1 }}>
@@ -4373,6 +4429,7 @@ export default function App() {
           trainingReadinessScore={trainingReadinessScore}
           isPremium={isPremium}
           setShowPremiumModal={setShowPremiumModal}
+          vo2max={vo2max}
         />
         {selectedRunForDetails && (
           <RunDetailsModal 
