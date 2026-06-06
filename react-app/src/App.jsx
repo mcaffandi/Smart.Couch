@@ -1063,7 +1063,7 @@ export default function App() {
     }
 
     // ── Header ──
-    if (shareTemplate !== 'sticker') {
+    if (shareTemplate !== 'sticker' && shareTemplate !== 'polaroid') {
       const athleteName = displayName || (currentUser ? currentUser.split('@')[0] : 'PELARI');
     ctx.fillStyle = textPrimary;
     ctx.font = '800 38px Outfit, sans-serif';
@@ -1420,6 +1420,84 @@ export default function App() {
       if (targetRun) {
         const distKm = ((targetRun.distance ?? 0) / 100000).toFixed(2);
         const totalSecs = Math.round((targetRun.duration ?? 0) / 1000);
+        const h = Math.floor(totalSecs / 3600);
+        const mDur = Math.floor((totalSecs % 3600) / 60);
+        const sDur = totalSecs % 60;
+        const durStr = h > 0 
+          ? `${h}:${mDur.toString().padStart(2, '0')}:${sDur.toString().padStart(2, '0')}`
+          : `${mDur}:${sDur.toString().padStart(2, '0')}`;
+        
+        const secPerKm = targetRun.distance && targetRun.duration ? (targetRun.duration / 1000) / (targetRun.distance / 100000) : 0;
+        const pM = Math.floor(secPerKm / 60);
+        const pS = Math.round(secPerKm % 60);
+        const paceVal = `${pM}:${pS.toString().padStart(2, '0')}`;
+        const paceUnit = " /km";
+
+        ctx.textAlign = 'center';
+        
+        // Title
+        const runName = targetRun.name || (lang === 'id' ? 'Sesi Lari' : 'Run Session');
+        ctx.fillStyle = textPrimary;
+        ctx.font = '600 80px Outfit, sans-serif';
+        // Add a slight drop shadow for text legibility if placed on bright backgrounds
+        ctx.shadowColor = 'rgba(0,0,0,0.5)';
+        ctx.shadowBlur = 10;
+        ctx.shadowOffsetY = 4;
+        ctx.fillText(runName, W/2, 460);
+
+        ctx.textAlign = 'left';
+
+        // Column 1 (Distance)
+        ctx.fillStyle = textSecondary;
+        ctx.font = '600 32px Inter, sans-serif';
+        ctx.fillText('DISTANCE:', 120, 580);
+        
+        ctx.fillStyle = textPrimary;
+        ctx.font = '700 80px Outfit, sans-serif';
+        const distVal = `${distKm}`;
+        const distW = ctx.measureText(distVal).width;
+        ctx.fillText(distVal, 120, 670);
+        
+        ctx.font = '500 40px Outfit, sans-serif';
+        ctx.fillText(' km', 120 + distW, 670);
+
+        // Column 2 (Time)
+        ctx.textAlign = 'center';
+        ctx.fillStyle = textSecondary;
+        ctx.font = '600 32px Inter, sans-serif';
+        ctx.fillText('TIME:', W/2, 580);
+        
+        ctx.fillStyle = textPrimary;
+        ctx.font = '700 80px Outfit, sans-serif';
+        ctx.fillText(durStr, W/2, 670);
+
+        // Column 3 (Pace)
+        ctx.textAlign = 'left';
+        ctx.font = '700 80px Outfit, sans-serif';
+        const paceValW = ctx.measureText(paceVal).width;
+        ctx.font = '500 40px Outfit, sans-serif';
+        const paceUnitW = ctx.measureText(paceUnit).width;
+        const totalPaceW = paceValW + paceUnitW;
+        const paceStartX = W - 120 - totalPaceW;
+
+        ctx.fillStyle = textSecondary;
+        ctx.font = '600 32px Inter, sans-serif';
+        ctx.fillText('PACE:', paceStartX, 580);
+        
+        ctx.fillStyle = textPrimary;
+        ctx.font = '700 80px Outfit, sans-serif';
+        ctx.fillText(paceVal, paceStartX, 670);
+        ctx.font = '500 40px Outfit, sans-serif';
+        ctx.fillText(paceUnit, paceStartX + paceValW, 670);
+        
+        ctx.shadowColor = 'transparent'; // Reset shadow
+        ctx.textAlign = 'left';
+      }
+    } else if (shareTemplate === 'polaroid') {
+      const targetRun = selectedRunForDetails || runActs.find(a => a.route && a.route.length > 0) || runActs[0];
+      if (targetRun) {
+        const distKm = ((targetRun.distance ?? 0) / 100000).toFixed(2);
+        const totalSecs = Math.round((targetRun.duration ?? 0) / 1000);
         const m = Math.floor(totalSecs / 60);
         const s = totalSecs % 60;
         const durStr = `${m}m ${s}s`;
@@ -1427,45 +1505,101 @@ export default function App() {
         const secPerKm = targetRun.distance && targetRun.duration ? (targetRun.duration / 1000) / (targetRun.distance / 100000) : 0;
         const pM = Math.floor(secPerKm / 60);
         const pS = Math.round(secPerKm % 60);
-        const paceStr = `${pM}:${pS.toString().padStart(2, '0')} /km`;
-
-        ctx.textAlign = 'center';
-
-        // Distance
-        ctx.fillStyle = textSecondary;
-        ctx.font = '800 36px Inter, sans-serif';
-        ctx.fillText('Distance', W/2, 260);
-        ctx.fillStyle = textPrimary;
-        ctx.font = '800 110px Outfit, sans-serif';
-        ctx.fillText(`${distKm} km`, W/2, 360);
-
-        // Pace
-        ctx.fillStyle = textSecondary;
-        ctx.font = '800 36px Inter, sans-serif';
-        ctx.fillText('Pace', W/2, 480);
-        ctx.fillStyle = textPrimary;
-        ctx.font = '800 110px Outfit, sans-serif';
-        ctx.fillText(paceStr, W/2, 580);
-
-        // Time
-        ctx.fillStyle = textSecondary;
-        ctx.font = '800 36px Inter, sans-serif';
-        ctx.fillText('Time', W/2, 700);
-        ctx.fillStyle = textPrimary;
-        ctx.font = '800 110px Outfit, sans-serif';
-        ctx.fillText(durStr, W/2, 800);
-
-        // Logo
-        ctx.fillStyle = accentPrimary;
-        ctx.font = '800 50px Outfit, sans-serif';
-        ctx.fillText('EnduraUP', W/2, 950);
+        const paceVal = `${pM}:${pS.toString().padStart(2, '0')}`;
         
+        const hrVal = targetRun.avgHR ? Math.round(targetRun.avgHR) : '--';
+
+        // Draw Top Bar (White)
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, W, 180);
+
+        // Draw Bottom Bar (White)
+        ctx.fillRect(0, H - 280, W, 280);
+
+        // Top Bar Content
+        // Avatar
+        if (avatar) {
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(100, 90, 50, 0, Math.PI * 2);
+          ctx.clip();
+          ctx.drawImage(avatar, 50, 40, 100, 100);
+          ctx.restore();
+        } else {
+          ctx.beginPath();
+          ctx.arc(100, 90, 50, 0, Math.PI * 2);
+          ctx.fillStyle = '#f3f4f6';
+          ctx.fill();
+        }
+
+        ctx.fillStyle = '#111827';
+        ctx.font = '800 36px Outfit, sans-serif';
+        const athleteName = displayName || (currentUser ? currentUser.split('@')[0] : 'PELARI');
+        ctx.fillText(`@${athleteName.toUpperCase()}`, 170, 85);
+        
+        ctx.fillStyle = '#6b7280';
+        ctx.font = '600 24px Inter, sans-serif';
+        ctx.fillText('ENDURA UP APP', 170, 125);
+
+        ctx.textAlign = 'right';
+        ctx.fillStyle = '#9ca3af';
+        ctx.font = '500 28px Inter, sans-serif';
+        const dateStr = new Date(targetRun.startTimeLocal).toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-US', { month: 'short', day: 'numeric' });
+        ctx.fillText(dateStr, W - 60, 105);
+        ctx.textAlign = 'left';
+
+        // Bottom Bar Content (Stats)
+        const botY = H - 280;
+        
+        // Column 1 (Distance)
+        ctx.fillStyle = '#6b7280';
+        ctx.font = '600 28px Inter, sans-serif';
+        ctx.fillText('DISTANCE', 90, botY + 80);
+        
+        ctx.fillStyle = '#111827';
+        ctx.font = '800 80px Outfit, sans-serif';
+        const distW = ctx.measureText(distKm).width;
+        ctx.fillText(distKm, 90, botY + 180);
+        ctx.font = '600 36px Outfit, sans-serif';
+        ctx.fillText(' KM', 90 + distW, botY + 180);
+
+        // Column 2 (Pace)
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#6b7280';
+        ctx.font = '600 28px Inter, sans-serif';
+        ctx.fillText('PACE', W/2, botY + 80);
+        
+        ctx.fillStyle = '#111827';
+        ctx.font = '800 80px Outfit, sans-serif';
+        const pW = ctx.measureText(paceVal).width;
+        ctx.fillText(paceVal, W/2 - 20, botY + 180); // shift slightly left to accommodate /km
+        ctx.textAlign = 'left';
+        ctx.font = '600 36px Outfit, sans-serif';
+        ctx.fillText(' /km', W/2 - 20 + pW/2, botY + 180);
+
+        // Column 3 (HR or Time)
+        ctx.textAlign = 'right';
+        ctx.fillStyle = '#6b7280';
+        ctx.font = '600 28px Inter, sans-serif';
+        ctx.fillText(targetRun.avgHR ? 'HR' : 'TIME', W - 90, botY + 80);
+        
+        ctx.fillStyle = '#111827';
+        ctx.font = '800 80px Outfit, sans-serif';
+        const val3 = targetRun.avgHR ? hrVal.toString() : durStr.split(' ')[0]; // use only min if time
+        const unit3 = targetRun.avgHR ? ' bpm' : '';
+        ctx.textAlign = 'left';
+        const val3W = ctx.measureText(val3).width;
+        const u3W = ctx.measureText(unit3).width;
+        const startX3 = W - 90 - (val3W + u3W);
+        ctx.fillText(val3, startX3, botY + 180);
+        ctx.font = '600 36px Outfit, sans-serif';
+        ctx.fillText(unit3, startX3 + val3W, botY + 180);
         ctx.textAlign = 'left';
       }
     }
 
     // ── Footer ──
-    if (shareTemplate !== 'sticker') {
+    if (shareTemplate !== 'sticker' && shareTemplate !== 'polaroid') {
       ctx.strokeStyle = borderStroke;
       ctx.lineWidth = 1.5;
       ctx.beginPath(); ctx.moveTo(90, 960); ctx.lineTo(W - 90, 960); ctx.stroke();
@@ -3230,7 +3364,8 @@ export default function App() {
                   { key: 'stats', label: 'Ringkasan Stats' },
                   { key: 'race', label: 'Prediksi Race' },
                   { key: 'run', label: 'Route Lari' },
-                  { key: 'sticker', label: 'Sticker IG' }
+                  { key: 'sticker', label: 'Sticker IG' },
+                  { key: 'polaroid', label: 'Frame Foto' }
                 ].map(t => (
                   <button
                     key={t.key}
