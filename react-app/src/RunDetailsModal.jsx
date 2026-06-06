@@ -123,13 +123,13 @@ export default function RunDetailsModal({ act, onClose, lang = 'id', stravaAcces
               </div>
               <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>{msToDate(act.startTimeLocal)}</div>
             </div>
-            <div style={{ display: 'flex', gap: 8 }}>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
               {onShare && (
-                <button onClick={onShare} className="btn-close" style={{ background: 'var(--accent-purple)', border: 'none', color: '#fff', cursor: 'pointer', padding: 8, borderRadius: '50%', boxShadow: '0 4px 12px rgba(167, 139, 250, 0.4)' }}>
+                <button onClick={onShare} className="btn-close" style={{ background: 'var(--accent-purple)', border: 'none', color: '#fff', cursor: 'pointer', padding: 8, borderRadius: '50%', boxShadow: '0 4px 12px rgba(167, 139, 250, 0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Share size={18} />
                 </button>
               )}
-              <button onClick={onClose} className="btn-close" style={{ background: 'var(--bg-card)', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 8, borderRadius: '50%' }}>
+              <button onClick={onClose} className="btn-close" style={{ background: 'var(--bg-card)', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 8, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <X size={20} />
               </button>
             </div>
