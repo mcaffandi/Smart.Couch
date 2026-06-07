@@ -1434,6 +1434,77 @@ export default function App() {
         const paceUnit = " /km";
 
         ctx.textAlign = 'center';
+
+        // Draw Map Route if available
+        if (targetRun.route && targetRun.route.length > 0) {
+          const mapY = 80;
+          const mapW = 600;
+          const mapH = 280;
+          const mapX = (W - mapW) / 2;
+          
+          const lats = targetRun.route.map(p => p.lat !== undefined ? p.lat : p[0]);
+          const lons = targetRun.route.map(p => p.lon !== undefined ? p.lon : p[1]);
+          const minLat = Math.min(...lats);
+          const maxLat = Math.max(...lats);
+          const minLon = Math.min(...lons);
+          const maxLon = Math.max(...lons);
+          
+          const latRange = (maxLat - minLat) || 0.0001;
+          const lonRange = (maxLon - minLon) || 0.0001;
+          
+          const avgLat = (minLat + maxLat) / 2;
+          const lonScale = Math.cos(avgLat * Math.PI / 180);
+          
+          const widthRatio = (lonRange * lonScale) / latRange;
+          
+          let drawW = mapW;
+          let drawH = mapH;
+          let offsetX = 0;
+          let offsetY = 0;
+          
+          if (widthRatio > mapW / mapH) {
+            drawH = mapW / widthRatio;
+            offsetY = (mapH - drawH) / 2;
+          } else {
+            drawW = mapH * widthRatio;
+            offsetX = (mapW - drawW) / 2;
+          }
+          
+          ctx.beginPath();
+          targetRun.route.forEach((p, i) => {
+            const px = mapX + offsetX + ((p.lon !== undefined ? p.lon : p[1]) - minLon) / lonRange * drawW;
+            const py = mapY + offsetY + (1 - ((p.lat !== undefined ? p.lat : p[0]) - minLat) / latRange) * drawH; // Invert lat
+            if (i === 0) ctx.moveTo(px, py);
+            else ctx.lineTo(px, py);
+          });
+          
+          // Use bright accent color for sticker route
+          const routeColor = shareTheme === 'transparent' ? '#a78bfa' : accentPrimary;
+          ctx.shadowColor = routeColor;
+          ctx.shadowBlur = 12;
+          ctx.strokeStyle = routeColor;
+          ctx.lineWidth = 8;
+          ctx.lineCap = 'round';
+          ctx.lineJoin = 'round';
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+          
+          // Draw start and end dots
+          const startPt = targetRun.route[0];
+          const endPt = targetRun.route[targetRun.route.length - 1];
+          const startX = mapX + offsetX + ((startPt.lon !== undefined ? startPt.lon : startPt[1]) - minLon) / lonRange * drawW;
+          const startY = mapY + offsetY + (1 - ((startPt.lat !== undefined ? startPt.lat : startPt[0]) - minLat) / latRange) * drawH;
+          const endX = mapX + offsetX + ((endPt.lon !== undefined ? endPt.lon : endPt[1]) - minLon) / lonRange * drawW;
+          const endY = mapY + offsetY + (1 - ((endPt.lat !== undefined ? endPt.lat : endPt[0]) - minLat) / latRange) * drawH;
+          
+          ctx.fillStyle = '#10b981'; // Green dot for start
+          ctx.beginPath(); ctx.arc(startX, startY, 12, 0, Math.PI * 2); ctx.fill();
+          ctx.lineWidth = 4; ctx.strokeStyle = '#ffffff'; ctx.stroke();
+          
+          ctx.fillStyle = '#ef4444'; // Red dot for end
+          ctx.beginPath(); ctx.arc(endX, endY, 12, 0, Math.PI * 2); ctx.fill();
+          ctx.lineWidth = 4; ctx.strokeStyle = '#ffffff'; ctx.stroke();
+        }
         
         // Title
         const runName = targetRun.name || (lang === 'id' ? 'Sesi Lari' : 'Run Session');
