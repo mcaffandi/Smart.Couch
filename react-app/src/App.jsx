@@ -1,5 +1,6 @@
 import ErrorBoundary from "./ErrorBoundary";
 import { useState, useCallback, useEffect, useRef, useMemo, lazy, Suspense } from 'react';
+import ImageCropperModal from './ImageCropperModal';
 import {
   loadUsersList, saveUsersList, getCurrentUser, saveCurrentUser,
   loadUserData, saveUserData, deleteUserData,
@@ -99,6 +100,7 @@ export default function App() {
   const [height, setHeight] = useState(() => data.profile?.height ?? null);
   const [gender, setGender] = useState(() => data.profile?.gender ?? '');
   const [avatar, setAvatar] = useState(() => data.profile?.avatar ?? null);
+  const [croppingImageSrc, setCroppingImageSrc] = useState(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showAddRunModal, setShowAddRunModal] = useState(false);
   const [showSleepModal, setShowSleepModal] = useState(false);
@@ -2789,20 +2791,21 @@ export default function App() {
                         <input id="avatar-upload" type="file" accept="image/*" style={{ display: 'none' }} onChange={e => {
                           const file = e.target.files?.[0];
                           if (!file) return;
-                          if (file.size > 200 * 1024) {
-                            addToast('Ukuran foto terlalu besar. Maksimal 200 KB.', 'error');
+                          if (file.size > 5 * 1024 * 1024) {
+                            addToast(lang === 'id' ? 'Ukuran foto terlalu besar. Maksimal 5 MB.' : 'Image too large. Max 5 MB.', 'error');
                             return;
                           }
                           const reader = new FileReader();
                           reader.onloadend = () => {
-                            setEditDraft(prev => ({ ...prev, avatar: reader.result }));
+                            setCroppingImageSrc(reader.result);
                           };
                           reader.readAsDataURL(file);
+                          e.target.value = null;
                         }} />
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-primary)' }}>Foto Profil</div>
-                        <div style={{ fontSize: 9, color: 'var(--text-muted)' }}>Maksimal 200 KB (JPEG/PNG)</div>
+                        <div style={{ fontSize: 9, color: 'var(--text-muted)' }}>Maksimal 5 MB (JPEG/PNG)</div>
                         {d.avatar && (
                           <button onClick={() => setEditDraft(prev => ({ ...prev, avatar: null }))} style={{ background: 'none', border: 'none', color: '#fb7185', fontSize: 9, padding: 0, marginTop: 2, cursor: 'pointer', textDecoration: 'underline', fontFamily: 'inherit', fontWeight: 600 }}>Hapus Foto</button>
                         )}
@@ -4660,6 +4663,18 @@ export default function App() {
           />
         )}
       </Suspense>
+      
+      {croppingImageSrc && (
+        <ImageCropperModal
+          imageSrc={croppingImageSrc}
+          onComplete={(base64Str) => {
+            setEditDraft(prev => ({ ...prev, avatar: base64Str }));
+            setCroppingImageSrc(null);
+          }}
+          onClose={() => setCroppingImageSrc(null)}
+          lang={lang}
+        />
+      )}
       <Toast toasts={toasts} />
     </div>
   );
