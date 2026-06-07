@@ -2587,6 +2587,15 @@ export default function App() {
                   </div>
                   <div style={{ fontSize: 11, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{currentUser}</div>
                 </div>
+                {!profileEditMode && (
+                  <button 
+                    onClick={() => { setEditDraft({ displayName: curName, age: curAge, gender: curGender, weight: curWeight, height: curHeight, avatar: avatar, goal: goal, programStyle: programStyle, targetPace: targetPace, selectedDays: selectedDays, stravaSyncMode: data.profile?.stravaSyncMode || 'fast' }); setProfileEditMode(true); }}
+                    style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 6, color: 'var(--text-primary)', cursor: 'pointer', padding: '4px 10px', fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                    Edit
+                  </button>
+                )}
                 <button onClick={closeModal}
                   style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 6, color: 'var(--text-muted)', cursor: 'pointer', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontFamily: 'inherit', flexShrink: 0 }}
                 >×</button>
@@ -2685,16 +2694,42 @@ export default function App() {
                     </div>
                   )}
                   
-                  {/* Reset Data Button moved here */}
-                  <div style={{ marginBottom: 16 }}>
+                  {/* Danger Zone (Reset/Delete) */}
+                  <div style={{ marginTop: 16, borderTop: '1px solid var(--border)', paddingTop: 16 }}>
                     {!confirmReset ? (
-                      <button
-                        className="btn btn-danger"
-                        onClick={() => setConfirmReset(true)}
-                        style={{ width: '100%', padding: '10px', borderRadius: 8, fontSize: 13, fontWeight: 700 }}
-                      >
-                        {lang === 'id' ? 'Reset & Hapus Semua Data' : 'Reset & Clear All Data'}
-                      </button>
+                      <div style={{ display: 'flex', justifyContent: 'center', gap: 24 }}>
+                        <button
+                          onClick={() => setConfirmReset(true)}
+                          style={{ background: 'none', border: 'none', color: '#ef4444', textDecoration: 'underline', cursor: 'pointer', fontSize: 11, fontWeight: 600, padding: 0 }}
+                        >
+                          {lang === 'id' ? 'Reset Semua Data' : 'Reset All Data'}
+                        </button>
+                        {!currentUser?.startsWith('Anonim-') && (
+                          <button 
+                            onClick={async () => {
+                              if (window.confirm(lang === 'id' ? 'Apakah kamu yakin ingin menghapus akun ini secara permanen? Seluruh data akan hilang dan tidak dapat dikembalikan.' : 'Are you sure you want to permanently delete your account? All data will be lost.')) {
+                                try {
+                                  if (isFirebaseConfigured && auth.currentUser) {
+                                    await deleteUser(auth.currentUser);
+                                  }
+                                  deleteUserData();
+                                  setSessionUser(null);
+                                  sessionStorage.removeItem('smartcoach_session');
+                                  setShowProfileModal(false);
+                                  addToast(lang === 'id' ? 'Akun berhasil dihapus permanen.' : 'Account permanently deleted.', 'error');
+                                } catch (err) {
+                                  if (err.code === 'auth/requires-recent-login') {
+                                    alert(lang === 'id' ? 'Gagal: Silakan logout dan login kembali untuk memverifikasi penghapusan akun.' : 'Failed: Please logout and login again to verify account deletion.');
+                                  } else {
+                                    alert("Gagal: " + err.message);
+                                  }
+                                }
+                              }
+                            }}
+                            style={{ background: 'none', border: 'none', color: '#ef4444', textDecoration: 'underline', cursor: 'pointer', fontSize: 11, fontWeight: 600, padding: 0 }}
+                          >Hapus Akun</button>
+                        )}
+                      </div>
                     ) : (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, background: 'rgba(239, 68, 68, 0.05)', padding: 16, borderRadius: 8, border: '1px solid rgba(239, 68, 68, 0.2)' }}>
                         <div style={{ fontSize: 13, color: '#ef4444', fontWeight: 700, textAlign: 'center' }}>
@@ -2736,36 +2771,6 @@ export default function App() {
                           </button>
                         </div>
                       </div>
-                    )}
-                  </div>
-                  <div style={{ display: 'flex', gap: 8, width: '100%' }}>
-                    <button onClick={() => { setEditDraft({ displayName: curName, age: curAge, gender: curGender, weight: curWeight, height: curHeight, avatar: avatar, goal: goal, programStyle: programStyle, targetPace: targetPace, selectedDays: selectedDays, stravaSyncMode: data.profile?.stravaSyncMode || 'fast' }); setProfileEditMode(true); }}
-                      style={{ flex: 1, padding: '10px', borderRadius: 8, background: 'var(--accent-purple)', border: 'none', color: '#fff', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13, fontWeight: 700 }}
-                    >Edit Profil</button>
-                    {!currentUser?.startsWith('Anonim-') && (
-                      <button 
-                        onClick={async () => {
-                          if (window.confirm(lang === 'id' ? 'Apakah kamu yakin ingin menghapus akun ini secara permanen? Seluruh data akan hilang dan tidak dapat dikembalikan.' : 'Are you sure you want to permanently delete your account? All data will be lost.')) {
-                            try {
-                              if (isFirebaseConfigured && auth.currentUser) {
-                                await deleteUser(auth.currentUser);
-                              }
-                              deleteUserData();
-                              setSessionUser(null);
-                              sessionStorage.removeItem('smartcoach_session');
-                              setShowProfileModal(false);
-                              addToast(lang === 'id' ? 'Akun berhasil dihapus permanen.' : 'Account permanently deleted.', 'error');
-                            } catch (err) {
-                              if (err.code === 'auth/requires-recent-login') {
-                                alert(lang === 'id' ? 'Gagal: Silakan logout dan login kembali untuk memverifikasi penghapusan akun.' : 'Failed: Please logout and login again to verify account deletion.');
-                              } else {
-                                alert("Gagal: " + err.message);
-                              }
-                            }
-                          }
-                        }}
-                        style={{ padding: '10px 16px', borderRadius: 8, background: 'var(--bg-surface)', border: '1px solid #ef4444', color: '#ef4444', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                      >Hapus Akun</button>
                     )}
                   </div>
                 </>) : (<>
