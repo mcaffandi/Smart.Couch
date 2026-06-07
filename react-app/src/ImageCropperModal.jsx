@@ -21,7 +21,7 @@ export default function ImageCropperModal({ imageSrc, onComplete, onClose, lang 
   };
 
   return (
-    <div className="profile-modal-backdrop" style={{ zIndex: 99999, backgroundColor: 'rgba(0,0,0,0.85)', position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div className="profile-modal-backdrop" style={{ zIndex: 9999999, backgroundColor: 'rgba(0,0,0,0.85)', position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div className="animate-fade-in" style={{ background: 'var(--bg-card)', borderRadius: 16, width: '100%', maxWidth: 400, display: 'flex', flexDirection: 'column', overflow: 'hidden', border: '1px solid var(--border)' }}>
         <div style={{ padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border)' }}>
           <h3 style={{ margin: 0, fontSize: 18, color: 'var(--text-primary)' }}>{lang === 'id' ? 'Sesuaikan Foto' : 'Crop Photo'}</h3>
