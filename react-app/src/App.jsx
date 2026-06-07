@@ -1504,7 +1504,15 @@ export default function App() {
           ctx.fillStyle = '#ef4444'; // Red dot for end
           ctx.beginPath(); ctx.arc(endX, endY, 12, 0, Math.PI * 2); ctx.fill();
           ctx.lineWidth = 4; ctx.strokeStyle = '#ffffff'; ctx.stroke();
+        } else {
+          ctx.fillStyle = textMuted || 'rgba(255,255,255,0.4)';
+          ctx.font = '600 24px Inter, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(lang === 'id' ? 'Peta rute tidak tersedia (Tidak ada data GPS)' : 'Route map not available (No GPS data)', W/2, 220);
+          ctx.textAlign = 'left';
         }
+        
+        ctx.textAlign = 'center';
         
         // Title
         const runName = targetRun.name || (lang === 'id' ? 'Sesi Lari' : 'Run Session');
