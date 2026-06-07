@@ -138,14 +138,32 @@ export function Collapsible({ title, children, defaultOpen = false }) {
 
 // ─── Number input ─────────────────────────────────────────────────────────────
 export function NumberInput({ value, onChange, min, max, step = 1, label }) {
+  const [localVal, setLocalVal] = useState(() => value.toString());
+
+  useEffect(() => {
+    if (parseFloat(localVal) !== value) {
+      setLocalVal(value.toString());
+    }
+  }, [value]);
+
+  const handleChange = (e) => {
+    let valStr = e.target.value;
+    if (/^0+(?=\d)/.test(valStr)) {
+      valStr = valStr.replace(/^0+(?=\d)/, '');
+    }
+    setLocalVal(valStr);
+    onChange(parseFloat(valStr) || 0);
+  };
+
   return (
     <div className="form-group">
       {label && <label className="form-label">{label}</label>}
       <div className="number-input-group">
         <button type="button" onClick={() => onChange(Math.max(min ?? -Infinity, parseFloat((value - step).toFixed(2))))}>−</button>
         <input
-          type="number" value={value} min={min} max={max} step={step}
-          onChange={e => onChange(parseFloat(e.target.value) || 0)}
+          type="number" value={localVal} min={min} max={max} step={step}
+          onChange={handleChange}
+          onBlur={() => setLocalVal(value.toString())}
         />
         <button type="button" onClick={() => onChange(Math.min(max ?? Infinity, parseFloat((value + step).toFixed(2))))}>+</button>
       </div>

@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { Lock, PenTool, Edit3, Search, Zap, Database, AlertTriangle } from 'lucide-react';
-import { collection, getDocs, getDocsFromServer, getDoc, setDoc, deleteDoc, doc, addDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, getDocs, getDocsFromServer, getDoc, setDoc, deleteDoc, doc, addDoc, updateDoc, serverTimestamp, increment } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage, auth } from './firebase';
 import ReactQuill from 'react-quill';
@@ -344,6 +344,9 @@ export default function AdminDashboard({ onBack }) {
       await updateDoc(doc(db, "upgrade_requests", requestId), {
         status: 'rejected'
       });
+      await setDoc(doc(db, "settings", "global"), {
+        proQuotaRemaining: increment(1)
+      }, { merge: true });
       setRequests(requests.map(r => r.id === requestId ? { ...r, status: 'rejected' } : r));
     } catch (err) {
       console.error(err);

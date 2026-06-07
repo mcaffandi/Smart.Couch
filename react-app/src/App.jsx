@@ -1555,12 +1555,12 @@ export default function App() {
 
         ctx.fillStyle = '#111827';
         ctx.font = '800 32px Outfit, sans-serif';
-        const athleteName = displayName || (currentUser ? currentUser.split('@')[0] : 'PELARI');
-        ctx.fillText(`@${athleteName.toUpperCase()}`, cardX + 150, cardY + 65);
+        const athleteName = displayName || (currentUser ? currentUser.split('@')[0] : 'Pelari');
+        ctx.fillText(`@${athleteName}`, cardX + 150, cardY + 65);
         
         ctx.fillStyle = '#6b7280';
         ctx.font = '600 20px Inter, sans-serif';
-        ctx.fillText('ENDURA UP APP', cardX + 150, cardY + 100);
+        ctx.fillText('Endura UP', cardX + 150, cardY + 100);
 
         ctx.textAlign = 'right';
         ctx.fillStyle = '#9ca3af';
@@ -2831,17 +2831,17 @@ export default function App() {
                         <div>
                           <label style={lbl}>Umur</label>
                           <input type="number" min={10} max={100} placeholder="—" style={inp}
-                            value={d.age ?? ''} onChange={e => { const v = e.target.value; setEditDraft(p => ({ ...p, age: v === '' ? null : parseInt(v) || null })); }} onFocus={onF} onBlur={onB} />
+                            value={d.age ?? ''} onChange={e => { let v = e.target.value; if (/^0+(?=\d)/.test(v)) { v = v.replace(/^0+(?=\d)/, ''); e.target.value = v; } setEditDraft(p => ({ ...p, age: v === '' ? null : parseInt(v) || null })); }} onFocus={onF} onBlur={onB} />
                         </div>
                         <div>
                           <label style={lbl}>Berat (kg)</label>
                           <input type="number" min={30} max={200} step={0.5} placeholder="—" style={inp}
-                            value={d.weight ?? ''} onChange={e => { const v = e.target.value; setEditDraft(p => ({ ...p, weight: v === '' ? null : parseFloat(v) || null })); }} onFocus={onF} onBlur={onB} />
+                            value={d.weight ?? ''} onChange={e => { let v = e.target.value; if (/^0+(?=\d)/.test(v)) { v = v.replace(/^0+(?=\d)/, ''); e.target.value = v; } setEditDraft(p => ({ ...p, weight: v === '' ? null : parseFloat(v) || null })); }} onFocus={onF} onBlur={onB} />
                         </div>
                         <div>
                           <label style={lbl}>Tinggi (cm)</label>
                           <input type="number" min={100} max={250} placeholder="—" style={inp}
-                            value={d.height ?? ''} onChange={e => { const v = e.target.value; setEditDraft(p => ({ ...p, height: v === '' ? null : parseInt(v) || null })); }} onFocus={onF} onBlur={onB} />
+                            value={d.height ?? ''} onChange={e => { let v = e.target.value; if (/^0+(?=\d)/.test(v)) { v = v.replace(/^0+(?=\d)/, ''); e.target.value = v; } setEditDraft(p => ({ ...p, height: v === '' ? null : parseInt(v) || null })); }} onFocus={onF} onBlur={onB} />
                         </div>
                       </div>
                       <div style={{ marginTop: 10 }}>
@@ -4592,6 +4592,17 @@ export default function App() {
                 requestedAt: serverTimestamp(),
                 status: 'pending'
               });
+
+              // Decrement the global promo quota by 1
+              await setDoc(doc(db, 'settings', 'global'), {
+                proQuotaRemaining: increment(-1)
+              }, { merge: true });
+              
+              setGlobalSettings(prev => ({
+                ...prev,
+                proQuotaRemaining: (prev?.proQuotaRemaining || 1) - 1
+              }));
+
               addToast(lang === 'id' ? 'Permintaan Upgrade berhasil dikirim! Menunggu konfirmasi Admin.' : 'Upgrade request sent! Waiting for Admin confirmation.');
             } catch (err) {
               console.error(err);
