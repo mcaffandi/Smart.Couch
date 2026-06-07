@@ -43,8 +43,8 @@ export default function AICoach({ activities, profile, lang = 'id', isPremium, s
   const getAIAnalysis = async () => {
     if (!isPremium && useServer) {
       const usage = getUsage();
-      if (usage.count >= 4) {
-        setErrorMsg(lang === 'id' ? "Batas AI Coach gratis (4x/minggu) telah habis. Upgrade ke PRO untuk akses tanpa batas!" : "Free AI limit (4x/week) reached. Upgrade to PRO for unlimited access!");
+      if (usage.count >= 3) {
+        setErrorMsg(lang === 'id' ? "Batas AI Coach gratis (3x/minggu) telah habis. Upgrade ke PRO untuk akses tanpa batas!" : "Free AI limit (3x/week) reached. Upgrade to PRO for unlimited access!");
         if (setShowPremiumModal) setShowPremiumModal(true);
         return;
       }

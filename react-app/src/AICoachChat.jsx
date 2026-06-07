@@ -73,8 +73,8 @@ export default function AICoachChat({ lang, goal, programStyle, targetPace, curr
 
       if (!isPremium && !apiKey) {
         const usage = getUsage();
-        if (usage.count >= 4) {
-          setMessages(p => [...p, { role: 'assistant', content: lang === 'id' ? "Batas AI Chat gratis (4x/minggu) telah habis. Upgrade ke PRO untuk akses tanpa batas!" : "Free AI Chat limit (4x/week) reached. Upgrade to PRO for unlimited access!" }]);
+        if (usage.count >= 3) {
+          setMessages(p => [...p, { role: 'assistant', content: lang === 'id' ? "Batas AI Chat gratis (3x/minggu) telah habis. Upgrade ke PRO untuk akses tanpa batas!" : "Free AI Chat limit (3x/week) reached. Upgrade to PRO for unlimited access!" }]);
           setIsTyping(false);
           if (setShowPremiumModal) setShowPremiumModal(true);
           return;
