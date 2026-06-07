@@ -73,8 +73,8 @@ export default function AICoachChat({ lang, goal, programStyle, targetPace, curr
 
       if (!isPremium && !apiKey) {
         const usage = getUsage();
-        if (usage.count >= 3) {
-          setMessages(p => [...p, { role: 'assistant', content: lang === 'id' ? "Batas AI Chat gratis (3x/minggu) telah habis. Upgrade ke PRO untuk akses tanpa batas!" : "Free AI Chat limit (3x/week) reached. Upgrade to PRO for unlimited access!" }]);
+        if (usage.count >= 5) {
+          setMessages(p => [...p, { role: 'assistant', content: lang === 'id' ? "Batas AI Chat gratis (5x/minggu) telah habis. Upgrade ke PRO untuk akses tanpa batas!" : "Free AI Chat limit (5x/week) reached. Upgrade to PRO for unlimited access!" }]);
           setIsTyping(false);
           if (setShowPremiumModal) setShowPremiumModal(true);
           return;
@@ -261,56 +261,60 @@ STRICT RULES (MUST FOLLOW):
         onClick={() => setIsOpen(true)}
         style={{
           position: 'fixed', bottom: 80, right: 20, zIndex: 9999,
-          width: 56, height: 56, borderRadius: 28, background: 'var(--accent-purple)',
-          color: '#fff', border: 'none', boxShadow: '0 4px 12px rgba(139,92,246,0.4)',
+          width: 60, height: 60, borderRadius: 30, background: 'linear-gradient(135deg, #818cf8, #c084fc)',
+          color: '#fff', border: '1px solid rgba(255,255,255,0.2)',
+          boxShadow: '0 8px 32px rgba(139,92,246,0.5), inset 0 0 20px rgba(255,255,255,0.2)',
           display: isOpen ? 'none' : 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-          transition: 'transform 0.2s'
+          transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+          animation: 'pulseGlow 2s infinite'
         }}
-        onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
-        onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+        onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.1)'; e.currentTarget.style.boxShadow = '0 12px 40px rgba(139,92,246,0.6), inset 0 0 20px rgba(255,255,255,0.4)'; }}
+        onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(139,92,246,0.5), inset 0 0 20px rgba(255,255,255,0.2)'; }}
       >
-        <MessageSquare size={24} />
+        <MessageSquare size={26} />
       </button>
 
       {isOpen && (
         <div style={{
           position: 'fixed', bottom: window.innerWidth < 768 ? 0 : 80, right: window.innerWidth < 768 ? 0 : 20, zIndex: 10000,
-          width: window.innerWidth < 768 ? '100%' : 360, height: window.innerWidth < 768 ? '85vh' : 500,
-          background: 'var(--bg-surface)', border: '1px solid var(--border)',
-          borderRadius: window.innerWidth < 768 ? '20px 20px 0 0' : 20, display: 'flex', flexDirection: 'column',
-          boxShadow: '0 12px 40px rgba(0,0,0,0.3)', overflow: 'hidden', animation: 'slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
+          width: window.innerWidth < 768 ? '100%' : 380, height: window.innerWidth < 768 ? '85vh' : 600,
+          background: 'rgba(25, 25, 25, 0.7)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+          border: '1px solid rgba(255,255,255,0.1)', borderBottom: window.innerWidth < 768 ? 'none' : '1px solid rgba(255,255,255,0.1)',
+          borderRadius: window.innerWidth < 768 ? '24px 24px 0 0' : 24, display: 'flex', flexDirection: 'column',
+          boxShadow: '0 24px 64px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1)', overflow: 'hidden', animation: 'slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
         }}>
-          <div style={{ padding: '16px', background: 'var(--bg-card)', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ width: 40, height: 40, borderRadius: 20, background: 'linear-gradient(135deg, #818cf8, #c084fc)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(139,92,246,0.3)' }}><Bot size={24} color="#fff" /></div>
+          <div style={{ padding: '16px 20px', background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid rgba(255,255,255,0.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+              <div style={{ width: 44, height: 44, borderRadius: 22, background: 'linear-gradient(135deg, #818cf8, #c084fc)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(139,92,246,0.4), inset 0 0 10px rgba(255,255,255,0.3)' }}><Bot size={26} color="#fff" /></div>
               <div>
-                <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-primary)' }}>Coach AI</div>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{lang === 'id' ? 'Selalu siap membantu' : 'Always ready to help'}</div>
+                <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', letterSpacing: '0.3px', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  Coach AI <div style={{width: 8, height: 8, borderRadius: 4, background: '#10b981', boxShadow: '0 0 8px #10b981'}} />
+                </div>
+                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', marginTop: 2 }}>{lang === 'id' ? 'Selalu siap membantu' : 'Always ready to help'}</div>
               </div>
             </div>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              <button onClick={() => { setMessages([]); setInput(''); }} style={{ background: 'var(--hover-overlay)', border: '1px solid var(--border)', color: 'var(--text-secondary)', cursor: 'pointer', padding: '4px 10px', fontSize: 12, borderRadius: 12, fontWeight: 600 }}>
+            <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+              <button onClick={() => { setMessages([]); setInput(''); }} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.8)', cursor: 'pointer', padding: '6px 12px', fontSize: 12, borderRadius: 16, fontWeight: 600, transition: 'all 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'} onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}>
                 {lang === 'id' ? 'Clear' : 'Clear'}
               </button>
-              <button onClick={() => setIsOpen(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--hover-overlay)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>
-                <X size={20} />
+              <button onClick={() => setIsOpen(false)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', padding: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', transition: 'all 0.2s' }} onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = '#fff'; }} onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = 'rgba(255,255,255,0.6)'; }}>
+                <X size={22} />
               </button>
             </div>
           </div>
           
-          <div style={{ flex: 1, overflowY: 'auto', padding: '20px 16px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div style={{ flex: 1, overflowY: 'auto', padding: '24px 20px', display: 'flex', flexDirection: 'column', gap: 16 }}>
             {messages.map((m, i) => (
-              <div key={i} style={{ alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start', maxWidth: '85%' }}>
+              <div key={i} style={{ alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start', maxWidth: '85%', animation: 'fadeInUp 0.3s ease-out' }}>
                 <div style={{ 
-                  background: m.role === 'user' ? 'var(--accent-purple)' : 'var(--bg-card)',
-                  color: m.role === 'user' ? '#fff' : 'var(--text-primary)',
-                  padding: '12px 16px', borderRadius: 18, borderBottomRightRadius: m.role === 'user' ? 4 : 18, borderBottomLeftRadius: m.role === 'assistant' ? 4 : 18,
-                  fontSize: 13, lineHeight: 1.5, border: m.role === 'assistant' ? '1px solid var(--border)' : 'none',
-                  boxShadow: m.role === 'assistant' ? 'none' : '0 2px 8px rgba(139,92,246,0.2)'
+                  background: m.role === 'user' ? 'linear-gradient(135deg, #818cf8, #c084fc)' : 'rgba(255,255,255,0.05)',
+                  color: m.role === 'user' ? '#fff' : 'rgba(255,255,255,0.9)',
+                  padding: '14px 18px', borderRadius: 20, borderBottomRightRadius: m.role === 'user' ? 4 : 20, borderBottomLeftRadius: m.role === 'assistant' ? 4 : 20,
+                  fontSize: 14, lineHeight: 1.5, border: m.role === 'assistant' ? '1px solid rgba(255,255,255,0.08)' : 'none',
+                  boxShadow: m.role === 'user' ? '0 8px 24px rgba(139,92,246,0.3)' : '0 4px 16px rgba(0,0,0,0.2)'
                 }}>
-                  {/* Basic markdown simulation for bold text */}
                   {m.content.split(/(\*\*.*?\*\*|\*.*?\*)/g).map((part, idx) => {
-                    if (part.startsWith('**') && part.endsWith('**')) return <strong key={idx}>{part.slice(2, -2)}</strong>;
+                    if (part.startsWith('**') && part.endsWith('**')) return <strong key={idx} style={{fontWeight: 700, color: m.role==='user'?'#fff':'#fff'}}>{part.slice(2, -2)}</strong>;
                     if (part.startsWith('*') && part.endsWith('*')) return <em key={idx}>{part.slice(1, -1)}</em>;
                     return part;
                   })}
@@ -318,33 +322,37 @@ STRICT RULES (MUST FOLLOW):
               </div>
             ))}
             {isTyping && (
-              <div style={{ alignSelf: 'flex-start', background: 'var(--bg-card)', border: '1px solid var(--border)', padding: '12px 16px', borderRadius: 18, borderBottomLeftRadius: 4 }}>
-                <div style={{ display: 'flex', gap: 4 }}>
-                  <div className="typing-dot" style={{ width: 6, height: 6, background: 'var(--text-muted)', borderRadius: 3, animation: 'blink 1.4s infinite both' }} />
-                  <div className="typing-dot" style={{ width: 6, height: 6, background: 'var(--text-muted)', borderRadius: 3, animation: 'blink 1.4s infinite both', animationDelay: '0.2s' }} />
-                  <div className="typing-dot" style={{ width: 6, height: 6, background: 'var(--text-muted)', borderRadius: 3, animation: 'blink 1.4s infinite both', animationDelay: '0.4s' }} />
+              <div style={{ alignSelf: 'flex-start', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', padding: '14px 18px', borderRadius: 20, borderBottomLeftRadius: 4, animation: 'fadeInUp 0.3s ease-out' }}>
+                <div style={{ display: 'flex', gap: 5 }}>
+                  <div className="typing-dot" style={{ width: 8, height: 8, background: 'rgba(255,255,255,0.5)', borderRadius: 4, animation: 'blink 1.4s infinite both' }} />
+                  <div className="typing-dot" style={{ width: 8, height: 8, background: 'rgba(255,255,255,0.5)', borderRadius: 4, animation: 'blink 1.4s infinite both', animationDelay: '0.2s' }} />
+                  <div className="typing-dot" style={{ width: 8, height: 8, background: 'rgba(255,255,255,0.5)', borderRadius: 4, animation: 'blink 1.4s infinite both', animationDelay: '0.4s' }} />
                 </div>
               </div>
             )}
             <div ref={endRef} />
           </div>
 
-          <div style={{ padding: '12px 16px', borderTop: '1px solid var(--border)', background: 'var(--bg-card)', display: 'flex', gap: 10, alignItems: 'center' }}>
+          <div style={{ padding: '16px 20px', borderTop: '1px solid rgba(255,255,255,0.08)', background: 'rgba(0,0,0,0.2)', display: 'flex', gap: 12, alignItems: 'center' }}>
             <input 
               value={input} onChange={e => setInput(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleSend()}
               placeholder={lang === 'id' ? 'Ketik pesan...' : 'Type a message...'}
-              style={{ flex: 1, background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-primary)', borderRadius: 24, padding: '12px 16px', fontSize: 13, outline: 'none' }}
+              style={{ flex: 1, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', borderRadius: 24, padding: '14px 20px', fontSize: 16, outline: 'none', transition: 'all 0.3s' }}
+              onFocus={e => { e.target.style.borderColor = 'rgba(139,92,246,0.5)'; e.target.style.background = 'rgba(255,255,255,0.08)'; e.target.style.boxShadow = '0 0 0 2px rgba(139,92,246,0.2)'; }}
+              onBlur={e => { e.target.style.borderColor = 'rgba(255,255,255,0.1)'; e.target.style.background = 'rgba(255,255,255,0.05)'; e.target.style.boxShadow = 'none'; }}
             />
-            <button onClick={handleSend} disabled={!input.trim()} style={{ width: 42, height: 42, borderRadius: 21, background: input.trim() ? 'var(--accent-purple)' : 'var(--bg-surface)', border: input.trim() ? 'none' : '1px solid var(--border)', color: input.trim() ? '#fff' : 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: input.trim() ? 'pointer' : 'default', transition: 'all 0.2s' }}>
-              <Send size={18} />
+            <button onClick={handleSend} disabled={!input.trim()} style={{ width: 48, height: 48, borderRadius: 24, background: input.trim() ? 'linear-gradient(135deg, #818cf8, #c084fc)' : 'rgba(255,255,255,0.05)', border: input.trim() ? 'none' : '1px solid rgba(255,255,255,0.1)', color: input.trim() ? '#fff' : 'rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: input.trim() ? 'pointer' : 'default', transition: 'all 0.3s', boxShadow: input.trim() ? '0 4px 16px rgba(139,92,246,0.4)' : 'none' }}>
+              <Send size={20} style={{ transform: input.trim() ? 'translateX(2px)' : 'none', transition: 'transform 0.2s' }} />
             </button>
           </div>
         </div>
       )}
       <style dangerouslySetInnerHTML={{__html:`
-        @keyframes blink { 0% { opacity: 0.2; } 20% { opacity: 1; } 100% { opacity: 0.2; } }
-        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes blink { 0% { opacity: 0.2; transform: scale(0.8); } 20% { opacity: 1; transform: scale(1.2); } 100% { opacity: 0.2; transform: scale(0.8); } }
+        @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes pulseGlow { 0% { box-shadow: 0 8px 32px rgba(139,92,246,0.4), 0 0 0 0 rgba(139,92,246,0.4); } 70% { box-shadow: 0 8px 32px rgba(139,92,246,0.6), 0 0 0 15px rgba(139,92,246,0); } 100% { box-shadow: 0 8px 32px rgba(139,92,246,0.4), 0 0 0 0 rgba(139,92,246,0); } }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
       `}} />
     </>
   );

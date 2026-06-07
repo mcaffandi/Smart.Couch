@@ -43,8 +43,8 @@ export default function AICoach({ activities, profile, lang = 'id', isPremium, s
   const getAIAnalysis = async () => {
     if (!isPremium && useServer) {
       const usage = getUsage();
-      if (usage.count >= 3) {
-        setErrorMsg(lang === 'id' ? "Batas AI Coach gratis (3x/minggu) telah habis. Upgrade ke PRO untuk akses tanpa batas!" : "Free AI limit (3x/week) reached. Upgrade to PRO for unlimited access!");
+      if (usage.count >= 5) {
+        setErrorMsg(lang === 'id' ? "Batas AI Coach gratis (5x/minggu) telah habis. Upgrade ke PRO untuk akses tanpa batas!" : "Free AI limit (5x/week) reached. Upgrade to PRO for unlimited access!");
         if (setShowPremiumModal) setShowPremiumModal(true);
         return;
       }
@@ -201,17 +201,25 @@ Keep the answer to 1-2 paragraphs max, direct, and without fluff.`;
   return (
     <div className="chart-container animate-fade-in" style={{ 
       marginTop: 20, 
-      background: analysis ? 'rgba(139, 92, 246, 0.03)' : undefined,
-      borderColor: analysis ? 'rgba(167, 139, 250, 0.3)' : undefined
+      background: analysis ? 'linear-gradient(145deg, rgba(139, 92, 246, 0.05) 0%, rgba(192, 132, 252, 0.02) 100%)' : 'var(--bg-card)',
+      borderColor: analysis ? 'rgba(167, 139, 250, 0.3)' : 'var(--border)',
+      boxShadow: analysis ? '0 12px 32px rgba(139, 92, 246, 0.1), inset 0 0 0 1px rgba(255,255,255,0.05)' : 'none',
+      position: 'relative',
+      overflow: 'hidden'
     }}>
+      {/* Background glow if analysis present */}
+      {analysis && <div style={{position: 'absolute', top: -50, right: -50, width: 150, height: 150, background: 'rgba(139, 92, 246, 0.2)', filter: 'blur(60px)', borderRadius: '50%', pointerEvents: 'none'}} />}
+
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20, position: 'relative', zIndex: 1 }}>
         <div>
-          <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Sparkles size={18} color="var(--accent-purple)" />
+          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 10, letterSpacing: '0.3px' }}>
+            <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 8, background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(192, 132, 252, 0.2))', border: '1px solid rgba(139, 92, 246, 0.3)'}}>
+              <Sparkles size={16} color="var(--accent-purple)" />
+            </div>
             {lang === 'id' ? 'AI Coach Personal' : 'AI Personal Coach'}
           </h3>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4, paddingLeft: 38 }}>
             {lang === 'id' ? 'Analisis data lari & rekomendasi berbasis AI' : 'AI-driven run analysis & training tips'}
           </div>
         </div>
@@ -220,97 +228,106 @@ Keep the answer to 1-2 paragraphs max, direct, and without fluff.`;
         {analysis && !loading && (
           <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
             {(savedKey || !useServer) && (
-              <button className="login-link-btn" style={{ fontSize: 12, color: 'var(--text-muted)', textDecoration: 'none' }} onClick={handleResetKey}>
+              <button className="login-link-btn" style={{ fontSize: 12, color: 'var(--text-muted)', textDecoration: 'none', padding: '6px 12px', background: 'var(--bg-surface)', borderRadius: 16, border: '1px solid var(--border)' }} onClick={handleResetKey}>
                 {lang === 'id' ? 'Ganti Key' : 'Change Key'}
               </button>
             )}
-            <button className="login-link-btn" style={{ fontSize: 12, color: 'var(--accent-purple)', fontWeight: 700, textDecoration: 'none' }} onClick={getAIAnalysis}>
-              {lang === 'id' ? 'Analisis Ulang' : 'Regenerate'}
+            <button className="btn btn-primary" style={{ fontSize: 12, padding: '6px 14px', width: 'auto', background: 'linear-gradient(135deg, #818cf8, #c084fc)', border: 'none', boxShadow: '0 4px 12px rgba(139,92,246,0.3)' }} onClick={getAIAnalysis}>
+              <Sparkles size={14} style={{marginRight: 6}} /> {lang === 'id' ? 'Analisis Ulang' : 'Regenerate'}
             </button>
           </div>
         )}
       </div>
 
       {/* Main Content */}
-      {(!savedKey && !useServer) ? (
-        /* Configuration Needed */
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0 }}>
-            {lang === 'id'
-              ? 'Masukkan Groq API Key lo untuk mengaktifkan AI Coach. AI akan menganalisis 5 aktivitas lari terakhir serta profil lo untuk memberikan rekomendasi latihan.'
-              : 'Enter your Groq API Key to enable the AI Coach. It will analyze your last 5 runs and runner profile to provide training feedback.'}
-          </p>
-          <div style={{ display: 'flex', gap: 10, marginTop: 6, flexWrap: 'wrap' }}>
-            <input
-              type="password"
-              className="form-input"
-              value={apiKey}
-              onChange={e => { setApiKey(e.target.value); setErrorMsg(''); }}
-              placeholder="gsk_..."
-              style={{ flex: 1, minWidth: 200 }}
-            />
-            <button className="btn btn-primary" style={{ width: 'auto' }} onClick={saveKey}>
-              {lang === 'id' ? 'Simpan' : 'Save'}
-            </button>
-          </div>
-          {errorMsg && (
-            <div style={{ fontSize: 12, color: '#fb7185', fontWeight: 600 }}>{errorMsg}</div>
-          )}
-        </div>
-      ) : loading ? (
-        /* Loading state */
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px 0', gap: 12 }}>
-          <svg className="spinner-rotate" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--accent-purple)' }}>
-            <line x1="12" y1="2" x2="12" y2="6"></line>
-            <line x1="12" y1="18" x2="12" y2="22"></line>
-            <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line>
-            <line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line>
-            <line x1="2" y1="12" x2="6" y2="12"></line>
-            <line x1="18" y1="12" x2="22" y2="12"></line>
-            <line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line>
-            <line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line>
-          </svg>
-          <div style={{ fontSize: 13, color: 'var(--text-secondary)', fontWeight: 600 }}>
-            {lang === 'id' ? 'AI Coach sedang menganalisis datamu...' : 'AI Coach is analyzing your data...'}
-          </div>
-        </div>
-      ) : !analysis ? (
-        /* Configured but no analysis yet (Call-to-Action) */
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0 }}>
-            {lang === 'id'
-              ? 'Dapatkan ulasan performa instan dan tips latihan spesifik berdasarkan riwayat larimu dari AI Coach.'
-              : 'Get instant performance insights and custom running recommendations from your AI Coach.'}
-          </p>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 6, flexWrap: 'wrap', gap: 12 }}>
-            {(savedKey || !useServer) ? (
-              <button className="login-link-btn" style={{ fontSize: 12, color: 'var(--text-muted)', textDecoration: 'none' }} onClick={handleResetKey}>
-                {lang === 'id' ? 'Ganti API Key' : 'Change API Key'}
+      <div style={{ position: 'relative', zIndex: 1 }}>
+        {(!savedKey && !useServer) ? (
+          /* Configuration Needed */
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, background: 'rgba(255,255,255,0.02)', padding: 16, borderRadius: 12, border: '1px solid var(--border)' }}>
+            <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0 }}>
+              {lang === 'id'
+                ? 'Masukkan Groq API Key lo untuk mengaktifkan AI Coach. AI akan menganalisis 5 aktivitas lari terakhir serta profil lo untuk memberikan rekomendasi latihan.'
+                : 'Enter your Groq API Key to enable the AI Coach. It will analyze your last 5 runs and runner profile to provide training feedback.'}
+            </p>
+            <div style={{ display: 'flex', gap: 10, marginTop: 4, flexWrap: 'wrap' }}>
+              <input
+                type="password"
+                className="form-input"
+                value={apiKey}
+                onChange={e => { setApiKey(e.target.value); setErrorMsg(''); }}
+                placeholder="gsk_..."
+                style={{ flex: 1, minWidth: 200, background: 'var(--bg-surface)' }}
+              />
+              <button className="btn btn-primary" style={{ width: 'auto', background: 'linear-gradient(135deg, #818cf8, #c084fc)', border: 'none', boxShadow: '0 4px 12px rgba(139,92,246,0.3)' }} onClick={saveKey}>
+                {lang === 'id' ? 'Simpan' : 'Save'}
               </button>
-            ) : (
-              <div />
+            </div>
+            {errorMsg && (
+              <div style={{ fontSize: 12, color: '#fb7185', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}><span style={{width: 6, height: 6, borderRadius: 3, background: '#fb7185'}} />{errorMsg}</div>
             )}
-            <button
-              className="btn btn-primary"
-              onClick={getAIAnalysis}
-              disabled={activities.length === 0}
-              style={{ width: 'auto', background: 'var(--accent-purple)', borderColor: 'var(--accent-purple)' }}
-            >
-              {lang === 'id' ? 'Mulai Analisis AI' : 'Start AI Analysis'}
-            </button>
           </div>
-          {errorMsg && (
-            <div style={{ fontSize: 12, color: '#fb7185', fontWeight: 600, marginTop: 4 }}>{errorMsg}</div>
-          )}
-        </div>
-      ) : (
-        /* Analysis Output */
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <div style={{ fontSize: 13.5, lineHeight: 1.8, color: 'var(--text-secondary)', whiteSpace: 'pre-wrap', borderLeft: '3px solid var(--accent-purple)', paddingLeft: 12 }}>
-            {analysis}
+        ) : loading ? (
+          /* Loading state */
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '32px 0', gap: 16, background: 'rgba(139, 92, 246, 0.02)', borderRadius: 12, border: '1px dashed rgba(139, 92, 246, 0.2)' }}>
+            <svg className="spinner-rotate" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--accent-purple)', filter: 'drop-shadow(0 0 8px rgba(139,92,246,0.4))' }}>
+              <line x1="12" y1="2" x2="12" y2="6"></line>
+              <line x1="12" y1="18" x2="12" y2="22"></line>
+              <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line>
+              <line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line>
+              <line x1="2" y1="12" x2="6" y2="12"></line>
+              <line x1="18" y1="12" x2="22" y2="12"></line>
+              <line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line>
+              <line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line>
+            </svg>
+            <div style={{ fontSize: 13, color: 'var(--accent-purple)', fontWeight: 600, letterSpacing: '0.5px' }}>
+              {lang === 'id' ? 'AI Coach sedang menganalisis datamu...' : 'AI Coach is analyzing your data...'}
+            </div>
           </div>
-        </div>
-      )}
+        ) : !analysis ? (
+          /* Configured but no analysis yet (Call-to-Action) */
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16, background: 'rgba(139, 92, 246, 0.02)', padding: 20, borderRadius: 12, border: '1px solid rgba(139, 92, 246, 0.1)' }}>
+            <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0, textAlign: 'center' }}>
+              {lang === 'id'
+                ? 'Dapatkan ulasan performa instan dan tips latihan spesifik berdasarkan riwayat larimu dari AI Coach.'
+                : 'Get instant performance insights and custom running recommendations from your AI Coach.'}
+            </p>
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: 4, flexDirection: 'column', gap: 12 }}>
+              <button
+                className="btn btn-primary"
+                onClick={getAIAnalysis}
+                disabled={activities.length === 0}
+                style={{ width: 'auto', background: 'linear-gradient(135deg, #818cf8, #c084fc)', border: 'none', padding: '12px 24px', fontSize: 14, boxShadow: '0 8px 24px rgba(139,92,246,0.4)', transform: 'scale(1)', transition: 'all 0.2s' }}
+                onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
+                onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+              >
+                <Sparkles size={18} style={{marginRight: 8}} /> {lang === 'id' ? 'Mulai Analisis AI' : 'Start AI Analysis'}
+              </button>
+              {(savedKey || !useServer) && (
+                <button className="login-link-btn" style={{ fontSize: 12, color: 'var(--text-muted)', textDecoration: 'none' }} onClick={handleResetKey}>
+                  {lang === 'id' ? 'Ganti API Key' : 'Change API Key'}
+                </button>
+              )}
+            </div>
+            {errorMsg && (
+              <div style={{ fontSize: 12, color: '#fb7185', fontWeight: 600, marginTop: 4, textAlign: 'center' }}>{errorMsg}</div>
+            )}
+          </div>
+        ) : (
+          /* Analysis Output */
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, animation: 'fadeInUp 0.4s ease-out' }}>
+            <div style={{ 
+              fontSize: 14, lineHeight: 1.8, color: 'var(--text-secondary)', whiteSpace: 'pre-wrap', 
+              background: 'rgba(255,255,255,0.02)', padding: 16, borderRadius: 12,
+              borderLeft: '4px solid var(--accent-purple)', borderTop: '1px solid var(--border)', borderRight: '1px solid var(--border)', borderBottom: '1px solid var(--border)' 
+            }}>
+              {analysis}
+            </div>
+          </div>
+        )}
+      </div>
+      <style dangerouslySetInnerHTML={{__html:`
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+      `}} />
     </div>
   );
 }
