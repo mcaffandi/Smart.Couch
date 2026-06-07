@@ -54,7 +54,7 @@ export default function AICoach({ activities, profile, lang = 'id', isPremium, s
     setErrorMsg('');
     try {
       // Prepare recent data safely
-      const recentRuns = activities.slice(0, 5).map(a => {
+      const recentRuns = [...activities].sort((a, b) => new Date(b.startTimeLocal || 0).getTime() - new Date(a.startTimeLocal || 0).getTime()).slice(0, 5).map(a => {
         let date = lang === 'id' ? "Tanggal tidak diketahui" : "Unknown date";
         try {
           const d = new Date(a.startTimeLocal);
@@ -232,7 +232,7 @@ Keep the answer to 1-2 paragraphs max, direct, and without fluff.`;
                 {lang === 'id' ? 'Ganti Key' : 'Change Key'}
               </button>
             )}
-            <button className="btn btn-primary" style={{ fontSize: 12, padding: '6px 14px', width: 'auto', background: 'linear-gradient(135deg, #818cf8, #c084fc)', border: 'none', boxShadow: '0 4px 12px rgba(139,92,246,0.3)' }} onClick={getAIAnalysis}>
+            <button className="btn btn-primary" style={{ fontSize: 12, padding: '6px 14px', width: 'auto' }} onClick={getAIAnalysis}>
               <Sparkles size={14} style={{marginRight: 6}} /> {lang === 'id' ? 'Analisis Ulang' : 'Regenerate'}
             </button>
           </div>
@@ -258,7 +258,7 @@ Keep the answer to 1-2 paragraphs max, direct, and without fluff.`;
                 placeholder="gsk_..."
                 style={{ flex: 1, minWidth: 200, background: 'var(--bg-surface)' }}
               />
-              <button className="btn btn-primary" style={{ width: 'auto', background: 'linear-gradient(135deg, #818cf8, #c084fc)', border: 'none', boxShadow: '0 4px 12px rgba(139,92,246,0.3)' }} onClick={saveKey}>
+              <button className="btn btn-primary" style={{ width: 'auto' }} onClick={saveKey}>
                 {lang === 'id' ? 'Simpan' : 'Save'}
               </button>
             </div>
@@ -296,9 +296,7 @@ Keep the answer to 1-2 paragraphs max, direct, and without fluff.`;
                 className="btn btn-primary"
                 onClick={getAIAnalysis}
                 disabled={activities.length === 0}
-                style={{ width: 'auto', background: 'linear-gradient(135deg, #818cf8, #c084fc)', border: 'none', padding: '12px 24px', fontSize: 14, boxShadow: '0 8px 24px rgba(139,92,246,0.4)', transform: 'scale(1)', transition: 'all 0.2s' }}
-                onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
-                onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                style={{ width: 'auto', padding: '12px 24px', fontSize: 14 }}
               >
                 <Sparkles size={18} style={{marginRight: 8}} /> {lang === 'id' ? 'Mulai Analisis AI' : 'Start AI Analysis'}
               </button>
