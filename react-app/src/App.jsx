@@ -4054,7 +4054,7 @@ export default function App() {
                   )}
                 </div>
                 {/* Metrics */}
-                <div className="metrics-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))' }}>
+                <div className="metrics-grid">
                   {(() => {
                     const now = new Date();
                     const day = now.getDay();
