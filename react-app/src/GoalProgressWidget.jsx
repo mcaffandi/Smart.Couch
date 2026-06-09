@@ -443,7 +443,7 @@ export default function GoalProgressWidget({ data, goal, lang = 'id', onLogWeigh
             </div>
           </div>
         </div>
-      ), document.body)}
+      , document.body)}
     </>
   );
 }
