@@ -505,23 +505,23 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
       )}
 
       <div className="pace-grid" style={{ marginBottom: 20 }}>
-        <div className="pace-card" style={{ background: 'rgba(251,113,133,0.07)', border: '1px solid rgba(251,113,133,0.2)' }}>
+        <div className="pace-card" style={{ background: 'rgba(251,113,133,0.07)', border: '1px solid rgba(251,113,133,0.2)', padding: '12px' }}>
           <div className="pace-label" style={{ color: '#fb7185' }}>{lang === 'id' ? 'Ngepush' : 'Push'}</div>
-          <div className="pace-value">{paces.ngepush}</div>
-          <div className="pace-unit">min/km</div>
-          {age && <div style={{ fontSize: 11, color: '#fb7185', marginTop: 4, fontWeight: 600 }}>HR {getHRForZone(0.8, 0.9)}</div>}
+          <div className="pace-value" style={{ fontSize: '15px' }}>{paces.ngepush}</div>
+          <div className="pace-unit" style={{ fontSize: '10px' }}>min/km</div>
+          {age && <div style={{ fontSize: 10, color: '#fb7185', marginTop: 2, fontWeight: 600 }}>HR {getHRForZone(0.8, 0.9)}</div>}
         </div>
-        <div className="pace-card" style={{ background: 'rgba(56,189,248,0.07)', border: '1px solid rgba(56,189,248,0.2)' }}>
+        <div className="pace-card" style={{ background: 'rgba(56,189,248,0.07)', border: '1px solid rgba(56,189,248,0.2)', padding: '12px' }}>
           <div className="pace-label" style={{ color: '#38bdf8' }}>{lang === 'id' ? 'Sedang' : 'Moderate'}</div>
-          <div className="pace-value">{paces.sedang}</div>
-          <div className="pace-unit">min/km</div>
-          {age && <div style={{ fontSize: 11, color: '#38bdf8', marginTop: 4, fontWeight: 600 }}>HR {getHRForZone(0.7, 0.8)}</div>}
+          <div className="pace-value" style={{ fontSize: '15px' }}>{paces.sedang}</div>
+          <div className="pace-unit" style={{ fontSize: '10px' }}>min/km</div>
+          {age && <div style={{ fontSize: 10, color: '#38bdf8', marginTop: 2, fontWeight: 600 }}>HR {getHRForZone(0.7, 0.8)}</div>}
         </div>
-        <div className="pace-card" style={{ background: 'rgba(52,211,153,0.07)', border: '1px solid rgba(52,211,153,0.2)' }}>
+        <div className="pace-card" style={{ background: 'rgba(52,211,153,0.07)', border: '1px solid rgba(52,211,153,0.2)', padding: '12px' }}>
           <div className="pace-label" style={{ color: '#34d399' }}>{lang === 'id' ? 'Santai' : 'Easy'}</div>
-          <div className="pace-value">{paces.santai}</div>
-          <div className="pace-unit">min/km</div>
-          {age && <div style={{ fontSize: 11, color: '#34d399', marginTop: 4, fontWeight: 600 }}>HR {getHRForZone(0.6, 0.7)}</div>}
+          <div className="pace-value" style={{ fontSize: '15px' }}>{paces.santai}</div>
+          <div className="pace-unit" style={{ fontSize: '10px' }}>min/km</div>
+          {age && <div style={{ fontSize: 10, color: '#34d399', marginTop: 2, fontWeight: 600 }}>HR {getHRForZone(0.6, 0.7)}</div>}
         </div>
       </div>
 
@@ -554,22 +554,22 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
                 if (isMissed) { borderColor = '#fb7185'; bg = 'rgba(251, 113, 133, 0.05)'; }
 
                 return (
-                  <div key={i} onClick={() => handleDayClick(dItem)} style={{ minWidth: 160, maxWidth: 180, flex: '0 0 auto', background: bg, border: `1.5px solid ${borderColor}`, borderRadius: 12, padding: 12, display: 'flex', flexDirection: 'column', opacity: dItem.isPast && !dItem.isToday ? 0.6 : 1, cursor: (dItem.isPast || dItem.isToday) ? 'pointer' : 'default', transition: 'transform 0.1s' }} onMouseDown={e => {if (dItem.isPast || dItem.isToday) e.currentTarget.style.transform = 'scale(0.96)'}} onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'} onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                  <div key={i} onClick={() => handleDayClick(dItem)} style={{ minWidth: 120, maxWidth: 140, flex: '0 0 auto', background: bg, border: `1.5px solid ${borderColor}`, borderRadius: 10, padding: '10px 12px', display: 'flex', flexDirection: 'column', opacity: dItem.isPast && !dItem.isToday ? 0.6 : 1, cursor: (dItem.isPast || dItem.isToday) ? 'pointer' : 'default', transition: 'transform 0.1s' }} onMouseDown={e => {if (dItem.isPast || dItem.isToday) e.currentTarget.style.transform = 'scale(0.96)'}} onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'} onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
                       <div>
-                        <div style={{ fontSize: 11, fontWeight: 700, color: dItem.isToday ? 'var(--accent-purple)' : 'var(--text-muted)' }}>{dayName.toUpperCase()}</div>
-                        <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--text-primary)' }}>{dateNum} <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)' }}>{monthStr}</span></div>
+                        <div style={{ fontSize: 10, fontWeight: 700, color: dItem.isToday ? 'var(--accent-purple)' : 'var(--text-muted)' }}>{dayName.toUpperCase()}</div>
+                        <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)' }}>{dateNum} <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)' }}>{monthStr}</span></div>
                       </div>
-                      {isCompleted && <div style={{ color: '#10b981' }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>}
-                      {isMissed && <div style={{ color: '#fb7185' }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></div>}
-                      {dItem.isToday && !isCompleted && <div style={{ background: 'var(--accent-purple)', color: '#fff', fontSize: 9, fontWeight: 800, padding: '2px 6px', borderRadius: 4 }}>TODAY</div>}
+                      {isCompleted && <div style={{ color: '#10b981' }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>}
+                      {isMissed && <div style={{ color: '#fb7185' }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></div>}
+                      {dItem.isToday && !isCompleted && <div style={{ background: 'var(--accent-purple)', color: '#fff', fontSize: 8, fontWeight: 800, padding: '2px 4px', borderRadius: 4 }}>TODAY</div>}
                     </div>
 
-                    <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 4, lineHeight: 1.2 }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 4, lineHeight: 1.2 }}>
                       {getJenis(dItem.workout.jenis)}
                     </div>
                     
-                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{getDurasi(dItem.workout.durasi)}</div>
+                    <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{getDurasi(dItem.workout.durasi)}</div>
                   </div>
                 );
               })}
