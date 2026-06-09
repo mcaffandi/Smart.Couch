@@ -737,13 +737,37 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
             <div style={{ padding: 24 }}>
               <div className="form-group" style={{ marginBottom: 16 }}>
                 <label className="form-label" style={{ color: 'var(--text-secondary)' }}>{lang === 'id' ? 'Jenis Aktivitas' : 'Activity Type'}</label>
-                <input 
-                  type="text" 
+                <select 
                   className="form-input" 
-                  value={logData.type}
-                  onChange={e => setLogData({ ...logData, type: e.target.value })}
-                  placeholder={lang === 'id' ? 'misal: Jalan Kaki, Bodyweight...' : 'e.g. Walking, Bodyweight...'}
-                />
+                  value={['Easy Run', 'Interval / Tempo', 'Long Run', 'Recovery Jog', 'Core & Leg Stabilizer', 'Yoga / Mobility', 'Jalan Kaki', 'Berenang', 'Sepeda'].includes(logData.type) ? logData.type : 'Lainnya'}
+                  onChange={e => setLogData({ ...logData, type: e.target.value === 'Lainnya' ? '' : e.target.value })}
+                  style={{ marginBottom: ['Easy Run', 'Interval / Tempo', 'Long Run', 'Recovery Jog', 'Core & Leg Stabilizer', 'Yoga / Mobility', 'Jalan Kaki', 'Berenang', 'Sepeda'].includes(logData.type) ? 0 : 8 }}
+                >
+                  {/* Keep the original scheduled workout as the first option if it's not in the common list but was auto-populated */}
+                  {!['Easy Run', 'Interval / Tempo', 'Long Run', 'Recovery Jog', 'Core & Leg Stabilizer', 'Yoga / Mobility', 'Jalan Kaki', 'Berenang', 'Sepeda', ''].includes(logData.type) && logData.type !== 'Lainnya' && (
+                    <option value="Lainnya">{logData.type} (Jadwal)</option>
+                  )}
+                  <option value="Easy Run">Easy Run</option>
+                  <option value="Interval / Tempo">Interval / Tempo</option>
+                  <option value="Long Run">Long Run</option>
+                  <option value="Recovery Jog">Recovery Jog</option>
+                  <option value="Core & Leg Stabilizer">Core & Leg Stabilizer</option>
+                  <option value="Yoga / Mobility">Yoga / Mobility</option>
+                  <option value="Jalan Kaki">Jalan Kaki</option>
+                  <option value="Berenang">Berenang</option>
+                  <option value="Sepeda">Sepeda</option>
+                  <option value="Lainnya">{lang === 'id' ? 'Lainnya...' : 'Other...'}</option>
+                </select>
+                
+                {!['Easy Run', 'Interval / Tempo', 'Long Run', 'Recovery Jog', 'Core & Leg Stabilizer', 'Yoga / Mobility', 'Jalan Kaki', 'Berenang', 'Sepeda'].includes(logData.type) && (
+                  <input 
+                    type="text" 
+                    className="form-input animate-scale-in" 
+                    value={logData.type}
+                    onChange={e => setLogData({ ...logData, type: e.target.value })}
+                    placeholder={lang === 'id' ? 'Ketik nama aktivitas...' : 'Type activity name...'}
+                  />
+                )}
               </div>
               <div className="form-group" style={{ marginBottom: 24 }}>
                 <label className="form-label" style={{ color: 'var(--text-secondary)' }}>{lang === 'id' ? 'Durasi (menit)' : 'Duration (minutes)'}</label>
