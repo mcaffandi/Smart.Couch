@@ -4189,19 +4189,18 @@ export default function App() {
                 </div>
 
                 <div className="dashboard-layout" style={{ marginTop: 20 }}>
-                  {/* Left Column: Primary training metrics and coaches */}
-                  <div className="dashboard-main-col">
+                  <div className="bento-2x3">
                     <TrendChart activities={runActs} lang={lang} externalTimeRange={dashboardTimeRange} setExternalTimeRange={setDashboardTimeRange} />
-                    <AICoach activities={data.running_activities} profile={{ age, goal, targetPace }} lang={lang} isPremium={isPremium} setShowPremiumModal={setShowPremiumModal} />
                   </div>
-
-                  {/* Right Column: Secondary charts and summaries */}
-                  <div className="dashboard-side-col">
-                    {actualMaxHR > 0 && (
+                  
+                  {actualMaxHR > 0 && (
+                    <div className="bento-1x2">
                       <HRZoneChart zones={hrZones} activities={data.running_activities} avgHr={avgHR ? Math.round(avgHR) : 0} lang={lang} />
-                    )}
+                    </div>
+                  )}
 
-                    {actualMaxHR > 0 && (
+                  {actualMaxHR > 0 && (
+                    <div className="bento-1x1">
                       <div className="info-card purple">
                         <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
                           <strong style={{ color: 'var(--text-primary)' }}>{lang === 'id' ? 'Detak Jantung:' : 'Heart Rate:'}</strong>{' '}
@@ -4220,10 +4219,16 @@ export default function App() {
                           )}
                         </div>
                       </div>
-                    )}
+                    </div>
+                  )}
 
-                    {/* Sleep correlation summary */}
-                    {avgRunSleep && avgNonRunSleep && (
+                  <div className="bento-2x2">
+                    <AICoach activities={data.running_activities} profile={{ age, goal, targetPace }} lang={lang} isPremium={isPremium} setShowPremiumModal={setShowPremiumModal} />
+                  </div>
+
+                  {/* Sleep correlation summary */}
+                  {avgRunSleep && avgNonRunSleep && (
+                    <div className="bento-1x2">
                       <div className="chart-container" style={{ padding: '20px' }}>
                         <div className="chart-title" style={{ marginBottom: 14 }}>
                           {lang === 'id' ? 'Korelasi Tidur & Lari' : 'Sleep & Run Correlation'}
