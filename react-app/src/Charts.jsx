@@ -248,12 +248,12 @@ export function HRZoneChart({ zones, activities = [], avgHr, lang = 'id' }) {
   return (
     <div className="chart-container" style={{ padding: '20px 16px' }}>
       <div className="chart-title" style={{ fontSize: 14, fontWeight: 600, marginBottom: 16 }}>{lang === 'id' ? 'Zona Detak Jantung' : 'Heart Rate Zones'}</div>
-      <ResponsiveContainer width="100%" height={200}>
-        <BarChart data={data} layout="vertical" margin={{ top: 0, right: 100, left: 0, bottom: 0 }} barCategoryGap="20%">
+      <ResponsiveContainer width="100%" height={180}>
+        <BarChart data={data} layout="vertical" margin={{ top: 0, right: 100, left: 0, bottom: 0 }} barCategoryGap="25%">
           <XAxis type="number" domain={[0, 'dataMax + 10']} tick={false} axisLine={false} tickLine={false} />
           <YAxis dataKey="zone" type="category" tick={{ fill: 'var(--text-secondary)', fontSize: 11, fontWeight: 700 }} axisLine={false} tickLine={false} width={45} tickMargin={8} />
           <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--bg-card-hover)' }} />
-          <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={20}>
+          <Bar dataKey="value" radius={[0, 4, 4, 0]}>
             {data.map((entry, index) => (
               <Cell key={index} fill={entry.color} fillOpacity={0.9} />
             ))}
