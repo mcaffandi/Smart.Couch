@@ -407,7 +407,7 @@ export const buildTrainingPlan = (programStyle, goal, paces, selectedDays = ['Se
 // ──────────────────────────────────────────────
 // Adaptive Calendar Builder
 // ──────────────────────────────────────────────
-export const buildAdaptiveCalendar = (weeklyPlan, activities = [], isPaused = false, isAdaptiveActive = false) => {
+export const buildAdaptiveCalendar = (weeklyPlan, activities = [], isPaused = false, isAdaptiveActive = false, planOverrides = {}) => {
   const today = new Date();
   today.setHours(0,0,0,0);
   
@@ -462,6 +462,10 @@ export const buildAdaptiveCalendar = (weeklyPlan, activities = [], isPaused = fa
     const idx = wDay === 0 ? 6 : wDay - 1;
     
     let workout = { ...weeklyPlan[idx] };
+    
+    if (planOverrides[dateStr]) {
+      workout = { ...workout, ...planOverrides[dateStr], isOverridden: true };
+    }
     
     const isPast = current < today;
     const isToday = current.getTime() === today.getTime();

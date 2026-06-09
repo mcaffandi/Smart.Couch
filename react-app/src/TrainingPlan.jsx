@@ -80,11 +80,13 @@ const getBadgeClass = (jenis) => {
   return 'badge-recovery';
 };
 
-export default function TrainingPlan({ activities, programStyle, goal, paces, latestSleepScore, actualBestPace, targetPace, selectedDays, gender, weight, height, age, lang = 'id', onLogManualActivity, onDeleteManualActivity }) {
+export default function TrainingPlan({ activities, programStyle, goal, paces, latestSleepScore, actualBestPace, targetPace, selectedDays, gender, weight, height, age, lang = 'id', onLogManualActivity, onDeleteManualActivity, planOverrides = {}, onUpdatePlanOverrides }) {
   const [isPaused, setIsPaused] = useState(() => localStorage.getItem('smartcoach_paused') === 'true');
   const [isAdaptiveActive, setIsAdaptiveActive] = useState(() => localStorage.getItem('smartcoach_adaptive') === 'true');
   const [showLogModal, setShowLogModal] = useState(false);
   const [logData, setLogData] = useState({ date: null, type: '', duration: 30 });
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editDayData, setEditDayData] = useState(null);
 
   const togglePause = () => {
     const newState = !isPaused;
@@ -99,7 +101,11 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
   };
 
   const handleDayClick = (dItem) => {
-    if (dItem.isPast === false && !dItem.isToday) return; // Don't click future
+    if (dItem.isPast === false && !dItem.isToday) {
+      setEditDayData(dItem);
+      setShowEditModal(true);
+      return;
+    }
     
     if (dItem.hasRun) {
       if (dItem.isManualRun) {
@@ -122,7 +128,7 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
   };
 
   const plan = buildTrainingPlan(programStyle, goal, paces, selectedDays);
-  const adaptiveCalendar = buildAdaptiveCalendar(plan, activities, isPaused, isAdaptiveActive);
+  const adaptiveCalendar = buildAdaptiveCalendar(plan, activities, isPaused, isAdaptiveActive, planOverrides);
   const todayIdx = adaptiveCalendar.findIndex(d => d.isToday) !== -1 ? adaptiveCalendar.findIndex(d => d.isToday) : 7;
   const next7Days = adaptiveCalendar.slice(todayIdx, todayIdx + 7);
 
@@ -549,9 +555,9 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
                 
                 let borderColor = 'var(--border)';
                 let bg = 'var(--bg-card)';
-                if (dItem.isToday) { borderColor = 'var(--accent-purple)'; bg = 'rgba(167, 139, 250, 0.05)'; }
-                if (isCompleted) { borderColor = '#10b981'; bg = 'rgba(16, 185, 129, 0.05)'; }
-                if (isMissed) { borderColor = '#fb7185'; bg = 'rgba(251, 113, 133, 0.05)'; }
+                if (dItem.isToday) { borderColor = 'var(--accent-purple)'; }
+                if (isCompleted) { borderColor = '#10b981'; }
+                if (isMissed) { borderColor = '#fb7185'; }
 
                 return (
                   <div key={i} onClick={() => handleDayClick(dItem)} style={{ minWidth: 120, maxWidth: 140, flex: '0 0 auto', background: bg, border: `1.5px solid ${borderColor}`, borderRadius: 10, padding: '10px 12px', display: 'flex', flexDirection: 'column', opacity: dItem.isPast && !dItem.isToday ? 0.6 : 1, cursor: (dItem.isPast || dItem.isToday) ? 'pointer' : 'default', transition: 'transform 0.1s' }} onMouseDown={e => {if (dItem.isPast || dItem.isToday) e.currentTarget.style.transform = 'scale(0.96)'}} onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'} onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}>
@@ -563,6 +569,16 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
                       {isCompleted && <div style={{ color: '#10b981' }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>}
                       {isMissed && <div style={{ color: '#fb7185' }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></div>}
                       {dItem.isToday && !isCompleted && <div style={{ background: 'var(--accent-purple)', color: '#fff', fontSize: 8, fontWeight: 800, padding: '2px 4px', borderRadius: 4 }}>TODAY</div>}
+                      {(!dItem.isPast || dItem.isToday) && !isCompleted && !dItem.isToday && (
+                         <div style={{ color: 'var(--text-muted)' }}>
+                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                         </div>
+                      )}
+                      {dItem.isToday && !isCompleted && (
+                         <div onClick={(e) => { e.stopPropagation(); setEditDayData(dItem); setShowEditModal(true); }} style={{ color: 'var(--text-muted)', cursor: 'pointer', marginLeft: 4 }}>
+                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                         </div>
+                      )}
                     </div>
 
                     <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 4, lineHeight: 1.2 }}>
@@ -603,7 +619,7 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
               const row = dItem.workout;
               
               return (
-                <tr key={i} onClick={() => handleDayClick(dItem)} style={{ background: dItem.isToday ? 'rgba(167, 139, 250, 0.05)' : 'transparent', cursor: (dItem.isPast || dItem.isToday) ? 'pointer' : 'default' }}>
+                <tr key={i} onClick={() => handleDayClick(dItem)} style={{ background: 'transparent', cursor: (dItem.isPast || dItem.isToday) ? 'pointer' : 'default' }}>
                   <td style={{ fontWeight: 700, color: dItem.isToday ? 'var(--accent-purple)' : 'var(--text-primary)', whiteSpace: 'nowrap' }}>
                     {dayName} <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-muted)' }}>{dateStr}</span>
                     {dItem.isToday && <span style={{ marginLeft: 8, background: 'var(--accent-purple)', color: '#fff', fontSize: 9, padding: '2px 6px', borderRadius: 4 }}>TODAY</span>}
@@ -627,7 +643,7 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
           const row = dItem.workout;
 
           return (
-            <div key={i} onClick={() => handleDayClick(dItem)} className="training-card-item" style={{ border: dItem.isToday ? '1px solid var(--accent-purple)' : '1px solid var(--border)', background: dItem.isToday ? 'rgba(167, 139, 250, 0.05)' : 'var(--bg-card)', cursor: (dItem.isPast || dItem.isToday) ? 'pointer' : 'default' }}>
+            <div key={i} onClick={() => handleDayClick(dItem)} className="training-card-item" style={{ border: dItem.isToday ? '1px solid var(--accent-purple)' : '1px solid var(--border)', background: 'var(--bg-card)', cursor: (dItem.isPast || dItem.isToday) ? 'pointer' : 'default' }}>
               <div className="training-card-header">
                 <span className="training-card-day" style={{ color: dItem.isToday ? 'var(--accent-purple)' : 'var(--text-primary)' }}>
                   {dayName}, {dateStr}
@@ -767,6 +783,72 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      , document.body)}
+      
+      {/* ── EDIT SCHEDULE MODAL ── */}
+      {showEditModal && editDayData && createPortal(
+        <div className="modal-overlay" style={{ zIndex: 9999 }} onClick={() => setShowEditModal(false)}>
+          <div className="modal-content animate-scale-in" style={{ padding: '24px', maxWidth: '400px' }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h3 style={{ margin: 0, fontSize: '18px', color: 'var(--text-primary)' }}>{lang === 'id' ? 'Ganti Jadwal' : 'Change Schedule'}</h3>
+              <button onClick={() => setShowEditModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              </button>
+            </div>
+            
+            <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '20px', lineHeight: 1.5 }}>
+              {lang === 'id' ? `Mau ganti latihan untuk tanggal ${editDayData.date}?` : `Want to change the workout for ${editDayData.date}?`}
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+              <button className="btn" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text-primary)', justifyContent: 'flex-start' }} onClick={() => {
+                if (onUpdatePlanOverrides) {
+                  const newO = { ...planOverrides, [editDayData.date]: { jenis: 'Core & Leg Stabilizer', durasi: '15-20 menit - Bodyweight', tujuan: 'Melatih otot inti (Plank/Bridge) dan engkel, TANPA squat/lunges berat.' } };
+                  onUpdatePlanOverrides(newO);
+                }
+                setShowEditModal(false);
+              }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: 8, color: 'var(--accent-emerald)' }}><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                Core & Leg Stabilizer
+              </button>
+              
+              <button className="btn" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text-primary)', justifyContent: 'flex-start' }} onClick={() => {
+                if (onUpdatePlanOverrides) {
+                  const newO = { ...planOverrides, [editDayData.date]: { jenis: 'Yoga / Mobility', durasi: '20-30 menit - Matras', tujuan: 'Peregangan dinamis fokus pada pinggul, betis, dan peregangan hamstring.' } };
+                  onUpdatePlanOverrides(newO);
+                }
+                setShowEditModal(false);
+              }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: 8, color: 'var(--accent-sky)' }}><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4M12 8h.01"></path></svg>
+                Yoga / Mobility
+              </button>
+
+              <button className="btn" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text-primary)', justifyContent: 'flex-start' }} onClick={() => {
+                if (onUpdatePlanOverrides) {
+                  const newO = { ...planOverrides, [editDayData.date]: { jenis: 'Total Rest', durasi: '-', tujuan: 'Pemulihan pasif total. Fokus pada tidur berkualitas dan asupan protein.' } };
+                  onUpdatePlanOverrides(newO);
+                }
+                setShowEditModal(false);
+              }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: 8, color: 'var(--alert-danger-text)' }}><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.92-10.24l5.58-3.33"></path></svg>
+                {lang === 'id' ? 'Skip Latihan (Rest)' : 'Skip Workout (Rest)'}
+              </button>
+            </div>
+
+            {editDayData.workout.isOverridden && (
+              <button className="btn btn-secondary" style={{ width: '100%' }} onClick={() => {
+                if (onUpdatePlanOverrides) {
+                  const newO = { ...planOverrides };
+                  delete newO[editDayData.date];
+                  onUpdatePlanOverrides(newO);
+                }
+                setShowEditModal(false);
+              }}>
+                {lang === 'id' ? 'Reset ke Jadwal Asli' : 'Reset to Original'}
+              </button>
+            )}
           </div>
         </div>
       , document.body)}
