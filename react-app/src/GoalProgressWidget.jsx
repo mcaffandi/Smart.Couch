@@ -178,37 +178,112 @@ export default function GoalProgressWidget({ data, goal, lang = 'id', onLogWeigh
 
   return (
     <>
-      {/* Widget Card */}
+      {/* Widget Card (Premium Glassmorphic) */}
       <div 
         onClick={() => setShowModal(true)}
         style={{
-          background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 20, 
-          cursor: 'pointer', position: 'relative', overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
-          transition: 'transform 0.2s, box-shadow 0.2s'
+          background: 'var(--bg-surface)', 
+          backgroundImage: `linear-gradient(135deg, ${content.color}08 0%, transparent 100%)`,
+          border: '1px solid var(--border)', 
+          borderRadius: 20, 
+          padding: 22, 
+          cursor: 'pointer', 
+          position: 'relative', 
+          overflow: 'hidden', 
+          boxShadow: '0 8px 32px rgba(0,0,0,0.04)',
+          transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
         }}
-        onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.1)' }}
-        onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.05)' }}
+        onMouseEnter={e => { 
+          e.currentTarget.style.transform = 'translateY(-4px) scale(1.01)'; 
+          e.currentTarget.style.boxShadow = `0 16px 40px ${content.color}15, 0 0 0 1px ${content.color}40`;
+          if (e.currentTarget.querySelector('.glow-orb')) {
+            e.currentTarget.querySelector('.glow-orb').style.opacity = '1';
+            e.currentTarget.querySelector('.glow-orb').style.transform = 'scale(1.3)';
+          }
+        }}
+        onMouseLeave={e => { 
+          e.currentTarget.style.transform = 'none'; 
+          e.currentTarget.style.boxShadow = '0 8px 32px rgba(0,0,0,0.04)';
+          e.currentTarget.style.border = '1px solid var(--border)';
+          if (e.currentTarget.querySelector('.glow-orb')) {
+            e.currentTarget.querySelector('.glow-orb').style.opacity = '0.5';
+            e.currentTarget.querySelector('.glow-orb').style.transform = 'scale(1)';
+          }
+        }}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ padding: 8, background: `${content.color}20`, borderRadius: 10 }}>{content.icon}</div>
+        {/* Glow Orb Background */}
+        <div 
+          className="glow-orb"
+          style={{
+            position: 'absolute', top: '-30px', right: '-30px', width: '120px', height: '120px',
+            background: `radial-gradient(circle, ${content.color}40 0%, transparent 70%)`,
+            borderRadius: '50%', filter: 'blur(20px)', opacity: '0.5',
+            transition: 'all 0.6s ease', pointerEvents: 'none', zIndex: 0
+          }} 
+        />
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20, position: 'relative', zIndex: 1 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            <div style={{ 
+              padding: 12, 
+              background: `linear-gradient(135deg, ${content.color}25, ${content.color}10)`, 
+              borderRadius: 14, 
+              border: `1px solid ${content.color}30`, 
+              boxShadow: `inset 0 0 0 1px rgba(255,255,255,0.1), 0 4px 12px ${content.color}20` 
+            }}>
+              {content.icon}
+            </div>
             <div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Goal Progress</div>
-              <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)' }}>{content.title}</div>
+              <div style={{ fontSize: 10, fontWeight: 800, color: content.color, textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 4 }}>
+                Goal Progress
+              </div>
+              <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
+                {content.title}
+              </div>
             </div>
           </div>
-          <div style={{ fontSize: 24, fontWeight: 800, color: content.color }}>{content.pct}%</div>
+          <div style={{ fontSize: 32, fontWeight: 900, color: content.color, lineHeight: 1, letterSpacing: '-0.04em', textShadow: `0 2px 12px ${content.color}40` }}>
+            {content.pct}%
+          </div>
         </div>
 
-        {/* Progress Bar */}
-        <div style={{ height: 8, background: 'var(--bg-card)', borderRadius: 4, overflow: 'hidden', marginBottom: 12 }}>
-          <div style={{ height: '100%', width: `${content.pct}%`, background: content.color, borderRadius: 4, transition: 'width 1s cubic-bezier(0.4, 0, 0.2, 1)' }} />
+        {/* Progress Bar Premium */}
+        <div style={{ position: 'relative', zIndex: 1, height: 10, background: 'var(--bg-base)', borderRadius: 8, overflow: 'hidden', marginBottom: 16, boxShadow: 'inset 0 1px 4px rgba(0,0,0,0.1)', border: '1px solid var(--border)' }}>
+          <div style={{ 
+            height: '100%', 
+            width: `${content.pct}%`, 
+            background: `linear-gradient(90deg, ${content.color}90, ${content.color})`, 
+            borderRadius: 8, 
+            transition: 'width 1.2s cubic-bezier(0.34, 1.56, 0.64, 1)', 
+            boxShadow: `0 0 12px ${content.color}80`,
+            position: 'relative'
+          }}>
+            {/* Shimmer effect inside progress bar */}
+            <div style={{
+              position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+              background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)',
+              transform: 'skewX(-20deg) translateX(-150%)',
+              animation: 'shimmer 3s infinite'
+            }} />
+          </div>
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, fontWeight: 600 }}>
-          <span style={{ color: 'var(--text-primary)' }}>{content.desc}</span>
-          <span style={{ color: 'var(--text-muted)' }}>{content.eta}</span>
+        <div style={{ position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13, fontWeight: 600 }}>
+          <span style={{ color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 6 }}>
+            {content.desc}
+          </span>
+          <span style={{ color: 'var(--text-muted)', background: 'var(--bg-base)', padding: '5px 12px', borderRadius: 20, fontSize: 11, fontWeight: 700, border: '1px solid var(--border)', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+            {content.eta}
+          </span>
         </div>
+        
+        <style>{`
+          @keyframes shimmer {
+            100% { transform: skewX(-20deg) translateX(200%); }
+          }
+        `}</style>
       </div>
 
       {/* Detail Modal */}

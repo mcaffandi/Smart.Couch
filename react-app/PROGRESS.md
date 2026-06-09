@@ -33,7 +33,7 @@
 ## To-Do List (Untuk Besok / Selanjutnya)
 - [ ] *Testing* ulang flow approval PRO memakai data asli / akun teman untuk meyakinkan semuanya nyambung 100%.
 - [ ] (*Bila Perlu*) Menambahkan fitur pembatalan otomatis jika user tidak kunjung mentransfer dalam 24 jam.
-- [ ] Fitur edit profile / custom avatar.
+- [x] Fitur edit profile / custom avatar.
 - [ ] ... (Tulis target selanjutnya di sini)
 
 ---
