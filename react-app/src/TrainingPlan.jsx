@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { buildTrainingPlan, buildAdaptiveCalendar, formatPace } from './utils';
 
 const dayTranslations = {
@@ -82,6 +83,8 @@ const getBadgeClass = (jenis) => {
 export default function TrainingPlan({ activities, programStyle, goal, paces, latestSleepScore, actualBestPace, targetPace, selectedDays, gender, weight, height, age, lang = 'id', onLogManualActivity, onDeleteManualActivity }) {
   const [isPaused, setIsPaused] = useState(() => localStorage.getItem('smartcoach_paused') === 'true');
   const [isAdaptiveActive, setIsAdaptiveActive] = useState(() => localStorage.getItem('smartcoach_adaptive') === 'true');
+  const [showLogModal, setShowLogModal] = useState(false);
+  const [logData, setLogData] = useState({ date: null, type: '', duration: 30 });
 
   const togglePause = () => {
     const newState = !isPaused;
@@ -109,13 +112,12 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
       }
     } else {
       const defaultVal = getJenis(dItem.workout.jenis);
-      const res = window.prompt(lang === 'id' ? 'Tandai selesai? Masukkan jenis aktivitas yang dilakukan (misal: Jalan Kaki, Bodyweight, Bersepeda):' : 'Mark as done? Enter activity type (e.g. Walking, Bodyweight, Cycling):', defaultVal);
-      if (res !== null) {
-        const val = res.trim() || defaultVal;
-        const timeRes = window.prompt(lang === 'id' ? 'Berapa menit durasi latihannya?' : 'How many minutes was the duration?', '30');
-        const durationMins = parseInt(timeRes, 10) || 30;
-        if (onLogManualActivity) onLogManualActivity(dItem.date, val, durationMins);
-      }
+      setLogData({
+        date: dItem.date,
+        type: defaultVal,
+        duration: 30
+      });
+      setShowLogModal(true);
     }
   };
 
@@ -702,6 +704,73 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
           </div>
         </div>
       </details>
+
+      {/* Manual Log Modal */}
+      {showLogModal && createPortal(
+        <div className="profile-modal-backdrop" onClick={() => setShowLogModal(false)} style={{ zIndex: 99999 }}>
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="animate-fade-in"
+            style={{ 
+              maxWidth: 400, width: '100%', background: 'var(--bg-surface)', 
+              borderRadius: 20, display: 'flex', flexDirection: 'column', overflow: 'hidden',
+              boxShadow: 'var(--shadow-premium)', border: '1px solid var(--border)'
+            }}
+          >
+            <div style={{ padding: 20, borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h2 style={{ fontSize: 18, fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
+                {lang === 'id' ? 'Tandai Selesai' : 'Mark as Done'}
+              </h2>
+              <button onClick={() => setShowLogModal(false)} style={{ background: 'var(--bg-card)', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 8, borderRadius: '50%' }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              </button>
+            </div>
+
+            <div style={{ padding: 24 }}>
+              <div className="form-group" style={{ marginBottom: 16 }}>
+                <label className="form-label" style={{ color: 'var(--text-secondary)' }}>{lang === 'id' ? 'Jenis Aktivitas' : 'Activity Type'}</label>
+                <input 
+                  type="text" 
+                  className="form-input" 
+                  value={logData.type}
+                  onChange={e => setLogData({ ...logData, type: e.target.value })}
+                  placeholder={lang === 'id' ? 'misal: Jalan Kaki, Bodyweight...' : 'e.g. Walking, Bodyweight...'}
+                />
+              </div>
+              <div className="form-group" style={{ marginBottom: 24 }}>
+                <label className="form-label" style={{ color: 'var(--text-secondary)' }}>{lang === 'id' ? 'Durasi (menit)' : 'Duration (minutes)'}</label>
+                <input 
+                  type="number" 
+                  className="form-input" 
+                  value={logData.duration}
+                  onChange={e => setLogData({ ...logData, duration: parseInt(e.target.value) || 0 })}
+                  min="1"
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: 12 }}>
+                <button 
+                  className="btn btn-secondary" 
+                  onClick={() => setShowLogModal(false)}
+                >
+                  {lang === 'id' ? 'Batal' : 'Cancel'}
+                </button>
+                <button 
+                  className="btn btn-primary" 
+                  onClick={() => {
+                    const finalType = logData.type.trim() || 'Custom Activity';
+                    if (onLogManualActivity) onLogManualActivity(logData.date, finalType, logData.duration);
+                    setShowLogModal(false);
+                  }}
+                >
+                  {lang === 'id' ? 'Simpan' : 'Save'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      , document.body)}
+
     </div>
   );
 }
