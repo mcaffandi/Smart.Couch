@@ -315,6 +315,7 @@ export default function App() {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [blogView, setBlogView] = useState('list');
   const [blogSearch, setBlogSearch] = useState('');
+  const [bypassedEmptyState, setBypassedEmptyState] = useState(() => localStorage.getItem('enduraup_bypassed_empty') === 'true');
 
   // Handle browser routing (back/forward)
   useEffect(() => {
@@ -3903,7 +3904,7 @@ export default function App() {
           </div>
         )}
 
-        {!hasData ? (
+        {!hasData && !bypassedEmptyState ? (
           /* Empty state */
           <div className="empty-state animate-fade-in">
             <div className="empty-state-icon-wrapper">
@@ -3942,6 +3943,14 @@ export default function App() {
               <div className="empty-step">
                 <div className="empty-step-num">3</div>
                 <div><strong>Atau input manual</strong> sesi lari &amp; tidur atau set profil (umur, goal, target pace) melalui sidebar kiri.</div>
+              </div>
+              <div 
+                className="empty-step clickable"
+                style={{ border: '1px dashed #8b5cf6', background: 'rgba(139, 92, 246, 0.05)' }}
+                onClick={() => { setBypassedEmptyState(true); localStorage.setItem('enduraup_bypassed_empty', 'true'); }}
+              >
+                <div className="empty-step-num" style={{ background: '#8b5cf6', color: '#fff' }}>4</div>
+                <div><strong>Mulai dari awal tanpa data</strong>. Langsung masuk ke Dashboard, buat jadwal latihan AI, dan mulai progres dari nol.</div>
               </div>
             </div>
           </div>
