@@ -622,7 +622,7 @@ html, body {
 .dashboard-layout {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  grid-auto-rows: minmax(100px, auto);
+  grid-auto-rows: 120px;
   gap: 20px;
 }
 
@@ -653,6 +653,22 @@ html, body {
   margin-bottom: 0 !important;
   display: flex;
   flex-direction: column;
+  overflow-y: auto;
+}
+
+/* Sleek scrollbar for bento cards */
+.dashboard-layout > div > .chart-container::-webkit-scrollbar,
+.dashboard-layout > div > .info-card::-webkit-scrollbar {
+  width: 4px;
+}
+.dashboard-layout > div > .chart-container::-webkit-scrollbar-track,
+.dashboard-layout > div > .info-card::-webkit-scrollbar-track {
+  background: transparent;
+}
+.dashboard-layout > div > .chart-container::-webkit-scrollbar-thumb,
+.dashboard-layout > div > .info-card::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
 }
 
 @media (max-width: 1100px) {

@@ -154,7 +154,8 @@ export function TrendChart({ activities, lang = 'id', externalTimeRange, setExte
           ))}
         </div>
       </div>
-      <ResponsiveContainer width="100%" height={220}>
+      <div style={{ flex: 1, minHeight: 220, position: 'relative' }}>
+        <ResponsiveContainer width="100%" height="100%">
         <ComposedChart data={data} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
           <XAxis dataKey="label" tick={{ fill: 'var(--text-secondary)', fontSize: 10 }} axisLine={false} tickLine={false} tickMargin={10} minTickGap={15} />
@@ -168,6 +169,7 @@ export function TrendChart({ activities, lang = 'id', externalTimeRange, setExte
           />
         </ComposedChart>
       </ResponsiveContainer>
+      </div>
     </div>
   );
 }
@@ -248,7 +250,8 @@ export function HRZoneChart({ zones, activities = [], avgHr, lang = 'id' }) {
   return (
     <div className="chart-container" style={{ padding: '20px 16px' }}>
       <div className="chart-title" style={{ fontSize: 14, fontWeight: 600, marginBottom: 16 }}>{lang === 'id' ? 'Zona Detak Jantung' : 'Heart Rate Zones'}</div>
-      <ResponsiveContainer width="100%" height={180}>
+      <div style={{ flex: 1, minHeight: 140, position: 'relative' }}>
+        <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} layout="vertical" margin={{ top: 0, right: 100, left: 0, bottom: 0 }} barCategoryGap="25%">
           <XAxis type="number" domain={[0, 'dataMax + 10']} tick={false} axisLine={false} tickLine={false} />
           <YAxis dataKey="zone" type="category" tick={{ fill: 'var(--text-secondary)', fontSize: 11, fontWeight: 700 }} axisLine={false} tickLine={false} width={45} tickMargin={8} />
@@ -267,6 +270,7 @@ export function HRZoneChart({ zones, activities = [], avgHr, lang = 'id' }) {
           </Bar>
         </BarChart>
       </ResponsiveContainer>
+      </div>
     </div>
   );
 }
