@@ -3,10 +3,10 @@ import { formatPace } from './utils';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const RACES = [
-  { key: '5k',  label: '5 km',          dist: 5000,   color: '#818cf8', colorDim: 'rgba(129,140,248,0.08)', border: 'rgba(129,140,248,0.2)' },
-  { key: '10k', label: '10 km',         dist: 10000,  color: '#34d399', colorDim: 'rgba(52,211,153,0.08)',  border: 'rgba(52,211,153,0.2)'  },
-  { key: 'hm',  label: 'Half Marathon', dist: 21097,  color: '#fbbf24', colorDim: 'rgba(251,191,36,0.08)',  border: 'rgba(251,191,36,0.2)'  },
-  { key: 'fm',  label: 'Marathon',      dist: 42195,  color: '#fb7185', colorDim: 'rgba(251,113,133,0.08)', border: 'rgba(251,113,133,0.2)' },
+  { key: '5k',  label: '5 km',          dist: 5000,   color: 'var(--alert-info-text)', colorDim: 'var(--alert-info-bg)', border: 'var(--alert-info-border)' },
+  { key: '10k', label: '10 km',         dist: 10000,  color: 'var(--alert-success-text)', colorDim: 'var(--alert-success-bg)', border: 'var(--alert-success-border)'  },
+  { key: 'hm',  label: 'Half Marathon', dist: 21097,  color: 'var(--alert-warning-text)', colorDim: 'var(--alert-warning-bg)', border: 'var(--alert-warning-border)'  },
+  { key: 'fm',  label: 'Marathon',      dist: 42195,  color: 'var(--alert-danger-text)', colorDim: 'var(--alert-danger-bg)', border: 'var(--alert-danger-border)' },
 ];
 
 const RIEGEL = 1.06;
@@ -165,7 +165,7 @@ export default function RacePrediction({ activities, targetPace, lang = 'id' }) 
           ? (lang === 'id' ? 'Sedang' : 'Moderate') 
           : (lang === 'id' ? 'Rendah' : 'Low')) 
     : (lang === 'id' ? 'Teoretis' : 'Theoretical');
-  const confColor   = hasData ? (recentRuns.length >= 5 ? '#34d399' : recentRuns.length >= 2 ? '#fbbf24' : '#fb7185') : '#818cf8';
+  const confColor   = hasData ? (recentRuns.length >= 5 ? 'var(--alert-success-text)' : recentRuns.length >= 2 ? 'var(--alert-warning-text)' : 'var(--alert-danger-text)') : 'var(--alert-info-text)';
 
   // Predictions for all distances
   const predictions = useMemo(() => {
@@ -241,7 +241,7 @@ export default function RacePrediction({ activities, targetPace, lang = 'id' }) 
           {vo2max > 0 && (
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em' }}>Est. VO2Max</div>
-              <div style={{ fontWeight: 900, fontSize: 22, color: '#818cf8', marginTop: 2 }}>{vo2max}</div>
+              <div style={{ fontWeight: 900, fontSize: 22, color: 'var(--alert-info-text)', marginTop: 2 }}>{vo2max}</div>
               <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>ml/kg/min</div>
             </div>
           )}
@@ -331,7 +331,7 @@ export default function RacePrediction({ activities, targetPace, lang = 'id' }) 
         <div style={{ marginBottom: 18 }}>
           <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 8 }}>
             {lang === 'id' ? `Target Waktu untuk ${targetRace?.label}` : `Target Time for ${targetRace?.label}`}
-            <span style={{ color: '#fb7185', marginLeft: 4 }}>*</span>
+            <span style={{ color: 'var(--alert-danger-text)', marginLeft: 4 }}>*</span>
           </div>
           <GoalTimeInput value={goalTime} onChange={setGoalTime} lang={lang} />
         </div>
@@ -370,7 +370,7 @@ export default function RacePrediction({ activities, targetPace, lang = 'id' }) 
                 <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em' }}>
                   {lang === 'id' ? 'Estimasi Tercapai' : 'Estimated Time'}
                 </div>
-                <div style={{ fontSize: 42, fontWeight: 900, color: '#818cf8', letterSpacing: '-1px', lineHeight: 1 }}>
+                <div style={{ fontSize: 42, fontWeight: 900, color: 'var(--alert-info-text)', letterSpacing: '-1px', lineHeight: 1 }}>
                   {weeksNeeded}
                 </div>
                 <div style={{ fontSize: 14, color: 'var(--text-secondary)', fontWeight: 600 }}>
@@ -389,7 +389,7 @@ export default function RacePrediction({ activities, targetPace, lang = 'id' }) 
                     <div style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>
                       {lang === 'id' ? 'Target Lo' : 'Your Goal'}
                     </div>
-                    <div style={{ fontSize: 16, fontWeight: 800, color: '#818cf8', marginTop: 2 }}>{secsToTime(goalSecs)}</div>
+                    <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--alert-info-text)', marginTop: 2 }}>{secsToTime(goalSecs)}</div>
                   </div>
                   <div style={{ background: 'var(--hover-overlay)', borderRadius: 10, padding: '10px 12px' }}>
                     <div style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>
@@ -401,7 +401,7 @@ export default function RacePrediction({ activities, targetPace, lang = 'id' }) 
                     <div style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>
                       {lang === 'id' ? 'Perlu Improve' : 'Improvement Needed'}
                     </div>
-                    <div style={{ fontSize: 16, fontWeight: 800, color: '#fbbf24', marginTop: 2 }}>
+                    <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--alert-warning-text)', marginTop: 2 }}>
                       {(((refRun.paceMinKm - goalPaceMinKm) / refRun.paceMinKm) * 100).toFixed(1)}%
                     </div>
                   </div>
@@ -419,7 +419,7 @@ export default function RacePrediction({ activities, targetPace, lang = 'id' }) 
                 <div style={{
                   height: '100%',
                   width: `${Math.min(100, Math.max(5, (goalPaceMinKm / refRun.paceMinKm) * 100))}%`,
-                  background: 'linear-gradient(90deg, #4f46e5, #818cf8)',
+                  background: 'linear-gradient(90deg, var(--accent-purple-dark), var(--accent-purple))',
                   borderRadius: 99,
                 }} />
               </div>

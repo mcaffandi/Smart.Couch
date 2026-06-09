@@ -505,23 +505,23 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
       )}
 
       <div className="pace-grid" style={{ marginBottom: 20 }}>
-        <div className="pace-card" style={{ background: 'rgba(251,113,133,0.07)', border: '1px solid rgba(251,113,133,0.2)', padding: '12px' }}>
-          <div className="pace-label" style={{ color: '#fb7185' }}>{lang === 'id' ? 'Ngepush' : 'Push'}</div>
+        <div className="pace-card" style={{ background: 'var(--alert-danger-bg)', border: '1px solid var(--alert-danger-border)', padding: '12px' }}>
+          <div className="pace-label" style={{ color: 'var(--alert-danger-text)' }}>{lang === 'id' ? 'Ngepush' : 'Push'}</div>
           <div className="pace-value" style={{ fontSize: '15px' }}>{paces.ngepush}</div>
           <div className="pace-unit" style={{ fontSize: '10px' }}>min/km</div>
-          {age && <div style={{ fontSize: 10, color: '#fb7185', marginTop: 2, fontWeight: 600 }}>HR {getHRForZone(0.8, 0.9)}</div>}
+          {age && <div style={{ fontSize: 10, color: 'var(--alert-danger-text)', marginTop: 2, fontWeight: 600 }}>HR {getHRForZone(0.8, 0.9)}</div>}
         </div>
-        <div className="pace-card" style={{ background: 'rgba(56,189,248,0.07)', border: '1px solid rgba(56,189,248,0.2)', padding: '12px' }}>
-          <div className="pace-label" style={{ color: '#38bdf8' }}>{lang === 'id' ? 'Sedang' : 'Moderate'}</div>
+        <div className="pace-card" style={{ background: 'var(--alert-info-bg)', border: '1px solid var(--alert-info-border)', padding: '12px' }}>
+          <div className="pace-label" style={{ color: 'var(--alert-info-text)' }}>{lang === 'id' ? 'Sedang' : 'Moderate'}</div>
           <div className="pace-value" style={{ fontSize: '15px' }}>{paces.sedang}</div>
           <div className="pace-unit" style={{ fontSize: '10px' }}>min/km</div>
-          {age && <div style={{ fontSize: 10, color: '#38bdf8', marginTop: 2, fontWeight: 600 }}>HR {getHRForZone(0.7, 0.8)}</div>}
+          {age && <div style={{ fontSize: 10, color: 'var(--alert-info-text)', marginTop: 2, fontWeight: 600 }}>HR {getHRForZone(0.7, 0.8)}</div>}
         </div>
-        <div className="pace-card" style={{ background: 'rgba(52,211,153,0.07)', border: '1px solid rgba(52,211,153,0.2)', padding: '12px' }}>
-          <div className="pace-label" style={{ color: '#34d399' }}>{lang === 'id' ? 'Santai' : 'Easy'}</div>
+        <div className="pace-card" style={{ background: 'var(--alert-success-bg)', border: '1px solid var(--alert-success-border)', padding: '12px' }}>
+          <div className="pace-label" style={{ color: 'var(--alert-success-text)' }}>{lang === 'id' ? 'Santai' : 'Easy'}</div>
           <div className="pace-value" style={{ fontSize: '15px' }}>{paces.santai}</div>
           <div className="pace-unit" style={{ fontSize: '10px' }}>min/km</div>
-          {age && <div style={{ fontSize: 10, color: '#34d399', marginTop: 2, fontWeight: 600 }}>HR {getHRForZone(0.6, 0.7)}</div>}
+          {age && <div style={{ fontSize: 10, color: 'var(--alert-success-text)', marginTop: 2, fontWeight: 600 }}>HR {getHRForZone(0.6, 0.7)}</div>}
         </div>
       </div>
 
