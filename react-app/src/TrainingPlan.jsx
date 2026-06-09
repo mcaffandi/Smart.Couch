@@ -101,11 +101,7 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
   };
 
   const handleDayClick = (dItem) => {
-    if (dItem.isPast === false && !dItem.isToday) {
-      setEditDayData(dItem);
-      setShowEditModal(true);
-      return;
-    }
+    if (dItem.isPast === false && !dItem.isToday) return; // Don't click future
     
     if (dItem.hasRun) {
       if (dItem.isManualRun) {
@@ -569,11 +565,7 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
                       {isCompleted && <div style={{ color: '#10b981' }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>}
                       {isMissed && <div style={{ color: '#fb7185' }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></div>}
                       {dItem.isToday && !isCompleted && <div style={{ background: 'var(--accent-purple)', color: '#fff', fontSize: 8, fontWeight: 800, padding: '2px 4px', borderRadius: 4 }}>TODAY</div>}
-                      {(!dItem.isPast || dItem.isToday) && !isCompleted && !dItem.isToday && (
-                         <div style={{ color: 'var(--text-muted)' }}>
-                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
-                         </div>
-                      )}
+
                       {dItem.isToday && !isCompleted && (
                          <div onClick={(e) => { e.stopPropagation(); setEditDayData(dItem); setShowEditModal(true); }} style={{ color: 'var(--text-muted)', cursor: 'pointer', marginLeft: 4 }}>
                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>

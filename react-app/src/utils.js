@@ -484,7 +484,9 @@ export const buildAdaptiveCalendar = (weeklyPlan, activities = [], isPaused = fa
       if (isPast && hasRun) {
         workout.completed = true;
       } else if (isPast && !hasRun) {
-        workout.missed = true;
+        if (!workout.jenis.includes('Rest')) {
+          workout.missed = true;
+        }
       }
     }
 
