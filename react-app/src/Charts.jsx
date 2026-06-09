@@ -214,7 +214,7 @@ export function HRZoneChart({ zones, activities = [], avgHr, lang = 'id' }) {
       value: totalDurMs > 0 ? Math.max(0.5, pct) : 10, // bar length
       pctStr: totalDurMs > 0 ? `${pct}%` : '',
       durStr: totalDurMs > 0 ? durStr : '',
-      labelStr: ms > 0 ? `${durStr} (${pct}%)` : '',
+      labelStr: ms > 0 ? `${durStr} (${pct}%)`.replace(/ /g, '\u00A0') : '',
     };
   });
 
