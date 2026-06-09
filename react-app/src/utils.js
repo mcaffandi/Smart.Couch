@@ -82,6 +82,7 @@ export const loadUserData = (username) => {
   return { 
     running_activities: [], 
     sleep_records: {}, 
+    weight_records: [],
     max_hr: 0,
     profile: { ...DEFAULT_PROFILE }
   };
@@ -435,7 +436,13 @@ export const buildAdaptiveCalendar = (weeklyPlan, activities = [], isPaused = fa
           }
         } catch (e) {}
       }
-      if (dateStr) activityMap[dateStr] = true;
+      if (dateStr) {
+        if (a.isManual) {
+          activityMap[dateStr] = 'manual';
+        } else {
+          activityMap[dateStr] = 'strava';
+        }
+      }
     }
   });
 
@@ -459,6 +466,7 @@ export const buildAdaptiveCalendar = (weeklyPlan, activities = [], isPaused = fa
     const isPast = current < today;
     const isToday = current.getTime() === today.getTime();
     const hasRun = !!activityMap[dateStr];
+    const isManualRun = activityMap[dateStr] === 'manual';
 
     if (isPaused && !isPast) {
       // If paused, today and future days are marked as Paused/Rest
@@ -482,6 +490,7 @@ export const buildAdaptiveCalendar = (weeklyPlan, activities = [], isPaused = fa
       isToday,
       isPast,
       hasRun,
+      isManualRun,
       isPaused,
       workout
     });

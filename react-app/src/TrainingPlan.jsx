@@ -79,7 +79,7 @@ const getBadgeClass = (jenis) => {
   return 'badge-recovery';
 };
 
-export default function TrainingPlan({ activities, programStyle, goal, paces, latestSleepScore, actualBestPace, targetPace, selectedDays, gender, weight, height, age, lang = 'id' }) {
+export default function TrainingPlan({ activities, programStyle, goal, paces, latestSleepScore, actualBestPace, targetPace, selectedDays, gender, weight, height, age, lang = 'id', onLogManualActivity, onDeleteManualActivity }) {
   const [isPaused, setIsPaused] = useState(() => localStorage.getItem('smartcoach_paused') === 'true');
   const [isAdaptiveActive, setIsAdaptiveActive] = useState(() => localStorage.getItem('smartcoach_adaptive') === 'true');
 
@@ -93,6 +93,30 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
     const newState = !isAdaptiveActive;
     setIsAdaptiveActive(newState);
     localStorage.setItem('smartcoach_adaptive', newState.toString());
+  };
+
+  const handleDayClick = (dItem) => {
+    if (dItem.isPast === false && !dItem.isToday) return; // Don't click future
+    
+    if (dItem.hasRun) {
+      if (dItem.isManualRun) {
+        if (confirm(lang === 'id' ? 'Hapus catatan aktivitas manual di hari ini?' : 'Delete manual activity log for this day?')) {
+          if (onDeleteManualActivity) onDeleteManualActivity(dItem.date);
+        }
+      } else {
+        // Can't delete Strava activity
+        alert(lang === 'id' ? 'Aktivitas ini dari Strava dan tidak bisa dihapus manual dari kalender.' : 'This activity is from Strava and cannot be deleted manually.');
+      }
+    } else {
+      const defaultVal = getJenis(dItem.workout.jenis);
+      const res = window.prompt(lang === 'id' ? 'Tandai selesai? Masukkan jenis aktivitas yang dilakukan (misal: Jalan Kaki, Bodyweight, Bersepeda):' : 'Mark as done? Enter activity type (e.g. Walking, Bodyweight, Cycling):', defaultVal);
+      if (res !== null) {
+        const val = res.trim() || defaultVal;
+        const timeRes = window.prompt(lang === 'id' ? 'Berapa menit durasi latihannya?' : 'How many minutes was the duration?', '30');
+        const durationMins = parseInt(timeRes, 10) || 30;
+        if (onLogManualActivity) onLogManualActivity(dItem.date, val, durationMins);
+      }
+    }
   };
 
   const plan = buildTrainingPlan(programStyle, goal, paces, selectedDays);
@@ -528,7 +552,7 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
                 if (isMissed) { borderColor = '#fb7185'; bg = 'rgba(251, 113, 133, 0.05)'; }
 
                 return (
-                  <div key={i} style={{ minWidth: 160, maxWidth: 180, flex: '0 0 auto', background: bg, border: `1.5px solid ${borderColor}`, borderRadius: 12, padding: 12, display: 'flex', flexDirection: 'column', opacity: dItem.isPast && !dItem.isToday ? 0.6 : 1 }}>
+                  <div key={i} onClick={() => handleDayClick(dItem)} style={{ minWidth: 160, maxWidth: 180, flex: '0 0 auto', background: bg, border: `1.5px solid ${borderColor}`, borderRadius: 12, padding: 12, display: 'flex', flexDirection: 'column', opacity: dItem.isPast && !dItem.isToday ? 0.6 : 1, cursor: (dItem.isPast || dItem.isToday) ? 'pointer' : 'default', transition: 'transform 0.1s' }} onMouseDown={e => {if (dItem.isPast || dItem.isToday) e.currentTarget.style.transform = 'scale(0.96)'}} onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'} onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
                       <div>
                         <div style={{ fontSize: 11, fontWeight: 700, color: dItem.isToday ? 'var(--accent-purple)' : 'var(--text-muted)' }}>{dayName.toUpperCase()}</div>
@@ -577,7 +601,7 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
               const row = dItem.workout;
               
               return (
-                <tr key={i} style={{ background: dItem.isToday ? 'rgba(167, 139, 250, 0.05)' : 'transparent' }}>
+                <tr key={i} onClick={() => handleDayClick(dItem)} style={{ background: dItem.isToday ? 'rgba(167, 139, 250, 0.05)' : 'transparent', cursor: (dItem.isPast || dItem.isToday) ? 'pointer' : 'default' }}>
                   <td style={{ fontWeight: 700, color: dItem.isToday ? 'var(--accent-purple)' : 'var(--text-primary)', whiteSpace: 'nowrap' }}>
                     {dayName} <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-muted)' }}>{dateStr}</span>
                     {dItem.isToday && <span style={{ marginLeft: 8, background: 'var(--accent-purple)', color: '#fff', fontSize: 9, padding: '2px 6px', borderRadius: 4 }}>TODAY</span>}
@@ -601,7 +625,7 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
           const row = dItem.workout;
 
           return (
-            <div key={i} className="training-card-item" style={{ border: dItem.isToday ? '1px solid var(--accent-purple)' : '1px solid var(--border)', background: dItem.isToday ? 'rgba(167, 139, 250, 0.05)' : 'var(--bg-card)' }}>
+            <div key={i} onClick={() => handleDayClick(dItem)} className="training-card-item" style={{ border: dItem.isToday ? '1px solid var(--accent-purple)' : '1px solid var(--border)', background: dItem.isToday ? 'rgba(167, 139, 250, 0.05)' : 'var(--bg-card)', cursor: (dItem.isPast || dItem.isToday) ? 'pointer' : 'default' }}>
               <div className="training-card-header">
                 <span className="training-card-day" style={{ color: dItem.isToday ? 'var(--accent-purple)' : 'var(--text-primary)' }}>
                   {dayName}, {dateStr}

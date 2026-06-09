@@ -1,0 +1,369 @@
+import React, { useState, useMemo } from 'react';
+import { Target, TrendingDown, Activity, CheckCircle, Flame, PlusCircle, ArrowRight, X, Calendar } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar, ReferenceLine, CartesianGrid } from 'recharts';
+
+export default function GoalProgressWidget({ data, goal, lang = 'id', onLogWeight, onLogRaceDate }) {
+  const [showModal, setShowModal] = useState(false);
+
+  const runActs = data.running_activities || [];
+  const weightRecs = data.weight_records || [];
+  const profileWeight = data.profile?.weight || 70;
+  const age = data.profile?.age || 30;
+  const maxHR = data.max_hr || (220 - age);
+
+  // ─────────────────────────────────────────
+  // Helper Math
+  // ─────────────────────────────────────────
+  const now = Date.now();
+  
+  // 1. Weightloss
+  const { weightProgress, weightTargetKcal, weightBurnedKcal, weightChartData } = useMemo(() => {
+    let burned = 0;
+    runActs.forEach(a => {
+      if (a.distance > 0) {
+        burned += (a.distance / 100000) * profileWeight * 1.036; // running kcal
+      } else if (a.isManual) {
+        burned += (a.duration / 60000) * 8; // approx 8 kcal/min for gym/walking
+      }
+    });
+    const targetKcal = 38500; // approx 5kg
+    const pct = Math.min(100, Math.round((burned / targetKcal) * 100));
+
+    // Chart Data
+    let cData = [...weightRecs];
+    if (cData.length === 0 && profileWeight) {
+      cData.push({ date: new Date().toISOString(), weight: profileWeight });
+    }
+    const chartData = cData.sort((a,b) => new Date(a.date) - new Date(b.date)).map(r => {
+      const d = new Date(r.date);
+      return { 
+        date: d.toLocaleDateString(lang==='id'?'id-ID':'en-US', { day: 'numeric', month: 'short' }), 
+        weight: r.weight 
+      };
+    });
+
+    return { weightProgress: pct, weightTargetKcal: targetKcal, weightBurnedKcal: Math.round(burned), weightChartData: chartData };
+  }, [runActs, weightRecs, profileWeight, lang]);
+
+  // 2. Turun HR / Aerobic Base
+  const { hrProgress, z2Hours, z2Target, z2ChartData } = useMemo(() => {
+    let z2Ms = 0;
+    const weeklyData = {};
+
+    runActs.forEach(a => {
+      // Check if it's Z1 or Z2
+      const isEasy = (a.avgHr && a.avgHr < maxHR * 0.75) || (!a.avgHr && a.name && (a.name.toLowerCase().includes('santai') || a.name.toLowerCase().includes('easy')));
+      if (isEasy) z2Ms += (a.duration || 0);
+
+      // Group by week for chart
+      if (a.startTimeLocal) {
+        const d = new Date(a.startTimeLocal);
+        const wKey = d.getFullYear() + '-W' + Math.ceil(d.getDate() / 7);
+        if(!weeklyData[wKey]) weeklyData[wKey] = { week: wKey, z2Mins: 0, otherMins: 0 };
+        if(isEasy) weeklyData[wKey].z2Mins += (a.duration || 0) / 60000;
+        else weeklyData[wKey].otherMins += (a.duration || 0) / 60000;
+      }
+    });
+
+    const hours = z2Ms / 3600000;
+    const target = 40; // 40 hours target
+    const pct = Math.min(100, Math.round((hours / target) * 100));
+
+    const chartData = Object.values(weeklyData).slice(-6); // last 6 weeks
+
+    return { hrProgress: pct, z2Hours: hours.toFixed(1), z2Target: target, z2ChartData: chartData };
+  }, [runActs, maxHR]);
+
+  // 3. 5K / 10K / Marathon
+  const { raceProgress, currentPeak, targetPeak, raceChartData } = useMemo(() => {
+    let target = 5;
+    if (goal === '10k') target = 10;
+    else if (goal === 'marathon') target = 32;
+
+    let peak = 0;
+    const history = [];
+    runActs.sort((a,b) => a.startTimeLocal - b.startTimeLocal).forEach(a => {
+      const dist = (a.distance || 0) / 100000;
+      if (dist > peak) peak = dist;
+      if (dist > 2) {
+        history.push({
+          date: new Date(a.startTimeLocal).toLocaleDateString(lang==='id'?'id-ID':'en-US', { month: 'short', day: 'numeric' }),
+          dist: parseFloat(dist.toFixed(1))
+        });
+      }
+    });
+
+    const pct = Math.min(100, Math.round((peak / target) * 100));
+    const chartData = history.slice(-10); // last 10 long runs
+
+    return { raceProgress: pct, currentPeak: parseFloat(peak.toFixed(1)), targetPeak: target, raceChartData: chartData };
+  }, [runActs, goal, lang]);
+
+  // 4. Maintenance
+  const { maintProgress, thisWeekMins, maintChartData } = useMemo(() => {
+    const oneWeekAgo = now - 7 * 24 * 3600 * 1000;
+    let mins = 0;
+    const dailyMins = {};
+
+    runActs.forEach(a => {
+      if (a.startTimeLocal >= oneWeekAgo) {
+        mins += (a.duration || 0) / 60000;
+      }
+      if (a.startTimeLocal) {
+        const dateStr = new Date(a.startTimeLocal).toISOString().split('T')[0];
+        dailyMins[dateStr] = (dailyMins[dateStr] || 0) + ((a.duration || 0) / 60000);
+      }
+    });
+
+    const pct = Math.min(100, Math.round((mins / 150) * 100));
+
+    // Chart Data (Last 14 days)
+    const chartData = [];
+    for(let i=13; i>=0; i--) {
+      const d = new Date(now - i * 24 * 3600 * 1000);
+      const str = d.toISOString().split('T')[0];
+      chartData.push({
+        date: d.toLocaleDateString(lang==='id'?'id-ID':'en-US', { day: 'numeric', month: 'short' }),
+        mins: Math.round(dailyMins[str] || 0)
+      });
+    }
+
+    return { maintProgress: pct, thisWeekMins: Math.round(mins), maintChartData: chartData };
+  }, [runActs, now, lang]);
+
+  // ─────────────────────────────────────────
+  // UI Helpers
+  // ─────────────────────────────────────────
+  const getWidgetContent = () => {
+    if (goal === 'weightloss') {
+      return {
+        title: lang === 'id' ? 'Progres Turun Berat' : 'Weightloss Progress',
+        icon: <TrendingDown size={20} color="#f43f5e" />,
+        color: '#f43f5e',
+        pct: weightProgress,
+        desc: lang === 'id' ? `${weightBurnedKcal} / ${weightTargetKcal} kkal terbakar` : `${weightBurnedKcal} / ${weightTargetKcal} kcal burned`,
+        eta: lang === 'id' ? `Estimasi: ~${Math.max(1, Math.round((weightTargetKcal - weightBurnedKcal)/2500))} minggu lagi` : `ETA: ~${Math.max(1, Math.round((weightTargetKcal - weightBurnedKcal)/2500))} weeks`
+      };
+    } else if (goal === 'turun-hr') {
+      return {
+        title: lang === 'id' ? 'Kapasitas Aerobik' : 'Aerobic Base',
+        icon: <Heart size={20} color="#3b82f6" />,
+        color: '#3b82f6',
+        pct: hrProgress,
+        desc: lang === 'id' ? `${z2Hours} / ${z2Target} jam di Zona 2` : `${z2Hours} / ${z2Target} hrs in Zone 2`,
+        eta: lang === 'id' ? `Efisiensi meningkat bertahap` : `Efficiency improving`
+      };
+    } else if (goal === '5k' || goal === '10k' || goal === 'marathon') {
+      return {
+        title: lang === 'id' ? `Persiapan ${goal.toUpperCase()}` : `${goal.toUpperCase()} Prep`,
+        icon: <Target size={20} color="#10b981" />,
+        color: '#10b981',
+        pct: raceProgress,
+        desc: lang === 'id' ? `Peak Long Run: ${currentPeak} / ${targetPeak} km` : `Peak Long Run: ${currentPeak} / ${targetPeak} km`,
+        eta: lang === 'id' ? `Siap dalam ~${Math.max(1, Math.round((targetPeak - currentPeak)/2))} minggu` : `Ready in ~${Math.max(1, Math.round((targetPeak - currentPeak)/2))} weeks`
+      };
+    } else {
+      return {
+        title: lang === 'id' ? 'Kesehatan & Kebugaran' : 'Health & Maintenance',
+        icon: <Activity size={20} color="#8b5cf6" />,
+        color: '#8b5cf6',
+        pct: maintProgress,
+        desc: lang === 'id' ? `${thisWeekMins} / 150 menit minggu ini` : `${thisWeekMins} / 150 mins this week`,
+        eta: maintProgress >= 100 ? (lang === 'id' ? 'Target Terpenuhi! 🔥' : 'Target Achieved! 🔥') : (lang === 'id' ? 'Tetap Konsisten!' : 'Keep it up!')
+      };
+    }
+  };
+
+  const content = getWidgetContent();
+
+  return (
+    <>
+      {/* Widget Card */}
+      <div 
+        onClick={() => setShowModal(true)}
+        style={{
+          background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 20, 
+          cursor: 'pointer', position: 'relative', overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+          transition: 'transform 0.2s, box-shadow 0.2s'
+        }}
+        onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.1)' }}
+        onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.05)' }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ padding: 8, background: `${content.color}20`, borderRadius: 10 }}>{content.icon}</div>
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Goal Progress</div>
+              <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)' }}>{content.title}</div>
+            </div>
+          </div>
+          <div style={{ fontSize: 24, fontWeight: 800, color: content.color }}>{content.pct}%</div>
+        </div>
+
+        {/* Progress Bar */}
+        <div style={{ height: 8, background: 'var(--bg-card)', borderRadius: 4, overflow: 'hidden', marginBottom: 12 }}>
+          <div style={{ height: '100%', width: `${content.pct}%`, background: content.color, borderRadius: 4, transition: 'width 1s cubic-bezier(0.4, 0, 0.2, 1)' }} />
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, fontWeight: 600 }}>
+          <span style={{ color: 'var(--text-primary)' }}>{content.desc}</span>
+          <span style={{ color: 'var(--text-muted)' }}>{content.eta}</span>
+        </div>
+      </div>
+
+      {/* Detail Modal */}
+      {showModal && (
+        <div className="profile-modal-backdrop" onClick={() => setShowModal(false)} style={{ zIndex: 99999 }}>
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="animate-fade-in"
+            style={{ 
+              maxWidth: 500, width: '100%', maxHeight: '90vh', background: 'var(--bg-surface)', 
+              borderRadius: 20, display: 'flex', flexDirection: 'column', overflow: 'hidden',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)', border: '1px solid var(--border)'
+            }}
+          >
+            <div style={{ padding: 20, borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h2 style={{ fontSize: 18, fontWeight: 800, margin: 0, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                {content.icon} {content.title}
+              </h2>
+              <button onClick={() => setShowModal(false)} style={{ background: 'var(--bg-card)', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 8, borderRadius: '50%' }}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <div style={{ padding: 24, overflowY: 'auto' }} className="hide-scrollbar">
+              
+              {/* GOAL: WEIGHTLOSS */}
+              {goal === 'weightloss' && (
+                <>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 24 }}>
+                    <div style={{ background: 'var(--bg-card)', padding: 16, borderRadius: 16, border: '1px solid var(--border)' }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4 }}>Total Kalori Terbakar</div>
+                      <div style={{ fontSize: 24, fontWeight: 800, color: '#f43f5e' }}>{weightBurnedKcal.toLocaleString()}</div>
+                      <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 4 }}>🔥 ~{(weightBurnedKcal/7700).toFixed(1)} kg lemak luntur</div>
+                    </div>
+                    <div style={{ background: 'var(--bg-card)', padding: 16, borderRadius: 16, border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                      <button 
+                        onClick={() => {
+                          const w = window.prompt(lang === 'id' ? 'Masukkan berat badan hari ini (kg):' : 'Enter weight today (kg):', profileWeight);
+                          if(w && !isNaN(parseFloat(w))) {
+                            if(onLogWeight) onLogWeight(parseFloat(w));
+                          }
+                        }}
+                        style={{ background: '#f43f5e', color: '#fff', border: 'none', padding: '12px', borderRadius: 12, fontWeight: 700, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+                      >
+                        <PlusCircle size={18} /> {lang === 'id' ? 'Log Berat' : 'Log Weight'}
+                      </button>
+                    </div>
+                  </div>
+
+                  <h3 style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 16 }}>Trend Penurunan Berat</h3>
+                  <div style={{ height: 200, width: '100%', background: 'var(--bg-card)', borderRadius: 16, padding: 16, border: '1px solid var(--border)' }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={weightChartData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+                        <XAxis dataKey="date" stroke="var(--text-muted)" fontSize={10} tickLine={false} axisLine={false} />
+                        <YAxis stroke="var(--text-muted)" fontSize={10} tickLine={false} axisLine={false} domain={['dataMin - 2', 'dataMax + 2']} />
+                        <Tooltip contentStyle={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 8 }} />
+                        <Line type="monotone" dataKey="weight" stroke="#f43f5e" strokeWidth={3} dot={{ r: 4, fill: '#f43f5e', strokeWidth: 2, stroke: 'var(--bg-surface)' }} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </>
+              )}
+
+              {/* GOAL: TURUN HR */}
+              {goal === 'turun-hr' && (
+                <>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 24 }}>
+                    <div style={{ background: 'var(--bg-card)', padding: 16, borderRadius: 16, border: '1px solid var(--border)' }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4 }}>Akumulasi Zona 2</div>
+                      <div style={{ fontSize: 24, fontWeight: 800, color: '#3b82f6' }}>{z2Hours} <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>jam</span></div>
+                    </div>
+                    <div style={{ background: 'var(--bg-card)', padding: 16, borderRadius: 16, border: '1px solid var(--border)' }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4 }}>Target Kestabilan</div>
+                      <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--text-primary)' }}>{z2Target} <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>jam</span></div>
+                    </div>
+                  </div>
+
+                  <h3 style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 16 }}>Distribusi Latihan (6 Minggu Terakhir)</h3>
+                  <div style={{ height: 200, width: '100%', background: 'var(--bg-card)', borderRadius: 16, padding: 16, border: '1px solid var(--border)' }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={z2ChartData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+                        <XAxis dataKey="week" stroke="var(--text-muted)" fontSize={10} tickLine={false} axisLine={false} />
+                        <Tooltip cursor={{ fill: 'var(--border)', opacity: 0.4 }} contentStyle={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 8 }} />
+                        <Bar dataKey="z2Mins" stackId="a" fill="#3b82f6" radius={[0,0,4,4]} name="Zona 2 (Menit)" />
+                        <Bar dataKey="otherMins" stackId="a" fill="var(--border)" radius={[4,4,0,0]} name="Zona Lain (Menit)" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </>
+              )}
+
+              {/* GOAL: RACE */}
+              {(goal === '5k' || goal === '10k' || goal === 'marathon') && (
+                <>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 24 }}>
+                    <div style={{ background: 'var(--bg-card)', padding: 16, borderRadius: 16, border: '1px solid var(--border)' }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4 }}>Peak Long Run</div>
+                      <div style={{ fontSize: 24, fontWeight: 800, color: '#10b981' }}>{currentPeak} <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>km</span></div>
+                    </div>
+                    <div style={{ background: 'var(--bg-card)', padding: 16, borderRadius: 16, border: '1px solid var(--border)' }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4 }}>Target Jarak</div>
+                      <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--text-primary)' }}>{targetPeak} <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>km</span></div>
+                    </div>
+                  </div>
+
+                  <h3 style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 16 }}>Ketahanan Jarak (Long Runs)</h3>
+                  <div style={{ height: 200, width: '100%', background: 'var(--bg-card)', borderRadius: 16, padding: 16, border: '1px solid var(--border)' }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={raceChartData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+                        <XAxis dataKey="date" stroke="var(--text-muted)" fontSize={10} tickLine={false} axisLine={false} />
+                        <YAxis stroke="var(--text-muted)" fontSize={10} tickLine={false} axisLine={false} domain={[0, 'auto']} />
+                        <Tooltip contentStyle={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 8 }} />
+                        <Line type="stepAfter" dataKey="dist" stroke="#10b981" strokeWidth={3} dot={{ r: 4, fill: '#10b981', strokeWidth: 2, stroke: 'var(--bg-surface)' }} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </>
+              )}
+
+              {/* GOAL: MAINTENANCE */}
+              {(goal === 'maintenance' || goal === 'health') && (
+                <>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 12, marginBottom: 24 }}>
+                    <div style={{ background: 'var(--bg-card)', padding: 16, borderRadius: 16, border: '1px solid var(--border)', textAlign: 'center' }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4 }}>Total Latihan 7 Hari Terakhir</div>
+                      <div style={{ fontSize: 32, fontWeight: 800, color: '#8b5cf6' }}>{thisWeekMins} <span style={{ fontSize: 16, color: 'var(--text-muted)' }}>/ 150 mnt</span></div>
+                      {thisWeekMins >= 150 ? (
+                        <div style={{ display: 'inline-block', marginTop: 8, padding: '4px 12px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', borderRadius: 12, fontSize: 12, fontWeight: 700 }}>Target WHO Terpenuhi! 🎉</div>
+                      ) : (
+                        <div style={{ display: 'inline-block', marginTop: 8, padding: '4px 12px', background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e', borderRadius: 12, fontSize: 12, fontWeight: 700 }}>Kurang {150 - thisWeekMins} menit lagi</div>
+                      )}
+                    </div>
+                  </div>
+
+                  <h3 style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 16 }}>Aktivitas Harian (14 Hari Terakhir)</h3>
+                  <div style={{ height: 200, width: '100%', background: 'var(--bg-card)', borderRadius: 16, padding: 16, border: '1px solid var(--border)' }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={maintChartData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+                        <XAxis dataKey="date" stroke="var(--text-muted)" fontSize={10} tickLine={false} axisLine={false} />
+                        <Tooltip cursor={{ fill: 'var(--border)', opacity: 0.4 }} contentStyle={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 8 }} />
+                        <Bar dataKey="mins" fill="#8b5cf6" radius={[4,4,0,0]} name="Menit" />
+                        <ReferenceLine y={22} stroke="#10b981" strokeDasharray="3 3" /> {/* Approx daily avg needed for 150/wk */}
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}

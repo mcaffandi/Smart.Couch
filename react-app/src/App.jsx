@@ -23,6 +23,7 @@ const AdminDashboard = lazy(() => import('./AdminDashboard'));
 import BlogModule from './Blog';
 import { AboutPage, PrivacyPage, ContactPage } from './StaticPages';
 import Logo from './Logo';
+import GoalProgressWidget from './GoalProgressWidget';
 const ExportGuideModal = lazy(() => import('./ExportGuideModal'));
 const FeedbackModal = lazy(() => import('./FeedbackModal'));
 const PremiumModal = lazy(() => import('./PremiumModal'));
@@ -603,6 +604,39 @@ export default function App() {
     setTimeout(() => setToasts(ts => ts.filter(t => t.id !== id)), 3500);
   }, []);
 
+  const handleLogManualActivity = useCallback((dateStr, jenis, durationMins = 30) => {
+    const d = new Date(dateStr + 'T12:00:00');
+    const newAct = {
+      startTimeLocal: d.getTime(),
+      distance: 0,
+      duration: durationMins * 60000,
+      activityType: 'manual',
+      name: jenis,
+      isManual: true
+    };
+    setData(prev => {
+      const mergedRuns = [...(prev.running_activities || []), newAct].sort((a,b) => a.startTimeLocal - b.startTimeLocal);
+      const updated = { ...prev, running_activities: mergedRuns };
+      saveAndSyncData(updated);
+      return updated;
+    });
+    addToast(lang === 'id' ? `Berhasil mencatat: ${jenis}` : `Logged: ${jenis}`, 'success');
+  }, [saveAndSyncData, lang, addToast]);
+
+  const handleDeleteManualActivity = useCallback((dateStr) => {
+    setData(prev => {
+      const mergedRuns = (prev.running_activities || []).filter(a => {
+        if (!a.isManual) return true;
+        const aDate = msToDate(a.startTimeLocal);
+        return aDate !== dateStr;
+      });
+      const updated = { ...prev, running_activities: mergedRuns };
+      saveAndSyncData(updated);
+      return updated;
+    });
+    addToast(lang === 'id' ? 'Aktivitas dihapus' : 'Activity removed', 'info');
+  }, [saveAndSyncData, lang, addToast]);
+
   // ── Strava Integration ───────────────────────────────────────────────────────
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -711,13 +745,14 @@ export default function App() {
             let totalAddedHours = 0;
             recentlyAdded.forEach(r => {
               const durationHours = (r.duration || 0) / 3600000;
-              let added = durationHours * 24;
+              let added = durationHours * 18;
               if (r.avgHr) {
                 const intensity = r.avgHr / userMaxHr;
-                if (intensity < 0.65) added = durationHours * 12;
-                else if (intensity < 0.75) added = durationHours * 24;
-                else if (intensity < 0.85) added = durationHours * 36;
-                else added = durationHours * 48;
+                if (intensity < 0.60) added = durationHours * 6;     // Recovery: 6h per jam
+                else if (intensity < 0.70) added = durationHours * 14;   // Base: 14h per jam
+                else if (intensity < 0.80) added = durationHours * 24;   // Tempo: 24h per jam
+                else if (intensity < 0.90) added = durationHours * 36;   // Threshold: 36h per jam
+                else added = durationHours * 48;                         // Anaerobic: 48h per jam
               }
               totalAddedHours += added;
             });
@@ -834,14 +869,29 @@ export default function App() {
       
       if (ev.type === 'run') {
         const durationHours = (ev.data.duration || 0) / 3600000;
-        let addedHours = durationHours * 24; // default
+        let addedHours = durationHours * 18; // default
         if (ev.data.avgHr) {
           const intensity = ev.data.avgHr / userMaxHr;
-          if (intensity < 0.60) addedHours = durationHours * 4;
-          else if (intensity < 0.70) addedHours = durationHours * 10;
-          else if (intensity < 0.80) addedHours = durationHours * 16;
-          else if (intensity < 0.90) addedHours = durationHours * 24;
-          else addedHours = durationHours * 36;
+          if (intensity < 0.60) addedHours = durationHours * 6;         // Recovery (Z1)
+          else if (intensity < 0.70) addedHours = durationHours * 14;   // Base (Z2)
+          else if (intensity < 0.80) addedHours = durationHours * 24;   // Tempo (Z3)
+          else if (intensity < 0.90) addedHours = durationHours * 36;   // Threshold (Z4)
+          else addedHours = durationHours * 48;                         // Anaerobic (Z5)
+        } else if (ev.data.isManual && ev.data.name) {
+          const nameLower = ev.data.name.toLowerCase();
+          if (nameLower.includes('yoga') || nameLower.includes('stretch') || nameLower.includes('mobility')) {
+            addedHours = durationHours * 2;   // Minimal strain
+          } else if (nameLower.includes('jalan') || nameLower.includes('walk') || nameLower.includes('recovery')) {
+            addedHours = durationHours * 6;   // Z1 equivalent
+          } else if (nameLower.includes('bodyweight') || nameLower.includes('gym') || nameLower.includes('strength') || nameLower.includes('core')) {
+            addedHours = durationHours * 24;  // Muscular fatigue, equivalent to Z3
+          } else if (nameLower.includes('hiit') || nameLower.includes('interval')) {
+            addedHours = durationHours * 36;  // High EPOC / CNS strain
+          } else {
+            addedHours = durationHours * 14;  // Default to moderate Z2 load
+          }
+        } else {
+          addedHours = durationHours * 14; // Default to moderate for unclassified activities without HR
         }
         currentRecoveryMs += (addedHours * 3600000);
       } else if (ev.type === 'sleep') {
@@ -2696,6 +2746,7 @@ export default function App() {
                     <Stat label="Goal" value={
                       goal === 'maintenance' ? 'Maintenance' :
                       goal === 'weightloss' ? 'Turun BB' :
+                      goal === '5k' ? '5K' :
                       goal === '10k' ? '10K' :
                       goal === 'marathon' ? 'Marathon' :
                       goal === 'turun-hr' ? 'Turun HR' :
@@ -2959,7 +3010,8 @@ export default function App() {
                         {[
                           { val: 'maintenance', label: t.maintenance },
                           { val: 'weightloss', label: lang === 'id' ? 'Turun Berat' : 'Weight Loss' },
-                          { val: '10k', label: '10K / 5K' },
+                          { val: '5k', label: '5K' },
+                          { val: '10k', label: '10K' },
                           { val: 'marathon', label: 'Marathon' },
                           { val: 'turun-hr', label: lang === 'id' ? 'Turun HR' : 'Lower HR' },
                           { val: 'health', label: lang === 'id' ? 'Kesehatan' : 'Health' }
@@ -3917,6 +3969,16 @@ export default function App() {
             {/* ─────────────────── DASHBOARD ─────────────────── */}
             {tab === 'dashboard' && (
               <div className="animate-fade-in">
+                
+                <div style={{ marginBottom: 24 }}>
+                  <GoalProgressWidget 
+                    data={data} 
+                    goal={goal} 
+                    lang={lang} 
+                    onLogWeight={handleLogWeight} 
+                  />
+                </div>
+
                 {latestSleepDate && (
                   <div className="readiness-card animate-fade-in">
                     <div className="readiness-dial-wrapper">
@@ -4188,6 +4250,8 @@ export default function App() {
                   height={data.profile?.height}
                   age={data.profile?.age}
                   lang={lang}
+                  onLogManualActivity={handleLogManualActivity}
+                  onDeleteManualActivity={handleDeleteManualActivity}
                 />
 
                 <div className="info-card purple" style={{ marginTop: 20 }}>

@@ -167,7 +167,8 @@ export default function OnboardingWizard({ initialProfile, onComplete, onSkip, l
                         {[
                           { val: 'maintenance', label: t.maintenance },
                           { val: 'weightloss', label: lang === 'id' ? 'Turun Berat' : 'Weight Loss' },
-                          { val: '10k', label: '10K / 5K' },
+                          { val: '5k', label: 'Lulus 5K' },
+                          { val: '10k', label: 'Finish 10K' },
                           { val: 'marathon', label: 'Marathon' },
                           { val: 'turun-hr', label: lang === 'id' ? 'Turun HR' : 'Lower HR' },
                           { val: 'health', label: lang === 'id' ? 'Kesehatan' : 'Health' }
