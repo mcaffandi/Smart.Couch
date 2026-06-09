@@ -232,7 +232,8 @@ export default function GoalProgressWidget({ data, goal, lang = 'id', onLogWeigh
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20, position: 'relative', zIndex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
             <div style={{ 
-              padding: 12, 
+              width: 46, height: 46, flexShrink: 0,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
               background: `linear-gradient(135deg, ${content.color}25, ${content.color}10)`, 
               borderRadius: 14, 
               border: `1px solid ${content.color}30`, 
