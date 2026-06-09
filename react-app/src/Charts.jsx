@@ -90,7 +90,7 @@ export function TrendChart({ activities, lang = 'id', externalTimeRange, setExte
             {viewMode === 'week' ? (lang === 'id' ? `Minggu, ${label}` : `Week of ${label}`) : label}
           </div>
           <div style={{ fontWeight: 600, color: 'var(--accent-purple)' }}>Volume: {payload[0]?.payload.km} km</div>
-          <div style={{ fontWeight: 600, color: 'var(--accent-amber)', marginTop: 4 }}>Trend (MA): {payload[0]?.payload.ma} km</div>
+          <div style={{ fontWeight: 600, color: 'var(--accent-sky)', marginTop: 4 }}>Trend (MA): {payload[0]?.payload.ma} km</div>
         </div>
       );
     }
@@ -162,9 +162,9 @@ export function TrendChart({ activities, lang = 'id', externalTimeRange, setExte
           <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--bg-card-hover)', opacity: 0.5 }} />
           <Bar dataKey="km" fill="var(--accent-purple)" opacity={0.6} radius={[4, 4, 0, 0]} maxBarSize={40} />
           <Line
-            type="monotone" dataKey="ma" stroke="var(--accent-amber)" strokeWidth={3}
+            type="monotone" dataKey="ma" stroke="var(--accent-sky)" strokeWidth={3}
             dot={false}
-            activeDot={{ r: 6, strokeWidth: 0, fill: 'var(--accent-amber)' }}
+            activeDot={{ r: 6, strokeWidth: 0, fill: 'var(--accent-sky)' }}
           />
         </ComposedChart>
       </ResponsiveContainer>
