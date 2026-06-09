@@ -163,11 +163,11 @@ export const getPaceRecommendations = (targetPace) => {
 // HR Zone Computation
 // ──────────────────────────────────────────────
 export const getHRZones = (maxHR) => [
-  { zone: 'Z1 – Recovery',   pct: '50–60%', min: Math.round(maxHR * 0.50), max: Math.round(maxHR * 0.60), color: '#38bdf8' },
-  { zone: 'Z2 – Aerobic',    pct: '60–70%', min: Math.round(maxHR * 0.60), max: Math.round(maxHR * 0.70), color: '#34d399' },
-  { zone: 'Z3 – Tempo',      pct: '70–80%', min: Math.round(maxHR * 0.70), max: Math.round(maxHR * 0.80), color: '#fbbf24' },
-  { zone: 'Z4 – Threshold',  pct: '80–90%', min: Math.round(maxHR * 0.80), max: Math.round(maxHR * 0.90), color: '#f97316' },
-  { zone: 'Z5 – Max',        pct: '90–100%',min: Math.round(maxHR * 0.90), max: maxHR,                     color: '#fb7185' },
+  { zone: 'Z1 – Recovery',   pct: '50–60%', min: Math.round(maxHR * 0.50), max: Math.round(maxHR * 0.60), color: 'rgba(124, 58, 237, 0.25)' },
+  { zone: 'Z2 – Aerobic',    pct: '60–70%', min: Math.round(maxHR * 0.60), max: Math.round(maxHR * 0.70), color: 'rgba(124, 58, 237, 0.45)' },
+  { zone: 'Z3 – Tempo',      pct: '70–80%', min: Math.round(maxHR * 0.70), max: Math.round(maxHR * 0.80), color: 'rgba(124, 58, 237, 0.65)' },
+  { zone: 'Z4 – Threshold',  pct: '80–90%', min: Math.round(maxHR * 0.80), max: Math.round(maxHR * 0.90), color: 'rgba(124, 58, 237, 0.85)' },
+  { zone: 'Z5 – Max',        pct: '90–100%',min: Math.round(maxHR * 0.90), max: maxHR,                     color: 'var(--accent-purple)' },
 ];
 
 // ──────────────────────────────────────────────

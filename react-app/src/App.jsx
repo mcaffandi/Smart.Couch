@@ -2632,8 +2632,8 @@ export default function App() {
   }
 
   const trainingReadinessScore = trainingReadiness ?? 100;
-  const rColor = trainingReadinessScore >= 80 ? '#10b981' : trainingReadinessScore >= 60 ? '#f59e0b' : '#ef4444';
-  const rBgColor = trainingReadinessScore >= 80 ? 'rgba(16, 185, 129, 0.08)' : trainingReadinessScore >= 60 ? 'rgba(245, 158, 11, 0.08)' : 'rgba(239, 68, 68, 0.08)';
+  const rColor = 'var(--accent-purple)';
+  const rBgColor = 'rgba(124, 58, 237, 0.15)';
 
   const getReadinessDesc = () => {
     const isId = lang === 'id';
@@ -4207,13 +4207,13 @@ export default function App() {
                           {lang === 'id' ? (
                             <>
                               Estimasi Max HR berdasarkan umur ({age} tahun) adalah <strong>{220 - age} bpm</strong>,
-                              tapi data mencatat hingga <strong style={{ color: '#f97316' }}>{actualMaxHR} bpm</strong>.
+                              tapi data mencatat hingga <strong style={{ color: 'var(--accent-purple)' }}>{actualMaxHR} bpm</strong>.
                               Zona latihan lo dikalkulasi pakai data aktual yang lebih akurat.
                             </>
                           ) : (
                             <>
                               Estimated Max HR based on age ({age} years) is <strong>{220 - age} bpm</strong>,
-                              but your data recorded up to <strong style={{ color: '#f97316' }}>{actualMaxHR} bpm</strong>.
+                              but your data recorded up to <strong style={{ color: 'var(--accent-purple)' }}>{actualMaxHR} bpm</strong>.
                               Your training zones are calculated using your more accurate actual data.
                             </>
                           )}
