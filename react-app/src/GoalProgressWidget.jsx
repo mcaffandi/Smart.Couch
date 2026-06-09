@@ -183,6 +183,10 @@ export default function GoalProgressWidget({ data, goal, lang = 'id', onLogWeigh
       <div 
         onClick={() => setShowModal(true)}
         style={{
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
           background: 'var(--bg-surface)', 
           backgroundImage: `linear-gradient(135deg, ${content.color}08 0%, transparent 100%)`,
           border: '1px solid var(--border)', 

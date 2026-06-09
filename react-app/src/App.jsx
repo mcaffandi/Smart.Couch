@@ -3986,71 +3986,73 @@ export default function App() {
             {tab === 'dashboard' && (
               <div className="animate-fade-in">
                 
-                <div style={{ marginBottom: 24 }}>
-                  <GoalProgressWidget 
-                    data={data} 
-                    goal={goal} 
-                    lang={lang} 
-                    onLogWeight={handleLogWeight} 
-                  />
-                </div>
-
-                {latestSleepDate && (
-                  <div className="readiness-card animate-fade-in">
-                    <div className="readiness-dial-wrapper">
-                      <div className="readiness-dial" style={{ position: 'relative', border: 'none', background: 'transparent', boxShadow: 'none' }}>
-                        <svg width="68" height="68" viewBox="0 0 68 68" style={{ transform: 'rotate(-90deg)', position: 'absolute', top: 0, left: 0 }}>
-                          <circle cx="34" cy="34" r="30" fill="none" stroke={rBgColor} strokeWidth="4" />
-                          <circle cx="34" cy="34" r="30" fill="none" stroke={rColor} strokeWidth="4" 
-                                  strokeLinecap={trainingReadinessScore === 100 ? "butt" : "round"} 
-                                  strokeDasharray={188.5} 
-                                  strokeDashoffset={188.5 - ((trainingReadinessScore === 100 ? 100 : Math.min(trainingReadinessScore, 96)) / 100) * 188.5} 
-                                  style={{ transition: 'stroke-dashoffset 1s ease-in-out' }} />
-                        </svg>
-                        <div className="readiness-dial-value" style={{ position: 'relative', zIndex: 1 }}>{trainingReadinessScore}%</div>
-                      </div>
-                      <div className="readiness-dial-label" style={{ color: rColor }}>
-                        {trainingReadinessScore >= 80 ? (lang === 'id' ? 'Prima' : 'Prime') : trainingReadinessScore >= 60 ? (lang === 'id' ? 'Cukup' : 'Fair') : (lang === 'id' ? 'Rendah' : 'Low')}
-                      </div>
-                      {recoveryEndTimestamp && (
-                        <div style={{ 
-                          marginTop: '6px', 
-                          padding: '4px 10px', 
-                          background: 'rgba(245, 158, 11, 0.1)', 
-                          color: '#f59e0b', 
-                          border: '1px solid rgba(245, 158, 11, 0.2)',
-                          borderRadius: '12px', 
-                          fontSize: '11px', 
-                          fontWeight: '600',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '4px'
-                        }}>
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M5 22h14"></path>
-                            <path d="M5 2h14"></path>
-                            <path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"></path>
-                            <path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"></path>
-                          </svg>
-                          <LiveCountdown endTimestamp={recoveryEndTimestamp} lang={lang} />
-                        </div>
-                      )}
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <h3 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: rColor }}>
-                          <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-                        </svg>
-                        {lang === 'id' ? 'Kesiapan Latihan Terkini' : 'Current Training Readiness'}
-                      </h3>
-                      <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.6', margin: 0 }}>
-                        {readinessDesc.sleepPart}
-                        {readinessDesc.restPart}
-                        {readinessDesc.actionPart}
-                      </p>
-                    </div>
+                <div className={`top-widgets-grid ${!latestSleepDate ? 'single-widget' : ''}`}>
+                  <div style={{ height: '100%' }}>
+                    <GoalProgressWidget 
+                      data={data} 
+                      goal={goal} 
+                      lang={lang} 
+                      onLogWeight={handleLogWeight} 
+                    />
                   </div>
-                )}
+
+                  {latestSleepDate && (
+                    <div className="readiness-card animate-fade-in" style={{ height: '100%', marginBottom: 0 }}>
+                      <div className="readiness-dial-wrapper">
+                        <div className="readiness-dial" style={{ position: 'relative', border: 'none', background: 'transparent', boxShadow: 'none' }}>
+                          <svg width="68" height="68" viewBox="0 0 68 68" style={{ transform: 'rotate(-90deg)', position: 'absolute', top: 0, left: 0 }}>
+                            <circle cx="34" cy="34" r="30" fill="none" stroke={rBgColor} strokeWidth="4" />
+                            <circle cx="34" cy="34" r="30" fill="none" stroke={rColor} strokeWidth="4" 
+                                    strokeLinecap={trainingReadinessScore === 100 ? "butt" : "round"} 
+                                    strokeDasharray={188.5} 
+                                    strokeDashoffset={188.5 - ((trainingReadinessScore === 100 ? 100 : Math.min(trainingReadinessScore, 96)) / 100) * 188.5} 
+                                    style={{ transition: 'stroke-dashoffset 1s ease-in-out' }} />
+                          </svg>
+                          <div className="readiness-dial-value" style={{ position: 'relative', zIndex: 1 }}>{trainingReadinessScore}%</div>
+                        </div>
+                        <div className="readiness-dial-label" style={{ color: rColor }}>
+                          {trainingReadinessScore >= 80 ? (lang === 'id' ? 'Prima' : 'Prime') : trainingReadinessScore >= 60 ? (lang === 'id' ? 'Cukup' : 'Fair') : (lang === 'id' ? 'Rendah' : 'Low')}
+                        </div>
+                        {recoveryEndTimestamp && (
+                          <div style={{ 
+                            marginTop: '6px', 
+                            padding: '4px 10px', 
+                            background: 'rgba(245, 158, 11, 0.1)', 
+                            color: '#f59e0b', 
+                            border: '1px solid rgba(245, 158, 11, 0.2)',
+                            borderRadius: '12px', 
+                            fontSize: '11px', 
+                            fontWeight: '600',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px'
+                          }}>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M5 22h14"></path>
+                              <path d="M5 2h14"></path>
+                              <path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"></path>
+                              <path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"></path>
+                            </svg>
+                            <LiveCountdown endTimestamp={recoveryEndTimestamp} lang={lang} />
+                          </div>
+                        )}
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <h3 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: rColor }}>
+                            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                          </svg>
+                          {lang === 'id' ? 'Kesiapan Latihan Terkini' : 'Current Training Readiness'}
+                        </h3>
+                        <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.6', margin: 0 }}>
+                          {readinessDesc.sleepPart}
+                          {readinessDesc.restPart}
+                          {readinessDesc.actionPart}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
                 {/* Metrics */}
                 <div className="metrics-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))' }}>
                   {(() => {
