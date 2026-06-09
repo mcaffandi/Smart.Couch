@@ -528,7 +528,7 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
       {/* ── ADAPTIVE CALENDAR SECTION ── */}
       {(() => {
         const startIdx = Math.max(0, todayIdx - 2);
-        const displayDays = adaptiveCalendar.slice(startIdx, startIdx + 8);
+        const displayDays = adaptiveCalendar.slice(startIdx);
         
         return (
           <div style={{ marginBottom: 30 }}>

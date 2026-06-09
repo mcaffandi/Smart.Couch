@@ -448,7 +448,7 @@ export const buildAdaptiveCalendar = (weeklyPlan, activities = [], isPaused = fa
 
   const calendar = [];
 
-  for (let i = 0; i < 28; i++) { // 4 weeks
+  for (let i = 0; i < 90; i++) { // ~3 months
     const current = new Date(startDate);
     current.setDate(startDate.getDate() + i);
     
