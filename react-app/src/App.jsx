@@ -2637,22 +2637,25 @@ export default function App() {
 
   const getReadinessDesc = () => {
     const isId = lang === 'id';
-    const latestSleepDateForDisplay = latestSleepDate ? (sleepRecs[latestSleepDate]?.dateStr || latestSleepDate.split('_')[0]) : '';
-    const sleepPart = isId 
-      ? `Berdasarkan rekaman tidur terakhir (${latestSleepDateForDisplay}), kualitas tidur lo berada di skor ${latestSleepScore}%. `
-      : `Based on your latest sleep record (${latestSleepDateForDisplay}), your sleep quality score is ${latestSleepScore}%. `;
+    
+    let sleepPart = '';
+    if (latestSleepDate) {
+      sleepPart = isId 
+        ? `Tidur: ${latestSleepScore}% (Berdasarkan data terakhir). `
+        : `Sleep: ${latestSleepScore}% (Based on latest record). `;
+    }
 
     let restPart;
     if (!recoveryEndTimestamp) {
       restPart = isId
-        ? `Otot lo udah pulih 100% dari sesi lari terakhir (0 jam sisa recovery). Kesiapan fisik pulih maksimal.`
-        : `Your muscles have fully recovered from the last run (0 hours remaining). Physical readiness is at maximum.`;
+        ? `Otot pulih 100%. Recovery time: 0 jam. `
+        : `Muscle recovery: 100%. Recovery time: 0 hrs. `;
     } else {
       restPart = (
         <span>
-          {isId ? 'Sisa waktu pemulihan (Recovery Time) lo masih ' : 'Your remaining Recovery Time is '}
+          {isId ? 'Recovery time: ' : 'Recovery time: '}
           <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}><LiveCountdown endTimestamp={recoveryEndTimestamp} lang={lang} /></span>
-          {isId ? '. Ada penyesuaian skor karena sisa kelelahan otot.' : '. There is a score adjustment due to residual muscle fatigue.'}
+          {isId ? '. ' : '. '}
         </span>
       );
     }
@@ -2660,16 +2663,16 @@ export default function App() {
     let actionPart = '';
     if (trainingReadinessScore >= 80) {
       actionPart = isId
-        ? ' Tubuh lo fit banget dan siap nerima latihan intensitas tinggi hari ini!'
-        : ' Your body is in prime condition and ready for high-intensity training today!';
+        ? 'Kesiapan fisik maksimal untuk sesi intensitas tinggi.'
+        : 'Maximum physical readiness for high-intensity sessions.';
     } else if (trainingReadinessScore >= 60) {
       actionPart = isId
-        ? ' Pemulihan lo cukup. Silakan latihan, tapi hindari memaksakan diri terlalu keras (overpush).'
-        : ' Your recovery is fair. You can train, but avoid pushing yourself too hard (overpush).';
+        ? 'Kesiapan moderat. Direkomendasikan untuk sesi intensitas rendah (Easy/Base run).'
+        : 'Moderate readiness. Recommended for low-intensity sessions (Easy/Base run).';
     } else {
       actionPart = isId
-        ? ' Pemulihan rendah. Sangat disarankan untuk rest, fokus hidrasi, dan pemulihan hari ini.'
-        : ' Low recovery level. We highly recommend prioritizing rest, hydration, and recovery today.';
+        ? 'Kesiapan rendah. Prioritaskan rest day atau pemulihan aktif.'
+        : 'Low readiness. Prioritize rest day or active recovery.';
     }
 
     return { sleepPart, restPart, actionPart };
@@ -4195,7 +4198,7 @@ export default function App() {
                   {/* Right Column: Secondary charts and summaries */}
                   <div className="dashboard-side-col">
                     {actualMaxHR > 0 && (
-                      <HRZoneChart zones={hrZones} avgHr={avgHR ? Math.round(avgHR) : 0} lang={lang} />
+                      <HRZoneChart zones={hrZones} activities={data.running_activities} avgHr={avgHR ? Math.round(avgHR) : 0} lang={lang} />
                     )}
 
                     {actualMaxHR > 0 && (
