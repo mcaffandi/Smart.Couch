@@ -4257,7 +4257,6 @@ export default function App() {
                               : <>Your sleep tends to be better on rest days (difference of {(parseFloat(avgNonRunSleep) - parseFloat(avgRunSleep)).toFixed(1)} points). Assess your recovery routines.</>
                             }
                           </div>
-                          </div>
                         )}
                       </div>
                     </div>
