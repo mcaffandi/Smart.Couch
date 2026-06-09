@@ -604,6 +604,22 @@ export default function App() {
     setTimeout(() => setToasts(ts => ts.filter(t => t.id !== id)), 3500);
   }, []);
 
+  const handleLogWeight = useCallback((w) => {
+    setData(prev => {
+      const records = [...(prev.weight_records || [])];
+      records.push({ date: new Date().toISOString(), weight: w });
+      const updated = { 
+        ...prev, 
+        weight_records: records,
+        profile: { ...(prev.profile || {}), weight: w }
+      };
+      setWeight(w);
+      saveAndSyncData(updated);
+      return updated;
+    });
+    addToast(lang === 'id' ? 'Berat badan berhasil dicatat!' : 'Weight logged successfully!');
+  }, [lang, addToast]);
+
   const handleLogManualActivity = useCallback((dateStr, jenis, durationMins = 30) => {
     const d = new Date(dateStr + 'T12:00:00');
     const newAct = {
