@@ -211,9 +211,10 @@ export function HRZoneChart({ zones, activities = [], avgHr, lang = 'id' }) {
       min: z.min,
       max: z.max,
       color: z.color,
-      value: totalDurMs > 0 ? Math.max(1, pct) : 10, // bar length
+      value: totalDurMs > 0 ? Math.max(0.5, pct) : 10, // bar length
       pctStr: totalDurMs > 0 ? `${pct}%` : '',
       durStr: totalDurMs > 0 ? durStr : '',
+      labelStr: ms > 0 ? `${durStr} (${pct}%)` : '',
     };
   });
 
@@ -257,12 +258,11 @@ export function HRZoneChart({ zones, activities = [], avgHr, lang = 'id' }) {
               <Cell key={index} fill={entry.color} fillOpacity={0.9} />
             ))}
             <LabelList 
-              dataKey="durStr" 
+              dataKey="labelStr" 
               position="right" 
               fill="var(--text-secondary)" 
               fontSize={11}
               fontWeight={600}
-              formatter={(val, i) => data[i]?.pctStr ? `${val} (${data[i].pctStr})` : val}
             />
           </Bar>
         </BarChart>
