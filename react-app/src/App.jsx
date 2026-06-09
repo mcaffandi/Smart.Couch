@@ -2884,13 +2884,13 @@ export default function App() {
                         </div>
                         <div style={{ fontSize: 12, color: 'var(--text-secondary)', textAlign: 'center', lineHeight: 1.5 }}>
                           {lang === 'id' 
-                            ? <>Ketik <b>delete reset my data </b> di bawah untuk melanjutkan.</>
-                            : <>Type <b>delete reset my data </b> below to confirm.</>}
+                            ? <>Ketik <b>delete my data</b> di bawah untuk melanjutkan.</>
+                            : <>Type <b>delete my data</b> below to confirm.</>}
                         </div>
                         <input 
                           type="text" 
                           id="reset-confirm-input"
-                          placeholder="delete reset my data "
+                          placeholder="delete my data"
                           style={{ background: 'var(--bg-base)', border: '1px solid #ef4444', borderRadius: 6, color: 'var(--text-primary)', padding: '10px', fontSize: 13, outline: 'none', textAlign: 'center' }}
                         />
                         <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
@@ -2899,7 +2899,7 @@ export default function App() {
                             style={{ flex: 1, padding: '10px', fontSize: 13, fontWeight: 700 }}
                             onClick={() => { 
                               const val = document.getElementById('reset-confirm-input')?.value;
-                              if (val === 'delete reset my data ') {
+                              if (val === 'delete my data') {
                                 handleReset(); 
                                 setShowProfileModal(false); 
                               } else {
