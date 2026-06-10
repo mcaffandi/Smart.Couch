@@ -198,7 +198,7 @@ export const buildTrainingPlan = (programStyle, goal, paces, selectedDays = ['Se
   if (activeDays.length === 0) {
     if (goal === 'marathon') activeDays = ['Selasa', 'Kamis', 'Sabtu', 'Minggu'];
     else if (goal === 'turun-hr') activeDays = ['Rabu', 'Jumat', 'Minggu'];
-    else if (goal === 'weightloss') activeDays = ['Senin', 'Rabu', 'Jumat', 'Sabtu'];
+    else if (goal === 'weightloss') activeDays = []; // Lari tidak wajib untuk weightloss
     else activeDays = ['Selasa', 'Kamis', 'Sabtu'];
   }
 
@@ -389,6 +389,13 @@ export const buildTrainingPlan = (programStyle, goal, paces, selectedDays = ['Se
         jenis: 'Total Rest',
         durasi: '–',
         tujuan: 'Pemulihan pasif total. Fokus pada tidur berkualitas dan asupan protein.'
+      };
+    } else if (activeDays.length === 0 && goal === 'weightloss' && idx % 2 !== 0) {
+      plan[coreIdx] = {
+        hari: coreDay,
+        jenis: 'Total Rest',
+        durasi: '–',
+        tujuan: 'Istirahat (Porsi latihan dikurangi karena tidak ada jadwal lari).'
       };
     } else {
       const ct = crossTrainings[idx % crossTrainings.length];
