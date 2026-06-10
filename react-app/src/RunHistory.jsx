@@ -88,42 +88,7 @@ export default function RunHistory({ activities, lang = 'id', onEdit, onDelete, 
     return badges;
   };
 
-  const calculatePBs = (acts) => {
-    const pbs = {};
-    const distances = {
-      '1K': 1,
-      '5K': 5,
-      '10K': 10,
-      'Half Marathon': 21.0975
-    };
 
-    acts.forEach(a => {
-      if (!a.distance || !a.duration) return;
-      const distKm = a.distance / 100000;
-      const durSec = a.duration / 1000;
-      if (distKm < 0.9) return; // skip very short runs
-
-      const paceSecPerKm = durSec / distKm;
-
-      for (const [name, targetDist] of Object.entries(distances)) {
-        // Only consider runs that are at least the target distance (with a tiny 2% margin of error for GPS)
-        if (distKm >= targetDist * 0.98) {
-          const estTimeSec = paceSecPerKm * targetDist;
-          if (!pbs[name] || estTimeSec < pbs[name].timeSec) {
-            pbs[name] = {
-              timeSec: estTimeSec,
-              date: a.startTimeLocal,
-              pace: paceSecPerKm,
-              actualDist: distKm
-            };
-          }
-        }
-      }
-    });
-    return pbs;
-  };
-
-  const pbs = calculatePBs(activities);
   const earnedBadges = calculateBadges(activities);
 
   return (
@@ -167,37 +132,7 @@ export default function RunHistory({ activities, lang = 'id', onEdit, onDelete, 
         </div>
       )}
 
-      {Object.keys(pbs).length > 0 && (
-        <div style={{ marginBottom: 32 }}>
-          <h3 style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
-            {lang === 'id' ? 'Personal Records (Estimasi)' : 'Personal Records (Estimated)'}
-          </h3>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-            {['1K', '5K', '10K', 'Half Marathon'].map(dist => {
-              const pb = pbs[dist];
-              if (!pb) return null;
-              
-              const m = Math.floor(pb.timeSec / 60);
-              const s = Math.round(pb.timeSec % 60);
-              const formattedTime = m > 59 
-                ? `${Math.floor(m/60)}j ${m%60}m ${s}s` 
-                : `${m}:${s.toString().padStart(2, '0')}`;
-              
-              return (
-                <div key={dist} style={{
-                  background: 'var(--bg-surface)', border: '1px solid var(--border)',
-                  borderRadius: 10, padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 2,
-                  minWidth: 110, flex: '0 1 auto'
-                }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-secondary)' }}>{dist} PB</div>
-                  <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--accent-purple)' }}>{formattedTime}</div>
-                  <div style={{ fontSize: 9, color: 'var(--text-muted)' }}>{msToDate(pb.date).split('•')[0]}</div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
+
 
       <div className="history-list">
         {paged.map((act, i) => {
