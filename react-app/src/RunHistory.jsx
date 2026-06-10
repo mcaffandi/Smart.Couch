@@ -169,10 +169,10 @@ export default function RunHistory({ activities, lang = 'id', onEdit, onDelete, 
 
       {Object.keys(pbs).length > 0 && (
         <div style={{ marginBottom: 32 }}>
-          <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
+          <h3 style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
             {lang === 'id' ? 'Personal Records (Estimasi)' : 'Personal Records (Estimated)'}
           </h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
             {['1K', '5K', '10K', 'Half Marathon'].map(dist => {
               const pb = pbs[dist];
               if (!pb) return null;
@@ -186,11 +186,12 @@ export default function RunHistory({ activities, lang = 'id', onEdit, onDelete, 
               return (
                 <div key={dist} style={{
                   background: 'var(--bg-surface)', border: '1px solid var(--border)',
-                  borderRadius: 12, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 4
+                  borderRadius: 10, padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 2,
+                  minWidth: 110, flex: '0 1 auto'
                 }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)' }}>{dist} PB</div>
-                  <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--accent-purple)' }}>{formattedTime}</div>
-                  <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{msToDate(pb.date).split('•')[0]}</div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-secondary)' }}>{dist} PB</div>
+                  <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--accent-purple)' }}>{formattedTime}</div>
+                  <div style={{ fontSize: 9, color: 'var(--text-muted)' }}>{msToDate(pb.date).split('•')[0]}</div>
                 </div>
               );
             })}
