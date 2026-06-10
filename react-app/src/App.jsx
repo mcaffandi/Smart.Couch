@@ -124,6 +124,24 @@ export default function App() {
   const [globalSettings, setGlobalSettings] = useState({ stravaSyncMode: 'fast' });
   const [dashboardTimeRange, setDashboardTimeRange] = useState('all');
 
+  const filteredDashboardActs = useMemo(() => {
+    if (dashboardTimeRange === 'all' || !data.running_activities) {
+      return data.running_activities || [];
+    }
+    const now = new Date().getTime();
+    const timeRanges = {
+      '1w': now - 7 * 24 * 60 * 60 * 1000,
+      '1m': now - 30 * 24 * 60 * 60 * 1000,
+      '3m': now - 90 * 24 * 60 * 60 * 1000,
+      '6m': now - 180 * 24 * 60 * 60 * 1000,
+      '1y': now - 365 * 24 * 60 * 60 * 1000,
+    };
+    const limit = timeRanges[dashboardTimeRange];
+    return data.running_activities.filter(a => {
+      return a.startTimeLocal && new Date(a.startTimeLocal).getTime() >= limit;
+    });
+  }, [dashboardTimeRange, data.running_activities]);
+
   useEffect(() => {
     if (!globalSettings) return;
 
@@ -4123,35 +4141,19 @@ export default function App() {
 
                     let filteredDist = 0;
                     let distDesc = lang === 'id' ? 'Total sepanjang masa' : 'All time distance';
-                    
-                    const timeRanges = {
-                      '1w': now.getTime() - 7 * 24 * 60 * 60 * 1000,
-                      '1m': now.getTime() - 30 * 24 * 60 * 60 * 1000,
-                      '3m': now.getTime() - 90 * 24 * 60 * 60 * 1000,
-                      '6m': now.getTime() - 180 * 24 * 60 * 60 * 1000,
-                      '1y': now.getTime() - 365 * 24 * 60 * 60 * 1000,
-                    };
 
-                    if (dashboardTimeRange === 'all') {
-                      filteredDist = totalDist;
-                    } else {
-                      const limit = timeRanges[dashboardTimeRange];
-                      for (const a of data.running_activities) {
-                        if (!a.startTimeLocal) continue;
-                        if (new Date(a.startTimeLocal).getTime() >= limit) {
-                          filteredDist += (a.distance || 0) / 100000;
-                        }
-                      }
-                      
-                      const mapDesc = {
-                        '1w': lang === 'id' ? 'Dalam 1 minggu terakhir' : 'In the last 1 week',
-                        '1m': lang === 'id' ? 'Dalam 1 bulan terakhir' : 'In the last 1 month',
-                        '3m': lang === 'id' ? 'Dalam 3 bulan terakhir' : 'In the last 3 months',
-                        '6m': lang === 'id' ? 'Dalam 6 bulan terakhir' : 'In the last 6 months',
-                        '1y': lang === 'id' ? 'Dalam 1 tahun terakhir' : 'In the last 1 year',
-                      };
-                      distDesc = mapDesc[dashboardTimeRange] || distDesc;
+                    for (const a of filteredDashboardActs) {
+                      filteredDist += (a.distance || 0) / 100000;
                     }
+                    
+                    const mapDesc = {
+                      '1w': lang === 'id' ? 'Dalam 1 minggu terakhir' : 'In the last 1 week',
+                      '1m': lang === 'id' ? 'Dalam 1 bulan terakhir' : 'In the last 1 month',
+                      '3m': lang === 'id' ? 'Dalam 3 bulan terakhir' : 'In the last 3 months',
+                      '6m': lang === 'id' ? 'Dalam 6 bulan terakhir' : 'In the last 6 months',
+                      '1y': lang === 'id' ? 'Dalam 1 tahun terakhir' : 'In the last 1 year',
+                    };
+                    distDesc = mapDesc[dashboardTimeRange] || distDesc;
 
                     return [
                       { 
@@ -4204,7 +4206,7 @@ export default function App() {
                   
                   {actualMaxHR > 0 && (
                     <div className="bento-1x2">
-                      <HRZoneChart zones={hrZones} activities={data.running_activities} avgHr={avgHR ? Math.round(avgHR) : 0} lang={lang} />
+                      <HRZoneChart zones={hrZones} activities={filteredDashboardActs} avgHr={avgHR ? Math.round(avgHR) : 0} lang={lang} />
                     </div>
                   )}
 
