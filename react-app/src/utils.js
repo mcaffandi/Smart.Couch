@@ -160,6 +160,30 @@ export const getPaceRecommendations = (targetPace) => {
 };
 
 // ──────────────────────────────────────────────
+// VO2 Max Estimation (Pace & HR Based)
+// ──────────────────────────────────────────────
+export const estimateVO2Max = (paceMinKm, avgHr, maxHr) => {
+  if (paceMinKm < 3 || paceMinKm > 20) return null; // guard against bad input
+  const vel = 1000 / paceMinKm; // m/min
+  const vo2Run = (vel * 0.2) + 3.5; // ACSM Running Equation
+
+  if (avgHr && maxHr && avgHr > 60 && maxHr > 100) {
+    // If we have HR data, scale the VO2 based on how hard they were working
+    // % HR Max correlates closely with % VO2 Max
+    const pctHrMax = avgHr / maxHr;
+    // We assume they couldn't possibly be at < 50% HRMax while running
+    const effectivePct = Math.max(0.5, Math.min(1.0, pctHrMax));
+    const result = Math.round(vo2Run / effectivePct);
+    return Math.min(90, Math.max(10, result));
+  } else {
+    // Fallback: assume it was a maximal effort (100% HR) or use Daniels-ish curve
+    const o2 = -4.60 + 0.182258 * vel + 0.000104 * vel * vel;
+    const result = Math.round(o2 / 0.85); // assume 85% efficiency for fallback
+    return Math.min(90, Math.max(10, result));
+  }
+};
+
+// ──────────────────────────────────────────────
 // HR Zone Computation
 // ──────────────────────────────────────────────
 export const getHRZones = (maxHR) => [

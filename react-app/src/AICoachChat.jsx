@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Bot, MessageSquare, Send, X } from 'lucide-react';
 import { formatPace, buildTrainingPlan } from './utils';
 
-export default function AICoachChat({ lang, goal, programStyle, targetPace, currentUser, runActs, selectedDays, latestSleepScore, recoveryRemainingHours, trainingReadinessScore, isPremium, setShowPremiumModal, vo2max }) {
+export default function AICoachChat({ lang, goal, programStyle, targetPace, currentUser, runActs, selectedDays, latestSleepScore, recoveryRemainingHours, trainingReadinessScore, isPremium, setShowPremiumModal, vo2max, hrZones }) {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -139,6 +139,13 @@ export default function AICoachChat({ lang, goal, programStyle, targetPace, curr
       const vo2maxContextId = vo2max ? `\n- Estimasi VO2Max: ${vo2max.toFixed(1)}` : '';
       const vo2maxContextEn = vo2max ? `\n- Estimated VO2Max: ${vo2max.toFixed(1)}` : '';
 
+      let hrZonesContextId = '';
+      let hrZonesContextEn = '';
+      if (hrZones && hrZones.length > 0) {
+        hrZonesContextId = '\n\n[ZONA DETAK JANTUNG USER SAAT INI]\n' + hrZones.map(z => `- ${z.zone}: ${z.min}-${z.max} bpm`).join('\n');
+        hrZonesContextEn = '\n\n[USER CURRENT HEART RATE ZONES]\n' + hrZones.map(z => `- ${z.zone}: ${z.min}-${z.max} bpm`).join('\n');
+      }
+
       const systemPrompt = lang === 'id' 
         ? `Lo adalah Coach AI EnduraUP, pelatih lari profesional yang asik (pake bahasa gaul lo/gue).
 WAKTU LOKAL: ${currentDay}, Jam ${currentTime}.
@@ -151,7 +158,7 @@ ${todaysWorkoutId}
 - Training Readiness: ${trainingReadinessScore}%
 - Waktu Pemulihan Sisa: ${recoveryRemainingHours} jam
 - Skor Tidur Tadi Malam: ${latestSleepScore || 'Tidak ada data'}
-- Skor Konsistensi: ${consistencyScore}%${vo2maxContextId}${recentRunsContextId}
+- Skor Konsistensi: ${consistencyScore}%${vo2maxContextId}${recentRunsContextId}${hrZonesContextId}
 
 ATURAN WAJIB (PATUHI INI):
 1. JIKA READINESS < 60%: User sedang KECAPAIAN. LO DILARANG KERAS menyuruh atau mengizinkan user lari. Wajib paksa user untuk ISTIRAHAT TOTAL hari ini atau maksimal jalan kaki. Jika user nanya soal lari, tolak dan ingatkan readiness-nya masih ${trainingReadinessScore}%.
@@ -159,7 +166,7 @@ ATURAN WAJIB (PATUHI INI):
 3. JIKA KONSISTENSI < 50%: Roasting/tegur halus user karena malas.
 4. JANGAN KRITIK pace lambat. Pahami ilmu Zone 2 / 80/20. Puji lari lambat sebagai "Easy Run" yang bagus buat aerobic base. Jangan judge pelari jelek hanya karena pacenya jauh dari target.
 5. Jawab pertanyaan user dengan singkat, padat, pakai emoji.
-6. JIKA user nanya/bahas tentang hasil lari mereka, BERIKAN ANALISA: puji kalau "Keren!" atau "Mantap!" misal pacenya stabil / HR-nya aman. Kasih teguran halus kalau HR-nya kekencengan (di atas 170). Kasih feedback layaknya pelatih beneran. Jangan cuma nyebutin angka ulang.
+6. BERIKAN ANALISA MENDALAM: Saat menganalisa detak jantung (HR) user, WAJIB merujuk pada patokan [ZONA DETAK JANTUNG USER SAAT INI] di atas. Jangan pakai rumus generik umur standar, karena Max HR tiap orang berbeda-beda sesuai datanya. Jangan cuma mengulang sebut angka.
 7. JIKA user bahas MENU HARI INI, ingetin menu apa yang harus dia lakuin sesuai jadwal di atas, dan kasih tips singkat cara ngejalaninnya.
 8. JIKA user bahas topik di luar lari/olahraga, tolak dengan sopan.`
         : `You are EnduraUP Coach AI, a professional, friendly running coach.
@@ -173,7 +180,7 @@ ${todaysWorkoutEn}
 - Training Readiness: ${trainingReadinessScore}%
 - Remaining Recovery Time: ${recoveryRemainingHours} hours
 - Last Night's Sleep Score: ${latestSleepScore || 'No data'}
-- Consistency Score: ${consistencyScore}%${vo2maxContextEn}${recentRunsContextEn}
+- Consistency Score: ${consistencyScore}%${vo2maxContextEn}${recentRunsContextEn}${hrZonesContextEn}
 
 STRICT RULES (MUST FOLLOW):
 1. IF READINESS < 60%: User is EXHAUSTED. YOU ARE STRICTLY FORBIDDEN to tell them to run. You MUST force them to REST today. If they ask to run, refuse and remind them their readiness is ${trainingReadinessScore}%.
@@ -181,7 +188,7 @@ STRICT RULES (MUST FOLLOW):
 3. IF CONSISTENCY < 50%: Give them a playful roast for being lazy.
 4. DO NOT CRITICIZE slow paces. Understand Zone 2 / 80/20 training. Praise slow running as good "Easy Runs" for building aerobic base.
 5. Answer concisely with emojis.
-6. IF user asks about their recent runs, PROVIDE ANALYSIS: praise them if it's "Cool!" or "Awesome!" (e.g., stable pace, good HR). Give gentle feedback if their HR is too high (>170). Act like a real coach giving qualitative feedback, don't just repeat numbers.
+6. IN-DEPTH ANALYSIS: When analyzing the user's heart rate, you MUST refer to [USER CURRENT HEART RATE ZONES] provided above. Do not use generic age-based formulas, as everyone's Max HR is different based on their data. Provide actionable feedback instead of just repeating numbers.
 7. IF user talks about non-running topics, politely decline.`;
 
       const endpoint = apiKey ? 'https://api.groq.com/openai/v1/chat/completions' : '/api/coach';

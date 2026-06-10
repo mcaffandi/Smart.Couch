@@ -6,7 +6,7 @@ import {
   loadUserData, saveUserData, deleteUserData,
   getLocalDateStr, msToDate, formatDate, formatPace, getPaceRecommendations,
   getHRZones, buildTrainingPlan, buildAdaptiveCalendar,
-  parseGarminZip, mergeData, parseGpxFile, decodePolyline
+  parseGarminZip, mergeData, parseGpxFile, decodePolyline, estimateVO2Max
 } from './utils';
 const TrendChart = lazy(() => import('./Charts').then(m => ({ default: m.TrendChart })));
 const HRZoneChart = lazy(() => import('./Charts').then(m => ({ default: m.HRZoneChart })));
@@ -973,12 +973,21 @@ export default function App() {
   }, [runActs]);
 
   const vo2max = useMemo(() => {
-    if (!actualBestPace) return null;
-    const vel = 1000 / actualBestPace; // m/min
-    const o2 = -4.60 + 0.182258 * vel + 0.000104 * vel * vel;
-    const result = Math.round(o2 / 0.85);
-    return Math.min(90, Math.max(10, result));
-  }, [actualBestPace]);
+    if (!runActs || !runActs.length) return null;
+    // Find the run with the best pace (lowest paceMinKm) that has HR data
+    const valid = runActs
+      .filter(a => a.distance >= 300000 && a.duration > 0)
+      .map(a => ({
+        paceMinKm: (a.duration / 60000) / (a.distance / 100000),
+        avgHr: a.avgHr
+      }))
+      .filter(a => a.paceMinKm >= 3 && a.paceMinKm <= 20)
+      .sort((a, b) => a.paceMinKm - b.paceMinKm);
+      
+    if (!valid.length) return null;
+    const best = valid[0];
+    return estimateVO2Max(best.paceMinKm, best.avgHr, actualMaxHR);
+  }, [runActs, actualMaxHR]);
 
   const streakWeeks = useMemo(() => {
     let streak = 0;
@@ -4316,7 +4325,7 @@ export default function App() {
                 <div className="section-header">
                   <h2 className="section-title">{t.tabRacePrediction}</h2>
                 </div>
-                <RacePrediction activities={runActs} targetPace={targetPace} lang={lang} />
+                <RacePrediction activities={runActs} targetPace={targetPace} lang={lang} actualMaxHR={actualMaxHR} />
               </div>
             )}
 
@@ -4814,6 +4823,7 @@ export default function App() {
           isPremium={isPremium}
           setShowPremiumModal={setShowPremiumModal}
           vo2max={vo2max}
+          hrZones={hrZones}
         />
         {selectedRunForDetails && (
           <RunDetailsModal 

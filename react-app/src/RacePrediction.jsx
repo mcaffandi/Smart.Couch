@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { formatPace } from './utils';
+import { formatPace, estimateVO2Max } from './utils';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const RACES = [
@@ -86,14 +86,6 @@ function estimateWeeks(currentPaceMinKm, targetPaceMinKm, stagnant) {
   return stagnant ? Math.ceil(weeks * 1.35) : weeks; // +35% buffer if stagnant
 }
 
-function estimateVO2Max(paceMinKm) {
-  if (paceMinKm < 3 || paceMinKm > 20) return null; // guard against bad input
-  const vel = 1000 / paceMinKm;                      // m/min
-  const o2 = -4.60 + 0.182258 * vel + 0.000104 * vel * vel;
-  const result = Math.round(o2 / 0.85);
-  return Math.min(90, Math.max(10, result));          // clamp to realistic human range
-}
-
 // ─── Goal Input sub-component ─────────────────────────────────────────────────
 function GoalTimeInput({ value, onChange, lang = 'id' }) {
   return (
@@ -109,7 +101,14 @@ function GoalTimeInput({ value, onChange, lang = 'id' }) {
             <input
               type="number" min={0} max={max}
               value={value[key]}
-              onChange={e => onChange({ ...value, [key]: Math.min(max, Math.max(0, parseInt(e.target.value) || 0)) })}
+              onChange={e => {
+                const val = e.target.value;
+                if (val === '') {
+                  onChange({ ...value, [key]: '' });
+                } else {
+                  onChange({ ...value, [key]: Math.min(max, Math.max(0, parseInt(val) || 0)) });
+                }
+              }}
               style={{
                 background: 'var(--bg-base)', border: '1px solid var(--border)', borderRadius: 8,
                 color: 'var(--text-primary)', fontFamily: 'Outfit, sans-serif',
@@ -131,7 +130,7 @@ function GoalTimeInput({ value, onChange, lang = 'id' }) {
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
-export default function RacePrediction({ activities, targetPace, lang = 'id' }) {
+export default function RacePrediction({ activities, targetPace, lang = 'id', actualMaxHR }) {
   const [selectedRace, setSelectedRace] = useState('10k');
   const [goalTime, setGoalTime] = useState({ h: 0, m: 50, s: 0 });
 
@@ -180,7 +179,7 @@ export default function RacePrediction({ activities, targetPace, lang = 'id' }) 
   }, [refRun]);
 
   // Goal calculation
-  const goalSecs = timeToSecs(goalTime.h, goalTime.m, goalTime.s);
+  const goalSecs = timeToSecs(goalTime.h || 0, goalTime.m || 0, goalTime.s || 0);
   const targetRace = RACES.find(r => r.key === selectedRace);
   const currentPred = predictions.find(p => p.key === selectedRace);
 
@@ -191,7 +190,7 @@ export default function RacePrediction({ activities, targetPace, lang = 'id' }) 
     ? estimateWeeks(refRun.paceMinKm, goalPaceMinKm, stagnation.stagnant)
     : 0;
 
-  const vo2max = refRun ? estimateVO2Max(refRun.paceMinKm) : null;
+  const vo2max = refRun ? estimateVO2Max(refRun.paceMinKm, refRun.avgHr, actualMaxHR) : null;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
