@@ -186,13 +186,16 @@ export const estimateVO2Max = (paceMinKm, avgHr, maxHr) => {
 // ──────────────────────────────────────────────
 // HR Zone Computation
 // ──────────────────────────────────────────────
-export const getHRZones = (maxHR) => [
-  { zone: 'Z1 – Recovery',   pct: '50–60%', min: Math.round(maxHR * 0.50), max: Math.round(maxHR * 0.60), color: '#818cf8' },
-  { zone: 'Z2 – Aerobic',    pct: '60–70%', min: Math.round(maxHR * 0.60), max: Math.round(maxHR * 0.70), color: '#3b82f6' },
-  { zone: 'Z3 – Tempo',      pct: '70–80%', min: Math.round(maxHR * 0.70), max: Math.round(maxHR * 0.80), color: '#10b981' },
-  { zone: 'Z4 – Threshold',  pct: '80–90%', min: Math.round(maxHR * 0.80), max: Math.round(maxHR * 0.90), color: '#f59e0b' },
-  { zone: 'Z5 – Max',        pct: '90–100%',min: Math.round(maxHR * 0.90), max: maxHR,                    color: '#ef4444' },
-];
+export const getHRZones = (maxHR, restingHR = 60) => {
+  const hrr = maxHR - restingHR;
+  return [
+    { zone: 'Z1 – Recovery',   pct: '50–60%', min: Math.round(hrr * 0.50 + restingHR), max: Math.round(hrr * 0.60 + restingHR), color: '#818cf8' },
+    { zone: 'Z2 – Aerobic',    pct: '60–70%', min: Math.round(hrr * 0.60 + restingHR), max: Math.round(hrr * 0.70 + restingHR), color: '#3b82f6' },
+    { zone: 'Z3 – Tempo',      pct: '70–80%', min: Math.round(hrr * 0.70 + restingHR), max: Math.round(hrr * 0.80 + restingHR), color: '#10b981' },
+    { zone: 'Z4 – Threshold',  pct: '80–90%', min: Math.round(hrr * 0.80 + restingHR), max: Math.round(hrr * 0.90 + restingHR), color: '#f59e0b' },
+    { zone: 'Z5 – Max',        pct: '90–100%',min: Math.round(hrr * 0.90 + restingHR), max: maxHR,                              color: '#ef4444' },
+  ];
+};
 
 // ──────────────────────────────────────────────
 // Training Plans
