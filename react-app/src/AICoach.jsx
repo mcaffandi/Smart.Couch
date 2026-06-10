@@ -200,12 +200,12 @@ Keep the answer to 1-2 paragraphs max, direct, and without fluff.`;
 
   return (
     <div className="chart-container animate-fade-in" style={{ 
-      marginTop: 20, 
       background: analysis ? 'linear-gradient(145deg, rgba(139, 92, 246, 0.05) 0%, rgba(192, 132, 252, 0.02) 100%)' : 'var(--bg-card)',
       borderColor: analysis ? 'rgba(167, 139, 250, 0.3)' : 'var(--border)',
       boxShadow: analysis ? '0 12px 32px rgba(139, 92, 246, 0.1), inset 0 0 0 1px rgba(255,255,255,0.05)' : 'none',
       position: 'relative',
-      overflow: 'hidden'
+      overflowX: 'hidden',
+      overflowY: 'auto'
     }}>
       {/* Background glow if analysis present */}
       {analysis && <div style={{position: 'absolute', top: -50, right: -50, width: 150, height: 150, background: 'rgba(139, 92, 246, 0.2)', filter: 'blur(60px)', borderRadius: '50%', pointerEvents: 'none'}} />}
