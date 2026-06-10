@@ -886,29 +886,29 @@ export default function App() {
       
       if (ev.type === 'run') {
         const durationHours = (ev.data.duration || 0) / 3600000;
-        let addedHours = durationHours * 18; // default
+        let addedHours = durationHours * 24; // default
         if (ev.data.avgHr) {
           const intensity = ev.data.avgHr / userMaxHr;
-          if (intensity < 0.60) addedHours = durationHours * 6;         // Recovery (Z1)
-          else if (intensity < 0.70) addedHours = durationHours * 14;   // Base (Z2)
-          else if (intensity < 0.80) addedHours = durationHours * 24;   // Tempo (Z3)
-          else if (intensity < 0.90) addedHours = durationHours * 36;   // Threshold (Z4)
-          else addedHours = durationHours * 48;                         // Anaerobic (Z5)
+          if (intensity < 0.60) addedHours = durationHours * 12;        // Recovery (Z1)
+          else if (intensity < 0.70) addedHours = durationHours * 24;   // Base (Z2)
+          else if (intensity < 0.80) addedHours = durationHours * 36;   // Tempo (Z3)
+          else if (intensity < 0.90) addedHours = durationHours * 48;   // Threshold (Z4)
+          else addedHours = durationHours * 72;                         // Anaerobic (Z5)
         } else if (ev.data.isManual && ev.data.name) {
           const nameLower = ev.data.name.toLowerCase();
           if (nameLower.includes('yoga') || nameLower.includes('stretch') || nameLower.includes('mobility')) {
-            addedHours = durationHours * 2;   // Minimal strain
+            addedHours = durationHours * 4;   // Minimal strain
           } else if (nameLower.includes('jalan') || nameLower.includes('walk') || nameLower.includes('recovery')) {
-            addedHours = durationHours * 6;   // Z1 equivalent
+            addedHours = durationHours * 12;   // Z1 equivalent
           } else if (nameLower.includes('bodyweight') || nameLower.includes('gym') || nameLower.includes('strength') || nameLower.includes('core')) {
-            addedHours = durationHours * 24;  // Muscular fatigue, equivalent to Z3
+            addedHours = durationHours * 36;  // Muscular fatigue, equivalent to Z3
           } else if (nameLower.includes('hiit') || nameLower.includes('interval')) {
-            addedHours = durationHours * 36;  // High EPOC / CNS strain
+            addedHours = durationHours * 48;  // High EPOC / CNS strain
           } else {
-            addedHours = durationHours * 14;  // Default to moderate Z2 load
+            addedHours = durationHours * 24;  // Default to moderate Z2 load
           }
         } else {
-          addedHours = durationHours * 14; // Default to moderate for unclassified activities without HR
+          addedHours = durationHours * 24; // Default to moderate for unclassified activities without HR
         }
         currentRecoveryMs += (addedHours * 3600000);
       } else if (ev.type === 'sleep') {
