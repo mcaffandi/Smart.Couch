@@ -221,7 +221,7 @@ STRICT RULES (MUST FOLLOW):
         throw new Error(data.error?.message || data.error || 'API Error');
       }
       
-      const aiReply = data.choices[0].message.content;
+      const aiReply = data.choices[0].message.content.replace(/—/g, '-');
       if (!isPremium && !apiKey) incrementUsage();
       setMessages(p => [...p, { role: 'assistant', content: aiReply }]);
     } catch (e) {

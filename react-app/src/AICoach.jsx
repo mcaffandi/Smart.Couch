@@ -137,7 +137,7 @@ Keep the answer to 1-2 paragraphs max, direct, and without fluff.`;
         }
 
         if (data.choices && data.choices.length > 0) {
-          setAnalysis(data.choices[0].message.content);
+          setAnalysis(data.choices[0].message.content.replace(/—/g, '-'));
           if (!isPremium && useServer) incrementUsage();
         } else {
           setErrorMsg(lang === 'id' ? "Gagal memproses analisis." : "Failed to process analysis.");
@@ -176,7 +176,7 @@ Keep the answer to 1-2 paragraphs max, direct, and without fluff.`;
           localStorage.removeItem('groq_api_key');
           setApiKey('');
         } else if (data.choices && data.choices.length > 0) {
-          setAnalysis(data.choices[0].message.content);
+          setAnalysis(data.choices[0].message.content.replace(/—/g, '-'));
         } else {
           setErrorMsg(lang === 'id' ? "Gagal memproses analisis. Cek konfigurasi API Key." : "Failed to process analysis. Check your API Key configuration.");
           setSavedKey(false);
