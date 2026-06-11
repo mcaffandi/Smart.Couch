@@ -186,7 +186,8 @@ export default function RacePrediction({ activities, targetPace, lang = 'id', ac
   const goalValid = goalSecs > 0;
   const goalPaceMinKm = goalValid && targetRace ? (goalSecs / 60) / (targetRace.dist / 1000) : null;
   const alreadyAchieved = goalValid && currentPred && goalSecs >= currentPred.predSec;
-  const weeksNeeded = goalPaceMinKm && refRun && !alreadyAchieved
+  const isImpossible = goalPaceMinKm && goalPaceMinKm < 2.5; // faster than 2:30/km is impossible
+  const weeksNeeded = goalPaceMinKm && refRun && !alreadyAchieved && !isImpossible
     ? estimateWeeks(refRun.paceMinKm, goalPaceMinKm, stagnation.stagnant)
     : 0;
 
@@ -312,7 +313,18 @@ export default function RacePrediction({ activities, targetPace, lang = 'id', ac
           {RACES.map(r => (
             <button
               key={r.key}
-              onClick={() => setSelectedRace(r.key)}
+              onClick={() => {
+                setSelectedRace(r.key);
+                const p = predictions.find(pred => pred.key === r.key);
+                if (p) {
+                   const targetSec = Math.floor(p.predSec * 0.95); // default to 5% faster
+                   setGoalTime({
+                     h: Math.floor(targetSec / 3600),
+                     m: Math.floor((targetSec % 3600) / 60),
+                     s: targetSec % 60
+                   });
+                }
+              }}
               style={{
                 padding: '6px 14px', borderRadius: 20, border: `1px solid ${selectedRace === r.key ? r.color : 'var(--border)'}`,
                 background: selectedRace === r.key ? `${r.colorDim}` : 'transparent',
@@ -343,6 +355,18 @@ export default function RacePrediction({ activities, targetPace, lang = 'id', ac
             fontSize: 13, color: 'var(--text-muted)'
           }}>
             {lang === 'id' ? 'Isi target waktu di atas untuk melihat estimasi' : 'Fill in target time above to see estimation'}
+          </div>
+        ) : isImpossible ? (
+          <div className="alert alert-danger" style={{ textAlign: 'center', marginBottom: 0 }}>
+            {lang === 'id' ? (
+              <>
+                <strong>Target Ga Logis! 😅</strong> Pace target lo ({formatPace(goalPaceMinKm)}/km) melampaui rekor pelari elit. Silakan masukkan target waktu yang lebih masuk akal untuk jarak {targetRace?.label}.
+              </>
+            ) : (
+              <>
+                <strong>Illogical Target! 😅</strong> Your target pace ({formatPace(goalPaceMinKm)}/km) is faster than elite runners. Please enter a more realistic target time for {targetRace?.label}.
+              </>
+            )}
           </div>
         ) : alreadyAchieved ? (
           <div className="alert alert-success">
