@@ -576,8 +576,8 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
                     </div>
                   </div>
 
-                  {/* Days List */}
-                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  {/* Days List (Horizontal Squares) */}
+                  <div style={{ display: 'flex', overflowX: 'auto', gap: 12, padding: '16px 20px', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                     {week.map((dItem, dIdx) => {
                        const dObj = new Date(dItem.date);
                        const dayName = dObj.toLocaleDateString(lang==='id'?'id-ID':'en-US', {weekday:'short'}).toUpperCase();
@@ -587,47 +587,40 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
                        const isCompleted = dItem.hasRun;
                        
                        let colorVar = 'var(--text-muted)';
-                       if (dItem.workout.jenis.includes('Interval') || dItem.workout.jenis.includes('Tempo') || dItem.workout.jenis.includes('HIIT')) colorVar = '#f97316'; // orange
-                       else if (dItem.workout.jenis.includes('Easy') || dItem.workout.jenis.includes('Jog') || dItem.workout.jenis.includes('Zone 2') || dItem.workout.jenis.includes('MAF')) colorVar = '#38bdf8'; // light blue
-                       else if (dItem.workout.jenis.includes('Long') || dItem.workout.jenis.includes('Base Run')) colorVar = '#818cf8'; // purple
-                       else if (!isRest) colorVar = '#34d399'; // green for mobility/core
+                       if (dItem.workout.jenis.includes('Interval') || dItem.workout.jenis.includes('Tempo') || dItem.workout.jenis.includes('HIIT')) colorVar = '#f97316';
+                       else if (dItem.workout.jenis.includes('Easy') || dItem.workout.jenis.includes('Jog') || dItem.workout.jenis.includes('Zone 2') || dItem.workout.jenis.includes('MAF')) colorVar = '#38bdf8';
+                       else if (dItem.workout.jenis.includes('Long') || dItem.workout.jenis.includes('Base Run')) colorVar = '#818cf8';
+                       else if (!isRest) colorVar = '#34d399';
                        
                        return (
-                         <div key={dIdx} onClick={() => handleDayClick(dItem)} style={{ display: 'flex', padding: '12px 16px', borderBottom: dIdx < week.length-1 ? '1px solid var(--border)' : 'none', cursor: 'pointer', opacity: dItem.isPast && !dItem.isToday ? 0.6 : 1, transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-card-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                         <div key={dIdx} onClick={() => handleDayClick(dItem)} style={{ flex: '0 0 auto', width: 150, minHeight: 140, background: 'var(--bg-card)', borderRadius: 12, padding: 16, border: dItem.isToday ? '2px solid var(--accent-purple)' : '1px solid var(--border)', cursor: 'pointer', opacity: dItem.isPast && !dItem.isToday ? 0.6 : 1, transition: 'transform 0.15s, background 0.15s', display: 'flex', flexDirection: 'column' }} onMouseEnter={e => { if(!dItem.isPast) e.currentTarget.style.background = 'var(--bg-card-hover)'; e.currentTarget.style.transform = 'translateY(-2px)'}} onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-card)'; e.currentTarget.style.transform = 'translateY(0)'}}>
                            
-                           {/* Left: Date */}
-                           <div style={{ width: 50, flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', opacity: isRest ? 0.5 : 1 }}>
-                             <span style={{ fontSize: 10, fontWeight: 700, color: dItem.isToday ? 'var(--accent-purple)' : 'var(--text-muted)' }}>{dayName}</span>
-                             <span style={{ fontSize: 16, fontWeight: 800, color: dItem.isToday ? 'var(--accent-purple)' : 'var(--text-primary)', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', background: dItem.isToday ? 'rgba(139,92,246,0.1)' : 'transparent', marginTop: 2 }}>{dateNum}</span>
+                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+                             <div>
+                               <div style={{ fontSize: 11, fontWeight: 700, color: dItem.isToday ? 'var(--accent-purple)' : 'var(--text-muted)' }}>{dayName}</div>
+                               <div style={{ fontSize: 20, fontWeight: 800, color: dItem.isToday ? 'var(--accent-purple)' : 'var(--text-primary)' }}>{dateNum}</div>
+                             </div>
+                             {isCompleted && (
+                               <div style={{ color: '#10b981', background: 'rgba(16,185,129,0.1)', padding: 4, borderRadius: '50%' }}>
+                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                               </div>
+                             )}
                            </div>
 
-                           {/* Right: Workout Card */}
-                           <div style={{ flex: 1, marginLeft: 12 }}>
+                           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                              {isRest ? (
-                               <div style={{ height: '100%', display: 'flex', alignItems: 'center', color: 'var(--text-muted)', fontSize: 13, fontWeight: 600 }}>
-                                 <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                                   {lang === 'id' ? 'Add (Rest)' : 'Add (Rest)'}
-                                 </span>
+                               <div style={{ color: 'var(--text-muted)', fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                 {lang === 'id' ? 'Add (Rest)' : 'Add (Rest)'}
                                </div>
                              ) : (
-                               <div style={{ background: 'var(--bg-card)', borderRadius: 8, padding: '12px 14px', borderLeft: `4px solid ${colorVar}`, position: 'relative', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
-                                 {isCompleted && (
-                                   <div style={{ position: 'absolute', top: 10, right: 12, color: '#10b981' }}>
-                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
-                                   </div>
-                                 )}
-                                 <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 4, paddingRight: 20 }}>
+                               <div style={{ borderLeft: `4px solid ${colorVar}`, paddingLeft: 10 }}>
+                                 <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 6, lineHeight: 1.3 }}>
                                    {getJenis(dItem.workout.jenis)}
                                  </div>
                                  <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
                                    {getDurasi(dItem.workout.durasi)}
                                  </div>
-                                 {dItem.workout.tujuan && (
-                                   <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 6, lineHeight: 1.4 }}>
-                                     {getTujuan(dItem.workout.tujuan)}
-                                   </div>
-                                 )}
                                </div>
                              )}
                            </div>
