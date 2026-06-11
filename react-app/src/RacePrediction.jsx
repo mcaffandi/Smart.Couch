@@ -425,7 +425,7 @@ export default function RacePrediction({ activities, targetPace, lang = 'id', ac
                       {lang === 'id' ? 'Perlu Improve' : 'Improvement Needed'}
                     </div>
                     <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--alert-warning-text)', marginTop: 2 }}>
-                      {(((refRun.paceMinKm - goalPaceMinKm) / refRun.paceMinKm) * 100).toFixed(1)}%
+                      {(((currentPred.predPace - goalPaceMinKm) / currentPred.predPace) * 100).toFixed(1)}%
                     </div>
                   </div>
                 </div>
@@ -435,13 +435,13 @@ export default function RacePrediction({ activities, targetPace, lang = 'id', ac
             {/* Progress bar */}
             <div style={{ marginTop: 4 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text-muted)', marginBottom: 6 }}>
-                <span>{lang === 'id' ? `Pace sekarang: ${formatPace(refRun.paceMinKm)}` : `Current pace: ${formatPace(refRun.paceMinKm)}`}</span>
+                <span>{lang === 'id' ? `Pace Prediksi (${targetRace?.label}): ${formatPace(currentPred.predPace)}` : `Predicted pace (${targetRace?.label}): ${formatPace(currentPred.predPace)}`}</span>
                 <span>{lang === 'id' ? `Target: ${formatPace(goalPaceMinKm)}` : `Goal: ${formatPace(goalPaceMinKm)}`}</span>
               </div>
               <div style={{ height: 6, background: 'var(--hover-overlay)', borderRadius: 99, overflow: 'hidden' }}>
                 <div style={{
                   height: '100%',
-                  width: `${Math.min(100, Math.max(5, (goalPaceMinKm / refRun.paceMinKm) * 100))}%`,
+                  width: `${Math.min(100, Math.max(5, (goalPaceMinKm / currentPred.predPace) * 100))}%`,
                   background: 'linear-gradient(90deg, var(--accent-purple-dark), var(--accent-purple))',
                   borderRadius: 99,
                 }} />
