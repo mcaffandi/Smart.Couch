@@ -78,10 +78,6 @@ export function TrendChart({ activities, lang = 'id', externalTimeRange, setExte
   }
 
   const totalKm = data.reduce((s, d) => s + d.km, 0).toFixed(1);
-  const totalRuns = filteredActivities.length;
-  const totalMs = filteredActivities.reduce((s, a) => s + (a.duration || 0), 0);
-  const totalHrs = Math.floor(totalMs / 3600000);
-  const totalMins = Math.round((totalMs % 3600000) / 60000);
 
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload?.length) {
@@ -94,6 +90,7 @@ export function TrendChart({ activities, lang = 'id', externalTimeRange, setExte
             {viewMode === 'week' ? (lang === 'id' ? `Minggu, ${label}` : `Week of ${label}`) : label}
           </div>
           <div style={{ fontWeight: 600, color: 'var(--accent-purple)' }}>Volume: {payload[0]?.payload.km} km</div>
+          <div style={{ fontWeight: 600, color: 'var(--accent-sky)', marginTop: 4 }}>Trend (MA): {payload[0]?.payload.ma} km</div>
         </div>
       );
     }
@@ -156,48 +153,22 @@ export function TrendChart({ activities, lang = 'id', externalTimeRange, setExte
             </button>
           ))}
         </div>
-
-        {/* Dashboard Stats Summary */}
-        <div style={{ marginTop: 12, marginBottom: 24 }}>
-          <div style={{ display: 'flex', gap: 40, flexWrap: 'wrap' }}>
-            <div>
-              <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4, fontWeight: 700 }}>
-                {lang === 'id' ? 'Total Jarak' : 'Kilometers'}
-              </div>
-              <div style={{ fontSize: 36, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-1px' }}>{totalKm}</div>
-            </div>
-            <div>
-              <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4, fontWeight: 700 }}>
-                {lang === 'id' ? 'Total Waktu' : 'Time'}
-              </div>
-              <div style={{ fontSize: 36, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-1px' }}>
-                {totalHrs}<span style={{ fontSize: 18, fontWeight: 600, color: 'var(--text-secondary)', marginRight: 6 }}>h</span>{totalMins}<span style={{ fontSize: 18, fontWeight: 600, color: 'var(--text-secondary)' }}>m</span>
-              </div>
-            </div>
-            <div>
-              <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4, fontWeight: 700 }}>
-                {lang === 'id' ? 'Sesi Lari' : 'Runs'}
-              </div>
-              <div style={{ fontSize: 36, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-1px' }}>{totalRuns}</div>
-            </div>
-          </div>
-        </div>
-
       </div>
-      
-      <div style={{ flex: 1, minHeight: 250, position: 'relative' }}>
+      <div style={{ flex: 1, minHeight: 220, position: 'relative' }}>
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
-            <XAxis dataKey="label" tick={{ fill: 'var(--text-muted)', fontSize: 10 }} axisLine={false} tickLine={false} tickMargin={10} minTickGap={15} />
-            <YAxis orientation="right" tick={{ fill: 'var(--text-muted)', fontSize: 10 }} axisLine={false} tickLine={false} width={30} tickMargin={8} />
-            <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--bg-card-hover)', opacity: 0.5 }} />
-            <Bar dataKey="km" radius={[4, 4, 0, 0]} maxBarSize={40}>
-              {data.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={index === data.length - 1 ? 'var(--accent-purple)' : '#334155'} />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
+        <ComposedChart data={data} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+          <XAxis dataKey="label" tick={{ fill: 'var(--text-secondary)', fontSize: 10 }} axisLine={false} tickLine={false} tickMargin={10} minTickGap={15} />
+          <YAxis tick={{ fill: 'var(--text-secondary)', fontSize: 10 }} axisLine={false} tickLine={false} width={40} tickMargin={8} />
+          <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--bg-card-hover)', opacity: 0.5 }} />
+          <Bar dataKey="km" fill="var(--accent-purple)" opacity={0.6} radius={[4, 4, 0, 0]} maxBarSize={40} />
+          <Line
+            type="monotone" dataKey="ma" stroke="var(--accent-sky)" strokeWidth={3}
+            dot={false}
+            activeDot={{ r: 6, strokeWidth: 0, fill: 'var(--accent-sky)' }}
+          />
+        </ComposedChart>
+      </ResponsiveContainer>
       </div>
     </div>
   );
