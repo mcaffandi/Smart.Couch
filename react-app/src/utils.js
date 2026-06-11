@@ -544,8 +544,8 @@ export const buildAdaptiveCalendar = (weeklyPlan, activities = [], isPaused = fa
     // 1. Collect missed runs from the past (only within the current week to avoid snowballing)
     for (let i = 0; i < calendar.length; i++) {
       const day = calendar[i];
-      // Only look at days in the past, starting from 7 days ago up to yesterday
-      if (day.isPast && day.workout.missed) {
+      // Only look at days in the past, and ONLY within this current week (from Monday)
+      if (day.isPast && day.workout.missed && day.dateObj.getTime() >= startOfThisWeek.getTime()) {
         const isRunWorkout = day.workout.jenis.includes('Run') || day.workout.jenis.includes('Interval') || day.workout.jenis.includes('Tempo') || day.workout.jenis.includes('Jog');
         if (isRunWorkout) {
           const shiftedWorkout = { ...day.workout, originalHari: day.workout.hari };
