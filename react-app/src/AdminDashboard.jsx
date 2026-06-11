@@ -591,88 +591,88 @@ export default function AdminDashboard({ onBack }) {
 
       {adminTab === 'overview' && (
         <div className="animate-fade-in">
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24, marginBottom: 40 }}>
-            <div className="stat-card" style={{ background: 'linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)', padding: 24, borderRadius: 16, border: '1px solid rgba(255,255,255,0.05)', position: 'relative', overflow: 'hidden' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 32 }}>
+            <div className="stat-card" style={{ background: 'linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)', padding: 16, borderRadius: 12, border: '1px solid rgba(255,255,255,0.05)', position: 'relative', overflow: 'hidden' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div style={{ zIndex: 1 }}>
-                  <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 8, fontWeight: 600 }}>Total Pengguna</div>
-                  <div style={{ fontSize: 36, fontWeight: '800', color: 'var(--text-primary)', letterSpacing: '-0.5px' }}>{totalUsers}</div>
-                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 8 }}>Terdaftar di sistem</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginBottom: 4, fontWeight: 600 }}>Total Pengguna</div>
+                  <div style={{ fontSize: 24, fontWeight: '800', color: 'var(--text-primary)', letterSpacing: '-0.5px' }}>{totalUsers}</div>
+                  <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 4 }}>Terdaftar di sistem</div>
                 </div>
-                <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
-                  <Users size={22} color="var(--text-secondary)" />
+                <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
+                  <Users size={16} color="var(--text-secondary)" />
                 </div>
               </div>
             </div>
 
-            <div className="stat-card" style={{ background: 'linear-gradient(145deg, rgba(59, 130, 246, 0.08) 0%, rgba(59, 130, 246, 0.02) 100%)', padding: 24, borderRadius: 16, border: '1px solid rgba(59, 130, 246, 0.2)', position: 'relative', overflow: 'hidden' }}>
-              <div style={{ position: 'absolute', top: -30, right: -30, width: 100, height: 100, background: '#3b82f6', opacity: 0.1, filter: 'blur(30px)', borderRadius: '50%' }} />
+            <div className="stat-card" style={{ background: 'linear-gradient(145deg, rgba(59, 130, 246, 0.08) 0%, rgba(59, 130, 246, 0.02) 100%)', padding: 16, borderRadius: 12, border: '1px solid rgba(59, 130, 246, 0.2)', position: 'relative', overflow: 'hidden' }}>
+              <div style={{ position: 'absolute', top: -20, right: -20, width: 60, height: 60, background: '#3b82f6', opacity: 0.1, filter: 'blur(20px)', borderRadius: '50%' }} />
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div style={{ zIndex: 1 }}>
-                  <div style={{ fontSize: 13, color: '#93c5fd', marginBottom: 8, fontWeight: 600 }}>Aktif Harian (DAU)</div>
-                  <div style={{ fontSize: 36, fontWeight: '800', color: '#60a5fa', letterSpacing: '-0.5px' }}>{dau}</div>
-                  <div style={{ fontSize: 12, color: 'rgba(147, 197, 253, 0.6)', marginTop: 8 }}>Login dlm 24 jam</div>
+                  <div style={{ fontSize: 11, color: '#93c5fd', marginBottom: 4, fontWeight: 600 }}>Aktif Harian (DAU)</div>
+                  <div style={{ fontSize: 24, fontWeight: '800', color: '#60a5fa', letterSpacing: '-0.5px' }}>{dau}</div>
+                  <div style={{ fontSize: 10, color: 'rgba(147, 197, 253, 0.6)', marginTop: 4 }}>Login dlm 24 jam</div>
                 </div>
-                <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(59, 130, 246, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
-                  <Activity size={22} color="#60a5fa" />
+                <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(59, 130, 246, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
+                  <Activity size={16} color="#60a5fa" />
                 </div>
               </div>
             </div>
 
-            <div className="stat-card" style={{ background: 'linear-gradient(145deg, rgba(139, 92, 246, 0.08) 0%, rgba(139, 92, 246, 0.02) 100%)', padding: 24, borderRadius: 16, border: '1px solid rgba(139, 92, 246, 0.2)', position: 'relative', overflow: 'hidden' }}>
-              <div style={{ position: 'absolute', top: -30, right: -30, width: 100, height: 100, background: '#8b5cf6', opacity: 0.1, filter: 'blur(30px)', borderRadius: '50%' }} />
+            <div className="stat-card" style={{ background: 'linear-gradient(145deg, rgba(139, 92, 246, 0.08) 0%, rgba(139, 92, 246, 0.02) 100%)', padding: 16, borderRadius: 12, border: '1px solid rgba(139, 92, 246, 0.2)', position: 'relative', overflow: 'hidden' }}>
+              <div style={{ position: 'absolute', top: -20, right: -20, width: 60, height: 60, background: '#8b5cf6', opacity: 0.1, filter: 'blur(20px)', borderRadius: '50%' }} />
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div style={{ zIndex: 1 }}>
-                  <div style={{ fontSize: 13, color: '#c4b5fd', marginBottom: 8, fontWeight: 600 }}>Aktif Bulanan (MAU)</div>
-                  <div style={{ fontSize: 36, fontWeight: '800', color: '#a78bfa', letterSpacing: '-0.5px' }}>{mau}</div>
-                  <div style={{ fontSize: 12, color: 'rgba(196, 181, 253, 0.6)', marginTop: 8 }}>Login dlm 30 hari</div>
+                  <div style={{ fontSize: 11, color: '#c4b5fd', marginBottom: 4, fontWeight: 600 }}>Aktif Bulanan (MAU)</div>
+                  <div style={{ fontSize: 24, fontWeight: '800', color: '#a78bfa', letterSpacing: '-0.5px' }}>{mau}</div>
+                  <div style={{ fontSize: 10, color: 'rgba(196, 181, 253, 0.6)', marginTop: 4 }}>Login dlm 30 hari</div>
                 </div>
-                <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(139, 92, 246, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
-                  <TrendingUp size={22} color="#a78bfa" />
+                <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(139, 92, 246, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
+                  <TrendingUp size={16} color="#a78bfa" />
                 </div>
               </div>
             </div>
 
-            <div className="stat-card" style={{ background: 'linear-gradient(145deg, rgba(245, 158, 11, 0.08) 0%, rgba(245, 158, 11, 0.02) 100%)', padding: 24, borderRadius: 16, border: '1px solid rgba(245, 158, 11, 0.2)', position: 'relative', overflow: 'hidden' }}>
-              <div style={{ position: 'absolute', top: -30, right: -30, width: 100, height: 100, background: '#f59e0b', opacity: 0.1, filter: 'blur(30px)', borderRadius: '50%' }} />
+            <div className="stat-card" style={{ background: 'linear-gradient(145deg, rgba(245, 158, 11, 0.08) 0%, rgba(245, 158, 11, 0.02) 100%)', padding: 16, borderRadius: 12, border: '1px solid rgba(245, 158, 11, 0.2)', position: 'relative', overflow: 'hidden' }}>
+              <div style={{ position: 'absolute', top: -20, right: -20, width: 60, height: 60, background: '#f59e0b', opacity: 0.1, filter: 'blur(20px)', borderRadius: '50%' }} />
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div style={{ zIndex: 1 }}>
-                  <div style={{ fontSize: 13, color: '#fcd34d', marginBottom: 8, fontWeight: 600 }}>User PRO</div>
-                  <div style={{ fontSize: 36, fontWeight: '800', color: '#fbbf24', letterSpacing: '-0.5px' }}>{paidProUsers.length}</div>
-                  <div style={{ fontSize: 12, color: 'rgba(252, 211, 77, 0.6)', marginTop: 8 }}>Berlangganan aktif</div>
+                  <div style={{ fontSize: 11, color: '#fcd34d', marginBottom: 4, fontWeight: 600 }}>User PRO</div>
+                  <div style={{ fontSize: 24, fontWeight: '800', color: '#fbbf24', letterSpacing: '-0.5px' }}>{paidProUsers.length}</div>
+                  <div style={{ fontSize: 10, color: 'rgba(252, 211, 77, 0.6)', marginTop: 4 }}>Berlangganan aktif</div>
                 </div>
-                <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(245, 158, 11, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
-                  <Crown size={22} color="#fbbf24" />
+                <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(245, 158, 11, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
+                  <Crown size={16} color="#fbbf24" />
                 </div>
               </div>
             </div>
 
-            <div className="stat-card" style={{ background: 'linear-gradient(145deg, rgba(16, 185, 129, 0.08) 0%, rgba(16, 185, 129, 0.02) 100%)', padding: 24, borderRadius: 16, border: '1px solid rgba(16, 185, 129, 0.2)', position: 'relative', overflow: 'hidden' }}>
-              <div style={{ position: 'absolute', top: -30, right: -30, width: 100, height: 100, background: '#10b981', opacity: 0.1, filter: 'blur(30px)', borderRadius: '50%' }} />
+            <div className="stat-card" style={{ background: 'linear-gradient(145deg, rgba(16, 185, 129, 0.08) 0%, rgba(16, 185, 129, 0.02) 100%)', padding: 16, borderRadius: 12, border: '1px solid rgba(16, 185, 129, 0.2)', position: 'relative', overflow: 'hidden' }}>
+              <div style={{ position: 'absolute', top: -20, right: -20, width: 60, height: 60, background: '#10b981', opacity: 0.1, filter: 'blur(20px)', borderRadius: '50%' }} />
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div style={{ zIndex: 1 }}>
-                  <div style={{ fontSize: 13, color: '#6ee7b7', marginBottom: 8, fontWeight: 600 }}>Estimasi Revenue / Bln</div>
-                  <div style={{ fontSize: 30, fontWeight: '800', color: '#34d399', letterSpacing: '-0.5px' }}>
+                  <div style={{ fontSize: 11, color: '#6ee7b7', marginBottom: 4, fontWeight: 600 }}>Estimasi Revenue / Bln</div>
+                  <div style={{ fontSize: 22, fontWeight: '800', color: '#34d399', letterSpacing: '-0.5px' }}>
                     Rp {(paidProUsers.length * 29000).toLocaleString('id-ID')}
                   </div>
-                  <div style={{ fontSize: 12, color: 'rgba(110, 231, 183, 0.6)', marginTop: 8 }}>Gross Estimate</div>
+                  <div style={{ fontSize: 10, color: 'rgba(110, 231, 183, 0.6)', marginTop: 4 }}>Gross Estimate</div>
                 </div>
-                <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(16, 185, 129, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
-                  <DollarSign size={22} color="#34d399" />
+                <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(16, 185, 129, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
+                  <DollarSign size={16} color="#34d399" />
                 </div>
               </div>
             </div>
 
-            <div className="stat-card" style={{ background: 'linear-gradient(145deg, rgba(236, 72, 153, 0.08) 0%, rgba(236, 72, 153, 0.02) 100%)', padding: 24, borderRadius: 16, border: '1px solid rgba(236, 72, 153, 0.2)', position: 'relative', overflow: 'hidden', cursor: 'pointer' }} onClick={() => setAdminTab('blogs')}>
-              <div style={{ position: 'absolute', top: -30, right: -30, width: 100, height: 100, background: '#ec4899', opacity: 0.1, filter: 'blur(30px)', borderRadius: '50%' }} />
+            <div className="stat-card" style={{ background: 'linear-gradient(145deg, rgba(236, 72, 153, 0.08) 0%, rgba(236, 72, 153, 0.02) 100%)', padding: 16, borderRadius: 12, border: '1px solid rgba(236, 72, 153, 0.2)', position: 'relative', overflow: 'hidden', cursor: 'pointer' }} onClick={() => setAdminTab('blogs')}>
+              <div style={{ position: 'absolute', top: -20, right: -20, width: 60, height: 60, background: '#ec4899', opacity: 0.1, filter: 'blur(20px)', borderRadius: '50%' }} />
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div style={{ zIndex: 1 }}>
-                  <div style={{ fontSize: 13, color: '#f9a8d4', marginBottom: 8, fontWeight: 600 }}>Total Artikel Blog</div>
-                  <div style={{ fontSize: 36, fontWeight: '800', color: '#f472b6', letterSpacing: '-0.5px' }}>{totalBlogs}</div>
-                  <div style={{ fontSize: 12, color: 'rgba(249, 168, 212, 0.6)', marginTop: 8 }}>Klik untuk mengelola</div>
+                  <div style={{ fontSize: 11, color: '#f9a8d4', marginBottom: 4, fontWeight: 600 }}>Total Artikel Blog</div>
+                  <div style={{ fontSize: 24, fontWeight: '800', color: '#f472b6', letterSpacing: '-0.5px' }}>{totalBlogs}</div>
+                  <div style={{ fontSize: 10, color: 'rgba(249, 168, 212, 0.6)', marginTop: 4 }}>Klik untuk mengelola</div>
                 </div>
-                <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(236, 72, 153, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
-                  <FileText size={22} color="#f472b6" />
+                <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(236, 72, 153, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
+                  <FileText size={16} color="#f472b6" />
                 </div>
               </div>
             </div>
