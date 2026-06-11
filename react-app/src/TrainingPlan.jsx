@@ -88,6 +88,15 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
   const [showEditModal, setShowEditModal] = useState(false);
   const [editDayData, setEditDayData] = useState(null);
 
+  useEffect(() => {
+    setTimeout(() => {
+      const el = document.getElementById('today-card');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 300);
+  }, []);
+
   const togglePause = () => {
     const newState = !isPaused;
     setIsPaused(newState);
@@ -576,8 +585,8 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
                     </div>
                   </div>
 
-                  {/* Days List (Horizontal Squares) */}
-                  <div style={{ display: 'flex', overflowX: 'auto', gap: 12, padding: '16px 20px', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                  {/* Days List (Grid Squares) */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 12, padding: '16px 20px' }}>
                     {week.map((dItem, dIdx) => {
                        const dObj = new Date(dItem.date);
                        const dayName = dObj.toLocaleDateString(lang==='id'?'id-ID':'en-US', {weekday:'short'}).toUpperCase();
@@ -593,7 +602,7 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
                        else if (!isRest) colorVar = '#34d399';
                        
                        return (
-                         <div key={dIdx} onClick={() => handleDayClick(dItem)} style={{ flex: '1 0 130px', maxWidth: 200, minHeight: 140, background: 'var(--bg-card)', borderRadius: 12, padding: 16, border: dItem.isToday ? '2px solid var(--accent-purple)' : '1px solid var(--border)', cursor: 'pointer', opacity: dItem.isPast && !dItem.isToday ? 0.6 : 1, transition: 'transform 0.15s, background 0.15s', display: 'flex', flexDirection: 'column' }} onMouseEnter={e => { if(!dItem.isPast) e.currentTarget.style.background = 'var(--bg-card-hover)'; e.currentTarget.style.transform = 'translateY(-2px)'}} onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-card)'; e.currentTarget.style.transform = 'translateY(0)'}}>
+                         <div id={dItem.isToday ? 'today-card' : ''} key={dIdx} onClick={() => handleDayClick(dItem)} style={{ minHeight: 130, background: 'var(--bg-card)', borderRadius: 12, padding: '14px 12px', border: dItem.isToday ? '2px solid var(--accent-purple)' : '1px solid var(--border)', cursor: 'pointer', opacity: dItem.isPast && !dItem.isToday ? 0.6 : 1, transition: 'transform 0.15s, background 0.15s', display: 'flex', flexDirection: 'column' }} onMouseEnter={e => { if(!dItem.isPast) e.currentTarget.style.background = 'var(--bg-card-hover)'; e.currentTarget.style.transform = 'translateY(-2px)'}} onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-card)'; e.currentTarget.style.transform = 'translateY(0)'}}>
                            
                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
                              <div>

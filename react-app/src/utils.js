@@ -563,34 +563,29 @@ export const buildAdaptiveCalendar = (weeklyPlan, activities = [], isPaused = fa
       }
     }
 
-    // 2. Shift them into today and future days
+    // 2. Reschedule missed runs to the next available Rest day
     if (missedRuns.length > 0) {
       let todayIdx = calendar.findIndex(d => d.isToday);
       if (todayIdx !== -1) {
-        // We will insert missed runs starting today.
-        // We shift the existing schedule rightwards.
-        let insertIdx = todayIdx;
+        let searchIdx = todayIdx;
         
-        while (missedRuns.length > 0 && insertIdx < calendar.length) {
-          const missed = missedRuns.shift();
-          missed.rescheduled = true;
+        while (missedRuns.length > 0 && searchIdx < calendar.length) {
+          let currentWorkout = calendar[searchIdx].workout;
           
-          // Push the current day's workout down if it's a Run, 
-          // or just overwrite it if it's a Rest day.
-          let currentWorkout = calendar[insertIdx].workout;
-          const isCurrentRun = currentWorkout.jenis.includes('Run') || currentWorkout.jenis.includes('Interval') || currentWorkout.jenis.includes('Tempo') || currentWorkout.jenis.includes('Jog');
+          // Look for an available day (Rest, Total Rest, or empty)
+          const isAvailable = currentWorkout.jenis.includes('Rest') || currentWorkout.jenis.includes('Total') || currentWorkout.jenis.includes('Recovery Jog');
           
-          calendar[insertIdx].workout = missed;
-          
-          if (isCurrentRun) {
-            // Need to shift the current run to the next day
-            if (!currentWorkout.originalHari) {
-              currentWorkout.originalHari = currentWorkout.hari;
-            }
-            missedRuns.unshift(currentWorkout); // put it back at the front of the queue to be placed tomorrow
+          if (isAvailable && !calendar[searchIdx].hasRun) {
+            const missed = missedRuns.shift();
+            missed.rescheduled = true;
+            
+            calendar[searchIdx].workout = {
+              ...missed,
+              hari: calendar[searchIdx].dateObj.toLocaleDateString('id-ID', {weekday:'long'}),
+              isOverridden: true
+            };
           }
-          
-          insertIdx++;
+          searchIdx++;
         }
       }
     }
