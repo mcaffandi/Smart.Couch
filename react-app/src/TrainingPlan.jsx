@@ -527,132 +527,120 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
         </div>
       </div>
 
-      {/* ── ADAPTIVE CALENDAR SECTION ── */}
+      {/* ── ADAPTIVE CALENDAR TIMELINE VIEW ── */}
       {(() => {
-        const startIdx = Math.max(0, todayIdx - 2);
-        const displayDays = adaptiveCalendar.slice(startIdx);
-        
+        const chunkedWeeks = [];
+        let currentWeek = [];
+        adaptiveCalendar.forEach(day => {
+          currentWeek.push(day);
+          if (currentWeek.length === 7) {
+            chunkedWeeks.push(currentWeek);
+            currentWeek = [];
+          }
+        });
+        if (currentWeek.length > 0) chunkedWeeks.push(currentWeek);
+
+        const todayWeekIdx = chunkedWeeks.findIndex(w => w.some(d => d.isToday));
+        // Tampilkan dari minggu ini hingga 3 minggu ke depan (total 4 minggu)
+        const displayWeeks = chunkedWeeks.slice(Math.max(0, todayWeekIdx), Math.max(0, todayWeekIdx) + 4);
+
         return (
-          <div style={{ marginBottom: 30 }}>
-            <h3 style={{ fontSize: 15, fontWeight: 800, marginBottom: 12, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-              {lang === 'id' ? 'Kalender Berjalan' : 'Running Calendar'}
-            </h3>
-            <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 10, msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
-              {displayDays.map((dItem, i) => {
-                const dateObj = new Date(dItem.date);
-                const dayName = dateObj.toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-US', { weekday: 'short' });
-                const dateNum = dateObj.getDate();
-                const monthStr = dateObj.toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-US', { month: 'short' });
-                
-                const isMissed = dItem.workout.missed;
-                const isCompleted = dItem.hasRun;
-                const isRescheduled = dItem.workout.rescheduled;
-                
-                let borderColor = 'var(--border)';
-                let bg = 'var(--bg-card)';
-                if (dItem.isToday) { borderColor = 'var(--accent-purple)'; }
-                if (isCompleted) { borderColor = '#10b981'; }
-                if (isMissed) { borderColor = '#fb7185'; }
+          <div className="weekly-timeline-container" style={{ display: 'flex', flexDirection: 'column', gap: 24, marginBottom: 30 }}>
+            {displayWeeks.map((week, wIdx) => {
+              if(week.length === 0) return null;
 
-                return (
-                  <div key={i} onClick={() => handleDayClick(dItem)} style={{ minWidth: 120, maxWidth: 140, flex: '0 0 auto', background: bg, border: `1.5px solid ${borderColor}`, borderRadius: 10, padding: '10px 12px', display: 'flex', flexDirection: 'column', opacity: dItem.isPast && !dItem.isToday ? 0.6 : 1, cursor: (dItem.isPast || dItem.isToday) ? 'pointer' : 'default', transition: 'transform 0.1s' }} onMouseDown={e => {if (dItem.isPast || dItem.isToday) e.currentTarget.style.transform = 'scale(0.96)'}} onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'} onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
-                      <div>
-                        <div style={{ fontSize: 10, fontWeight: 700, color: dItem.isToday ? 'var(--accent-purple)' : 'var(--text-muted)' }}>{dayName.toUpperCase()}</div>
-                        <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)' }}>{dateNum} <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)' }}>{monthStr}</span></div>
+              const startDate = new Date(week[0].date);
+              const endDate = new Date(week[week.length-1].date);
+              const dateRangeStr = `${startDate.getDate()} ${startDate.toLocaleDateString(lang==='id'?'id-ID':'en-US', {month:'short'})} - ${endDate.getDate()} ${endDate.toLocaleDateString(lang==='id'?'id-ID':'en-US', {month:'short'})}`;
+
+              const numRuns = week.filter(d => {
+                const type = (d.workout.jenis || '').toLowerCase();
+                return type.includes('run') || type.includes('interval') || type.includes('jog') || type.includes('tempo') || type.includes('hiit');
+              }).length;
+
+              return (
+                <div key={wIdx} className="week-block" style={{ background: 'var(--bg-surface)', borderRadius: 16, overflow: 'hidden', border: '1px solid var(--border)' }}>
+                  
+                  {/* Week Header */}
+                  <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-primary)' }}>{dateRangeStr}</span>
+                        <span style={{ background: 'var(--bg-card)', padding: '2px 8px', borderRadius: 12, fontSize: 11, fontWeight: 700, color: 'var(--text-secondary)' }}>
+                          WEEK {todayWeekIdx + wIdx + 1}
+                        </span>
                       </div>
-                      {isCompleted && <div style={{ color: '#10b981' }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>}
-                      {isMissed && <div style={{ color: '#fb7185' }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></div>}
-                      {dItem.isToday && !isCompleted && <div style={{ background: 'var(--accent-purple)', color: '#fff', fontSize: 8, fontWeight: 800, padding: '2px 4px', borderRadius: 4 }}>TODAY</div>}
-
-                      {dItem.isToday && !isCompleted && (
-                         <div onClick={(e) => { e.stopPropagation(); setEditDayData(dItem); setShowEditModal(true); }} style={{ color: 'var(--text-muted)', cursor: 'pointer', marginLeft: 4 }}>
-                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
-                         </div>
-                      )}
+                      <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
+                        Total: {numRuns} {lang === 'id' ? 'Sesi Lari' : 'Runs'}
+                      </div>
                     </div>
-
-                    <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 4, lineHeight: 1.2 }}>
-                      {getJenis(dItem.workout.jenis)}
-                    </div>
-                    
-                    <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{getDurasi(dItem.workout.durasi)}</div>
                   </div>
-                );
-              })}
-            </div>
+
+                  {/* Days List */}
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    {week.map((dItem, dIdx) => {
+                       const dObj = new Date(dItem.date);
+                       const dayName = dObj.toLocaleDateString(lang==='id'?'id-ID':'en-US', {weekday:'short'}).toUpperCase();
+                       const dateNum = dObj.getDate();
+
+                       const isRest = dItem.workout.jenis.includes('Rest') || dItem.workout.jenis.includes('Total');
+                       const isCompleted = dItem.hasRun;
+                       
+                       let colorVar = 'var(--text-muted)';
+                       if (dItem.workout.jenis.includes('Interval') || dItem.workout.jenis.includes('Tempo') || dItem.workout.jenis.includes('HIIT')) colorVar = '#f97316'; // orange
+                       else if (dItem.workout.jenis.includes('Easy') || dItem.workout.jenis.includes('Jog') || dItem.workout.jenis.includes('Zone 2') || dItem.workout.jenis.includes('MAF')) colorVar = '#38bdf8'; // light blue
+                       else if (dItem.workout.jenis.includes('Long') || dItem.workout.jenis.includes('Base Run')) colorVar = '#818cf8'; // purple
+                       else if (!isRest) colorVar = '#34d399'; // green for mobility/core
+                       
+                       return (
+                         <div key={dIdx} onClick={() => handleDayClick(dItem)} style={{ display: 'flex', padding: '12px 16px', borderBottom: dIdx < week.length-1 ? '1px solid var(--border)' : 'none', cursor: 'pointer', opacity: dItem.isPast && !dItem.isToday ? 0.6 : 1, transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-card-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                           
+                           {/* Left: Date */}
+                           <div style={{ width: 50, flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', opacity: isRest ? 0.5 : 1 }}>
+                             <span style={{ fontSize: 10, fontWeight: 700, color: dItem.isToday ? 'var(--accent-purple)' : 'var(--text-muted)' }}>{dayName}</span>
+                             <span style={{ fontSize: 16, fontWeight: 800, color: dItem.isToday ? 'var(--accent-purple)' : 'var(--text-primary)', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', background: dItem.isToday ? 'rgba(139,92,246,0.1)' : 'transparent', marginTop: 2 }}>{dateNum}</span>
+                           </div>
+
+                           {/* Right: Workout Card */}
+                           <div style={{ flex: 1, marginLeft: 12 }}>
+                             {isRest ? (
+                               <div style={{ height: '100%', display: 'flex', alignItems: 'center', color: 'var(--text-muted)', fontSize: 13, fontWeight: 600 }}>
+                                 <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                   {lang === 'id' ? 'Add (Rest)' : 'Add (Rest)'}
+                                 </span>
+                               </div>
+                             ) : (
+                               <div style={{ background: 'var(--bg-card)', borderRadius: 8, padding: '12px 14px', borderLeft: `4px solid ${colorVar}`, position: 'relative', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
+                                 {isCompleted && (
+                                   <div style={{ position: 'absolute', top: 10, right: 12, color: '#10b981' }}>
+                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                                   </div>
+                                 )}
+                                 <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 4, paddingRight: 20 }}>
+                                   {getJenis(dItem.workout.jenis)}
+                                 </div>
+                                 <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+                                   {getDurasi(dItem.workout.durasi)}
+                                 </div>
+                                 {dItem.workout.tujuan && (
+                                   <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 6, lineHeight: 1.4 }}>
+                                     {getTujuan(dItem.workout.tujuan)}
+                                   </div>
+                                 )}
+                               </div>
+                             )}
+                           </div>
+                         </div>
+                       );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         );
       })()}
-
-      <h3 style={{ fontSize: 15, fontWeight: 800, marginBottom: 12, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-        {lang === 'id' ? 'Jadwal 7 Hari Kedepan' : 'Next 7 Days Schedule'}
-      </h3>
-
-
-      {/* Desktop Table View */}
-      <div className="training-table-desktop" style={{ overflowX: 'auto', borderRadius: 14, border: '1px solid var(--border)' }}>
-        <table className="training-table">
-          <thead>
-            <tr>
-              <th>{lang === 'id' ? 'Hari' : 'Day'}</th>
-              <th>{lang === 'id' ? 'Jenis Latihan' : 'Workout Type'}</th>
-              <th>{lang === 'id' ? 'Durasi / Intensitas' : 'Duration / Intensity'}</th>
-              <th>{lang === 'id' ? 'Tujuan' : 'Target / Purpose'}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {next7Days.map((dItem, i) => {
-              const dateObj = new Date(dItem.date);
-              const dayName = dateObj.toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-US', { weekday: 'long' });
-              const dateStr = dateObj.toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-US', { day: 'numeric', month: 'short' });
-              const row = dItem.workout;
-              
-              return (
-                <tr key={i} onClick={() => handleDayClick(dItem)} style={{ background: 'transparent', cursor: (dItem.isPast || dItem.isToday) ? 'pointer' : 'default' }}>
-                  <td style={{ fontWeight: 700, color: dItem.isToday ? 'var(--accent-purple)' : 'var(--text-primary)', whiteSpace: 'nowrap' }}>
-                    {dayName} <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-muted)' }}>{dateStr}</span>
-                    {dItem.isToday && <span style={{ marginLeft: 8, background: 'var(--accent-purple)', color: '#fff', fontSize: 9, padding: '2px 6px', borderRadius: 4 }}>TODAY</span>}
-                  </td>
-                  <td><span className={`badge ${getBadgeClass(row.jenis)}`}>{getJenis(row.jenis)}</span></td>
-                  <td style={{ color: 'var(--text-secondary)', fontSize: 13 }}>{getDurasi(row.durasi)}</td>
-                  <td style={{ color: 'var(--text-muted)', fontSize: 13 }}>{getTujuan(row.tujuan)}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Mobile Cards View */}
-      <div className="training-cards-mobile">
-        {next7Days.map((dItem, i) => {
-          const dateObj = new Date(dItem.date);
-          const dayName = dateObj.toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-US', { weekday: 'short' });
-          const dateStr = dateObj.toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-US', { day: 'numeric', month: 'short' });
-          const row = dItem.workout;
-
-          return (
-            <div key={i} onClick={() => handleDayClick(dItem)} className="training-card-item" style={{ border: dItem.isToday ? '1px solid var(--accent-purple)' : '1px solid var(--border)', background: 'var(--bg-card)', cursor: (dItem.isPast || dItem.isToday) ? 'pointer' : 'default' }}>
-              <div className="training-card-header">
-                <span className="training-card-day" style={{ color: dItem.isToday ? 'var(--accent-purple)' : 'var(--text-primary)' }}>
-                  {dayName}, {dateStr}
-                  {dItem.isToday && <span style={{ marginLeft: 8, background: 'var(--accent-purple)', color: '#fff', fontSize: 9, padding: '2px 6px', borderRadius: 4 }}>TODAY</span>}
-                </span>
-                <span className={`badge ${getBadgeClass(row.jenis)}`}>{getJenis(row.jenis)}</span>
-              </div>
-              <div className="training-card-dur">
-                {getDurasi(row.durasi)}
-              </div>
-              <div className="training-card-tujuan">
-                {getTujuan(row.tujuan)}
-              </div>
-            </div>
-          );
-        })}
-      </div>
 
       <details style={{ marginTop: 20 }}>
         <summary style={{

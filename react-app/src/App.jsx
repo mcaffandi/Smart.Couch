@@ -12,6 +12,7 @@ const TrendChart = lazy(() => import('./Charts').then(m => ({ default: m.TrendCh
 const HRZoneChart = lazy(() => import('./Charts').then(m => ({ default: m.HRZoneChart })));
 const RunHistory = lazy(() => import('./RunHistory'));
 const RunDetailsModal = lazy(() => import('./RunDetailsModal'));
+const PersonalRecordsWidget = lazy(() => import('./PersonalRecordsWidget'));
 const TrainingPlan = lazy(() => import('./TrainingPlan'));
 const RacePrediction = lazy(() => import('./RacePrediction'));
 import LoginScreen from './LoginScreen';
@@ -4202,6 +4203,7 @@ export default function App() {
                 <div className="dashboard-layout" style={{ marginTop: 20 }}>
                   <div className="bento-2x3">
                     <TrendChart activities={runActs} lang={lang} externalTimeRange={dashboardTimeRange} setExternalTimeRange={setDashboardTimeRange} />
+                    <PersonalRecordsWidget activities={runActs} lang={lang} />
                   </div>
                   
                   {actualMaxHR > 0 && (
