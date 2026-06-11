@@ -158,34 +158,34 @@ export function TrendChart({ activities, lang = 'id', externalTimeRange, setExte
         </div>
 
         {/* Dashboard Stats Summary */}
-        <div style={{ background: 'var(--bg-surface)', padding: 16, borderRadius: 12, border: '1px solid var(--border)', marginTop: 8 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)' }}>
-              {timeRange === 'all' ? (lang === 'id' ? 'Semua Waktu' : 'ALL TIME') : `LAST ${timeRange.toUpperCase()}`}
-            </span>
-            <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-              VIEW BY: {viewMode}
-            </span>
-          </div>
-          <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
-            <div style={{ minWidth: 80 }}>
-              <div style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>KILOMETERS</div>
-              <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--text-primary)' }}>{totalKm}</div>
+        <div style={{ marginTop: 12, marginBottom: 24 }}>
+          <div style={{ display: 'flex', gap: 40, flexWrap: 'wrap' }}>
+            <div>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4, fontWeight: 700 }}>
+                {lang === 'id' ? 'Total Jarak' : 'Kilometers'}
+              </div>
+              <div style={{ fontSize: 36, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-1px' }}>{totalKm}</div>
             </div>
-            <div style={{ minWidth: 80 }}>
-              <div style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>TIME</div>
-              <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--text-primary)' }}>{totalHrs}h {totalMins}m</div>
+            <div>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4, fontWeight: 700 }}>
+                {lang === 'id' ? 'Total Waktu' : 'Time'}
+              </div>
+              <div style={{ fontSize: 36, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-1px' }}>
+                {totalHrs}<span style={{ fontSize: 18, fontWeight: 600, color: 'var(--text-secondary)', marginRight: 6 }}>h</span>{totalMins}<span style={{ fontSize: 18, fontWeight: 600, color: 'var(--text-secondary)' }}>m</span>
+              </div>
             </div>
-            <div style={{ minWidth: 60 }}>
-              <div style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>RUNS</div>
-              <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--text-primary)' }}>{totalRuns}</div>
+            <div>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4, fontWeight: 700 }}>
+                {lang === 'id' ? 'Sesi Lari' : 'Runs'}
+              </div>
+              <div style={{ fontSize: 36, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-1px' }}>{totalRuns}</div>
             </div>
           </div>
         </div>
 
       </div>
       
-      <div style={{ flex: 1, minHeight: 180, position: 'relative' }}>
+      <div style={{ flex: 1, minHeight: 250, position: 'relative' }}>
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
             <XAxis dataKey="label" tick={{ fill: 'var(--text-muted)', fontSize: 10 }} axisLine={false} tickLine={false} tickMargin={10} minTickGap={15} />
@@ -193,7 +193,7 @@ export function TrendChart({ activities, lang = 'id', externalTimeRange, setExte
             <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--bg-card-hover)', opacity: 0.5 }} />
             <Bar dataKey="km" radius={[4, 4, 0, 0]} maxBarSize={40}>
               {data.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={index === data.length - 1 ? 'var(--accent-purple)' : 'rgba(255,255,255,0.1)'} />
+                <Cell key={`cell-${index}`} fill={index === data.length - 1 ? 'var(--accent-purple)' : '#334155'} />
               ))}
             </Bar>
           </BarChart>
