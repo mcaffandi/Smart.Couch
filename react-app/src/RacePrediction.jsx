@@ -65,11 +65,11 @@ function detectStagnation(activities, lang = 'id') {
       pct: improvement.toFixed(1),
       note: improvement < 0
         ? (lang === 'id' 
-            ? `Pace lo turun ${Math.abs(improvement).toFixed(1)}% dalam 4 minggu terakhir — estimasi ditambah buffer.`
-            : `Your pace decreased by ${Math.abs(improvement).toFixed(1)}% in the last 4 weeks — estimation buffer added.`)
+            ? `Pace lo turun ${Math.abs(improvement).toFixed(1)}% dalam 4 minggu terakhir - estimasi ditambah buffer.`
+            : `Your pace decreased by ${Math.abs(improvement).toFixed(1)}% in the last 4 weeks - estimation buffer added.`)
         : (lang === 'id'
-            ? `Hampir tidak ada progress pace (${improvement.toFixed(1)}%) — estimasi ditambah buffer recovery.`
-            : `Almost no pace progress (${improvement.toFixed(1)}%) — recovery buffer added.`),
+            ? `Hampir tidak ada progress pace (${improvement.toFixed(1)}%) - estimasi ditambah buffer recovery.`
+            : `Almost no pace progress (${improvement.toFixed(1)}%) - recovery buffer added.`),
     };
   }
   return { stagnant: false, improvement: improvement.toFixed(1), note: null };
@@ -217,7 +217,7 @@ export default function RacePrediction({ activities, targetPace, lang = 'id', ac
       }}>
         <div>
           <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 4 }}>
-            {lang === 'id' ? `Data Terbaik — ${dataLabel}` : `Best Data — ${dataLabel}`}
+            {lang === 'id' ? `Data Terbaik - ${dataLabel}` : `Best Data - ${dataLabel}`}
           </div>
           <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--text-primary)' }}>
             {refRun.distKm.toFixed(1)} km &nbsp;·&nbsp; {formatPace(refRun.paceMinKm)} min/km
@@ -304,8 +304,8 @@ export default function RacePrediction({ activities, targetPace, lang = 'id', ac
         </div>
         <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 18 }}>
           {lang === 'id' 
-            ? 'Masukkan target waktu lo — sistem kalkulasi berapa minggu lagi bisa tercapai.' 
-            : 'Enter your goal time — the system calculates how many weeks are needed to reach it.'}
+            ? 'Masukkan target waktu lo - sistem kalkulasi berapa minggu lagi bisa tercapai.' 
+            : 'Enter your goal time - the system calculates how many weeks are needed to reach it.'}
         </div>
 
         {/* Race selector */}
@@ -338,7 +338,7 @@ export default function RacePrediction({ activities, targetPace, lang = 'id', ac
           ))}
         </div>
 
-        {/* Time input — WAJIB diisi user */}
+        {/* Time input - WAJIB diisi user */}
         <div style={{ marginBottom: 18 }}>
           <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 8 }}>
             {lang === 'id' ? `Target Waktu untuk ${targetRace?.label}` : `Target Time for ${targetRace?.label}`}
@@ -481,13 +481,13 @@ export default function RacePrediction({ activities, targetPace, lang = 'id', ac
             ))}
           </div>
           <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-            {vo2max < 30 ? (lang === 'id' ? 'Pemula — baseline yang bagus. Lari konsisten 3×/minggu bisa naik 5–8 poin dalam 3 bulan pertama.' : 'Beginner — great baseline. Running consistently 3×/week can raise it by 5–8 points in the first 3 months.') :
-             vo2max < 38 ? (lang === 'id' ? 'Di bawah rata-rata — potensi improve besar. Fokus easy run volume dulu sebelum interval.' : 'Below average — significant potential to improve. Focus on easy run volume first before starting intervals.') :
-             vo2max < 46 ? (lang === 'id' ? 'Rata-rata — level yang solid. Tambahkan interval 1×/minggu untuk naik ke level berikutnya.' : 'Average — a solid level. Add interval training 1×/week to climb to the next level.') :
-             vo2max < 52 ? (lang === 'id' ? 'Di atas rata-rata — atletis. Tempo run + progressive overload bisa push lebih jauh.' : 'Above average — athletic. Tempo runs + progressive overload can push it further.') :
-             vo2max < 57 ? (lang === 'id' ? 'Baik sekali — setara pelari kompetitif amatir. Jaga volume dan hindari overtraining.' : 'Very good — on par with competitive amateur runners. Keep up volume and avoid overtraining.') :
-             vo2max < 62 ? (lang === 'id' ? 'Sangat baik — top 10% populasi. Prioritaskan recovery dan peak week periodization.' : 'Excellent — top 10% of the population. Prioritize recovery and peak-week periodization.') :
-             (lang === 'id' ? 'Level elite — di sini butuh coach spesialis dan program periodization ketat.' : 'Elite level — requires a specialist coach and strict periodization programming.')}
+            {vo2max < 30 ? (lang === 'id' ? 'Pemula - baseline yang bagus. Lari konsisten 3×/minggu bisa naik 5–8 poin dalam 3 bulan pertama.' : 'Beginner - great baseline. Running consistently 3×/week can raise it by 5–8 points in the first 3 months.') :
+             vo2max < 38 ? (lang === 'id' ? 'Di bawah rata-rata - potensi improve besar. Fokus easy run volume dulu sebelum interval.' : 'Below average - significant potential to improve. Focus on easy run volume first before starting intervals.') :
+             vo2max < 46 ? (lang === 'id' ? 'Rata-rata - level yang solid. Tambahkan interval 1×/minggu untuk naik ke level berikutnya.' : 'Average - a solid level. Add interval training 1×/week to climb to the next level.') :
+             vo2max < 52 ? (lang === 'id' ? 'Di atas rata-rata - atletis. Tempo run + progressive overload bisa push lebih jauh.' : 'Above average - athletic. Tempo runs + progressive overload can push it further.') :
+             vo2max < 57 ? (lang === 'id' ? 'Baik sekali - setara pelari kompetitif amatir. Jaga volume dan hindari overtraining.' : 'Very good - on par with competitive amateur runners. Keep up volume and avoid overtraining.') :
+             vo2max < 62 ? (lang === 'id' ? 'Sangat baik - top 10% populasi. Prioritaskan recovery dan peak week periodization.' : 'Excellent - top 10% of the population. Prioritize recovery and peak-week periodization.') :
+             (lang === 'id' ? 'Level elite - di sini butuh coach spesialis dan program periodization ketat.' : 'Elite level - requires a specialist coach and strict periodization programming.')}
           </div>
         </div>
       )}
@@ -497,7 +497,7 @@ export default function RacePrediction({ activities, targetPace, lang = 'id', ac
         {lang === 'id' ? (
           <>
             <strong style={{ color: 'var(--text-secondary)' }}>Metode:</strong> Prediksi menggunakan{' '}
-            <strong style={{ color: 'var(--text-secondary)' }}>Riegel's Formula</strong> (T₂ = T₁ × (D₂/D₁)^1.06) —
+            <strong style={{ color: 'var(--text-secondary)' }}>Riegel's Formula</strong> (T₂ = T₁ × (D₂/D₁)^1.06) -
             algoritma yang sama digunakan Garmin &amp; Strava. Estimasi minggu dihitung berdasarkan rate improve ~1.5%/bulan
             {stagnation.stagnant ? ' dengan buffer stagnansi.' : '.'}
             &nbsp;Akurasi meningkat seiring bertambahnya data lari &gt; 3 km.
@@ -505,7 +505,7 @@ export default function RacePrediction({ activities, targetPace, lang = 'id', ac
         ) : (
           <>
             <strong style={{ color: 'var(--text-secondary)' }}>Method:</strong> Predictions use{' '}
-            <strong style={{ color: 'var(--text-secondary)' }}>Riegel's Formula</strong> (T₂ = T₁ × (D₂/D₁)^1.06) —
+            <strong style={{ color: 'var(--text-secondary)' }}>Riegel's Formula</strong> (T₂ = T₁ × (D₂/D₁)^1.06) -
             the same algorithm used by Garmin &amp; Strava. Weekly estimation is calculated based on a ~1.5%/month improvement rate
             {stagnation.stagnant ? ' with a stagnation buffer.' : '.'}
             &nbsp;Accuracy improves as more run data &gt; 3 km is recorded.

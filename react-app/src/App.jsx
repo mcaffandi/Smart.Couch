@@ -2738,7 +2738,7 @@ export default function App() {
             <div style={{ overflow: 'hidden' }}>
               <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>{label}</div>
               <div style={{ fontSize: 15, fontWeight: 800, color: value ? 'var(--text-primary)' : 'var(--text-muted)', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
-                {value ? <>{value} <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)' }}>{unit}</span></> : '—'}
+                {value ? <>{value} <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)' }}>{unit}</span></> : '-'}
               </div>
             </div>
           </div>
@@ -2807,7 +2807,7 @@ export default function App() {
                   {bmiCat && (
                     <div style={{ background: `${bmiCat.c}12`, border: `1px solid ${bmiCat.c}40`, borderRadius: 8, padding: '10px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>BMI</span>
-                      <span style={{ fontSize: 16, fontWeight: 800, color: bmiCat.c }}>{bmi} <span style={{ fontSize: 11, fontWeight: 600 }}>— {bmiCat.l}</span></span>
+                      <span style={{ fontSize: 16, fontWeight: 800, color: bmiCat.c }}>{bmi} <span style={{ fontSize: 11, fontWeight: 600 }}>- {bmiCat.l}</span></span>
                     </div>
                   )}
                   {/* ── LOGIN PROMPT for anonymous users ── */}
@@ -3015,17 +3015,17 @@ export default function App() {
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
                         <div>
                           <label style={lbl}>Umur</label>
-                          <input type="number" min={10} max={100} placeholder="—" style={inp}
+                          <input type="number" min={10} max={100} placeholder="-" style={inp}
                             value={d.age ?? ''} onChange={e => { let v = e.target.value; if (/^0+(?=\d)/.test(v)) { v = v.replace(/^0+(?=\d)/, ''); e.target.value = v; } setEditDraft(p => ({ ...p, age: v === '' ? null : parseInt(v) || null })); }} onFocus={onF} onBlur={onB} />
                         </div>
                         <div>
                           <label style={lbl}>Berat (kg)</label>
-                          <input type="number" min={30} max={200} step={0.5} placeholder="—" style={inp}
+                          <input type="number" min={30} max={200} step={0.5} placeholder="-" style={inp}
                             value={d.weight ?? ''} onChange={e => { let v = e.target.value; if (/^0+(?=\d)/.test(v)) { v = v.replace(/^0+(?=\d)/, ''); e.target.value = v; } setEditDraft(p => ({ ...p, weight: v === '' ? null : parseFloat(v) || null })); }} onFocus={onF} onBlur={onB} />
                         </div>
                         <div>
                           <label style={lbl}>Tinggi (cm)</label>
-                          <input type="number" min={100} max={250} placeholder="—" style={inp}
+                          <input type="number" min={100} max={250} placeholder="-" style={inp}
                             value={d.height ?? ''} onChange={e => { let v = e.target.value; if (/^0+(?=\d)/.test(v)) { v = v.replace(/^0+(?=\d)/, ''); e.target.value = v; } setEditDraft(p => ({ ...p, height: v === '' ? null : parseInt(v) || null })); }} onFocus={onF} onBlur={onB} />
                         </div>
                       </div>
@@ -3159,7 +3159,7 @@ export default function App() {
               </div>
 
                   {/* Live BMI in edit mode */}
-                  {(() => { const ew = d.weight; const eh = d.height; if (!ew || !eh) return null; const eb = (ew / ((eh / 100) ** 2)).toFixed(1); const ec = eb < 18.5 ? { l: 'Underweight', c: '#60a5fa' } : eb < 25 ? { l: 'Normal', c: '#34d399' } : eb < 30 ? { l: 'Overweight', c: '#fbbf24' } : { l: 'Obese', c: '#fb7185' }; return <div style={{ background: `${ec.c}12`, border: `1px solid ${ec.c}40`, borderRadius: 8, padding: '10px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 14 }}><span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>BMI</span><span style={{ fontSize: 15, fontWeight: 800, color: ec.c }}>{eb} <span style={{ fontSize: 11, fontWeight: 600 }}>— {ec.l}</span></span></div>; })()}
+                  {(() => { const ew = d.weight; const eh = d.height; if (!ew || !eh) return null; const eb = (ew / ((eh / 100) ** 2)).toFixed(1); const ec = eb < 18.5 ? { l: 'Underweight', c: '#60a5fa' } : eb < 25 ? { l: 'Normal', c: '#34d399' } : eb < 30 ? { l: 'Overweight', c: '#fbbf24' } : { l: 'Obese', c: '#fb7185' }; return <div style={{ background: `${ec.c}12`, border: `1px solid ${ec.c}40`, borderRadius: 8, padding: '10px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 14 }}><span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>BMI</span><span style={{ fontSize: 15, fontWeight: 800, color: ec.c }}>{eb} <span style={{ fontSize: 11, fontWeight: 600 }}>- {ec.l}</span></span></div>; })()}
 
                   <div style={{ display: 'flex', gap: 8 }}>
                     <button onClick={() => { setEditDraft({}); setProfileEditMode(false); }}
@@ -3863,7 +3863,7 @@ export default function App() {
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
                 <p className="page-subtitle" style={{ fontSize: 14, color: 'var(--text-secondary)', margin: 0 }}>
-                  {data.profile?.displayName ? (lang === 'id' ? `Halo, ${data.profile.displayName} — ` : `Hello, ${data.profile.displayName} — `) : ''}
+                  {data.profile?.displayName ? (lang === 'id' ? `Halo, ${data.profile.displayName} - ` : `Hello, ${data.profile.displayName} - `) : ''}
                   {new Date().toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
                 </p>
               </div>
@@ -4306,13 +4306,13 @@ export default function App() {
                     {lang === 'id' ? (
                       <>
                         Naikkan volume maksimal <strong>10% per minggu</strong>.
-                        Jangan "balas dendam" lari jauh tiba-tiba setelah beberapa hari off — cedera bisa menghancurkan progress berbulan-bulan.
+                        Jangan "balas dendam" lari jauh tiba-tiba setelah beberapa hari off - cedera bisa menghancurkan progress berbulan-bulan.
                         Konsistensi jauh lebih valuable dari satu sesi epic!
                       </>
                     ) : (
                       <>
                         Increase training volume by a maximum of <strong>10% weekly</strong>.
-                        Do not run excessive recovery distances suddenly after off-days — injuries can undo months of hard progress.
+                        Do not run excessive recovery distances suddenly after off-days - injuries can undo months of hard progress.
                         Consistency is far more valuable than one epic session!
                       </>
                     )}

@@ -125,7 +125,7 @@ export const formatDate = (dateStr) => {
 // ──────────────────────────────────────────────
 export const formatPace = (p) => {
   const val = typeof p === 'string' ? parseFloat(p) : p;
-  if (typeof val !== 'number' || isNaN(val)) return '—';
+  if (typeof val !== 'number' || isNaN(val)) return '-';
   let mins = Math.floor(val);
   let secs = Math.round((val - mins) * 60);
   if (secs >= 60) {
@@ -138,9 +138,9 @@ export const formatPace = (p) => {
 export const getPaceRecommendations = (targetPace) => {
   if (!targetPace) {
     return {
-      ngepush: '—',
-      sedang: '—',
-      santai: '—'
+      ngepush: '-',
+      sedang: '-',
+      santai: '-'
     };
   }
   const baseSecs = targetPace * 60;

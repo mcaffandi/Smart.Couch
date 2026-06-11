@@ -155,11 +155,11 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
       <div className="alert alert-danger" style={{ marginBottom: 18 }}>
         {lang === 'id' ? (
           <>
-            <strong>Kondisi Drop:</strong> Skor tidur lo {latestSleepScore} — tidur kurang. Kalau jadwal hari ini interval atau tempo, <strong>sangat disarankan ganti ke Easy Run atau Rest</strong> untuk cegah cedera.
+            <strong>Kondisi Drop:</strong> Skor tidur lo {latestSleepScore} - tidur kurang. Kalau jadwal hari ini interval atau tempo, <strong>sangat disarankan ganti ke Easy Run atau Rest</strong> untuk cegah cedera.
           </>
         ) : (
           <>
-            <strong>Poor Sleep:</strong> Your sleep score is {latestSleepScore} — insufficient rest. If today's scheduled run is an interval or tempo, <strong>it is highly recommended to switch to an Easy Run atau Rest</strong> to prevent injury.
+            <strong>Poor Sleep:</strong> Your sleep score is {latestSleepScore} - insufficient rest. If today's scheduled run is an interval or tempo, <strong>it is highly recommended to switch to an Easy Run atau Rest</strong> to prevent injury.
           </>
         )}
       </div>
@@ -181,11 +181,11 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
       <div className="alert alert-success" style={{ marginBottom: 18 }}>
         {lang === 'id' ? (
           <>
-            <strong>Kondisi Prima:</strong> Tidur lo sangat baik (skor {latestSleepScore}). Tubuh dalam kondisi prime — waktu ideal untuk push intensitas tinggi.
+            <strong>Kondisi Prima:</strong> Tidur lo sangat baik (skor {latestSleepScore}). Tubuh dalam kondisi prime - waktu ideal untuk push intensitas tinggi.
           </>
         ) : (
           <>
-            <strong>Prime Condition:</strong> Your sleep is excellent (score {latestSleepScore}). Your body is in prime shape — an ideal time to push high-intensity training.
+            <strong>Prime Condition:</strong> Your sleep is excellent (score {latestSleepScore}). Your body is in prime shape - an ideal time to push high-intensity training.
           </>
         )}
       </div>

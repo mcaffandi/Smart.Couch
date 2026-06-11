@@ -28,7 +28,7 @@ const parseImageUrl = (url) => {
 
 const getThumbnailUrl = (blog) => {
   if (!blog) return '';
-  // Trim and check — empty string counts as no thumbnail
+  // Trim and check - empty string counts as no thumbnail
   let url = (blog.coverImage || blog.thumbnail || '').trim();
   
   // If no explicit thumbnail, try to extract first non-base64 image from content

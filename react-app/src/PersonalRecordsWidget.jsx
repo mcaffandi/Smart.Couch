@@ -96,7 +96,7 @@ export default function PersonalRecordsWidget({ activities = [], lang = 'id' }) 
                 </div>
               ) : (
                 <div style={{ textAlign: 'center', fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>
-                  —
+                  -
                 </div>
               )}
             </div>

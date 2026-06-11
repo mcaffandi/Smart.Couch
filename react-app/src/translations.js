@@ -60,9 +60,9 @@ export const translations = {
     improve10k: "Meningkatkan Waktu 10K",
     improveHalf: "Meningkatkan Waktu Half Marathon",
     improveFull: "Meningkatkan Waktu Full Marathon",
-    ngepush: "Ngepush — Intensif",
-    sedang: "Sedang — Bertahap",
-    santai: "Santai — Konsisten",
+    ngepush: "Ngepush - Intensif",
+    sedang: "Sedang - Bertahap",
+    santai: "Santai - Konsisten",
 
     // Days
     daysShort: ["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"],
@@ -197,9 +197,9 @@ export const translations = {
     improve10k: "Improve 10K Time",
     improveHalf: "Improve Half Marathon Time",
     improveFull: "Improve Full Marathon Time",
-    ngepush: "Intensive — High Load",
-    sedang: "Moderate — Gradual",
-    santai: "Light — Consistent",
+    ngepush: "Intensive - High Load",
+    sedang: "Moderate - Gradual",
+    santai: "Light - Consistent",
 
     // Days
     daysShort: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
