@@ -610,7 +610,7 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
                                <div style={{ fontSize: 20, fontWeight: 800, color: dItem.isToday ? 'var(--accent-purple)' : 'var(--text-primary)' }}>{dateNum}</div>
                              </div>
                              {isCompleted && (
-                               <div style={{ color: '#10b981', background: 'rgba(16,185,129,0.1)', padding: 4, borderRadius: '50%' }}>
+                               <div style={{ color: '#10b981', background: 'rgba(16,185,129,0.1)', borderRadius: '50%', width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
                                </div>
                              )}
@@ -719,7 +719,7 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
               <h2 style={{ fontSize: 18, fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
                 {lang === 'id' ? 'Tandai Selesai' : 'Mark as Done'}
               </h2>
-              <button onClick={() => setShowLogModal(false)} style={{ background: 'var(--bg-card)', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 8, borderRadius: '50%' }}>
+              <button onClick={() => setShowLogModal(false)} style={{ background: 'var(--bg-card)', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', width: 36, height: 36, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, padding: 0 }}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
               </button>
             </div>
