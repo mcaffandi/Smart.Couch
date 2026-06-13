@@ -27,7 +27,7 @@ import GoalProgressWidget from './GoalProgressWidget';
 const ExportGuideModal = lazy(() => import('./ExportGuideModal'));
 const FeedbackModal = lazy(() => import('./FeedbackModal'));
 const PremiumModal = lazy(() => import('./PremiumModal'));
-import { Sun, Moon, Coffee, Crown } from 'lucide-react';
+import { Sun, Moon, Coffee, Crown, Scale } from 'lucide-react';
 import { translations } from './translations';
 import {
   auth,
@@ -3466,6 +3466,21 @@ export default function App() {
             }} style={{ justifyContent: 'flex-start', padding: '12px 16px', background: 'var(--bg-card)', borderRadius: 10 }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#38bdf8' }}><path d="M2 4v16"></path><path d="M2 8h18a2 2 0 0 1 2 2v10"></path><path d="M2 17h20"></path><path d="M6 8v9"></path></svg>
               {lang === 'id' ? 'Catat Tidur / Nap' : 'Log Sleep / Nap'}
+            </button>
+            <button className="btn btn-secondary" onClick={() => {
+              const currentWeight = data.profile?.weight || 70;
+              const w = window.prompt(lang === 'id' ? 'Masukkan berat badan hari ini (kg):' : 'Enter weight today (kg):', currentWeight);
+              if (w) {
+                const parsed = parseFloat(w);
+                if (!isNaN(parsed) && parsed > 20 && parsed < 300) {
+                  handleLogWeight(parsed);
+                } else {
+                  alert(lang === 'id' ? 'Berat badan tidak valid' : 'Invalid weight');
+                }
+              }
+            }} style={{ justifyContent: 'flex-start', padding: '12px 16px', background: 'var(--bg-card)', borderRadius: 10 }}>
+              <Scale size={18} style={{ color: '#10b981' }} />
+              {lang === 'id' ? 'Catat Berat Badan' : 'Log Body Weight'}
             </button>
           </div>
 
