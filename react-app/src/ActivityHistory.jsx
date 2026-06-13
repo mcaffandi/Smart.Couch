@@ -61,7 +61,7 @@ export default function RunHistory({ activities, profileWeight = 70, lang = 'id'
 
     return (
       <div className="route-map-container" style={{
-        width: '60px', height: '40px', flexShrink: 0
+        width: '45px', height: '30px', flexShrink: 0
       }}>
         <svg width="100%" height="100%" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet">
           <polyline points={pts} fill="none" stroke="#818cf8" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
@@ -199,12 +199,12 @@ export default function RunHistory({ activities, profileWeight = 70, lang = 'id'
                     <RouteMap route={act.route} />
                   </div>
                 ) : (
-                  <div style={{ marginRight: 8, padding: 8, borderRadius: 12, background: 'var(--bg-base)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
-                    {act.manualType === 'strength' ? <Dumbbell size={24} /> :
-                     act.manualType === 'cycling' ? <Bike size={24} /> :
-                     act.manualType === 'swimming' ? <Waves size={24} /> :
-                     act.manualType === 'walking' ? <Footprints size={24} /> :
-                     <Activity size={24} />}
+                  <div style={{ marginRight: 8, padding: 6, borderRadius: 10, background: 'var(--bg-base)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
+                    {act.manualType === 'strength' ? <Dumbbell size={18} /> :
+                     act.manualType === 'cycling' ? <Bike size={18} /> :
+                     act.manualType === 'swimming' ? <Waves size={18} /> :
+                     act.manualType === 'walking' ? <Footprints size={18} /> :
+                     <Activity size={18} />}
                   </div>
                 )}
 
