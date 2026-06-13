@@ -968,8 +968,7 @@ export default function App() {
 
   // Adjust readiness score based on sleep score and running fatigue/rest
   const trainingReadiness = useMemo(() => {
-    if (latestSleepScore === null) return null;
-    let score = latestSleepScore;
+    let score = latestSleepScore !== null ? latestSleepScore : 100;
     
     if (recoveryRemainingHours <= 0) {
       if (latestSleepScore >= 50) {
@@ -4056,7 +4055,7 @@ export default function App() {
             {tab === 'dashboard' && (
               <div className="animate-fade-in">
                 
-                <div className={`top-widgets-grid ${!latestSleepDate ? 'single-widget' : ''}`}>
+                <div className="top-widgets-grid">
                   <div style={{ height: '100%' }}>
                     <GoalProgressWidget 
                       data={data} 
@@ -4066,9 +4065,8 @@ export default function App() {
                     />
                   </div>
 
-                  {latestSleepDate && (
-                    <div className="readiness-card animate-fade-in" style={{ height: '100%', marginBottom: 0 }}>
-                      <div className="readiness-dial-wrapper">
+                  <div className="readiness-card animate-fade-in" style={{ height: '100%', marginBottom: 0 }}>
+                    <div className="readiness-dial-wrapper">
                         <div className="readiness-dial" style={{ position: 'relative', border: 'none', background: 'transparent', boxShadow: 'none' }}>
                           <svg width="68" height="68" viewBox="0 0 68 68" style={{ transform: 'rotate(-90deg)', position: 'absolute', top: 0, left: 0 }}>
                             <circle cx="34" cy="34" r="30" fill="none" stroke={rBgColor} strokeWidth="4" />
@@ -4119,9 +4117,8 @@ export default function App() {
                           {readinessDesc.restPart}
                           {readinessDesc.actionPart}
                         </p>
-                      </div>
                     </div>
-                  )}
+                  </div>
                 </div>
                 {/* Metrics */}
                 <div className="metrics-grid">
@@ -4420,9 +4417,8 @@ export default function App() {
                   </div>
                 ) : (
                   <>
-                    {latestSleepDate && (
-                      <div className="readiness-card animate-fade-in">
-                        <div className="readiness-dial-wrapper">
+                    <div className="readiness-card animate-fade-in">
+                      <div className="readiness-dial-wrapper">
                           <div className="readiness-dial" style={{ 
                             background: `conic-gradient(${rColor} ${trainingReadinessScore}%, ${rBgColor} ${trainingReadinessScore}%)`
                           }}>
@@ -4467,9 +4463,7 @@ export default function App() {
                             {readinessDesc.restPart}
                             {readinessDesc.actionPart}
                           </p>
-                        </div>
                       </div>
-                    )}
 
                     <div className="sleep-history-grid">
                       {Object.entries(sleepRecs).sort(([a], [b]) => b.localeCompare(a)).map(([key, rec]) => {
