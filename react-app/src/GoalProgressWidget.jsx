@@ -5,6 +5,7 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, 
 
 export default function GoalProgressWidget({ data, goal, lang = 'id', onLogWeight, onLogRaceDate }) {
   const [showModal, setShowModal] = useState(false);
+  const [calorieTimeframe, setCalorieTimeframe] = useState('today');
 
   const runActs = data.running_activities || [];
   const weightRecs = data.weight_records || [];
@@ -18,11 +19,24 @@ export default function GoalProgressWidget({ data, goal, lang = 'id', onLogWeigh
   const now = Date.now();
   
   // 1. Weightloss
-  const { weightProgress, weightTargetKcal, weightBurnedKcal, todayBurnedKcal, weightChartData, startWeight, currentWeight, weightDiff, targetWeight, weightLossETA, programStyle } = useMemo(() => {
+  const { weightProgress, weightTargetKcal, weightBurnedKcal, todayBurnedKcal, weekBurnedKcal, monthBurnedKcal, weightChartData, startWeight, currentWeight, weightDiff, targetWeight, weightLossETA, programStyle } = useMemo(() => {
     let burned = 0;
     let todayBurned = 0;
+    let weekBurned = 0;
+    let monthBurned = 0;
+    
     const startOfToday = new Date();
     startOfToday.setHours(0,0,0,0);
+    
+    const startOfWeek = new Date();
+    const day = startOfWeek.getDay();
+    const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
+    startOfWeek.setDate(diff);
+    startOfWeek.setHours(0,0,0,0);
+    
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0,0,0,0);
 
     runActs.forEach(a => {
       let actKcal = 0;
@@ -34,8 +48,11 @@ export default function GoalProgressWidget({ data, goal, lang = 'id', onLogWeigh
         actKcal = (a.duration / 60000) * 8; // approx 8 kcal/min for gym/walking
       }
       burned += actKcal;
-      if (a.startTimeLocal && new Date(a.startTimeLocal) >= startOfToday) {
-        todayBurned += actKcal;
+      if (a.startTimeLocal) {
+        const actDate = new Date(a.startTimeLocal);
+        if (actDate >= startOfToday) todayBurned += actKcal;
+        if (actDate >= startOfWeek) weekBurned += actKcal;
+        if (actDate >= startOfMonth) monthBurned += actKcal;
       }
     });
     const targetKcal = 38500; // approx 5kg (fallback)
@@ -88,7 +105,10 @@ export default function GoalProgressWidget({ data, goal, lang = 'id', onLogWeigh
 
     return { 
       weightProgress: pct, weightTargetKcal: targetKcal, weightBurnedKcal: Math.round(burned), weightChartData: chartData,
-      startWeight: startW, currentWeight: parseFloat(currentW.toFixed(1)), weightDiff: parseFloat(diff.toFixed(1)), targetWeight: targetWt, weightLossETA: etaWeeks, programStyle: pStyle
+      startWeight: startW, currentWeight: parseFloat(currentW.toFixed(1)), weightDiff: parseFloat(diff.toFixed(1)), targetWeight: targetWt, weightLossETA: etaWeeks, programStyle: pStyle,
+      todayBurnedKcal: Math.round(todayBurned),
+      weekBurnedKcal: Math.round(weekBurned),
+      monthBurnedKcal: Math.round(monthBurned)
     };
   }, [runActs, weightRecs, profileWeight, lang, data.profile?.targetWeight, data.profile?.programStyle]);
 
@@ -407,11 +427,55 @@ export default function GoalProgressWidget({ data, goal, lang = 'id', onLogWeigh
                   
                   <h3 style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 16 }}>Aktivitas Pendukung</h3>
                   <div style={{ background: 'var(--bg-card)', padding: 16, borderRadius: 16, border: '1px solid var(--border)' }}>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4 }}>Kalori Terbakar Hari Ini</div>
-                      <div style={{ fontSize: 24, fontWeight: 800, color: '#f59e0b' }}>{todayBurnedKcal.toLocaleString()} <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>kkal</span></div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)' }}>Kalori Terbakar</div>
+                        <div style={{ display: 'flex', gap: 4, background: 'var(--bg-base)', padding: 2, borderRadius: 8 }}>
+                          {['today', 'week', 'month', 'all'].map(tf => (
+                            <button
+                              key={tf}
+                              onClick={() => setCalorieTimeframe(tf)}
+                              style={{
+                                background: calorieTimeframe === tf ? 'var(--bg-surface)' : 'transparent',
+                                color: calorieTimeframe === tf ? 'var(--text-primary)' : 'var(--text-muted)',
+                                border: 'none',
+                                borderRadius: 6,
+                                padding: '4px 8px',
+                                fontSize: 10,
+                                fontWeight: 700,
+                                cursor: 'pointer',
+                                transition: 'all 0.2s',
+                                boxShadow: calorieTimeframe === tf ? '0 2px 4px rgba(0,0,0,0.05)' : 'none'
+                              }}
+                            >
+                              {tf === 'today' ? (lang === 'id' ? 'Hari Ini' : 'Today') :
+                               tf === 'week' ? (lang === 'id' ? 'Minggu' : 'Week') :
+                               tf === 'month' ? (lang === 'id' ? 'Bulan' : 'Month') :
+                               (lang === 'id' ? 'Semua' : 'All')}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      <div style={{ fontSize: 24, fontWeight: 800, color: '#f59e0b' }}>
+                        {(
+                          calorieTimeframe === 'today' ? todayBurnedKcal :
+                          calorieTimeframe === 'week' ? weekBurnedKcal :
+                          calorieTimeframe === 'month' ? monthBurnedKcal :
+                          weightBurnedKcal
+                        ).toLocaleString()} <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>kkal</span>
+                      </div>
                       <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 8, display: 'flex', alignItems: 'center', gap: 4 }}>
                         <Flame size={14} color="#f59e0b" />
-                        ~{(todayBurnedKcal/7700).toFixed(2)} kg lemak luntur hari ini
+                        ~{( (
+                          calorieTimeframe === 'today' ? todayBurnedKcal :
+                          calorieTimeframe === 'week' ? weekBurnedKcal :
+                          calorieTimeframe === 'month' ? monthBurnedKcal :
+                          weightBurnedKcal
+                        ) / 7700 ).toFixed(2)} kg lemak luntur 
+                        {calorieTimeframe === 'today' ? ' hari ini' :
+                         calorieTimeframe === 'week' ? ' minggu ini' :
+                         calorieTimeframe === 'month' ? ' bulan ini' :
+                         ' sejauh ini'}
                       </div>
                   </div>
                 </>
