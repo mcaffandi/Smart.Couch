@@ -30,8 +30,8 @@ export default function GoalProgressWidget({ data, goal, lang = 'id', onLogWeigh
     
     const startOfWeek = new Date();
     const day = startOfWeek.getDay();
-    const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
-    startOfWeek.setDate(diff);
+    const dateDiff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
+    startOfWeek.setDate(dateDiff);
     startOfWeek.setHours(0,0,0,0);
     
     const startOfMonth = new Date();
