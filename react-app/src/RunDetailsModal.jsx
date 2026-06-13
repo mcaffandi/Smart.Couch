@@ -93,6 +93,23 @@ export default function RunDetailsModal({ act, onClose, lang = 'id', stravaAcces
     
   const pace = formatPace(overallSecPerKm / 60);
 
+  let isInterval = false;
+  if (act.name && act.name.toLowerCase().includes('interval')) {
+    isInterval = true;
+  } else if (laps.length >= 3) {
+    const paces = laps.map(lap => lap.distance ? lap.moving_time / (lap.distance / 1000) : null).filter(p => p !== null);
+    if (paces.length >= 2) {
+      const minPace = Math.min(...paces);
+      const maxPace = Math.max(...paces);
+      const badge = getBadge(act.avgHr, act.maxHr);
+      const isIntense = badge && (badge.label.toLowerCase().includes('ngepush') || badge.label.toLowerCase().includes('fire') || badge.label.toLowerCase().includes('overreaching'));
+      
+      if (isIntense && (maxPace - minPace > 180 || maxPace > 600)) {
+        isInterval = true;
+      }
+    }
+  }
+
   const formatSecs = (total) => {
     const min = Math.floor(total / 60);
     const sec = Math.round(total % 60);
@@ -224,42 +241,17 @@ export default function RunDetailsModal({ act, onClose, lang = 'id', stravaAcces
                       </thead>
                       <tbody>
                         {(() => {
-                          let isInterval = false;
-                          if (act.name && act.name.toLowerCase().includes('interval')) {
-                            isInterval = true;
-                          } else if (laps.length >= 3) {
-                            const paces = laps.map(lap => lap.distance ? lap.moving_time / (lap.distance / 1000) : null).filter(p => p !== null);
-                            if (paces.length >= 2) {
-                              const minPace = Math.min(...paces);
-                              const maxPace = Math.max(...paces);
-                              const badge = getBadge(act.avgHr, act.maxHr);
-                              const isIntense = badge && (badge.label.toLowerCase().includes('ngepush') || badge.label.toLowerCase().includes('fire') || badge.label.toLowerCase().includes('overreaching'));
-                              
-                              if (isIntense && (maxPace - minPace > 180 || maxPace > 600)) {
-                                isInterval = true;
-                              }
-                            }
-                          }
-
-                          const fastLaps = laps.filter(lap => {
-                            if (!overallSecPerKm) return true;
-                            const p = lap.distance ? lap.moving_time / (lap.distance / 1000) : Infinity;
-                            return p <= overallSecPerKm;
-                          });
-                          
-                          const displayedLaps = isInterval ? fastLaps : laps;
-                          
-                          return displayedLaps.map((lap, idx) => {
+                          return laps.map((lap, idx) => {
                             const distKm = lap.distance ? (lap.distance / 1000).toFixed(2) : '-';
                             const timeStr = lap.moving_time ? formatSecs(lap.moving_time) : '-';
                             const p = lap.moving_time && lap.distance ? (lap.moving_time / (lap.distance / 1000)) : null;
                             const paceStr = formatPace(p ? p / 60 : null);
                             
-                            // Highlight if it's a fast lap
-                            const isFast = overallSecPerKm && p && p <= overallSecPerKm;
+                            // Highlight if it's a fast lap inside an interval session
+                            const isFast = isInterval && overallSecPerKm && p && p <= overallSecPerKm;
                             
                             return (
-                              <tr key={lap.id} style={{ borderBottom: idx === displayedLaps.length - 1 ? 'none' : '1px solid var(--border)', background: (isInterval ? 'transparent' : (isFast ? 'rgba(167, 139, 250, 0.03)' : 'transparent')) }}>
+                              <tr key={lap.id} style={{ borderBottom: idx === laps.length - 1 ? 'none' : '1px solid var(--border)', background: isFast ? 'rgba(167, 139, 250, 0.08)' : 'transparent' }}>
                                 <td style={{ padding: '12px 16px', color: isFast ? 'var(--accent-purple)' : 'var(--text-primary)', fontWeight: 600 }}>{lap.lap_index || idx + 1}</td>
                                 <td style={{ padding: '12px 16px', textAlign: 'right', color: 'var(--text-secondary)' }}>{distKm}</td>
                                 <td style={{ padding: '12px 16px', textAlign: 'right', color: 'var(--text-secondary)' }}>{timeStr}</td>
@@ -275,7 +267,7 @@ export default function RunDetailsModal({ act, onClose, lang = 'id', stravaAcces
                     </table>
                     
                     {/* Fast Laps Summary Footer */}
-                    {laps.length > 0 && overallSecPerKm && (
+                    {isInterval && laps.length > 0 && overallSecPerKm && (
                       <div style={{ padding: '12px 16px', background: 'rgba(167, 139, 250, 0.08)', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13 }}>
                         <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>
                           {lang === 'id' ? 'Rata-rata Pace Lari Cepat (Active):' : 'Avg Fast Pace (Active):'}
