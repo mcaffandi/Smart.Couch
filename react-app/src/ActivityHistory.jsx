@@ -211,7 +211,7 @@ export default function RunHistory({ activities, profileWeight = 70, lang = 'id'
                      act.manualType === 'swimming' ? <Waves size={24} /> :
                      act.manualType === 'walking' ? <Footprints size={24} /> :
                      act.manualType === 'yoga' ? <Activity size={24} /> :
-                     <svg xmlns="http://www.w3.org/2000/svg" height="26px" viewBox="0 -960 960 960" width="26px" fill="currentColor"><path d="M540-100 376-264q-22-22-30.5-51T342-376l-16-92q-6-33 13.5-59.5T394-566l64 18 10 52 24-20q10-8 23-11.5t25-1.5l140 38v82l-140-36-40 32v180h80v132H540ZM352-472l-58 12q-11 2-21.5-1.5T254-472L120-606l56-56 122 122 54-12v80Zm280-48h-80l-26-118-80-24 22 136q7 42 36.5 70.5T580-316v136h-40v-142l-40-54v72l126 126 54-54-48-88ZM580-760q-33 0-56.5-23.5T500-840q0-33 23.5-56.5T580-920q33 0 56.5 23.5T660-840q0 33-23.5 56.5T580-760Z"/></svg>}
+                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M13.49 5.48c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm-3.6 13.9l1-4.4 2.1 2v6h2v-7.5l-2.1-2 .6-3c1.3 1.5 3.3 2.5 5.5 2.5v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1l-5.2 2.2v4.7h2v-3.4l1.8-.7-1.6 8.1-4.9-1-.4 2 7 1.4z"/></svg>}
                   </div>
 
                   <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start' }}>
