@@ -12,6 +12,15 @@ class ErrorBoundary extends React.Component {
 
   componentDidCatch(error, errorInfo) {
     console.error("ErrorBoundary caught:", error, errorInfo);
+    // Auto-reload for chunk loading errors (caused by new deployments invalidating old cached HTML)
+    if (
+      error && 
+      error.message && 
+      (error.message.includes('Failed to fetch dynamically imported module') || 
+       error.message.includes('Importing a module script failed'))
+    ) {
+      window.location.reload();
+    }
   }
 
   render() {
