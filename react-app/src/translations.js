@@ -55,14 +55,14 @@ export const translations = {
     logout: "Keluar",
 
     // Goals & Program Styles
-    maintenance: "Maintenance (Menjaga Kebugaran)",
+    maintenance: "Maintenance",
     improve5k: "Meningkatkan Waktu 5K",
     improve10k: "Meningkatkan Waktu 10K",
     improveHalf: "Meningkatkan Waktu Half Marathon",
     improveFull: "Meningkatkan Waktu Full Marathon",
-    ngepush: "Ngepush - Intensif",
-    sedang: "Sedang - Bertahap",
-    santai: "Santai - Konsisten",
+    ngepush: "Ngepush",
+    sedang: "Sedang",
+    santai: "Santai",
 
     // Days
     daysShort: ["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"],
@@ -192,14 +192,14 @@ export const translations = {
     logout: "Log Out",
 
     // Goals & Program Styles
-    maintenance: "Maintenance (Keep Fit)",
+    maintenance: "Maintenance",
     improve5k: "Improve 5K Time",
     improve10k: "Improve 10K Time",
     improveHalf: "Improve Half Marathon Time",
     improveFull: "Improve Full Marathon Time",
-    ngepush: "Intensive - High Load",
-    sedang: "Moderate - Gradual",
-    santai: "Light - Consistent",
+    ngepush: "Intensive",
+    sedang: "Moderate",
+    santai: "Light",
 
     // Days
     daysShort: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],

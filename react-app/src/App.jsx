@@ -3087,7 +3087,7 @@ export default function App() {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                     <div>
                       <label style={lbl}>{t.mainGoal}</label>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                         {[
                           { val: 'maintenance', label: t.maintenance },
                           { val: 'weightloss', label: lang === 'id' ? 'Turun Berat' : 'Weight Loss' },
@@ -3098,7 +3098,7 @@ export default function App() {
                           { val: 'health', label: lang === 'id' ? 'Kesehatan' : 'Health' }
                         ].map(g => (
                           <button key={g.val} type="button" onClick={() => setEditDraft(p => ({ ...p, goal: g.val }))}
-                            style={{ ...inp, cursor: 'pointer', textAlign: 'center', padding: '10px 6px', fontSize: 12, border: (d.goal ?? 'maintenance') === g.val ? '1.5px solid var(--accent-purple)' : '1px solid var(--border)', background: (d.goal ?? 'maintenance') === g.val ? 'rgba(167, 139, 250, 0.1)' : 'var(--bg-card)', color: (d.goal ?? 'maintenance') === g.val ? 'var(--accent-purple)' : 'var(--text-secondary)' }}>
+                            style={{ ...inp, flex: '1 1 auto', minWidth: '80px', cursor: 'pointer', textAlign: 'center', padding: '10px 12px', fontSize: 13, fontWeight: 600, border: (d.goal ?? 'maintenance') === g.val ? '1.5px solid var(--accent-purple)' : '1px solid var(--border)', background: (d.goal ?? 'maintenance') === g.val ? 'rgba(167, 139, 250, 0.1)' : 'var(--bg-card)', color: (d.goal ?? 'maintenance') === g.val ? 'var(--accent-purple)' : 'var(--text-secondary)' }}>
                             {g.label}
                           </button>
                         ))}
@@ -3107,14 +3107,14 @@ export default function App() {
 
                     <div>
                       <label style={lbl}>{t.programStyle}</label>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+                      <div style={{ display: 'flex', gap: 8 }}>
                         {[
                           { val: 'ngepush', label: t.ngepush },
                           { val: 'sedang', label: t.sedang },
                           { val: 'santai', label: t.santai }
                         ].map(s => (
                           <button key={s.val} type="button" onClick={() => setEditDraft(p => ({ ...p, programStyle: s.val }))}
-                            style={{ ...inp, cursor: 'pointer', textAlign: 'center', padding: '10px 4px', fontSize: 12, border: (d.programStyle ?? 'sedang') === s.val ? '1.5px solid #f97316' : '1px solid var(--border)', background: (d.programStyle ?? 'sedang') === s.val ? 'rgba(249, 115, 22, 0.1)' : 'var(--bg-card)', color: (d.programStyle ?? 'sedang') === s.val ? '#f97316' : 'var(--text-secondary)' }}>
+                            style={{ ...inp, flex: 1, cursor: 'pointer', textAlign: 'center', padding: '10px 4px', fontSize: 13, fontWeight: 600, border: (d.programStyle ?? 'sedang') === s.val ? '1.5px solid #f97316' : '1px solid var(--border)', background: (d.programStyle ?? 'sedang') === s.val ? 'rgba(249, 115, 22, 0.1)' : 'var(--bg-card)', color: (d.programStyle ?? 'sedang') === s.val ? '#f97316' : 'var(--text-secondary)' }}>
                             {s.label}
                           </button>
                         ))}
