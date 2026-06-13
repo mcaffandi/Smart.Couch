@@ -20,6 +20,7 @@ export default function RunDetailsModal({ act, onClose, lang = 'id', stravaAcces
   const [laps, setLaps] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [showFastLaps, setShowFastLaps] = useState(false);
 
   useEffect(() => {
     async function fetchLaps() {
@@ -177,10 +178,33 @@ export default function RunDetailsModal({ act, onClose, lang = 'id', stravaAcces
 
             {act.stravaId ? (
               <div style={{ marginTop: 8 }}>
-                <h3 style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <Zap size={16} color="#a78bfa" />
-                  Laps / Splits
-                </h3>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                  <h3 style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', margin: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <Zap size={16} color="#a78bfa" />
+                    Laps / Splits
+                  </h3>
+                  
+                  {laps.length > 0 && overallSecPerKm && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <button 
+                        onClick={() => setShowFastLaps(!showFastLaps)}
+                        style={{ 
+                          background: showFastLaps ? 'var(--accent-purple)' : 'transparent',
+                          color: showFastLaps ? '#fff' : 'var(--text-secondary)',
+                          border: `1px solid ${showFastLaps ? 'var(--accent-purple)' : 'var(--border)'}`,
+                          padding: '4px 10px',
+                          borderRadius: 12,
+                          fontSize: 11,
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          transition: 'all 0.2s'
+                        }}
+                      >
+                        {lang === 'id' ? '🔥 Filter Lari Cepat' : '🔥 Fast Laps Only'}
+                      </button>
+                    </div>
+                  )}
+                </div>
 
                 {loading ? (
                   <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-muted)', fontSize: 13 }}>
@@ -204,26 +228,62 @@ export default function RunDetailsModal({ act, onClose, lang = 'id', stravaAcces
                         </tr>
                       </thead>
                       <tbody>
-                        {laps.map((lap, idx) => {
-                          const distKm = lap.distance ? (lap.distance / 1000).toFixed(2) : '-';
-                          const timeStr = lap.moving_time ? formatSecs(lap.moving_time) : '-';
-                          const p = lap.moving_time && lap.distance ? (lap.moving_time / (lap.distance / 1000)) : null;
-                          const paceStr = formatPace(p ? p / 60 : null);
+                        {(() => {
+                          const fastLaps = laps.filter(lap => {
+                            if (!overallSecPerKm) return true;
+                            const p = lap.distance ? lap.moving_time / (lap.distance / 1000) : Infinity;
+                            return p <= overallSecPerKm;
+                          });
                           
-                          return (
-                            <tr key={lap.id} style={{ borderBottom: idx === laps.length - 1 ? 'none' : '1px solid var(--border)' }}>
-                              <td style={{ padding: '12px 16px', color: 'var(--text-primary)', fontWeight: 600 }}>{lap.lap_index || idx + 1}</td>
-                              <td style={{ padding: '12px 16px', textAlign: 'right', color: 'var(--text-secondary)' }}>{distKm}</td>
-                              <td style={{ padding: '12px 16px', textAlign: 'right', color: 'var(--text-secondary)' }}>{timeStr}</td>
-                              <td style={{ padding: '12px 16px', textAlign: 'right', color: 'var(--text-secondary)' }}>{paceStr}</td>
-                              <td style={{ padding: '12px 16px', textAlign: 'right', color: 'var(--text-secondary)' }}>
-                                {lap.average_heartrate ? Math.round(lap.average_heartrate) : '-'}
-                              </td>
-                            </tr>
-                          );
-                        })}
+                          const displayedLaps = showFastLaps ? fastLaps : laps;
+                          
+                          return displayedLaps.map((lap, idx) => {
+                            const distKm = lap.distance ? (lap.distance / 1000).toFixed(2) : '-';
+                            const timeStr = lap.moving_time ? formatSecs(lap.moving_time) : '-';
+                            const p = lap.moving_time && lap.distance ? (lap.moving_time / (lap.distance / 1000)) : null;
+                            const paceStr = formatPace(p ? p / 60 : null);
+                            
+                            // Highlight if it's a fast lap
+                            const isFast = overallSecPerKm && p && p <= overallSecPerKm;
+                            
+                            return (
+                              <tr key={lap.id} style={{ borderBottom: idx === displayedLaps.length - 1 ? 'none' : '1px solid var(--border)', background: showFastLaps ? 'transparent' : (isFast ? 'rgba(167, 139, 250, 0.03)' : 'transparent') }}>
+                                <td style={{ padding: '12px 16px', color: isFast ? 'var(--accent-purple)' : 'var(--text-primary)', fontWeight: 600 }}>{lap.lap_index || idx + 1}</td>
+                                <td style={{ padding: '12px 16px', textAlign: 'right', color: 'var(--text-secondary)' }}>{distKm}</td>
+                                <td style={{ padding: '12px 16px', textAlign: 'right', color: 'var(--text-secondary)' }}>{timeStr}</td>
+                                <td style={{ padding: '12px 16px', textAlign: 'right', color: 'var(--text-secondary)', fontWeight: isFast ? 700 : 400 }}>{paceStr}</td>
+                                <td style={{ padding: '12px 16px', textAlign: 'right', color: 'var(--text-secondary)' }}>
+                                  {lap.average_heartrate ? Math.round(lap.average_heartrate) : '-'}
+                                </td>
+                              </tr>
+                            );
+                          });
+                        })()}
                       </tbody>
                     </table>
+                    
+                    {/* Fast Laps Summary Footer */}
+                    {laps.length > 0 && overallSecPerKm && (
+                      <div style={{ padding: '12px 16px', background: 'rgba(167, 139, 250, 0.08)', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13 }}>
+                        <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>
+                          {lang === 'id' ? 'Rata-rata Pace Lari Cepat (Active):' : 'Avg Fast Pace (Active):'}
+                        </span>
+                        <span style={{ color: 'var(--accent-purple)', fontWeight: 800, fontSize: 14 }}>
+                          {(() => {
+                            const fastLaps = laps.filter(lap => {
+                              const p = lap.distance ? lap.moving_time / (lap.distance / 1000) : Infinity;
+                              return p <= overallSecPerKm;
+                            });
+                            if (fastLaps.length === 0) return '-';
+                            const totalFastTime = fastLaps.reduce((acc, lap) => acc + lap.moving_time, 0);
+                            const totalFastDist = fastLaps.reduce((acc, lap) => acc + lap.distance, 0);
+                            if (totalFastDist === 0) return '-';
+                            const trueFastPace = totalFastTime / (totalFastDist / 1000);
+                            return formatPace(trueFastPace / 60);
+                          })()}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div style={{ textAlign: 'center', padding: '30px 0', color: 'var(--text-muted)', fontSize: 13, background: 'var(--bg-card)', borderRadius: 12, border: '1px dashed var(--border)' }}>
