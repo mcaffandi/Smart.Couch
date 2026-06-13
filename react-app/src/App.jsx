@@ -725,7 +725,16 @@ export default function App() {
         
         let newRuns = [];
         activities.forEach(act => {
-          if (act.type === 'Run') {
+          let isRun = act.type === 'Run';
+          let manualType = null;
+          
+          if (act.type === 'WeightTraining' || act.type === 'Workout' || act.type === 'Crossfit') manualType = 'strength';
+          else if (act.type === 'Walk' || act.type === 'Hike') manualType = 'walking';
+          else if (act.type === 'Yoga') manualType = 'yoga';
+          else if (act.type === 'Ride' || act.type === 'VirtualRide' || act.type === 'EBikeRide') manualType = 'cycling';
+          else if (act.type === 'Swim') manualType = 'swimming';
+
+          if (isRun || manualType) {
             const startDateLocal = new Date(act.start_date).getTime();
             newRuns.push({
               stravaId: act.id,
@@ -735,13 +744,15 @@ export default function App() {
               duration: act.moving_time * 1000, // seconds to ms
               avgHr: act.average_heartrate ? Math.round(act.average_heartrate) : null,
               maxHr: act.max_heartrate ? Math.round(act.max_heartrate) : null,
-              route: act.map && act.map.summary_polyline ? decodePolyline(act.map.summary_polyline) : null
+              route: (isRun && act.map && act.map.summary_polyline) ? decodePolyline(act.map.summary_polyline) : null,
+              isManual: !isRun,
+              manualType: manualType
             });
           }
         });
 
         if (newRuns.length === 0) {
-          addToast(lang === 'id' ? 'Tidak ada lari baru di Strava' : 'No new runs found in Strava', 'info');
+          addToast(lang === 'id' ? 'Tidak ada aktivitas baru di Strava' : 'No new activities found in Strava', 'info');
           setData(prev => {
             const updated = { 
               ...prev, 
@@ -1946,7 +1957,16 @@ export default function App() {
 
       let newRuns = [];
       activities.forEach(act => {
-        if (act.type === 'Run') {
+        let isRun = act.type === 'Run';
+        let manualType = null;
+        
+        if (act.type === 'WeightTraining' || act.type === 'Workout' || act.type === 'Crossfit') manualType = 'strength';
+        else if (act.type === 'Walk' || act.type === 'Hike') manualType = 'walking';
+        else if (act.type === 'Yoga') manualType = 'yoga';
+        else if (act.type === 'Ride' || act.type === 'VirtualRide' || act.type === 'EBikeRide') manualType = 'cycling';
+        else if (act.type === 'Swim') manualType = 'swimming';
+
+        if (isRun || manualType) {
           const startDateLocal = new Date(act.start_date).getTime();
           newRuns.push({
             stravaId: act.id,
@@ -1956,13 +1976,15 @@ export default function App() {
             duration: act.moving_time * 1000,
             avgHr: act.average_heartrate ? Math.round(act.average_heartrate) : null,
             maxHr: act.max_heartrate ? Math.round(act.max_heartrate) : null,
-            route: act.map && act.map.summary_polyline ? decodePolyline(act.map.summary_polyline) : null
+            route: (isRun && act.map && act.map.summary_polyline) ? decodePolyline(act.map.summary_polyline) : null,
+            isManual: !isRun,
+            manualType: manualType
           });
         }
       });
 
       if (newRuns.length === 0) {
-        addToast(lang === 'id' ? 'Tidak ada lari baru di Strava' : 'No new runs found in Strava', 'info');
+        addToast(lang === 'id' ? 'Tidak ada aktivitas baru di Strava' : 'No new activities found in Strava', 'info');
         if (Object.keys(newTokens).length > 0) {
           setData(prev => {
             const updated = { ...prev, profile: { ...(prev.profile || {}), ...newTokens } };

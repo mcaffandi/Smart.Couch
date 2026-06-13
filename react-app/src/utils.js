@@ -472,7 +472,7 @@ export const buildAdaptiveCalendar = (weeklyPlan, activities = [], isPaused = fa
       }
       if (dateStr) {
         if (a.isManual) {
-          activityMap[dateStr] = 'manual';
+          activityMap[dateStr] = a.manualType || 'manual';
         } else {
           activityMap[dateStr] = 'strava';
         }
@@ -504,7 +504,7 @@ export const buildAdaptiveCalendar = (weeklyPlan, activities = [], isPaused = fa
     const isPast = current < today;
     const isToday = current.getTime() === today.getTime();
     const hasRun = !!activityMap[dateStr];
-    const isManualRun = activityMap[dateStr] === 'manual';
+    const isManualRun = activityMap[dateStr] === 'manual' || activityMap[dateStr] === 'strength' || activityMap[dateStr] === 'yoga' || activityMap[dateStr] === 'walking' || activityMap[dateStr] === 'cycling' || activityMap[dateStr] === 'swimming';
 
     if (isPaused && !isPast) {
       // If paused, today and future days are marked as Paused/Rest

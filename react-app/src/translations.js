@@ -70,9 +70,9 @@ export const translations = {
     // Empty State
     welcome: "Selamat Datang",
     emptyDbDesc: "Database lokal masih kosong. Mulai dengan menambahkan data latihan atau tidur lo.",
-    emptyStep1: "Upload data lari (.zip / .gpx) untuk import riwayat lari dan rute lo secara langsung.",
+    emptyStep1: "Upload data aktivitas (.zip / .gpx) untuk import riwayat latihan dan rute lo secara langsung.",
     emptyStep1Click: " (Klik di sini)",
-    emptyStep2: "Impor via Excel / CSV untuk menambahkan riwayat lari dan data tidur sekaligus.",
+    emptyStep2: "Impor via Excel / CSV untuk menambahkan riwayat aktivitas dan data tidur sekaligus.",
     emptyStep2Download: "Unduh template di sini",
     emptyStep2OrClick: " atau klik kotak ini untuk mengunggah file.",
     emptyStep3: "Atau input manual sesi lari & tidur atau set profil (umur, goal, target pace) melalui sidebar kiri.",
@@ -81,7 +81,7 @@ export const translations = {
     tabDashboard: "Dashboard",
     tabTrainingPlan: "Rencana Latihan",
     tabRacePrediction: "Race Prediction",
-    tabRunHistory: "Riwayat Lari",
+    tabRunHistory: "Aktivitas Harian",
     tabSleepAnalysis: "Analisis Tidur",
 
     // Dashboard Tab
@@ -120,7 +120,7 @@ export const translations = {
     activityName: "Nama Aktivitas",
     avgHr: "Avg HR",
     maxHr: "Max HR",
-    noRunsYet: "Belum ada aktivitas lari yang tercatat.",
+    noRunsYet: "Belum ada aktivitas yang tercatat.",
 
     // Sleep Analysis Tab
     sleepRecordsTitle: "Catatan Kualitas Tidur",
@@ -207,9 +207,9 @@ export const translations = {
     // Empty State
     welcome: "Welcome",
     emptyDbDesc: "Local database is empty. Get started by adding your training or sleep data.",
-    emptyStep1: "Upload run data (.zip / .gpx) to import your run history and routes directly.",
+    emptyStep1: "Upload activity data (.zip / .gpx) to import your training history and routes directly.",
     emptyStep1Click: " (Click here)",
-    emptyStep2: "Import via Excel / CSV to add your run history and sleep data at once.",
+    emptyStep2: "Import via Excel / CSV to add your activity history and sleep data at once.",
     emptyStep2Download: "Download template here",
     emptyStep2OrClick: " or click this box to upload your file.",
     emptyStep3: "Or manually input run & sleep sessions or set your profile (age, goal, target pace) in the left sidebar.",
@@ -218,7 +218,7 @@ export const translations = {
     tabDashboard: "Dashboard",
     tabTrainingPlan: "Training Plan",
     tabRacePrediction: "Race Prediction",
-    tabRunHistory: "Run History",
+    tabRunHistory: "Daily Activities",
     tabSleepAnalysis: "Sleep Analysis",
 
     // Dashboard Tab
@@ -257,7 +257,7 @@ export const translations = {
     activityName: "Activity Name",
     avgHr: "Avg HR",
     maxHr: "Max HR",
-    noRunsYet: "No running activities recorded yet.",
+    noRunsYet: "No activities recorded yet.",
 
     // Sleep Analysis Tab
     sleepRecordsTitle: "Sleep Quality Records",
