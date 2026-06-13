@@ -2534,9 +2534,11 @@ export default function App() {
           </ErrorBoundary>
         </div>
         
+        {/* Fitur OneTap di-takedown sementara 
         {(!sessionUser || sessionUser.startsWith('Anonim-')) && (
           <CustomOneTap onSignIn={handleOneTapSignIn} lang={lang} />
         )}
+        */}
 
         {(!sessionUser || sessionUser.startsWith('Anonim-')) && showLoginModal && (
           <LoginScreen
@@ -2612,9 +2614,11 @@ export default function App() {
           setLang={setLang} 
           visitorCount={visitorCount} 
         />
+        {/* Fitur OneTap di-takedown sementara
         {(!sessionUser || sessionUser.startsWith('Anonim-')) && (
           <CustomOneTap onSignIn={handleOneTapSignIn} lang={lang} />
         )}
+        */}
         {showLoginModal && (
           <LoginScreen
             isModal={true}

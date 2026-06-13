@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Bot, MessageSquare, Send, X } from 'lucide-react';
+import { Bot, MessageSquare, Send, X, Image as ImageIcon } from 'lucide-react';
 import { formatPace, buildTrainingPlan } from './utils';
 
 export default function AICoachChat({ lang, goal, programStyle, targetPace, currentUser, runActs, selectedDays, latestSleepScore, recoveryRemainingHours, trainingReadinessScore, isPremium, setShowPremiumModal, vo2max, hrZones }) {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
+  const [selectedImage, setSelectedImage] = useState(null);
   const [isTyping, setIsTyping] = useState(false);
+  const fileInputRef = useRef(null);
   const endRef = useRef(null);
 
   useEffect(() => {
@@ -54,14 +56,28 @@ export default function AICoachChat({ lang, goal, programStyle, targetPace, curr
     localStorage.setItem('enduraup_ai_usage', JSON.stringify(usage));
   };
 
+  const handleImageSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setSelectedImage(event.target.result); // Base64 data URL
+    };
+    reader.readAsDataURL(file);
+    e.target.value = null; // reset input
+  };
+
   const handleSend = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() && !selectedImage) return;
     const userMsg = input.trim();
+    const currentImg = selectedImage;
     
     // Add user message to UI
-    const newMessages = [...messages, { role: 'user', content: userMsg }];
+    const newMessages = [...messages, { role: 'user', content: userMsg, image: currentImg }];
     setMessages(newMessages);
     setInput('');
+    setSelectedImage(null);
     setIsTyping(true);
 
     const msgLower = userMsg.toLowerCase();
@@ -82,10 +98,21 @@ export default function AICoachChat({ lang, goal, programStyle, targetPace, curr
       }
 
       // Prepare conversation history for LLM (Compact to max last 6 messages to save tokens/context)
-      const chatHistory = newMessages.slice(-6).map(m => ({
-        role: m.role,
-        content: m.content
-      }));
+      const chatHistory = newMessages.slice(-6).map(m => {
+        if (m.image) {
+          return {
+            role: m.role,
+            content: [
+              { type: "text", text: m.content || "Tolong analisa gambar ini" },
+              { type: "image_url", image_url: { url: m.image } }
+            ]
+          };
+        }
+        return {
+          role: m.role,
+          content: m.content
+        };
+      });
 
       // Consistency Logic inside Chat
       const planRunDays = selectedDays?.length || 3;
@@ -195,11 +222,14 @@ STRICT RULES (MUST FOLLOW):
       const headers = { 'Content-Type': 'application/json' };
       if (apiKey) headers['Authorization'] = `Bearer ${apiKey.trim()}`;
 
+      const usesImage = chatHistory.some(m => Array.isArray(m.content) && m.content.some(c => c.type === 'image_url'));
+      const selectedModel = usesImage ? "llama-3.2-11b-vision-preview" : "llama-3.1-8b-instant";
+
       const res = await fetch(endpoint, {
         method: 'POST',
         headers,
         body: JSON.stringify({
-          model: "llama-3.1-8b-instant",
+          model: selectedModel,
           messages: [{ role: "system", content: systemPrompt }, ...chatHistory],
           temperature: 0.7,
           max_tokens: 400
@@ -320,7 +350,12 @@ STRICT RULES (MUST FOLLOW):
                   fontSize: 14, lineHeight: 1.5, border: m.role === 'assistant' ? '1px solid rgba(255,255,255,0.08)' : 'none',
                   boxShadow: m.role === 'user' ? '0 8px 24px rgba(139,92,246,0.3)' : '0 4px 16px rgba(0,0,0,0.2)'
                 }}>
-                  {m.content.split(/(\*\*.*?\*\*|\*.*?\*)/g).map((part, idx) => {
+                  {m.image && (
+                    <div style={{ marginBottom: m.content ? 12 : 0, borderRadius: 12, overflow: 'hidden' }}>
+                      <img src={m.image} alt="User attachment" style={{ width: '100%', maxHeight: 200, objectFit: 'cover', display: 'block' }} />
+                    </div>
+                  )}
+                  {m.content && m.content.split(/(\*\*.*?\*\*|\*.*?\*)/g).map((part, idx) => {
                     if (part.startsWith('**') && part.endsWith('**')) return <strong key={idx} style={{fontWeight: 700, color: m.role==='user'?'#fff':'#fff'}}>{part.slice(2, -2)}</strong>;
                     if (part.startsWith('*') && part.endsWith('*')) return <em key={idx}>{part.slice(1, -1)}</em>;
                     return part;
@@ -340,18 +375,30 @@ STRICT RULES (MUST FOLLOW):
             <div ref={endRef} />
           </div>
 
-          <div style={{ padding: '16px 20px', borderTop: '1px solid rgba(255,255,255,0.08)', background: 'rgba(0,0,0,0.2)', display: 'flex', gap: 12, alignItems: 'center' }}>
-            <input 
-              value={input} onChange={e => setInput(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleSend()}
-              placeholder={lang === 'id' ? 'Ketik pesan...' : 'Type a message...'}
-              style={{ flex: 1, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', borderRadius: 24, padding: '14px 20px', fontSize: 16, outline: 'none', transition: 'all 0.3s' }}
-              onFocus={e => { e.target.style.borderColor = 'rgba(139,92,246,0.5)'; e.target.style.background = 'rgba(255,255,255,0.08)'; e.target.style.boxShadow = '0 0 0 2px rgba(139,92,246,0.2)'; }}
-              onBlur={e => { e.target.style.borderColor = 'rgba(255,255,255,0.1)'; e.target.style.background = 'rgba(255,255,255,0.05)'; e.target.style.boxShadow = 'none'; }}
-            />
-            <button onClick={handleSend} disabled={!input.trim()} style={{ width: 48, height: 48, borderRadius: 24, background: input.trim() ? 'linear-gradient(135deg, #818cf8, #c084fc)' : 'rgba(255,255,255,0.05)', border: input.trim() ? 'none' : '1px solid rgba(255,255,255,0.1)', color: input.trim() ? '#fff' : 'rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: input.trim() ? 'pointer' : 'default', transition: 'all 0.3s', boxShadow: input.trim() ? '0 4px 16px rgba(139,92,246,0.4)' : 'none' }}>
-              <Send size={20} style={{ transform: input.trim() ? 'translateX(2px)' : 'none', transition: 'transform 0.2s' }} />
-            </button>
+          <div style={{ padding: '16px 20px', borderTop: '1px solid rgba(255,255,255,0.08)', background: 'rgba(0,0,0,0.2)', display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {selectedImage && (
+              <div style={{ position: 'relative', alignSelf: 'flex-start' }}>
+                <img src={selectedImage} alt="Preview" style={{ height: 60, borderRadius: 8, border: '2px solid rgba(139,92,246,0.5)', objectFit: 'cover' }} />
+                <button onClick={() => setSelectedImage(null)} style={{ position: 'absolute', top: -6, right: -6, background: '#ef4444', color: '#fff', border: 'none', borderRadius: '50%', width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.5)' }}><X size={12} /></button>
+              </div>
+            )}
+            <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+              <input type="file" ref={fileInputRef} onChange={handleImageSelect} accept="image/*" style={{ display: 'none' }} />
+              <button onClick={() => fileInputRef.current?.click()} style={{ width: 44, height: 44, borderRadius: 22, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s', flexShrink: 0 }} onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = '#fff'; }} onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; }}>
+                <ImageIcon size={20} />
+              </button>
+              <input 
+                value={input} onChange={e => setInput(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleSend()}
+                placeholder={lang === 'id' ? 'Ketik pesan atau upload foto...' : 'Type a message or upload photo...'}
+                style={{ flex: 1, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', borderRadius: 24, padding: '12px 20px', fontSize: 15, outline: 'none', transition: 'all 0.3s' }}
+                onFocus={e => { e.target.style.borderColor = 'rgba(139,92,246,0.5)'; e.target.style.background = 'rgba(255,255,255,0.08)'; e.target.style.boxShadow = '0 0 0 2px rgba(139,92,246,0.2)'; }}
+                onBlur={e => { e.target.style.borderColor = 'rgba(255,255,255,0.1)'; e.target.style.background = 'rgba(255,255,255,0.05)'; e.target.style.boxShadow = 'none'; }}
+              />
+              <button onClick={handleSend} disabled={!input.trim() && !selectedImage} style={{ width: 44, height: 44, borderRadius: 22, background: (input.trim() || selectedImage) ? 'linear-gradient(135deg, #818cf8, #c084fc)' : 'rgba(255,255,255,0.05)', border: (input.trim() || selectedImage) ? 'none' : '1px solid rgba(255,255,255,0.1)', color: (input.trim() || selectedImage) ? '#fff' : 'rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: (input.trim() || selectedImage) ? 'pointer' : 'default', transition: 'all 0.3s', boxShadow: (input.trim() || selectedImage) ? '0 4px 16px rgba(139,92,246,0.4)' : 'none', flexShrink: 0 }}>
+                <Send size={18} style={{ transform: (input.trim() || selectedImage) ? 'translateX(2px)' : 'none', transition: 'transform 0.2s' }} />
+              </button>
+            </div>
           </div>
         </div>
       )}
