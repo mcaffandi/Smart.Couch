@@ -10,7 +10,7 @@ import {
 } from './utils';
 const TrendChart = lazy(() => import('./Charts').then(m => ({ default: m.TrendChart })));
 const HRZoneChart = lazy(() => import('./Charts').then(m => ({ default: m.HRZoneChart })));
-const RunHistory = lazy(() => import('./RunHistory'));
+const ActivityHistory = lazy(() => import('./ActivityHistory'));
 const RunDetailsModal = lazy(() => import('./RunDetailsModal'));
 const TrainingPlan = lazy(() => import('./TrainingPlan'));
 const RacePrediction = lazy(() => import('./RacePrediction'));
@@ -744,6 +744,7 @@ export default function App() {
               duration: act.moving_time * 1000, // seconds to ms
               avgHr: act.average_heartrate ? Math.round(act.average_heartrate) : null,
               maxHr: act.max_heartrate ? Math.round(act.max_heartrate) : null,
+              calories: act.calories ? Math.round(act.calories) : null,
               route: (isRun && act.map && act.map.summary_polyline) ? decodePolyline(act.map.summary_polyline) : null,
               isManual: !isRun,
               manualType: manualType
@@ -1976,6 +1977,7 @@ export default function App() {
             duration: act.moving_time * 1000,
             avgHr: act.average_heartrate ? Math.round(act.average_heartrate) : null,
             maxHr: act.max_heartrate ? Math.round(act.max_heartrate) : null,
+            calories: act.calories ? Math.round(act.calories) : null,
             route: (isRun && act.map && act.map.summary_polyline) ? decodePolyline(act.map.summary_polyline) : null,
             isManual: !isRun,
             manualType: manualType
@@ -4365,11 +4367,12 @@ export default function App() {
               <div className="animate-fade-in">
                 <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                   <h2 className="section-title" style={{ margin: 0 }}>
-                    {lang === 'id' ? `Riwayat Sesi Lari (${totalSessions})` : `Run Session History (${totalSessions})`}
+                    {lang === 'id' ? `Aktivitas Harian (${totalSessions})` : `Daily Activities (${totalSessions})`}
                   </h2>
                 </div>
-                <RunHistory 
+                <ActivityHistory 
                   activities={runActs} 
+                  profileWeight={data.profile?.weight || 70}
                   lang={lang}
                   onViewDetails={setSelectedRunForDetails}
                   onDelete={(actTime) => {

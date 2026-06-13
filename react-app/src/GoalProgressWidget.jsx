@@ -21,7 +21,9 @@ export default function GoalProgressWidget({ data, goal, lang = 'id', onLogWeigh
   const { weightProgress, weightTargetKcal, weightBurnedKcal, weightChartData, startWeight, currentWeight, weightDiff, targetWeight, weightLossETA, programStyle } = useMemo(() => {
     let burned = 0;
     runActs.forEach(a => {
-      if (a.distance > 0) {
+      if (a.calories) {
+        burned += a.calories;
+      } else if (a.distance > 0) {
         burned += (a.distance / 100000) * profileWeight * 1.036; // running kcal
       } else if (a.isManual) {
         burned += (a.duration / 60000) * 8; // approx 8 kcal/min for gym/walking
