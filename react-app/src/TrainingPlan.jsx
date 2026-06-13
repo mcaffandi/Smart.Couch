@@ -619,7 +619,7 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', overflow: 'hidden' }}>
                              {dItem.hasRun && dItem.actObjs && dItem.actObjs.length > 0 ? (
                                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                                 {dItem.actObjs.map((act, actIdx) => (
+                                 {dItem.actObjs.slice(0, 2).map((act, actIdx) => (
                                    <div key={actIdx} style={{ borderLeft: `4px solid #10b981`, paddingLeft: 10 }}>
                                      <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 6, lineHeight: 1.3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                        {act.name || (act.manualType ? act.manualType.charAt(0).toUpperCase() + act.manualType.slice(1) : (lang === 'id' ? 'Selesai' : 'Completed'))}
@@ -632,6 +632,11 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
                                      </div>
                                    </div>
                                  ))}
+                                 {dItem.actObjs.length > 2 && (
+                                   <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, paddingLeft: 14 }}>
+                                     + {dItem.actObjs.length - 2} {lang === 'id' ? 'aktivitas lain' : 'more'}
+                                   </div>
+                                 )}
                                </div>
                              ) : isRest ? (
                                <div style={{ color: 'var(--text-muted)', fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
