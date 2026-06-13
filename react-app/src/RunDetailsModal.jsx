@@ -16,14 +16,20 @@ function MapBounds({ points }) {
   return null;
 }
 
-export default function RunDetailsModal({ act, onClose, lang = 'id', stravaAccessToken, isPremium, onEdit, onDelete, onShare }) {
-  const [laps, setLaps] = useState([]);
+export default function RunDetailsModal({ act, onClose, lang = 'id', stravaAccessToken, isPremium, onEdit, onDelete, onShare, onSaveLaps }) {
+  const [laps, setLaps] = useState(act.laps || []);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showFastLaps, setShowFastLaps] = useState(false);
 
   useEffect(() => {
     async function fetchLaps() {
+      // Jika sudah punya cache laps di dalam activity, gak usah panggil API Strava lagi!
+      if (act.laps && act.laps.length > 0) {
+        setLaps(act.laps);
+        return;
+      }
+      
       if (!act.stravaId) return;
       if (!stravaAccessToken) {
         setError(lang === 'id' ? 'Strava tidak terhubung.' : 'Strava not connected.');
@@ -44,8 +50,11 @@ export default function RunDetailsModal({ act, onClose, lang = 'id', stravaAcces
         }
         
         const data = await res.json();
-        if (data.laps) {
+        if (data.laps && data.laps.length > 0) {
           setLaps(data.laps);
+          if (onSaveLaps) {
+            onSaveLaps(act.startTimeLocal, data.laps);
+          }
         }
       } catch (err) {
         console.error('Error fetching Strava activity:', err);
@@ -56,7 +65,7 @@ export default function RunDetailsModal({ act, onClose, lang = 'id', stravaAcces
     }
     
     fetchLaps();
-  }, [act.stravaId, stravaAccessToken, lang]);
+  }, [act.stravaId, stravaAccessToken, lang, act.laps, act.startTimeLocal, onSaveLaps]);
 
   const msToDate = (ms) => {
     const d = new Date(ms);

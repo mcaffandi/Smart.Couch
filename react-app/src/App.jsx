@@ -4914,6 +4914,19 @@ export default function App() {
               });
               setSelectedRunForDetails(prev => ({ ...prev, name: newName }));
             }}
+            onSaveLaps={(actTime, laps) => {
+              setData(prev => {
+                const updated = {
+                  ...prev,
+                  running_activities: prev.running_activities.map(a => 
+                    a.startTimeLocal === actTime ? { ...a, laps: laps } : a
+                  )
+                };
+                saveAndSyncData(updated);
+                return updated;
+              });
+              setSelectedRunForDetails(prev => ({ ...prev, laps: laps }));
+            }}
             onDelete={(actTime) => {
               if (window.confirm(lang === 'id' ? 'Hapus sesi lari ini?' : 'Delete this run session?')) {
                 setData(prev => {

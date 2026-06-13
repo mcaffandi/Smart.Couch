@@ -150,10 +150,34 @@ export default function RunHistory({ activities, profileWeight = 70, lang = 'id'
           const m = Math.floor(totalSecs / 60);
           const s = totalSecs % 60;
           const formattedDur = `${m}:${s.toString().padStart(2, '0')}`;
-          const pace = act.distance && act.duration
-            ? ((act.duration / 1000) / (act.distance / 100000)) / 60
+          const overallSecPerKm = act.distance && act.duration
+            ? (act.duration / 1000) / (act.distance / 100000)
             : null;
-          const paceStr = pace ? `${Math.floor(pace)}:${Math.round((pace % 1) * 60).toString().padStart(2, '0')}` : '–';
+            
+          let finalPaceStr = '–';
+          let isFastPace = false;
+          
+          if (act.laps && act.laps.length > 0 && overallSecPerKm) {
+            const fastLaps = act.laps.filter(lap => {
+              const p = lap.distance ? lap.moving_time / (lap.distance / 1000) : Infinity;
+              return p <= overallSecPerKm;
+            });
+            if (fastLaps.length > 0) {
+              const totalFastTime = fastLaps.reduce((acc, lap) => acc + lap.moving_time, 0);
+              const totalFastDist = fastLaps.reduce((acc, lap) => acc + lap.distance, 0);
+              if (totalFastDist > 0) {
+                const trueFastPace = (totalFastTime / (totalFastDist / 1000)) / 60;
+                finalPaceStr = `${Math.floor(trueFastPace)}:${Math.round((trueFastPace % 1) * 60).toString().padStart(2, '0')}`;
+                isFastPace = true;
+              }
+            }
+          }
+          
+          if (!isFastPace && overallSecPerKm) {
+            const pace = overallSecPerKm / 60;
+            finalPaceStr = `${Math.floor(pace)}:${Math.round((pace % 1) * 60).toString().padStart(2, '0')}`;
+          }
+
           const badge = getBadge(act.avgHr, act.maxHr);
 
           return (
@@ -197,10 +221,14 @@ export default function RunHistory({ activities, profileWeight = 70, lang = 'id'
                       <div className="history-stat-label">{lang === 'id' ? 'waktu' : 'time'}</div>
                     </div>
                   )}
-                  {paceStr !== '–' && act.manualType !== 'strength' && act.manualType !== 'yoga' && (
+                  {finalPaceStr !== '–' && act.manualType !== 'strength' && act.manualType !== 'yoga' && (
                     <div className="history-stat">
-                      <div className="history-stat-value">{paceStr}</div>
-                      <div className="history-stat-label">pace</div>
+                      <div className="history-stat-value" style={{ color: isFastPace ? 'var(--accent-purple)' : 'inherit', fontWeight: isFastPace ? 800 : 'inherit' }}>
+                        {isFastPace ? `🔥 ${finalPaceStr}` : finalPaceStr}
+                      </div>
+                      <div className="history-stat-label" style={{ color: isFastPace ? 'var(--accent-purple)' : 'inherit' }}>
+                        {isFastPace ? 'active pace' : 'pace'}
+                      </div>
                     </div>
                   )}
                   {kcal > 0 && (
