@@ -136,9 +136,9 @@ export default function RunHistory({ activities, profileWeight = 70, lang = 'id'
 
       <div className="history-list">
         {paged.map((act, i) => {
-          const distKm = ((act.distance ?? 0) / 100000);
-          const totalSecs = Math.round((act.duration ?? 0) / 1000);
-          const durationMins = totalSecs / 60;
+          let distKm = ((act.distance ?? 0) / 100000);
+          let totalSecs = Math.round((act.duration ?? 0) / 1000);
+          let durationMins = totalSecs / 60;
           
           let kcal = 0;
           if (act.distance > 0) {
@@ -147,15 +147,14 @@ export default function RunHistory({ activities, profileWeight = 70, lang = 'id'
             kcal = Math.round(durationMins * 8);
           }
 
-          const m = Math.floor(totalSecs / 60);
-          const s = totalSecs % 60;
-          const formattedDur = `${m}:${s.toString().padStart(2, '0')}`;
           const overallSecPerKm = act.distance && act.duration
             ? (act.duration / 1000) / (act.distance / 100000)
             : null;
             
           let finalPaceStr = '–';
           let isFastPace = false;
+          let fastDist = 0;
+          let fastTime = 0;
           
           if (act.laps && act.laps.length > 0 && overallSecPerKm) {
             const fastLaps = act.laps.filter(lap => {
@@ -163,16 +162,26 @@ export default function RunHistory({ activities, profileWeight = 70, lang = 'id'
               return p <= overallSecPerKm;
             });
             if (fastLaps.length > 0) {
-              const totalFastTime = fastLaps.reduce((acc, lap) => acc + lap.moving_time, 0);
-              const totalFastDist = fastLaps.reduce((acc, lap) => acc + lap.distance, 0);
-              if (totalFastDist > 0) {
-                const trueFastPace = (totalFastTime / (totalFastDist / 1000)) / 60;
+              fastTime = fastLaps.reduce((acc, lap) => acc + lap.moving_time, 0);
+              fastDist = fastLaps.reduce((acc, lap) => acc + lap.distance, 0);
+              if (fastDist > 0) {
+                const trueFastPace = (fastTime / (fastDist / 1000)) / 60;
                 finalPaceStr = `${Math.floor(trueFastPace)}:${Math.round((trueFastPace % 1) * 60).toString().padStart(2, '0')}`;
                 isFastPace = true;
               }
             }
           }
           
+          if (isFastPace && fastDist > 0 && fastTime > 0) {
+            distKm = fastDist / 1000;
+            totalSecs = Math.round(fastTime);
+            durationMins = totalSecs / 60;
+          }
+
+          const m = Math.floor(totalSecs / 60);
+          const s = totalSecs % 60;
+          const formattedDur = `${m}:${s.toString().padStart(2, '0')}`;
+
           if (!isFastPace && overallSecPerKm) {
             const pace = overallSecPerKm / 60;
             finalPaceStr = `${Math.floor(pace)}:${Math.round((pace % 1) * 60).toString().padStart(2, '0')}`;
@@ -202,10 +211,10 @@ export default function RunHistory({ activities, profileWeight = 70, lang = 'id'
                      act.manualType === 'swimming' ? <Waves size={24} /> :
                      act.manualType === 'walking' ? <Footprints size={24} /> :
                      act.manualType === 'yoga' ? <Activity size={24} /> :
-                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 4a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/><path d="M14 9l-2-2-1 2-3-1"/><path d="M15 16l-3-4-1 2 2 4"/><path d="M9 16H6l-1 5"/><path d="M16 21h-2l-2-5"/></svg>}
+                     <svg xmlns="http://www.w3.org/2000/svg" height="26px" viewBox="0 -960 960 960" width="26px" fill="currentColor"><path d="M540-100 376-264q-22-22-30.5-51T342-376l-16-92q-6-33 13.5-59.5T394-566l64 18 10 52 24-20q10-8 23-11.5t25-1.5l140 38v82l-140-36-40 32v180h80v132H540ZM352-472l-58 12q-11 2-21.5-1.5T254-472L120-606l56-56 122 122 54-12v80Zm280-48h-80l-26-118-80-24 22 136q7 42 36.5 70.5T580-316v136h-40v-142l-40-54v72l126 126 54-54-48-88ZM580-760q-33 0-56.5-23.5T500-840q0-33 23.5-56.5T580-920q33 0 56.5 23.5T660-840q0 33-23.5 56.5T580-760Z"/></svg>}
                   </div>
 
-                  <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start' }}>
                     {act.distance > 0 ? (
                       <>
                         <div style={{ fontSize: 26, fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.1 }}>
@@ -215,7 +224,7 @@ export default function RunHistory({ activities, profileWeight = 70, lang = 'id'
                           <span>{formattedDur}</span>
                           <span style={{ fontSize: 10 }}>•</span>
                           <span style={{ color: isFastPace ? 'var(--accent-purple)' : 'inherit', fontWeight: isFastPace ? 700 : 'inherit' }}>
-                            {isFastPace ? `🔥 ${finalPaceStr}` : finalPaceStr} /km
+                            {finalPaceStr} /km
                           </span>
                         </div>
                       </>

@@ -20,7 +20,6 @@ export default function RunDetailsModal({ act, onClose, lang = 'id', stravaAcces
   const [laps, setLaps] = useState(act.laps || []);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [showFastLaps, setShowFastLaps] = useState(false);
 
   useEffect(() => {
     async function fetchLaps() {
@@ -192,27 +191,6 @@ export default function RunDetailsModal({ act, onClose, lang = 'id', stravaAcces
                     <Zap size={16} color="#a78bfa" />
                     Laps / Splits
                   </h3>
-                  
-                  {laps.length > 0 && overallSecPerKm && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <button 
-                        onClick={() => setShowFastLaps(!showFastLaps)}
-                        style={{ 
-                          background: showFastLaps ? 'var(--accent-purple)' : 'transparent',
-                          color: showFastLaps ? '#fff' : 'var(--text-secondary)',
-                          border: `1px solid ${showFastLaps ? 'var(--accent-purple)' : 'var(--border)'}`,
-                          padding: '4px 10px',
-                          borderRadius: 12,
-                          fontSize: 11,
-                          fontWeight: 600,
-                          cursor: 'pointer',
-                          transition: 'all 0.2s'
-                        }}
-                      >
-                        {lang === 'id' ? '🔥 Filter Lari Cepat' : '🔥 Fast Laps Only'}
-                      </button>
-                    </div>
-                  )}
                 </div>
 
                 {loading ? (
@@ -244,7 +222,8 @@ export default function RunDetailsModal({ act, onClose, lang = 'id', stravaAcces
                             return p <= overallSecPerKm;
                           });
                           
-                          const displayedLaps = showFastLaps ? fastLaps : laps;
+                          const isInterval = fastLaps.length > 0 && fastLaps.length < laps.length;
+                          const displayedLaps = isInterval ? fastLaps : laps;
                           
                           return displayedLaps.map((lap, idx) => {
                             const distKm = lap.distance ? (lap.distance / 1000).toFixed(2) : '-';
@@ -256,7 +235,7 @@ export default function RunDetailsModal({ act, onClose, lang = 'id', stravaAcces
                             const isFast = overallSecPerKm && p && p <= overallSecPerKm;
                             
                             return (
-                              <tr key={lap.id} style={{ borderBottom: idx === displayedLaps.length - 1 ? 'none' : '1px solid var(--border)', background: showFastLaps ? 'transparent' : (isFast ? 'rgba(167, 139, 250, 0.03)' : 'transparent') }}>
+                              <tr key={lap.id} style={{ borderBottom: idx === displayedLaps.length - 1 ? 'none' : '1px solid var(--border)', background: (isInterval ? 'transparent' : (isFast ? 'rgba(167, 139, 250, 0.03)' : 'transparent')) }}>
                                 <td style={{ padding: '12px 16px', color: isFast ? 'var(--accent-purple)' : 'var(--text-primary)', fontWeight: 600 }}>{lap.lap_index || idx + 1}</td>
                                 <td style={{ padding: '12px 16px', textAlign: 'right', color: 'var(--text-secondary)' }}>{distKm}</td>
                                 <td style={{ padding: '12px 16px', textAlign: 'right', color: 'var(--text-secondary)' }}>{timeStr}</td>
