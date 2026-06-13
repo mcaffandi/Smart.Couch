@@ -76,11 +76,8 @@ export default function GoalProgressWidget({ data, goal, lang = 'id', onLogWeigh
     const startW = chartData.length > 0 ? chartData[0].weight : profileWeight;
     let loggedCurrentW = chartData.length > 0 ? chartData[chartData.length - 1].weight : profileWeight;
     
-    // Estimate current weight if no manual logs exist
+    // Berat badan SAAT INI murni dari log manual pengguna (atau berat pendaftaran)
     let currentW = loggedCurrentW;
-    if (chartData.length <= 1 && burned > 0) {
-       currentW = startW - (burned / 7700);
-    }
 
     let diff = startW - currentW;
 
@@ -466,16 +463,13 @@ export default function GoalProgressWidget({ data, goal, lang = 'id', onLogWeigh
                       </div>
                       <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 8, display: 'flex', alignItems: 'center', gap: 4 }}>
                         <Flame size={14} color="#f59e0b" />
-                        ~{( (
+                        {lang === 'id' ? 'Setara pembakaran energi ~' : 'Equivalent energy burn to ~'}
+                        {( (
                           calorieTimeframe === 'today' ? todayBurnedKcal :
                           calorieTimeframe === 'week' ? weekBurnedKcal :
                           calorieTimeframe === 'month' ? monthBurnedKcal :
                           weightBurnedKcal
-                        ) / 7700 ).toFixed(2)} kg lemak luntur 
-                        {calorieTimeframe === 'today' ? ' hari ini' :
-                         calorieTimeframe === 'week' ? ' minggu ini' :
-                         calorieTimeframe === 'month' ? ' bulan ini' :
-                         ' sejauh ini'}
+                        ) / 7700 ).toFixed(2)} kg {lang === 'id' ? 'lemak' : 'fat'}
                       </div>
                   </div>
                 </>
