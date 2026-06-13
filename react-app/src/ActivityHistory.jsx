@@ -213,9 +213,14 @@ export default function RunHistory({ activities, profileWeight = 70, lang = 'id'
               style={{ animationDelay: `${i * 0.04}s`, padding: '16px', display: 'flex', flexDirection: 'column', alignItems: 'stretch', gap: 14, cursor: onViewDetails ? 'pointer' : 'default', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 16, marginBottom: 12, position: 'relative' }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)' }}>{act.name ?? (lang === 'id' ? 'Aktivitas' : 'Activity')}</span>
-                  {badge && <span className={`badge ${badge.cls}`} style={{ transform: 'scale(0.85)', transformOrigin: 'left center', margin: 0 }}>{badge.label}</span>}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)' }}>{act.name ?? (lang === 'id' ? 'Aktivitas' : 'Activity')}</span>
+                    {badge && <span className={`badge ${badge.cls}`} style={{ transform: 'scale(0.85)', transformOrigin: 'left center', margin: 0 }}>{badge.label}</span>}
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                    {msToDate(act.startTimeLocal)}
+                  </div>
                 </div>
               </div>
 
@@ -236,7 +241,7 @@ export default function RunHistory({ activities, profileWeight = 70, lang = 'id'
                         <div style={{ fontSize: 26, fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.1 }}>
                           {distKm.toFixed(2)} <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>km</span>
                         </div>
-                        <div style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 500, marginTop: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <div style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 500, marginTop: 6, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                           <span>{formattedDur}</span>
                           <span style={{ fontSize: 10 }}>•</span>
                           <span style={{ color: isFastPace ? 'var(--accent-purple)' : 'inherit', fontWeight: isFastPace ? 700 : 'inherit' }}>
@@ -250,17 +255,10 @@ export default function RunHistory({ activities, profileWeight = 70, lang = 'id'
                           {formattedDur} <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>{lang === 'id' ? 'mnt' : 'min'}</span>
                         </div>
                         <div style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 500, marginTop: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <span>{msToDate(act.startTimeLocal)}</span>
                           {act.avgHr ? (
-                            <>
-                              <span style={{ fontSize: 10 }}>•</span>
-                              <span>Avg HR: {Math.round(act.avgHr)}</span>
-                            </>
+                            <span>Avg HR: {Math.round(act.avgHr)}</span>
                           ) : kcal > 0 ? (
-                            <>
-                              <span style={{ fontSize: 10 }}>•</span>
-                              <span>{kcal} kcal</span>
-                            </>
+                            <span>{kcal} kcal</span>
                           ) : null}
                         </div>
                       </>
