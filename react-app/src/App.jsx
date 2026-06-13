@@ -4777,6 +4777,38 @@ export default function App() {
                     ? (lang === 'id' ? 'Strava Terhubung (Klik untuk Sync)' : 'Strava Connected (Click to Sync)')
                     : 'Connect with Strava'}
                 </button>
+                {data.profile?.stravaConnected && (
+                  <button 
+                    onClick={() => {
+                      if (window.confirm(lang === 'id' ? 'Yakin ingin memutus koneksi Strava?' : 'Are you sure you want to disconnect Strava?')) {
+                        const newProfile = { ...data.profile };
+                        delete newProfile.stravaConnected;
+                        delete newProfile.stravaAccessToken;
+                        delete newProfile.stravaRefreshToken;
+                        delete newProfile.stravaTokenExpiresAt;
+                        saveAndSyncData({ profile: newProfile });
+                        addToast(lang === 'id' ? 'Koneksi Strava berhasil diputus.' : 'Strava connection disconnected.', 'success');
+                      }
+                    }}
+                    style={{ 
+                      width: '100%', 
+                      marginTop: 8,
+                      background: 'transparent',
+                      color: 'var(--accent-rose)',
+                      border: '1px dashed var(--accent-rose)',
+                      padding: 10,
+                      borderRadius: 6,
+                      fontSize: 13,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s'
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(244, 63, 94, 0.1)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                  >
+                    {lang === 'id' ? 'Putuskan Koneksi Strava' : 'Disconnect Strava'}
+                  </button>
+                )}
               </>
             )}
 
