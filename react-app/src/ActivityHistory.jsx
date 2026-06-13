@@ -193,11 +193,7 @@ export default function RunHistory({ activities, profileWeight = 70, lang = 'id'
             }
           }
           
-          if (isFastPace && fastDist > 0 && fastTime > 0) {
-            distKm = fastDist / 1000;
-            totalSecs = Math.round(fastTime);
-            durationMins = totalSecs / 60;
-          }
+
 
           const m = Math.floor(totalSecs / 60);
           const s = totalSecs % 60;
@@ -218,6 +214,7 @@ export default function RunHistory({ activities, profileWeight = 70, lang = 'id'
                 padding: '12px 14px',
                 display: 'flex',
                 flexDirection: 'column',
+                alignItems: 'stretch',
                 gap: 8,
                 cursor: onViewDetails ? 'pointer' : 'default',
                 background: 'var(--bg-card)',
