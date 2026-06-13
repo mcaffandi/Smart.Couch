@@ -5,7 +5,7 @@ import { Star, Flame, Medal, Crown, Zap, Trophy } from 'lucide-react';
 import { Edit2, Trash2 } from 'lucide-react';
 const ITEMS_PER_PAGE = 12;
 
-export default function RunHistory({ activities, lang = 'id', onEdit, onDelete, onViewDetails }) {
+export default function RunHistory({ activities, profileWeight = 70, lang = 'id', onEdit, onDelete, onViewDetails }) {
   const [page, setPage] = useState(0);
 
   const sorted = [...activities].sort((a, b) =>
@@ -136,8 +136,17 @@ export default function RunHistory({ activities, lang = 'id', onEdit, onDelete, 
 
       <div className="history-list">
         {paged.map((act, i) => {
-          const distKm = ((act.distance ?? 0) / 100000).toFixed(2);
+          const distKm = ((act.distance ?? 0) / 100000);
           const totalSecs = Math.round((act.duration ?? 0) / 1000);
+          const durationMins = totalSecs / 60;
+          
+          let kcal = 0;
+          if (act.distance > 0) {
+            kcal = Math.round(distKm * profileWeight * 1.036);
+          } else if (act.isManual || act.manualType) {
+            kcal = Math.round(durationMins * 8);
+          }
+
           const m = Math.floor(totalSecs / 60);
           const s = totalSecs % 60;
           const formattedDur = `${m}:${s.toString().padStart(2, '0')}`;
@@ -167,14 +176,22 @@ export default function RunHistory({ activities, lang = 'id', onEdit, onDelete, 
                 ) : null}
 
                 <div className="history-stats" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                  <div className="history-stat">
-                    <div className="history-stat-value">{distKm}</div>
-                    <div className="history-stat-label">km</div>
-                  </div>
+                  {act.distance > 0 && (
+                    <div className="history-stat">
+                      <div className="history-stat-value">{distKm.toFixed(2)}</div>
+                      <div className="history-stat-label">km</div>
+                    </div>
+                  )}
                   {totalSecs > 0 && (
                     <div className="history-stat">
                       <div className="history-stat-value">{formattedDur}</div>
                       <div className="history-stat-label">{lang === 'id' ? 'waktu' : 'time'}</div>
+                    </div>
+                  )}
+                  {kcal > 0 && (
+                    <div className="history-stat">
+                      <div className="history-stat-value">{kcal}</div>
+                      <div className="history-stat-label">kcal</div>
                     </div>
                   )}
                   {act.avgHr && (

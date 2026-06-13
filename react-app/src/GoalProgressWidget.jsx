@@ -46,7 +46,14 @@ export default function GoalProgressWidget({ data, goal, lang = 'id', onLogWeigh
     let targetWt = data.profile?.targetWeight;
 
     const startW = chartData.length > 0 ? chartData[0].weight : profileWeight;
-    const currentW = chartData.length > 0 ? chartData[chartData.length - 1].weight : profileWeight;
+    let loggedCurrentW = chartData.length > 0 ? chartData[chartData.length - 1].weight : profileWeight;
+    
+    // Estimate current weight if no manual logs exist
+    let currentW = loggedCurrentW;
+    if (chartData.length <= 1 && burned > 0) {
+       currentW = startW - (burned / 7700);
+    }
+
     let diff = startW - currentW;
 
     if (!targetWt) targetWt = startW > 5 ? startW - 5 : startW;
@@ -70,7 +77,7 @@ export default function GoalProgressWidget({ data, goal, lang = 'id', onLogWeigh
 
     return { 
       weightProgress: pct, weightTargetKcal: targetKcal, weightBurnedKcal: Math.round(burned), weightChartData: chartData,
-      startWeight: startW, currentWeight: currentW, weightDiff: parseFloat(diff.toFixed(1)), targetWeight: targetWt, weightLossETA: etaWeeks, programStyle: pStyle
+      startWeight: startW, currentWeight: parseFloat(currentW.toFixed(1)), weightDiff: parseFloat(diff.toFixed(1)), targetWeight: targetWt, weightLossETA: etaWeeks, programStyle: pStyle
     };
   }, [runActs, weightRecs, profileWeight, lang, data.profile?.targetWeight, data.profile?.programStyle]);
 
