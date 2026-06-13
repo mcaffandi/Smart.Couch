@@ -151,6 +151,8 @@ export default function RunHistory({ activities, profileWeight = 70, lang = 'id'
             ? (act.duration / 1000) / (act.distance / 100000)
             : null;
             
+          const badge = getBadge(act.avgHr, act.maxHr);
+            
           let finalPaceStr = '–';
           let isFastPace = false;
           let fastDist = 0;
@@ -165,7 +167,10 @@ export default function RunHistory({ activities, profileWeight = 70, lang = 'id'
               if (paces.length >= 2) {
                 const minPace = Math.min(...paces);
                 const maxPace = Math.max(...paces);
-                if (maxPace - minPace > 90) {
+                
+                const isIntense = badge && (badge.label.toLowerCase().includes('ngepush') || badge.label.toLowerCase().includes('fire') || badge.label.toLowerCase().includes('overreaching'));
+                
+                if (isIntense && (maxPace - minPace > 180 || maxPace > 600)) {
                   isInterval = true;
                 }
               }
@@ -202,8 +207,6 @@ export default function RunHistory({ activities, profileWeight = 70, lang = 'id'
             const pace = overallSecPerKm / 60;
             finalPaceStr = `${Math.floor(pace)}:${Math.round((pace % 1) * 60).toString().padStart(2, '0')}`;
           }
-
-          const badge = getBadge(act.avgHr, act.maxHr);
 
           return (
             <div 

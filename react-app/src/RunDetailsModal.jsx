@@ -21,6 +21,14 @@ export default function RunDetailsModal({ act, onClose, lang = 'id', stravaAcces
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  const getBadge = (avgHr, maxHr) => {
+    if (!avgHr) return null;
+    if (avgHr > 165 || maxHr > 185) return { label: lang === 'id' ? 'On Fire' : 'On Fire', cls: 'badge-fire' };
+    if (avgHr > 152) return { label: lang === 'id' ? 'Ngepush' : 'Hard', cls: 'badge-ngepush' };
+    if (avgHr > 133) return { label: lang === 'id' ? 'Sedang' : 'Moderate', cls: 'badge-sedang' };
+    return { label: lang === 'id' ? 'Santai' : 'Easy', cls: 'badge-santai' };
+  };
+
   useEffect(() => {
     async function fetchLaps() {
       // Jika sudah punya cache laps di dalam activity, gak usah panggil API Strava lagi!
@@ -224,7 +232,10 @@ export default function RunDetailsModal({ act, onClose, lang = 'id', stravaAcces
                             if (paces.length >= 2) {
                               const minPace = Math.min(...paces);
                               const maxPace = Math.max(...paces);
-                              if (maxPace - minPace > 90) {
+                              const badge = getBadge(act.avgHr, act.maxHr);
+                              const isIntense = badge && (badge.label.toLowerCase().includes('ngepush') || badge.label.toLowerCase().includes('fire') || badge.label.toLowerCase().includes('overreaching'));
+                              
+                              if (isIntense && (maxPace - minPace > 180 || maxPace > 600)) {
                                 isInterval = true;
                               }
                             }
