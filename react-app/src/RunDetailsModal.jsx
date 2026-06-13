@@ -216,13 +216,26 @@ export default function RunDetailsModal({ act, onClose, lang = 'id', stravaAcces
                       </thead>
                       <tbody>
                         {(() => {
+                          let isInterval = false;
+                          if (act.name && act.name.toLowerCase().includes('interval')) {
+                            isInterval = true;
+                          } else if (laps.length >= 3) {
+                            const paces = laps.map(lap => lap.distance ? lap.moving_time / (lap.distance / 1000) : null).filter(p => p !== null);
+                            if (paces.length >= 2) {
+                              const minPace = Math.min(...paces);
+                              const maxPace = Math.max(...paces);
+                              if (maxPace - minPace > 90) {
+                                isInterval = true;
+                              }
+                            }
+                          }
+
                           const fastLaps = laps.filter(lap => {
                             if (!overallSecPerKm) return true;
                             const p = lap.distance ? lap.moving_time / (lap.distance / 1000) : Infinity;
                             return p <= overallSecPerKm;
                           });
                           
-                          const isInterval = fastLaps.length > 0 && fastLaps.length < laps.length;
                           const displayedLaps = isInterval ? fastLaps : laps;
                           
                           return displayedLaps.map((lap, idx) => {

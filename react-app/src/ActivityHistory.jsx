@@ -157,17 +157,33 @@ export default function RunHistory({ activities, profileWeight = 70, lang = 'id'
           let fastTime = 0;
           
           if (act.laps && act.laps.length > 0 && overallSecPerKm) {
-            const fastLaps = act.laps.filter(lap => {
-              const p = lap.distance ? lap.moving_time / (lap.distance / 1000) : Infinity;
-              return p <= overallSecPerKm;
-            });
-            if (fastLaps.length > 0) {
-              fastTime = fastLaps.reduce((acc, lap) => acc + lap.moving_time, 0);
-              fastDist = fastLaps.reduce((acc, lap) => acc + lap.distance, 0);
-              if (fastDist > 0) {
-                const trueFastPace = (fastTime / (fastDist / 1000)) / 60;
-                finalPaceStr = `${Math.floor(trueFastPace)}:${Math.round((trueFastPace % 1) * 60).toString().padStart(2, '0')}`;
-                isFastPace = true;
+            let isInterval = false;
+            if (act.name && act.name.toLowerCase().includes('interval')) {
+              isInterval = true;
+            } else if (act.laps.length >= 3) {
+              const paces = act.laps.map(lap => lap.distance ? lap.moving_time / (lap.distance / 1000) : null).filter(p => p !== null);
+              if (paces.length >= 2) {
+                const minPace = Math.min(...paces);
+                const maxPace = Math.max(...paces);
+                if (maxPace - minPace > 90) {
+                  isInterval = true;
+                }
+              }
+            }
+
+            if (isInterval) {
+              const fastLaps = act.laps.filter(lap => {
+                const p = lap.distance ? lap.moving_time / (lap.distance / 1000) : Infinity;
+                return p <= overallSecPerKm;
+              });
+              if (fastLaps.length > 0 && fastLaps.length < act.laps.length) {
+                fastTime = fastLaps.reduce((acc, lap) => acc + lap.moving_time, 0);
+                fastDist = fastLaps.reduce((acc, lap) => acc + lap.distance, 0);
+                if (fastDist > 0) {
+                  const trueFastPace = (fastTime / (fastDist / 1000)) / 60;
+                  finalPaceStr = `${Math.floor(trueFastPace)}:${Math.round((trueFastPace % 1) * 60).toString().padStart(2, '0')}`;
+                  isFastPace = true;
+                }
               }
             }
           }
