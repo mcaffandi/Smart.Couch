@@ -471,9 +471,10 @@ export const buildAdaptiveCalendar = (weeklyPlan, activities = [], isPaused = fa
         } catch (e) {}
       }
       if (dateStr) {
-        if (!activityMap[dateStr] || (activityMap[dateStr].duration || 0) < (a.duration || 0)) {
-          activityMap[dateStr] = a;
+        if (!activityMap[dateStr]) {
+          activityMap[dateStr] = [];
         }
+        activityMap[dateStr].push(a);
       }
     }
   });
@@ -501,8 +502,11 @@ export const buildAdaptiveCalendar = (weeklyPlan, activities = [], isPaused = fa
     
     const isPast = current < today;
     const isToday = current.getTime() === today.getTime();
-    const hasRun = !!activityMap[dateStr];
-    const actObj = activityMap[dateStr];
+    
+    const actObjs = activityMap[dateStr] || [];
+    const hasRun = actObjs.length > 0;
+    // Keep actObj for backward compatibility (longest run or first run)
+    const actObj = actObjs.length > 0 ? [...actObjs].sort((a,b) => (b.duration||0) - (a.duration||0))[0] : null;
     const isManualRun = actObj && (actObj.isManual || actObj.manualType);
 
     if (isPaused && !isPast) {
@@ -530,6 +534,7 @@ export const buildAdaptiveCalendar = (weeklyPlan, activities = [], isPaused = fa
       isPast,
       hasRun,
       actObj,
+      actObjs,
       isManualRun,
       isPaused,
       workout

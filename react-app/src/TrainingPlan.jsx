@@ -617,17 +617,21 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
                            </div>
 
                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', overflow: 'hidden' }}>
-                             {dItem.hasRun && dItem.actObj ? (
-                               <div style={{ borderLeft: `4px solid #10b981`, paddingLeft: 10 }}>
-                                 <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 6, lineHeight: 1.3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                   {dItem.actObj.name || (dItem.actObj.manualType ? dItem.actObj.manualType.charAt(0).toUpperCase() + dItem.actObj.manualType.slice(1) : (lang === 'id' ? 'Selesai' : 'Completed'))}
-                                 </div>
-                                 <div style={{ fontSize: 12, color: 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                   {dItem.actObj.distance > 0 ? `${(dItem.actObj.distance / 100000).toFixed(2)} km` : ''}
-                                   {dItem.actObj.distance > 0 && dItem.actObj.duration ? ' • ' : ''}
-                                   {dItem.actObj.duration ? `${Math.round(dItem.actObj.duration / 60000)} min` : ''} 
-                                   {dItem.actObj.calories ? ` • ${Math.round(dItem.actObj.calories)} kcal` : ''}
-                                 </div>
+                             {dItem.hasRun && dItem.actObjs && dItem.actObjs.length > 0 ? (
+                               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                 {dItem.actObjs.map((act, actIdx) => (
+                                   <div key={actIdx} style={{ borderLeft: `4px solid #10b981`, paddingLeft: 10 }}>
+                                     <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 6, lineHeight: 1.3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                       {act.name || (act.manualType ? act.manualType.charAt(0).toUpperCase() + act.manualType.slice(1) : (lang === 'id' ? 'Selesai' : 'Completed'))}
+                                     </div>
+                                     <div style={{ fontSize: 12, color: 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                       {act.distance > 0 ? `${(act.distance / 100000).toFixed(2)} km` : ''}
+                                       {act.distance > 0 && act.duration ? ' • ' : ''}
+                                       {act.duration ? `${Math.round(act.duration / 60000)} min` : ''} 
+                                       {act.calories ? ` • ${Math.round(act.calories)} kcal` : ''}
+                                     </div>
+                                   </div>
+                                 ))}
                                </div>
                              ) : isRest ? (
                                <div style={{ color: 'var(--text-muted)', fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
