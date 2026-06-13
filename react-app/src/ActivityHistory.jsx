@@ -30,7 +30,7 @@ export default function RunHistory({ activities, profileWeight = 70, lang = 'id'
     return { label: lang === 'id' ? 'Santai' : 'Easy', cls: 'badge-easy' };
   };
 
-  const RouteMap = ({ route }) => {
+  const RouteMap = ({ route, widthStyle = '45px', heightStyle = '30px', strokeColor = '#818cf8' }) => {
     if (!route || route.length < 2) return null;
     let minLat = 90, maxLat = -90, minLon = 180, maxLon = -180;
     route.forEach((pt) => {
@@ -61,10 +61,10 @@ export default function RunHistory({ activities, profileWeight = 70, lang = 'id'
 
     return (
       <div className="route-map-container" style={{
-        width: '45px', height: '30px', flexShrink: 0
+        width: widthStyle, height: heightStyle, flexShrink: 0
       }}>
         <svg width="100%" height="100%" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet">
-          <polyline points={pts} fill="none" stroke="#818cf8" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
+          <polyline points={pts} fill="none" stroke={strokeColor} strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </div>
     );
@@ -185,67 +185,68 @@ export default function RunHistory({ activities, profileWeight = 70, lang = 'id'
               className="history-item animate-fade-in" 
               key={i} 
               onClick={() => onViewDetails && onViewDetails(act)}
-              style={{ animationDelay: `${i * 0.04}s`, position: 'relative', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, cursor: onViewDetails ? 'pointer' : 'default' }}
+              style={{ animationDelay: `${i * 0.04}s`, padding: '16px', display: 'flex', flexDirection: 'column', gap: 14, cursor: onViewDetails ? 'pointer' : 'default', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 16, marginBottom: 12, position: 'relative' }}
             >
-              <div className="history-meta" style={{ flex: '1 1 auto', minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                <span className="history-date">{msToDate(act.startTimeLocal)}</span>
-                <span className="history-name" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block', width: '100%' }}>{act.name ?? (lang === 'id' ? 'Aktivitas Harian' : 'Daily Activity')}</span>
-                {badge && <span className={`badge ${badge.cls}`} style={{ marginTop: 6, display: 'inline-flex', alignSelf: 'flex-start' }}>{badge.label}</span>}
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexShrink: 0 }}>
-                {act.route && act.route.length > 0 ? (
-                  <div style={{ marginRight: 8 }}>
-                    <RouteMap route={act.route} />
-                  </div>
-                ) : (
-                  <div style={{ marginRight: 8, padding: 6, borderRadius: 10, background: 'var(--bg-base)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
-                    {act.manualType === 'strength' ? <Dumbbell size={18} /> :
-                     act.manualType === 'cycling' ? <Bike size={18} /> :
-                     act.manualType === 'swimming' ? <Waves size={18} /> :
-                     act.manualType === 'walking' ? <Footprints size={18} /> :
-                     <Activity size={18} />}
-                  </div>
-                )}
-
-                <div className="history-stats" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                  {act.distance > 0 && (
-                    <div className="history-stat">
-                      <div className="history-stat-value">{distKm.toFixed(2)}</div>
-                      <div className="history-stat-label">km</div>
-                    </div>
-                  )}
-                  {totalSecs > 0 && (
-                    <div className="history-stat">
-                      <div className="history-stat-value">{formattedDur}</div>
-                      <div className="history-stat-label">{lang === 'id' ? 'waktu' : 'time'}</div>
-                    </div>
-                  )}
-                  {finalPaceStr !== '–' && act.manualType !== 'strength' && act.manualType !== 'yoga' && (
-                    <div className="history-stat">
-                      <div className="history-stat-value" style={{ color: isFastPace ? 'var(--accent-purple)' : 'inherit', fontWeight: isFastPace ? 800 : 'inherit' }}>
-                        {isFastPace ? `🔥 ${finalPaceStr}` : finalPaceStr}
-                      </div>
-                      <div className="history-stat-label" style={{ color: isFastPace ? 'var(--accent-purple)' : 'inherit' }}>
-                        {isFastPace ? 'active pace' : 'pace'}
-                      </div>
-                    </div>
-                  )}
-                  {kcal > 0 && (
-                    <div className="history-stat">
-                      <div className="history-stat-value">{kcal}</div>
-                      <div className="history-stat-label">kcal</div>
-                    </div>
-                  )}
-                  {act.avgHr && (
-                    <div className="history-stat">
-                      <div className="history-stat-value">{Math.round(act.avgHr)}</div>
-                      <div className="history-stat-label">avg HR</div>
-                    </div>
-                  )}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)' }}>{act.name ?? (lang === 'id' ? 'Aktivitas' : 'Activity')}</span>
+                  {badge && <span className={`badge ${badge.cls}`} style={{ transform: 'scale(0.85)', transformOrigin: 'left center', margin: 0 }}>{badge.label}</span>}
                 </div>
               </div>
 
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                  <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'linear-gradient(135deg, #f97316, #fb923c)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 4px 12px rgba(249, 115, 22, 0.3)' }}>
+                    {act.manualType === 'strength' ? <Dumbbell size={24} /> :
+                     act.manualType === 'cycling' ? <Bike size={24} /> :
+                     act.manualType === 'swimming' ? <Waves size={24} /> :
+                     act.manualType === 'walking' ? <Footprints size={24} /> :
+                     act.manualType === 'yoga' ? <Activity size={24} /> :
+                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 4a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/><path d="M14 9l-2-2-1 2-3-1"/><path d="M15 16l-3-4-1 2 2 4"/><path d="M9 16H6l-1 5"/><path d="M16 21h-2l-2-5"/></svg>}
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                    {act.distance > 0 ? (
+                      <>
+                        <div style={{ fontSize: 26, fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.1 }}>
+                          {distKm.toFixed(2)} <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>km</span>
+                        </div>
+                        <div style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 500, marginTop: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <span>{formattedDur}</span>
+                          <span style={{ fontSize: 10 }}>•</span>
+                          <span style={{ color: isFastPace ? 'var(--accent-purple)' : 'inherit', fontWeight: isFastPace ? 700 : 'inherit' }}>
+                            {isFastPace ? `🔥 ${finalPaceStr}` : finalPaceStr} /km
+                          </span>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div style={{ fontSize: 26, fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.1 }}>
+                          {formattedDur} <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>{lang === 'id' ? 'mnt' : 'min'}</span>
+                        </div>
+                        <div style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 500, marginTop: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <span>{msToDate(act.startTimeLocal)}</span>
+                          {act.avgHr ? (
+                            <>
+                              <span style={{ fontSize: 10 }}>•</span>
+                              <span>Avg HR: {Math.round(act.avgHr)}</span>
+                            </>
+                          ) : kcal > 0 ? (
+                            <>
+                              <span style={{ fontSize: 10 }}>•</span>
+                              <span>{kcal} kcal</span>
+                            </>
+                          ) : null}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {act.route && act.route.length > 0 && (
+                  <RouteMap route={act.route} widthStyle="70px" heightStyle="50px" strokeColor="rgba(255,255,255,0.2)" />
+                )}
+              </div>
             </div>
           );
         })}
