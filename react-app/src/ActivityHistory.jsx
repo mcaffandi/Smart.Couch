@@ -210,10 +210,10 @@ export default function RunHistory({ activities, profileWeight = 70, lang = 'id'
               className="history-item animate-fade-in" 
               key={i} 
               onClick={() => onViewDetails && onViewDetails(act)}
-              style={{ animationDelay: `${i * 0.04}s`, padding: '16px', display: 'flex', flexDirection: 'column', alignItems: 'stretch', gap: 14, cursor: onViewDetails ? 'pointer' : 'default', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 16, marginBottom: 12, position: 'relative' }}
+              style={{ animationDelay: `${i * 0.04}s`, padding: '14px', display: 'flex', flexDirection: 'column', alignItems: 'stretch', gap: 10, cursor: onViewDetails ? 'pointer' : 'default', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 16, position: 'relative' }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)' }}>{act.name ?? (lang === 'id' ? 'Aktivitas' : 'Activity')}</span>
                     {badge && <span className={`badge ${badge.cls}`} style={{ transform: 'scale(0.85)', transformOrigin: 'left center', margin: 0 }}>{badge.label}</span>}
