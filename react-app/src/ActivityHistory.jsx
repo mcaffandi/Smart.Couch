@@ -151,8 +151,9 @@ export default function RunHistory({ activities, profileWeight = 70, lang = 'id'
           const s = totalSecs % 60;
           const formattedDur = `${m}:${s.toString().padStart(2, '0')}`;
           const pace = act.distance && act.duration
-            ? ((act.duration / 60000) / (act.distance / 100000)).toFixed(2)
-            : '–';
+            ? ((act.duration / 1000) / (act.distance / 100000)) / 60
+            : null;
+          const paceStr = pace ? `${Math.floor(pace)}:${Math.round((pace % 1) * 60).toString().padStart(2, '0')}` : '–';
           const badge = getBadge(act.avgHr, act.maxHr);
 
           return (
@@ -194,6 +195,12 @@ export default function RunHistory({ activities, profileWeight = 70, lang = 'id'
                     <div className="history-stat">
                       <div className="history-stat-value">{formattedDur}</div>
                       <div className="history-stat-label">{lang === 'id' ? 'waktu' : 'time'}</div>
+                    </div>
+                  )}
+                  {paceStr !== '–' && act.manualType !== 'strength' && act.manualType !== 'yoga' && (
+                    <div className="history-stat">
+                      <div className="history-stat-value">{paceStr}</div>
+                      <div className="history-stat-label">pace</div>
                     </div>
                   )}
                   {kcal > 0 && (

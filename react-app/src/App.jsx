@@ -4902,7 +4902,16 @@ export default function App() {
             stravaAccessToken={data.profile?.stravaAccessToken}
             isPremium={isPremium}
             onEdit={(actTime, newName) => {
-              handleEditRunName(actTime, newName);
+              setData(prev => {
+                const updated = {
+                  ...prev,
+                  running_activities: prev.running_activities.map(a => 
+                    a.startTimeLocal === actTime ? { ...a, name: newName } : a
+                  )
+                };
+                saveAndSyncData(updated);
+                return updated;
+              });
               setSelectedRunForDetails(prev => ({ ...prev, name: newName }));
             }}
             onDelete={(actTime) => {
