@@ -213,70 +213,122 @@ export default function RunHistory({ activities, profileWeight = 70, lang = 'id'
               className="history-item animate-fade-in" 
               key={i} 
               onClick={() => onViewDetails && onViewDetails(act)}
-              style={{ animationDelay: `${i * 0.04}s`, padding: '14px', display: 'flex', flexDirection: 'column', alignItems: 'stretch', gap: 10, cursor: onViewDetails ? 'pointer' : 'default', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 16, position: 'relative' }}
+              style={{
+                animationDelay: `${i * 0.04}s`,
+                padding: '12px 14px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 8,
+                cursor: onViewDetails ? 'pointer' : 'default',
+                background: 'var(--bg-card)',
+                border: '1px solid var(--border)',
+                borderRadius: 14,
+                position: 'relative',
+              }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)' }}>{act.name ?? (lang === 'id' ? 'Aktivitas' : 'Activity')}</span>
-                    {badge && <span className={`badge ${badge.cls}`} style={{ transform: 'scale(0.85)', transformOrigin: 'left center', margin: 0 }}>{badge.label}</span>}
+              {/* ── Header row: nama + badge + tanggal ── */}
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 6 }}>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'nowrap', overflow: 'hidden' }}>
+                    <span style={{
+                      fontSize: 13,
+                      fontWeight: 700,
+                      color: 'var(--text-primary)',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    }}>
+                      {act.name ?? (lang === 'id' ? 'Aktivitas' : 'Activity')}
+                    </span>
+                    {badge && (
+                      <span className={`badge ${badge.cls}`} style={{
+                        fontSize: 10,
+                        padding: '2px 7px',
+                        borderRadius: 20,
+                        fontWeight: 700,
+                        flexShrink: 0,
+                        lineHeight: 1.6,
+                      }}>
+                        {badge.label}
+                      </span>
+                    )}
                   </div>
-                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>
                     {msToDate(act.startTimeLocal)}
                   </div>
                 </div>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                  <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'linear-gradient(135deg, #f97316, #fb923c)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 4px 12px rgba(249, 115, 22, 0.3)' }}>
-                    {act.manualType === 'strength' ? <Dumbbell size={24} /> :
-                     act.manualType === 'cycling' ? <Bike size={24} /> :
-                     act.manualType === 'swimming' ? <Waves size={24} /> :
-                     act.manualType === 'walking' ? <Footprints size={24} /> :
-                     act.manualType === 'yoga' ? <Activity size={24} /> :
-                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M13.49 5.48c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm-3.6 13.9l1-4.4 2.1 2v6h2v-7.5l-2.1-2 .6-3c1.3 1.5 3.3 2.5 5.5 2.5v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1l-5.2 2.2v4.7h2v-3.4l1.8-.7-1.6 8.1-4.9-1-.4 2 7 1.4z"/></svg>}
+              {/* ── Metric row: icon + data + minimap ── */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  {/* Icon */}
+                  <div style={{
+                    width: 38,
+                    height: 38,
+                    borderRadius: '50%',
+                    background: 'linear-gradient(135deg, #f97316, #fb923c)',
+                    color: '#fff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                    boxShadow: '0 3px 10px rgba(249, 115, 22, 0.28)',
+                  }}>
+                    {act.manualType === 'strength' ? <Dumbbell size={18} /> :
+                     act.manualType === 'cycling'  ? <Bike size={18} /> :
+                     act.manualType === 'swimming' ? <Waves size={18} /> :
+                     act.manualType === 'walking'  ? <Footprints size={18} /> :
+                     act.manualType === 'yoga'     ? <Activity size={18} /> :
+                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M13.49 5.48c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm-3.6 13.9l1-4.4 2.1 2v6h2v-7.5l-2.1-2 .6-3c1.3 1.5 3.3 2.5 5.5 2.5v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1l-5.2 2.2v4.7h2v-3.4l1.8-.7-1.6 8.1-4.9-1-.4 2 7 1.4z"/></svg>}
                   </div>
 
-                  <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start' }}>
+                  {/* Metric */}
+                  <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                     {act.distance > 0 ? (
                       <>
-                        <div style={{ fontSize: 26, fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.1 }}>
-                          {distKm.toFixed(2)} <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>km</span>
+                        {/* Golden ratio: 14px title → 14×1.618 ≈ 22px metric */}
+                        <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.1 }}>
+                          {distKm.toFixed(2)}{' '}
+                          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)' }}>km</span>
                         </div>
-                        <div style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 500, marginTop: 6, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                        <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 500, marginTop: 3, display: 'flex', alignItems: 'center', gap: 4 }}>
                           <span>{formattedDur}</span>
-                          <span style={{ fontSize: 10 }}>•</span>
-                          <span style={{ color: isFastPace ? 'var(--accent-purple)' : 'inherit', fontWeight: isFastPace ? 700 : 'inherit' }}>
+                          <span style={{ fontSize: 9, opacity: 0.5 }}>•</span>
+                          <span style={{
+                            color: isFastPace ? 'var(--accent-purple)' : 'inherit',
+                            fontWeight: isFastPace ? 700 : 500,
+                          }}>
                             {finalPaceStr} /km
                           </span>
                         </div>
                       </>
                     ) : (
                       <>
-                        <div style={{ fontSize: 26, fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.1 }}>
-                          {formattedDur} <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>{lang === 'id' ? 'mnt' : 'min'}</span>
+                        <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.1 }}>
+                          {formattedDur}{' '}
+                          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)' }}>
+                            {lang === 'id' ? 'mnt' : 'min'}
+                          </span>
                         </div>
-                        <div style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 500, marginTop: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
-                          {act.avgHr ? (
-                            <span>Avg HR: {Math.round(act.avgHr)}</span>
-                          ) : kcal > 0 ? (
-                            <span>{kcal} kcal</span>
-                          ) : null}
+                        <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 500, marginTop: 3 }}>
+                          {act.avgHr ? `Avg HR: ${Math.round(act.avgHr)}` : kcal > 0 ? `${kcal} kcal` : null}
                         </div>
                       </>
                     )}
                   </div>
                 </div>
 
+                {/* Route minimap */}
                 {act.route && act.route.length > 0 && (
-                  <RouteMap route={act.route} widthStyle="70px" heightStyle="50px" strokeColor="rgba(255,255,255,0.2)" />
+                  <RouteMap route={act.route} widthStyle="58px" heightStyle="42px" strokeColor="rgba(255,255,255,0.18)" />
                 )}
               </div>
             </div>
           );
         })}
       </div>
+
 
       {totalPages > 1 && (
         <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginTop: 16 }}>

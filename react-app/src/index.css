@@ -839,18 +839,18 @@ html, body {
 }
 
 .metric-value {
-  font-size: 32px;
-  font-weight: 900;
+  font-size: 26px;
+  font-weight: 800;
   color: var(--text-primary);
   line-height: 1;
   letter-spacing: -0.02em;
 }
 
 .metric-unit {
-  font-size: 14px;
-  font-weight: 300;
+  font-size: 12px;
+  font-weight: 500;
   color: var(--text-muted);
-  margin-left: 4px;
+  margin-left: 3px;
 }
 
 .metric-subtext {
@@ -898,8 +898,8 @@ html, body {
 .info-card {
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 18px 20px;
+  border-radius: 14px;
+  padding: 16px 18px;
   margin-bottom: 16px;
 }
 
@@ -979,7 +979,7 @@ html, body {
 }
 
 .sleep-card-value {
-  font-size: 30px;
+  font-size: 24px;
   font-weight: 800;
   color: var(--text-primary);
 }
@@ -1833,13 +1833,12 @@ html, body {
 .sleep-history-card {
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 16px;
+  border-radius: 14px;
+  padding: 14px 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: var(--shadow-base);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.2s ease;
 }
 
 .sleep-history-card:hover {
@@ -1855,7 +1854,7 @@ html, body {
 }
 
 .sleep-card-date {
-  font-size: 13.5px;
+  font-size: 13px;
   color: var(--text-primary);
   font-weight: 700;
   display: flex;
@@ -1863,7 +1862,7 @@ html, body {
 }
 
 .sleep-card-dur {
-  font-size: 12.5px;
+  font-size: 11px;
   color: var(--text-muted);
 }
 
@@ -1874,7 +1873,7 @@ html, body {
 }
 
 .sleep-score-big {
-  font-size: 28px;
+  font-size: 22px;
   font-weight: 800;
   line-height: 1;
 }

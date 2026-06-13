@@ -3,10 +3,10 @@ import { formatPace, estimateVO2Max } from './utils';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const RACES = [
-  { key: '5k',  label: '5 km',          dist: 5000,   color: 'var(--alert-info-text)', colorDim: 'var(--alert-info-bg)', border: 'var(--alert-info-border)' },
-  { key: '10k', label: '10 km',         dist: 10000,  color: 'var(--alert-success-text)', colorDim: 'var(--alert-success-bg)', border: 'var(--alert-success-border)'  },
-  { key: 'hm',  label: 'Half Marathon', dist: 21097,  color: 'var(--alert-warning-text)', colorDim: 'var(--alert-warning-bg)', border: 'var(--alert-warning-border)'  },
-  { key: 'fm',  label: 'Marathon',      dist: 42195,  color: 'var(--alert-danger-text)', colorDim: 'var(--alert-danger-bg)', border: 'var(--alert-danger-border)' },
+  { key: '5k',  label: '5 km',          dist: 5000,   color: 'var(--accent-sky)',     accent: 'var(--accent-sky)' },
+  { key: '10k', label: '10 km',         dist: 10000,  color: 'var(--accent-emerald)', accent: 'var(--accent-emerald)' },
+  { key: 'hm',  label: 'Half Marathon', dist: 21097,  color: 'var(--accent-amber)',   accent: 'var(--accent-amber)' },
+  { key: 'fm',  label: 'Marathon',      dist: 42195,  color: 'var(--accent-rose)',    accent: 'var(--accent-rose)' },
 ];
 
 const RIEGEL = 1.06;
@@ -164,7 +164,9 @@ export default function RacePrediction({ activities, targetPace, lang = 'id', ac
           ? (lang === 'id' ? 'Sedang' : 'Moderate') 
           : (lang === 'id' ? 'Rendah' : 'Low')) 
     : (lang === 'id' ? 'Teoretis' : 'Theoretical');
-  const confColor   = hasData ? (recentRuns.length >= 5 ? 'var(--alert-success-text)' : recentRuns.length >= 2 ? 'var(--alert-warning-text)' : 'var(--alert-danger-text)') : 'var(--alert-info-text)';
+  const confColor = hasData
+    ? (recentRuns.length >= 5 ? 'var(--accent-emerald)' : recentRuns.length >= 2 ? 'var(--accent-amber)' : 'var(--accent-rose)')
+    : 'var(--accent-sky)';
 
   // Predictions for all distances
   const predictions = useMemo(() => {
@@ -280,14 +282,17 @@ export default function RacePrediction({ activities, targetPace, lang = 'id', ac
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 12 }}>
         {predictions.map(p => (
           <div key={p.key} style={{
-            background: p.colorDim, border: `1px solid ${p.border}`,
-            borderRadius: 14, padding: '18px 16px',
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border)',
+            borderTop: `2px solid ${p.accent}`,
+            borderRadius: 14,
+            padding: '16px',
           }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: p.color, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{p.label}</div>
-            <div style={{ fontSize: 28, fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-0.5px', lineHeight: 1.1, marginTop: 6 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: p.accent, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{p.label}</div>
+            <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.3px', lineHeight: 1.1, marginTop: 6 }}>
               {secsToTime(p.predSec)}
             </div>
-            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4, fontWeight: 500 }}>
               {formatPace(p.predPace)} <span style={{ fontSize: 10 }}>min/km</span>
             </div>
           </div>
@@ -326,11 +331,13 @@ export default function RacePrediction({ activities, targetPace, lang = 'id', ac
                 }
               }}
               style={{
-                padding: '6px 14px', borderRadius: 20, border: `1px solid ${selectedRace === r.key ? r.color : 'var(--border)'}`,
-                background: selectedRace === r.key ? `${r.colorDim}` : 'transparent',
-                color: selectedRace === r.key ? r.color : 'var(--text-muted)',
-                fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'Outfit, sans-serif',
+                padding: '5px 12px', borderRadius: 20,
+                border: `1px solid ${selectedRace === r.key ? r.accent : 'var(--border)'}`,
+                background: selectedRace === r.key ? 'transparent' : 'transparent',
+                color: selectedRace === r.key ? r.accent : 'var(--text-muted)',
+                fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'Outfit, sans-serif',
                 transition: 'all 0.15s',
+                outline: 'none',
               }}
             >
               {r.label}
@@ -412,7 +419,7 @@ export default function RacePrediction({ activities, targetPace, lang = 'id', ac
                     <div style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>
                       {lang === 'id' ? 'Target Lo' : 'Your Goal'}
                     </div>
-                    <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--alert-info-text)', marginTop: 2 }}>{secsToTime(goalSecs)}</div>
+                    <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--accent-purple)', marginTop: 2 }}>{secsToTime(goalSecs)}</div>
                   </div>
                   <div style={{ background: 'var(--hover-overlay)', borderRadius: 10, padding: '10px 12px' }}>
                     <div style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>
@@ -424,7 +431,7 @@ export default function RacePrediction({ activities, targetPace, lang = 'id', ac
                     <div style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>
                       {lang === 'id' ? 'Perlu Improve' : 'Improvement Needed'}
                     </div>
-                    <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--alert-warning-text)', marginTop: 2 }}>
+                    <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--accent-amber)', marginTop: 2 }}>
                       {(((currentPred.predPace - goalPaceMinKm) / currentPred.predPace) * 100).toFixed(1)}%
                     </div>
                   </div>
@@ -465,17 +472,17 @@ export default function RacePrediction({ activities, targetPace, lang = 'id', ac
       {vo2max > 0 && (
         <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 14, padding: '16px 20px' }}>
           <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 10 }}>
-            {lang === 'id' ? 'Estimasi VO2Max:' : 'Estimated VO2Max:'} <span style={{ color: '#818cf8' }}>{vo2max}</span> ml/kg/min
+            {lang === 'id' ? 'Estimasi VO2Max:' : 'Estimated VO2Max:'} <span style={{ color: 'var(--accent-purple)' }}>{vo2max}</span> ml/kg/min
           </div>
           <div style={{ display: 'flex', gap: 3, height: 6, borderRadius: 99, overflow: 'hidden', marginBottom: 10 }}>
             {[
-              { color: '#475569', active: vo2max < 30 || true },
-              { color: '#fb7185', active: vo2max >= 30 },
-              { color: '#f97316', active: vo2max >= 38 },
-              { color: '#fbbf24', active: vo2max >= 46 },
-              { color: '#34d399', active: vo2max >= 52 },
-              { color: '#38bdf8', active: vo2max >= 57 },
-              { color: '#818cf8', active: vo2max >= 62 },
+              { color: 'var(--text-muted)',    active: vo2max < 30 || true },
+              { color: 'var(--accent-rose)',    active: vo2max >= 30 },
+              { color: 'var(--accent-amber)',   active: vo2max >= 38 },
+              { color: 'var(--accent-amber)',   active: vo2max >= 46 },
+              { color: 'var(--accent-emerald)', active: vo2max >= 52 },
+              { color: 'var(--accent-sky)',     active: vo2max >= 57 },
+              { color: 'var(--accent-purple)',  active: vo2max >= 62 },
             ].map((seg, i) => (
               <div key={i} style={{ flex: 1, background: seg.color, opacity: seg.active ? 1 : 0.15, transition: 'opacity 0.3s' }} />
             ))}

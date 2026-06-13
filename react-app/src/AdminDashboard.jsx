@@ -609,12 +609,12 @@ export default function AdminDashboard({ onBack }) {
               <div style={{ position: 'absolute', top: -20, right: -20, width: 60, height: 60, background: '#3b82f6', opacity: 0.1, filter: 'blur(20px)', borderRadius: '50%' }} />
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div style={{ zIndex: 1 }}>
-                  <div style={{ fontSize: 11, color: '#93c5fd', marginBottom: 4, fontWeight: 600 }}>Aktif Harian (DAU)</div>
-                  <div style={{ fontSize: 24, fontWeight: '800', color: '#60a5fa', letterSpacing: '-0.5px' }}>{dau}</div>
+                  <div style={{ fontSize: 11, color: 'var(--accent-sky)', marginBottom: 4, fontWeight: 600 }}>Aktif Harian (DAU)</div>
+                  <div style={{ fontSize: 24, fontWeight: '800', color: 'var(--accent-sky)', letterSpacing: '-0.5px' }}>{dau}</div>
                   <div style={{ fontSize: 10, color: 'rgba(147, 197, 253, 0.6)', marginTop: 4 }}>Login dlm 24 jam</div>
                 </div>
                 <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(59, 130, 246, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
-                  <Activity size={16} color="#60a5fa" />
+                  <Activity size={16} color="var(--accent-sky)" />
                 </div>
               </div>
             </div>
@@ -623,12 +623,12 @@ export default function AdminDashboard({ onBack }) {
               <div style={{ position: 'absolute', top: -20, right: -20, width: 60, height: 60, background: '#8b5cf6', opacity: 0.1, filter: 'blur(20px)', borderRadius: '50%' }} />
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div style={{ zIndex: 1 }}>
-                  <div style={{ fontSize: 11, color: '#c4b5fd', marginBottom: 4, fontWeight: 600 }}>Aktif Bulanan (MAU)</div>
-                  <div style={{ fontSize: 24, fontWeight: '800', color: '#a78bfa', letterSpacing: '-0.5px' }}>{mau}</div>
+                  <div style={{ fontSize: 11, color: 'var(--accent-purple)', opacity: 0.8, marginBottom: 4, fontWeight: 600 }}>Aktif Bulanan (MAU)</div>
+                  <div style={{ fontSize: 24, fontWeight: '800', color: 'var(--accent-purple)', letterSpacing: '-0.5px' }}>{mau}</div>
                   <div style={{ fontSize: 10, color: 'rgba(196, 181, 253, 0.6)', marginTop: 4 }}>Login dlm 30 hari</div>
                 </div>
                 <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(139, 92, 246, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
-                  <TrendingUp size={16} color="#a78bfa" />
+                  <TrendingUp size={16} color="var(--accent-purple)" />
                 </div>
               </div>
             </div>
@@ -637,12 +637,12 @@ export default function AdminDashboard({ onBack }) {
               <div style={{ position: 'absolute', top: -20, right: -20, width: 60, height: 60, background: '#f59e0b', opacity: 0.1, filter: 'blur(20px)', borderRadius: '50%' }} />
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div style={{ zIndex: 1 }}>
-                  <div style={{ fontSize: 11, color: '#fcd34d', marginBottom: 4, fontWeight: 600 }}>User PRO</div>
-                  <div style={{ fontSize: 24, fontWeight: '800', color: '#fbbf24', letterSpacing: '-0.5px' }}>{paidProUsers.length}</div>
+                  <div style={{ fontSize: 11, color: 'var(--accent-amber)', opacity: 0.8, marginBottom: 4, fontWeight: 600 }}>User PRO</div>
+                  <div style={{ fontSize: 24, fontWeight: '800', color: 'var(--accent-amber)', letterSpacing: '-0.5px' }}>{paidProUsers.length}</div>
                   <div style={{ fontSize: 10, color: 'rgba(252, 211, 77, 0.6)', marginTop: 4 }}>Berlangganan aktif</div>
                 </div>
                 <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(245, 158, 11, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
-                  <Crown size={16} color="#fbbf24" />
+                  <Crown size={16} color="var(--accent-amber)" />
                 </div>
               </div>
             </div>
@@ -651,14 +651,14 @@ export default function AdminDashboard({ onBack }) {
               <div style={{ position: 'absolute', top: -20, right: -20, width: 60, height: 60, background: '#10b981', opacity: 0.1, filter: 'blur(20px)', borderRadius: '50%' }} />
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div style={{ zIndex: 1 }}>
-                  <div style={{ fontSize: 11, color: '#6ee7b7', marginBottom: 4, fontWeight: 600 }}>Estimasi Revenue / Bln</div>
-                  <div style={{ fontSize: 22, fontWeight: '800', color: '#34d399', letterSpacing: '-0.5px' }}>
+                  <div style={{ fontSize: 11, color: 'var(--accent-emerald)', opacity: 0.8, marginBottom: 4, fontWeight: 600 }}>Estimasi Revenue / Bln</div>
+                  <div style={{ fontSize: 22, fontWeight: '800', color: 'var(--accent-emerald)', letterSpacing: '-0.5px' }}>
                     Rp {(paidProUsers.length * 29000).toLocaleString('id-ID')}
                   </div>
                   <div style={{ fontSize: 10, color: 'rgba(110, 231, 183, 0.6)', marginTop: 4 }}>Gross Estimate</div>
                 </div>
                 <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(16, 185, 129, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
-                  <DollarSign size={16} color="#34d399" />
+                  <DollarSign size={16} color="var(--accent-emerald)" />
                 </div>
               </div>
             </div>
@@ -667,12 +667,12 @@ export default function AdminDashboard({ onBack }) {
               <div style={{ position: 'absolute', top: -20, right: -20, width: 60, height: 60, background: '#ec4899', opacity: 0.1, filter: 'blur(20px)', borderRadius: '50%' }} />
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div style={{ zIndex: 1 }}>
-                  <div style={{ fontSize: 11, color: '#f9a8d4', marginBottom: 4, fontWeight: 600 }}>Total Artikel Blog</div>
-                  <div style={{ fontSize: 24, fontWeight: '800', color: '#f472b6', letterSpacing: '-0.5px' }}>{totalBlogs}</div>
+                  <div style={{ fontSize: 11, color: 'var(--accent-rose)', opacity: 0.8, marginBottom: 4, fontWeight: 600 }}>Total Artikel Blog</div>
+                  <div style={{ fontSize: 24, fontWeight: '800', color: 'var(--accent-rose)', letterSpacing: '-0.5px' }}>{totalBlogs}</div>
                   <div style={{ fontSize: 10, color: 'rgba(249, 168, 212, 0.6)', marginTop: 4 }}>Klik untuk mengelola</div>
                 </div>
                 <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(236, 72, 153, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
-                  <FileText size={16} color="#f472b6" />
+                  <FileText size={16} color="var(--accent-rose)" />
                 </div>
               </div>
             </div>
@@ -737,21 +737,21 @@ export default function AdminDashboard({ onBack }) {
                           const isPro = u.data?.profile?.isPremium || (u.data?.profile?.premiumUntil && u.data.profile.premiumUntil > Date.now());
                           if (!isPro) return '-';
                           if (u.data?.profile?.premiumUntil) {
-                            return <span style={{ color: '#10b981', fontWeight: 600 }}>s/d {new Date(u.data.profile.premiumUntil).toLocaleDateString('id-ID')}</span>;
+                            return <span style={{ color: 'var(--accent-emerald)', fontWeight: 600 }}>s/d {new Date(u.data.profile.premiumUntil).toLocaleDateString('id-ID')}</span>;
                           }
-                          return <span style={{ color: '#10b981', fontWeight: 600 }}>Aktif (Permanen)</span>;
+                          return <span style={{ color: 'var(--accent-emerald)', fontWeight: 600 }}>Aktif (Permanen)</span>;
                         })()}
                       </td>
                       <td style={{ padding: '16px', textAlign: 'center', display: 'flex', gap: '8px', justifyContent: 'center' }}>
                         <button 
                           onClick={() => handleTogglePremium(u.id, u.data?.profile)}
-                          style={{ background: (u.data?.profile?.isPremium || (u.data?.profile?.premiumUntil && u.data.profile.premiumUntil > Date.now())) ? '#f59e0b' : '#10b981', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', whiteSpace: 'nowrap' }}
+                          style={{ background: (u.data?.profile?.isPremium || (u.data?.profile?.premiumUntil && u.data.profile.premiumUntil > Date.now())) ? 'var(--accent-amber)' : 'var(--accent-emerald)', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', whiteSpace: 'nowrap' }}
                         >
                           {(u.data?.profile?.isPremium || (u.data?.profile?.premiumUntil && u.data.profile.premiumUntil > Date.now())) ? 'Cabut PRO' : '+ Jadikan PRO'}
                         </button>
                         <button 
                           onClick={() => handleDeleteUser(u.id)}
-                          style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
+                          style={{ background: 'var(--accent-rose)', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
                         >
                           Hapus
                         </button>
@@ -787,7 +787,7 @@ export default function AdminDashboard({ onBack }) {
                   onChange={e => setGlobalSettings({...globalSettings, stravaSyncEnabled: e.target.checked})}
                   style={{ opacity: 0, position: 'absolute', width: 0, height: 0 }}
                 />
-                <div style={{ width: 44, height: 24, background: globalSettings.stravaSyncEnabled !== false ? '#10b981' : '#ef4444', borderRadius: 24, position: 'relative', transition: 'background 0.3s' }}>
+                <div style={{ width: 44, height: 24, background: globalSettings.stravaSyncEnabled !== false ? 'var(--accent-emerald)' : 'var(--accent-rose)', borderRadius: 24, position: 'relative', transition: 'background 0.3s' }}>
                   <div style={{ position: 'absolute', top: 2, left: globalSettings.stravaSyncEnabled !== false ? 22 : 2, width: 20, height: 20, background: '#fff', borderRadius: '50%', transition: 'left 0.3s' }}></div>
                 </div>
               </label>
@@ -810,7 +810,7 @@ export default function AdminDashboard({ onBack }) {
               <button 
                 type="button"
                 onClick={() => setGlobalSettings({...globalSettings, stravaSyncMode: 'full'})}
-                style={{ background: globalSettings.stravaSyncMode === 'full' ? '#ef4444' : 'transparent', color: globalSettings.stravaSyncMode === 'full' ? '#fff' : 'var(--text-secondary)', border: 'none', padding: '10px 20px', borderRadius: 8, fontWeight: 600, fontSize: 14, cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: 6 }}
+                style={{ background: globalSettings.stravaSyncMode === 'full' ? 'var(--accent-rose)' : 'transparent', color: globalSettings.stravaSyncMode === 'full' ? '#fff' : 'var(--text-secondary)', border: 'none', padding: '10px 20px', borderRadius: 8, fontWeight: 600, fontSize: 14, cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: 6 }}
               >
                 <Database size={16} /> Full Sync (Semua Data)
               </button>

@@ -385,7 +385,7 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
           <div style={{
             background: 'rgba(249, 115, 22, 0.1)', border: '1px solid rgba(249, 115, 22, 0.3)',
             padding: '6px 12px', borderRadius: 20, display: 'flex', alignItems: 'center', gap: 6,
-            color: '#f97316', fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap'
+            color: 'var(--accent-amber)', fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap'
           }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path>
@@ -422,7 +422,7 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
             onClick={togglePause}
             style={{
               background: isPaused ? 'rgba(251,113,133,0.1)' : 'var(--bg-card)', 
-              color: isPaused ? '#fb7185' : 'var(--text-primary)', 
+              color: isPaused ? 'var(--accent-rose)' : 'var(--text-primary)', 
               border: `1px solid ${isPaused ? 'rgba(251,113,133,0.3)' : 'var(--border)'}`,
               padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 700,
               cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, transition: 'all 0.2s'
@@ -476,7 +476,7 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
               {lang === 'id' ? (
                 <>
                   Pace terbaik lo dari data: <strong style={{ color: 'var(--text-primary)' }}>{formatPace(actualBestPace)} min/km</strong>
-                  {' '}· Target lo: <strong style={{ color: '#818cf8' }}>{formatPace(targetPace)} min/km</strong>
+                  {' '}· Target lo: <strong style={{ color: 'var(--accent-purple)' }}>{formatPace(targetPace)} min/km</strong>
                   <br />
                   Rencana latihan ini dirancang untuk membawa lo dari kemampuan saat ini menuju target tersebut.
                   Zone Ngepush / Sedang / Santai di bawah mengacu pada <strong>target pace</strong> lo.
@@ -484,7 +484,7 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
               ) : (
                 <>
                   Your best pace from data: <strong style={{ color: 'var(--text-primary)' }}>{formatPace(actualBestPace)} min/km</strong>
-                  {' '}· Your target: <strong style={{ color: '#818cf8' }}>{formatPace(targetPace)} min/km</strong>
+                  {' '}· Your target: <strong style={{ color: 'var(--accent-purple)' }}>{formatPace(targetPace)} min/km</strong>
                   <br />
                   This training plan is designed to help you reach that target from your current fitness level.
                   The Push / Moderate / Easy zones below refer to your <strong>target pace</strong>.
@@ -503,7 +503,7 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
             <line x1="12" y1="8" x2="12.01" y2="8"></line>
           </svg>
           <div>
-            <div style={{ fontWeight: 700, marginBottom: 4, color: '#0369a1' }}>
+            <div style={{ fontWeight: 700, marginBottom: 4, color: 'var(--accent-sky)' }}>
               {lang === 'id' ? 'Target Pace Belum Diatur' : 'Target Pace Not Set'}
             </div>
             <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
@@ -516,23 +516,23 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
       )}
 
       <div className="pace-grid" style={{ marginBottom: 20 }}>
-        <div className="pace-card" style={{ background: 'var(--alert-danger-bg)', border: '1px solid var(--alert-danger-border)', padding: '12px' }}>
-          <div className="pace-label" style={{ color: 'var(--alert-danger-text)' }}>{lang === 'id' ? 'Ngepush' : 'Push'}</div>
-          <div className="pace-value" style={{ fontSize: '15px' }}>{paces.ngepush}</div>
-          <div className="pace-unit" style={{ fontSize: '10px' }}>min/km</div>
-          {age && <div style={{ fontSize: 10, color: 'var(--alert-danger-text)', marginTop: 2, fontWeight: 600 }}>HR {getHRForZone(0.8, 0.9)}</div>}
+        <div className="pace-card" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderTop: '2px solid var(--accent-rose)', padding: '12px' }}>
+          <div className="pace-label" style={{ color: 'var(--accent-rose)', fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>{lang === 'id' ? 'Ngepush' : 'Push'}</div>
+          <div className="pace-value" style={{ fontSize: '22px', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.1 }}>{paces.ngepush}</div>
+          <div className="pace-unit" style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 500 }}>min/km</div>
+          {age && <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 4 }}>HR {getHRForZone(0.8, 0.9)}</div>}
         </div>
-        <div className="pace-card" style={{ background: 'var(--alert-info-bg)', border: '1px solid var(--alert-info-border)', padding: '12px' }}>
-          <div className="pace-label" style={{ color: 'var(--alert-info-text)' }}>{lang === 'id' ? 'Sedang' : 'Moderate'}</div>
-          <div className="pace-value" style={{ fontSize: '15px' }}>{paces.sedang}</div>
-          <div className="pace-unit" style={{ fontSize: '10px' }}>min/km</div>
-          {age && <div style={{ fontSize: 10, color: 'var(--alert-info-text)', marginTop: 2, fontWeight: 600 }}>HR {getHRForZone(0.7, 0.8)}</div>}
+        <div className="pace-card" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderTop: '2px solid var(--accent-amber)', padding: '12px' }}>
+          <div className="pace-label" style={{ color: 'var(--accent-amber)', fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>{lang === 'id' ? 'Sedang' : 'Moderate'}</div>
+          <div className="pace-value" style={{ fontSize: '22px', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.1 }}>{paces.sedang}</div>
+          <div className="pace-unit" style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 500 }}>min/km</div>
+          {age && <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 4 }}>HR {getHRForZone(0.7, 0.8)}</div>}
         </div>
-        <div className="pace-card" style={{ background: 'var(--alert-success-bg)', border: '1px solid var(--alert-success-border)', padding: '12px' }}>
-          <div className="pace-label" style={{ color: 'var(--alert-success-text)' }}>{lang === 'id' ? 'Santai' : 'Easy'}</div>
-          <div className="pace-value" style={{ fontSize: '15px' }}>{paces.santai}</div>
-          <div className="pace-unit" style={{ fontSize: '10px' }}>min/km</div>
-          {age && <div style={{ fontSize: 10, color: 'var(--alert-success-text)', marginTop: 2, fontWeight: 600 }}>HR {getHRForZone(0.6, 0.7)}</div>}
+        <div className="pace-card" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderTop: '2px solid var(--accent-emerald)', padding: '12px' }}>
+          <div className="pace-label" style={{ color: 'var(--accent-emerald)', fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>{lang === 'id' ? 'Santai' : 'Easy'}</div>
+          <div className="pace-value" style={{ fontSize: '22px', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.1 }}>{paces.santai}</div>
+          <div className="pace-unit" style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 500 }}>min/km</div>
+          {age && <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 4 }}>HR {getHRForZone(0.6, 0.7)}</div>}
         </div>
       </div>
 
@@ -596,59 +596,82 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
                        const isCompleted = dItem.hasRun;
                        
                        let colorVar = 'var(--text-muted)';
-                       if (dItem.workout.jenis.includes('Interval') || dItem.workout.jenis.includes('Tempo') || dItem.workout.jenis.includes('HIIT')) colorVar = '#f97316';
-                       else if (dItem.workout.jenis.includes('Easy') || dItem.workout.jenis.includes('Jog') || dItem.workout.jenis.includes('Zone 2') || dItem.workout.jenis.includes('MAF')) colorVar = '#38bdf8';
-                       else if (dItem.workout.jenis.includes('Long') || dItem.workout.jenis.includes('Base Run')) colorVar = '#818cf8';
-                       else if (!isRest) colorVar = '#34d399';
+                       if (dItem.workout.jenis.includes('Interval') || dItem.workout.jenis.includes('Tempo') || dItem.workout.jenis.includes('HIIT')) colorVar = 'var(--accent-rose)';
+                       else if (dItem.workout.jenis.includes('Easy') || dItem.workout.jenis.includes('Jog') || dItem.workout.jenis.includes('Zone 2') || dItem.workout.jenis.includes('MAF')) colorVar = 'var(--accent-sky)';
+                       else if (dItem.workout.jenis.includes('Long') || dItem.workout.jenis.includes('Base Run')) colorVar = 'var(--accent-purple)';
+                       else if (!isRest) colorVar = 'var(--accent-emerald)';
                        
+                       // Accent color — subtle, using opacity instead of bold color
+                       const accentColor = colorVar;
+
                        return (
-                         <div id={dItem.isToday ? 'today-card' : ''} key={dIdx} onClick={() => handleDayClick(dItem)} style={{ minHeight: 130, background: 'var(--bg-card)', borderRadius: 12, padding: '14px 12px', border: dItem.isToday ? '2px solid var(--accent-purple)' : '1px solid var(--border)', cursor: 'pointer', opacity: dItem.isPast && !dItem.isToday ? 0.6 : 1, transition: 'transform 0.15s, background 0.15s', display: 'flex', flexDirection: 'column' }} onMouseEnter={e => { if(!dItem.isPast) e.currentTarget.style.background = 'var(--bg-card-hover)'; e.currentTarget.style.transform = 'translateY(-2px)'}} onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-card)'; e.currentTarget.style.transform = 'translateY(0)'}}>
-                           
-                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+                         <div
+                           id={dItem.isToday ? 'today-card' : ''}
+                           key={dIdx}
+                           onClick={() => handleDayClick(dItem)}
+                           style={{
+                             minHeight: 120,
+                             background: 'var(--bg-card)',
+                             borderRadius: 14,
+                             padding: '12px 14px',
+                             border: dItem.isToday ? '1px solid var(--accent-purple)' : '1px solid var(--border)',
+                             boxShadow: dItem.isToday ? '0 0 0 1px var(--accent-purple)' : 'none',
+                             cursor: 'pointer',
+                             opacity: dItem.isPast && !dItem.isToday ? 0.55 : 1,
+                             transition: 'transform 0.15s, box-shadow 0.15s',
+                             display: 'flex',
+                             flexDirection: 'column',
+                             gap: 8,
+                           }}
+                           onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = dItem.isToday ? '0 0 0 1px var(--accent-purple), 0 4px 12px rgba(0,0,0,0.15)' : '0 4px 12px rgba(0,0,0,0.1)'; }}
+                           onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = dItem.isToday ? '0 0 0 1px var(--accent-purple)' : 'none'; }}
+                         >
+                           {/* Day header */}
+                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                              <div>
-                               <div style={{ fontSize: 11, fontWeight: 700, color: dItem.isToday ? 'var(--accent-purple)' : 'var(--text-muted)' }}>{dayName}</div>
-                               <div style={{ fontSize: 20, fontWeight: 800, color: dItem.isToday ? 'var(--accent-purple)' : 'var(--text-primary)' }}>{dateNum}</div>
+                               <div style={{ fontSize: 10, fontWeight: 700, color: dItem.isToday ? 'var(--accent-purple)' : 'var(--text-muted)', letterSpacing: '0.05em' }}>{dayName}</div>
+                               <div style={{ fontSize: 18, fontWeight: 800, color: dItem.isToday ? 'var(--accent-purple)' : 'var(--text-primary)', lineHeight: 1.1 }}>{dateNum}</div>
                              </div>
                              {isCompleted && (
-                               <div style={{ color: '#10b981', background: 'rgba(16,185,129,0.1)', borderRadius: '50%', width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                               <div style={{ color: 'var(--accent-emerald)', background: 'rgba(16,185,129,0.08)', borderRadius: '50%', width: 22, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
                                </div>
                              )}
                            </div>
 
-                           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', overflow: 'hidden' }}>
+                           {/* Content */}
+                           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', overflow: 'hidden' }}>
                              {dItem.hasRun && dItem.actObjs && dItem.actObjs.length > 0 ? (
-                               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                                  {dItem.actObjs.slice(0, 2).map((act, actIdx) => (
-                                   <div key={actIdx} style={{ borderLeft: `4px solid #10b981`, paddingLeft: 10 }}>
-                                     <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 6, lineHeight: 1.3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                   <div key={actIdx} style={{ borderLeft: `2px solid var(--accent-emerald)`, paddingLeft: 8 }}>
+                                     <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                        {act.name || (act.manualType ? act.manualType.charAt(0).toUpperCase() + act.manualType.slice(1) : (lang === 'id' ? 'Selesai' : 'Completed'))}
                                      </div>
-                                     <div style={{ fontSize: 12, color: 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                     <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                        {act.distance > 0 ? `${(act.distance / 100000).toFixed(2)} km` : ''}
                                        {act.distance > 0 && act.duration ? ' • ' : ''}
-                                       {act.duration ? `${Math.round(act.duration / 60000)} min` : ''} 
-                                       {act.calories ? ` • ${Math.round(act.calories)} kcal` : ''}
+                                       {act.duration ? `${Math.round(act.duration / 60000)} min` : ''}
                                      </div>
                                    </div>
                                  ))}
                                  {dItem.actObjs.length > 2 && (
-                                   <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, paddingLeft: 14 }}>
-                                     + {dItem.actObjs.length - 2} {lang === 'id' ? 'aktivitas lain' : 'more'}
+                                   <div style={{ fontSize: 10, color: 'var(--text-muted)', paddingLeft: 10 }}>
+                                     +{dItem.actObjs.length - 2} {lang === 'id' ? 'lagi' : 'more'}
                                    </div>
                                  )}
                                </div>
                              ) : isRest ? (
-                               <div style={{ color: 'var(--text-muted)', fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
-                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                               <div style={{ color: 'var(--text-muted)', fontSize: 12, display: 'flex', alignItems: 'center', gap: 5 }}>
+                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                                  {lang === 'id' ? 'Add (Rest)' : 'Add (Rest)'}
                                </div>
                              ) : (
-                               <div style={{ borderLeft: `4px solid ${colorVar}`, paddingLeft: 10 }}>
-                                 <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 6, lineHeight: 1.3 }}>
+                               <div style={{ borderLeft: `2px solid ${accentColor}`, paddingLeft: 8 }}>
+                                 <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.3 }}>
                                    {getJenis(dItem.workout.jenis)}
                                  </div>
-                                 <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+                                 <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
                                    {getDurasi(dItem.workout.durasi)}
                                  </div>
                                </div>
@@ -696,7 +719,7 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
           </div>
 
           <div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: '#38bdf8', marginBottom: 8 }}>{guides.yogaTitle}</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--accent-sky)', marginBottom: 8 }}>{guides.yogaTitle}</div>
             <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 10 }}>
               {guides.yogaDesc}
             </p>
@@ -708,7 +731,7 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
           </div>
 
           <div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: '#34d399', marginBottom: 8 }}>{guides.breathTitle}</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--accent-emerald)', marginBottom: 8 }}>{guides.breathTitle}</div>
             <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 10 }}>
               {guides.breathDesc}
             </p>

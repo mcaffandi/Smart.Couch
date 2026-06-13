@@ -4538,7 +4538,7 @@ export default function App() {
                       {Object.entries(sleepRecs).sort(([a], [b]) => b.localeCompare(a)).map(([key, rec]) => {
                         const dateForDisplay = rec.dateStr || key.split('_')[0];
                         const s = rec.score;
-                        const color = s >= 80 ? '#10b981' : s >= 60 ? '#f59e0b' : '#ef4444';
+                        const color = s >= 80 ? 'var(--accent-emerald)' : s >= 60 ? 'var(--accent-amber)' : 'var(--accent-rose)';
                         return (
                           <div className="sleep-history-card" key={key}>
                             <div className="sleep-card-left">
