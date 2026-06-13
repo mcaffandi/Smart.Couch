@@ -3536,8 +3536,8 @@ export default function App() {
           {hasData && (
             <div style={{ fontSize: 11, color: 'var(--text-muted)', textAlign: 'center', marginTop: 4 }}>
               {lang === 'id'
-                ? `${totalSessions} sesi lari · ${Object.keys(sleepRecs).length} malam tidur`
-                : `${totalSessions} runs · ${Object.keys(sleepRecs).length} sleep logs`}
+                ? `${totalSessions} aktivitas · ${Object.keys(sleepRecs).length} malam tidur`
+                : `${totalSessions} activities · ${Object.keys(sleepRecs).length} sleep logs`}
             </div>
           )}
         </div>
@@ -4441,7 +4441,7 @@ export default function App() {
                   lang={lang}
                   onViewDetails={setSelectedRunForDetails}
                   onDelete={(actTime) => {
-                    if (window.confirm(lang === 'id' ? 'Hapus sesi lari ini?' : 'Delete this run session?')) {
+                    if (window.confirm(lang === 'id' ? 'Hapus aktivitas ini?' : 'Delete this activity?')) {
                       setData(prev => {
                         const updated = {
                           ...prev,

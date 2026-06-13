@@ -72,10 +72,10 @@ export default function RunHistory({ activities, profileWeight = 70, lang = 'id'
 
   const calculateBadges = (acts) => {
     const badges = [];
-    if (acts.length >= 1) badges.push({ id: 'first', icon: <Star size={28} color="#eab308" />, title: lang === 'id' ? 'Langkah Pertama' : 'First Step', desc: lang === 'id' ? 'Menyelesaikan lari pertama.' : 'Completed first run.', color: 'rgba(234, 179, 8, 0.15)', border: '#eab308' });
-    if (acts.length >= 5) badges.push({ id: 'streak', icon: <Flame size={28} color="#ef4444" />, title: 'On Fire', desc: lang === 'id' ? '5+ sesi lari terselesaikan.' : '5+ sessions completed.', color: 'rgba(239, 68, 68, 0.15)', border: '#ef4444' });
-    if (acts.some(a => a.distance >= 500000)) badges.push({ id: '5k', icon: <Trophy size={28} color="#3b82f6" />, title: '5K Finisher', desc: lang === 'id' ? 'Berhasil lari 5km+.' : 'Completed 5km+ run.', color: 'rgba(59, 130, 246, 0.15)', border: '#3b82f6' });
-    if (acts.some(a => a.distance >= 1000000)) badges.push({ id: '10k', icon: <Medal size={28} color="#10b981" />, title: '10K Finisher', desc: lang === 'id' ? 'Berhasil lari 10km+.' : 'Completed 10km+ run.', color: 'rgba(16, 185, 129, 0.15)', border: '#10b981' });
+    if (acts.length >= 1) badges.push({ id: 'first', icon: <Star size={28} color="#eab308" />, title: lang === 'id' ? 'Langkah Pertama' : 'First Step', desc: lang === 'id' ? 'Menyelesaikan aktivitas pertama.' : 'Completed first activity.', color: 'rgba(234, 179, 8, 0.15)', border: '#eab308' });
+    if (acts.length >= 5) badges.push({ id: 'streak', icon: <Flame size={28} color="#ef4444" />, title: 'On Fire', desc: lang === 'id' ? '5+ sesi aktivitas terselesaikan.' : '5+ activity sessions completed.', color: 'rgba(239, 68, 68, 0.15)', border: '#ef4444' });
+    if (acts.some(a => a.distance >= 500000)) badges.push({ id: '5k', icon: <Trophy size={28} color="#3b82f6" />, title: '5K Finisher', desc: lang === 'id' ? 'Berhasil menempuh 5km+.' : 'Completed 5km+ distance.', color: 'rgba(59, 130, 246, 0.15)', border: '#3b82f6' });
+    if (acts.some(a => a.distance >= 1000000)) badges.push({ id: '10k', icon: <Medal size={28} color="#10b981" />, title: '10K Finisher', desc: lang === 'id' ? 'Berhasil menempuh 10km+.' : 'Completed 10km+ distance.', color: 'rgba(16, 185, 129, 0.15)', border: '#10b981' });
     if (acts.some(a => a.distance >= 2109700)) badges.push({ id: 'hm', icon: <Crown size={28} color="#a78bfa" />, title: 'Half Marathon', desc: lang === 'id' ? 'Menyelesaikan jarak HM.' : 'Completed HM distance.', color: 'rgba(167, 139, 250, 0.15)', border: '#a78bfa' });
     
     const hasSpeedy = acts.some(a => {
@@ -83,7 +83,7 @@ export default function RunHistory({ activities, profileWeight = 70, lang = 'id'
       const pace = (a.duration / 60000) / (a.distance / 100000);
       return pace <= 5.5;
     });
-    if (hasSpeedy) badges.push({ id: 'speed', icon: <Zap size={28} color="#06b6d4" />, title: 'Speed Demon', desc: lang === 'id' ? 'Pace lari sub 5:30/km.' : 'Sub 5:30/km pace.', color: 'rgba(6, 182, 212, 0.15)', border: '#06b6d4' });
+    if (hasSpeedy) badges.push({ id: 'speed', icon: <Zap size={28} color="#06b6d4" />, title: 'Speed Demon', desc: lang === 'id' ? 'Pace sub 5:30/km.' : 'Sub 5:30/km pace.', color: 'rgba(6, 182, 212, 0.15)', border: '#06b6d4' });
 
     return badges;
   };
