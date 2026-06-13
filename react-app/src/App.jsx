@@ -123,6 +123,7 @@ export default function App() {
   const [selectedDays, setSelectedDays] = useState(() => data.profile?.selectedDays ?? ['Selasa', 'Kamis', 'Sabtu']);
   const [globalSettings, setGlobalSettings] = useState({ stravaSyncMode: 'fast' });
   const [dashboardTimeRange, setDashboardTimeRange] = useState('all');
+  const [showGoalOverlay, setShowGoalOverlay] = useState(false);
 
   const filteredDashboardActs = useMemo(() => {
     if (dashboardTimeRange === 'all' || !data.running_activities) {
@@ -3087,22 +3088,70 @@ export default function App() {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                     <div>
                       <label style={lbl}>{t.mainGoal}</label>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                        {[
-                          { val: 'maintenance', label: t.maintenance },
-                          { val: 'weightloss', label: lang === 'id' ? 'Turun Berat' : 'Weight Loss' },
-                          { val: '5k', label: '5K' },
-                          { val: '10k', label: '10K' },
-                          { val: 'marathon', label: 'Marathon' },
-                          { val: 'turun-hr', label: lang === 'id' ? 'Turun HR' : 'Lower HR' },
-                          { val: 'health', label: lang === 'id' ? 'Kesehatan' : 'Health' }
-                        ].map(g => (
-                          <button key={g.val} type="button" onClick={() => setEditDraft(p => ({ ...p, goal: g.val }))}
-                            style={{ ...inp, flex: '1 1 auto', minWidth: '80px', cursor: 'pointer', textAlign: 'center', padding: '10px 12px', fontSize: 13, fontWeight: 600, border: (d.goal ?? 'maintenance') === g.val ? '1.5px solid var(--accent-purple)' : '1px solid var(--border)', background: (d.goal ?? 'maintenance') === g.val ? 'rgba(167, 139, 250, 0.1)' : 'var(--bg-card)', color: (d.goal ?? 'maintenance') === g.val ? 'var(--accent-purple)' : 'var(--text-secondary)' }}>
-                            {g.label}
-                          </button>
-                        ))}
-                      </div>
+                      {(() => {
+                        const goalOptions = [
+                          { val: 'maintenance', label: t.maintenance, icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>, desc: lang==='id'?'Jaga kebugaran dan stamina harian':'Keep daily fitness and stamina' },
+                          { val: 'weightloss', label: lang === 'id' ? 'Turun Berat' : 'Weight Loss', icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0011 12c-1.11-1.11-.93-3-.93-3a5.5 5.5 0 00-3.5 3c-.76.9-1.07 2.15-1.07 3.5A5.5 5.5 0 0011 21c2.19 0 4-1.22 4.93-3 .24-.5.35-1.04.35-1.6A5.4 5.4 0 0014 11c0-1.7-.63-3.23-1.65-4.35-.38-.42-.92-.66-1.48-.65H10c-.57.01-1.1.26-1.47.69C7.45 7.85 6.8 9.4 6.8 11.1c0 1.25.43 2.45 1.15 3.4z"></path></svg>, desc: lang==='id'?'Fokus pembakaran kalori ekstra':'Focus on extra calorie burn' },
+                          { val: '5k', label: '5K', icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>, desc: lang==='id'?'Persiapan matang untuk jarak 5K':'Preparation for 5K distance' },
+                          { val: '10k', label: '10K', icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>, desc: lang==='id'?'Bangun daya tahan untuk 10K':'Build endurance for 10K' },
+                          { val: 'marathon', label: 'Marathon', icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path></svg>, desc: lang==='id'?'Latihan jarak jauh HM & FM':'Long distance training HM & FM' },
+                          { val: 'turun-hr', label: lang === 'id' ? 'Turun HR' : 'Lower HR', icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ec4899" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.42 4.58a5.4 5.4 0 00-7.65 0l-.77.78-.77-.78a5.4 5.4 0 00-7.65 0C1.46 6.7 1.33 10.28 4 13l8 8 8-8c2.67-2.72 2.54-6.3.42-8.42z"></path></svg>, desc: lang==='id'?'Latihan basis aerobik jantung':'Aerobic base building' },
+                          { val: 'health', label: lang === 'id' ? 'Kesehatan' : 'Health', icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#14b8a6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>, desc: lang==='id'?'Olahraga santai untuk kesehatan':'Light exercise for health' }
+                        ];
+
+                        const currentGoal = goalOptions.find(g => g.val === (d.goal ?? 'maintenance')) || goalOptions[0];
+
+                        return (
+                          <>
+                            <button type="button" onClick={() => setShowGoalOverlay(true)}
+                              style={{ ...inp, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: 'var(--bg-card)', cursor: 'pointer', textAlign: 'left', minHeight: 60 }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                                <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                  {currentGoal.icon}
+                                </div>
+                                <div>
+                                  <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 2 }}>{currentGoal.label}</div>
+                                  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{currentGoal.desc}</div>
+                                </div>
+                              </div>
+                              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            </button>
+
+                            {/* Goal Selection Overlay Modal */}
+                            {showGoalOverlay && (
+                              <div className="profile-modal-backdrop" onClick={e => { if (e.target === e.currentTarget) setShowGoalOverlay(false); }} style={{ zIndex: 10001 }}>
+                                <div className="profile-modal-container" style={{ maxWidth: 400, padding: 0, overflow: 'hidden' }}>
+                                  <div style={{ padding: '20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-card)' }}>
+                                    <div>
+                                      <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800 }}>Pilih Target Latihan</h3>
+                                      <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>Program otomatis disesuaikan dengan target.</div>
+                                    </div>
+                                    <button type="button" onClick={() => setShowGoalOverlay(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
+                                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                                    </button>
+                                  </div>
+                                  <div style={{ maxHeight: '60vh', overflowY: 'auto', padding: '12px' }}>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                      {goalOptions.map(g => (
+                                        <button key={g.val} type="button" onClick={() => { setEditDraft(p => ({ ...p, goal: g.val })); setShowGoalOverlay(false); }}
+                                          style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px', background: (d.goal ?? 'maintenance') === g.val ? 'rgba(167, 139, 250, 0.1)' : 'var(--bg-card)', border: (d.goal ?? 'maintenance') === g.val ? '2px solid var(--accent-purple)' : '2px solid transparent', borderRadius: 12, cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s' }}>
+                                          <div style={{ width: 44, height: 44, borderRadius: 12, background: (d.goal ?? 'maintenance') === g.val ? 'var(--accent-purple)' : 'rgba(255,255,255,0.05)', color: (d.goal ?? 'maintenance') === g.val ? '#fff' : 'var(--text-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                            {g.icon}
+                                          </div>
+                                          <div style={{ flex: 1 }}>
+                                            <div style={{ fontSize: 15, fontWeight: 700, color: (d.goal ?? 'maintenance') === g.val ? 'var(--accent-purple)' : 'var(--text-primary)', marginBottom: 2 }}>{g.label}</div>
+                                            <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{g.desc}</div>
+                                          </div>
+                                        </button>
+                                      ))}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </>
+                        );
+                      })()}
                     </div>
 
                     <div>
