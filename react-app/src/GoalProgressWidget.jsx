@@ -18,15 +18,24 @@ export default function GoalProgressWidget({ data, goal, lang = 'id', onLogWeigh
   const now = Date.now();
   
   // 1. Weightloss
-  const { weightProgress, weightTargetKcal, weightBurnedKcal, weightChartData, startWeight, currentWeight, weightDiff, targetWeight, weightLossETA, programStyle } = useMemo(() => {
+  const { weightProgress, weightTargetKcal, weightBurnedKcal, todayBurnedKcal, weightChartData, startWeight, currentWeight, weightDiff, targetWeight, weightLossETA, programStyle } = useMemo(() => {
     let burned = 0;
+    let todayBurned = 0;
+    const startOfToday = new Date();
+    startOfToday.setHours(0,0,0,0);
+
     runActs.forEach(a => {
+      let actKcal = 0;
       if (a.calories) {
-        burned += a.calories;
+        actKcal = a.calories;
       } else if (a.distance > 0) {
-        burned += (a.distance / 100000) * profileWeight * 1.036; // running kcal
+        actKcal = (a.distance / 100000) * profileWeight * 1.036; // running kcal
       } else if (a.isManual) {
-        burned += (a.duration / 60000) * 8; // approx 8 kcal/min for gym/walking
+        actKcal = (a.duration / 60000) * 8; // approx 8 kcal/min for gym/walking
+      }
+      burned += actKcal;
+      if (a.startTimeLocal && new Date(a.startTimeLocal) >= startOfToday) {
+        todayBurned += actKcal;
       }
     });
     const targetKcal = 38500; // approx 5kg (fallback)
@@ -365,7 +374,7 @@ export default function GoalProgressWidget({ data, goal, lang = 'id', onLogWeigh
                       <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4 }}>Progres BB Saat Ini</div>
                       <div style={{ fontSize: 24, fontWeight: 800, color: '#f43f5e' }}>{currentWeight} <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>kg</span></div>
                       <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 4 }}>
-                        🎯 Target: {targetWeight} kg | Mode: <strong style={{ textTransform: 'capitalize' }}>{programStyle}</strong>
+                        <Target size={14} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> Target: {targetWeight} kg | Mode: <strong style={{ textTransform: 'capitalize' }}>{programStyle}</strong>
                       </div>
                     </div>
                     <div style={{ background: 'var(--bg-card)', padding: 16, borderRadius: 16, border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
@@ -398,9 +407,12 @@ export default function GoalProgressWidget({ data, goal, lang = 'id', onLogWeigh
                   
                   <h3 style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 16 }}>Aktivitas Pendukung</h3>
                   <div style={{ background: 'var(--bg-card)', padding: 16, borderRadius: 16, border: '1px solid var(--border)' }}>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4 }}>Total Kalori Terbakar Ekstra</div>
-                      <div style={{ fontSize: 24, fontWeight: 800, color: '#f59e0b' }}>{weightBurnedKcal.toLocaleString()} <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>kkal</span></div>
-                      <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 4 }}>🔥 ~{(weightBurnedKcal/7700).toFixed(1)} kg lemak luntur via exercise</div>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4 }}>Kalori Terbakar Hari Ini</div>
+                      <div style={{ fontSize: 24, fontWeight: 800, color: '#f59e0b' }}>{todayBurnedKcal.toLocaleString()} <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>kkal</span></div>
+                      <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 8, display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <Flame size={14} color="#f59e0b" />
+                        ~{(todayBurnedKcal/7700).toFixed(2)} kg lemak luntur hari ini
+                      </div>
                   </div>
                 </>
               )}

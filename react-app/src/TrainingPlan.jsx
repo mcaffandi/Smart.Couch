@@ -616,8 +616,20 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
                              )}
                            </div>
 
-                           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                             {isRest ? (
+                           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', overflow: 'hidden' }}>
+                             {dItem.hasRun && dItem.actObj ? (
+                               <div style={{ borderLeft: `4px solid #10b981`, paddingLeft: 10 }}>
+                                 <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 6, lineHeight: 1.3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                   {dItem.actObj.name || (dItem.actObj.manualType ? dItem.actObj.manualType.charAt(0).toUpperCase() + dItem.actObj.manualType.slice(1) : (lang === 'id' ? 'Selesai' : 'Completed'))}
+                                 </div>
+                                 <div style={{ fontSize: 12, color: 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                   {dItem.actObj.distance > 0 ? `${(dItem.actObj.distance / 100000).toFixed(2)} km` : ''}
+                                   {dItem.actObj.distance > 0 && dItem.actObj.duration ? ' • ' : ''}
+                                   {dItem.actObj.duration ? `${Math.round(dItem.actObj.duration / 60000)} min` : ''} 
+                                   {dItem.actObj.calories ? ` • ${Math.round(dItem.actObj.calories)} kcal` : ''}
+                                 </div>
+                               </div>
+                             ) : isRest ? (
                                <div style={{ color: 'var(--text-muted)', fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                                  {lang === 'id' ? 'Add (Rest)' : 'Add (Rest)'}
