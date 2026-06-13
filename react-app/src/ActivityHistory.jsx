@@ -194,7 +194,7 @@ export default function RunHistory({ activities, profileWeight = 70, lang = 'id'
               className="history-item animate-fade-in" 
               key={i} 
               onClick={() => onViewDetails && onViewDetails(act)}
-              style={{ animationDelay: `${i * 0.04}s`, padding: '16px', display: 'flex', flexDirection: 'column', gap: 14, cursor: onViewDetails ? 'pointer' : 'default', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 16, marginBottom: 12, position: 'relative' }}
+              style={{ animationDelay: `${i * 0.04}s`, padding: '16px', display: 'flex', flexDirection: 'column', alignItems: 'stretch', gap: 14, cursor: onViewDetails ? 'pointer' : 'default', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 16, marginBottom: 12, position: 'relative' }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
