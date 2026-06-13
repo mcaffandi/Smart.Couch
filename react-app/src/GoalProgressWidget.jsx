@@ -18,7 +18,7 @@ export default function GoalProgressWidget({ data, goal, lang = 'id', onLogWeigh
   const now = Date.now();
   
   // 1. Weightloss
-  const { weightProgress, weightTargetKcal, weightBurnedKcal, weightChartData } = useMemo(() => {
+  const { weightProgress, weightTargetKcal, weightBurnedKcal, weightChartData, startWeight, currentWeight, weightDiff, targetWeight, weightLossETA, programStyle } = useMemo(() => {
     let burned = 0;
     runActs.forEach(a => {
       if (a.distance > 0) {
@@ -27,8 +27,7 @@ export default function GoalProgressWidget({ data, goal, lang = 'id', onLogWeigh
         burned += (a.duration / 60000) * 8; // approx 8 kcal/min for gym/walking
       }
     });
-    const targetKcal = 38500; // approx 5kg
-    const pct = Math.min(100, Math.round((burned / targetKcal) * 100));
+    const targetKcal = 38500; // approx 5kg (fallback)
 
     // Chart Data
     let cData = [...weightRecs];
@@ -43,8 +42,37 @@ export default function GoalProgressWidget({ data, goal, lang = 'id', onLogWeigh
       };
     });
 
-    return { weightProgress: pct, weightTargetKcal: targetKcal, weightBurnedKcal: Math.round(burned), weightChartData: chartData };
-  }, [runActs, weightRecs, profileWeight, lang]);
+    const pStyle = data.profile?.programStyle || 'sedang';
+    let targetWt = data.profile?.targetWeight;
+
+    const startW = chartData.length > 0 ? chartData[0].weight : profileWeight;
+    const currentW = chartData.length > 0 ? chartData[chartData.length - 1].weight : profileWeight;
+    let diff = startW - currentW;
+
+    if (!targetWt) targetWt = startW > 5 ? startW - 5 : startW;
+
+    let pct = 0;
+    if (startW > targetWt) {
+       pct = Math.min(100, Math.max(0, Math.round(((startW - currentW) / (startW - targetWt)) * 100)));
+    } else {
+       pct = 100;
+    }
+
+    let rate = 0.5; 
+    if (pStyle === 'santai') rate = 0.25;
+    else if (pStyle === 'ngepush') rate = 0.8;
+
+    let remainingWt = currentW - targetWt;
+    let etaWeeks = 0;
+    if (remainingWt > 0) {
+       etaWeeks = Math.max(1, Math.ceil(remainingWt / rate));
+    }
+
+    return { 
+      weightProgress: pct, weightTargetKcal: targetKcal, weightBurnedKcal: Math.round(burned), weightChartData: chartData,
+      startWeight: startW, currentWeight: currentW, weightDiff: parseFloat(diff.toFixed(1)), targetWeight: targetWt, weightLossETA: etaWeeks, programStyle: pStyle
+    };
+  }, [runActs, weightRecs, profileWeight, lang, data.profile?.targetWeight, data.profile?.programStyle]);
 
   // 2. Turun HR / Aerobic Base
   const { hrProgress, z2Hours, z2Target, z2ChartData } = useMemo(() => {
@@ -137,13 +165,18 @@ export default function GoalProgressWidget({ data, goal, lang = 'id', onLogWeigh
   // ─────────────────────────────────────────
   const getWidgetContent = () => {
     if (goal === 'weightloss') {
+      let diffStr = '';
+      if (weightDiff === 0) diffStr = lang === 'id' ? 'Belum ada penurunan' : 'No weight lost yet';
+      else if (weightDiff > 0) diffStr = lang === 'id' ? `Turun ${weightDiff} kg dari awal` : `Down ${weightDiff} kg from start`;
+      else diffStr = lang === 'id' ? `Naik ${Math.abs(weightDiff)} kg 😱` : `Up ${Math.abs(weightDiff)} kg 😱`;
+
       return {
         title: lang === 'id' ? 'Progres Turun Berat' : 'Weightloss Progress',
         icon: <TrendingDown size={20} color="#f43f5e" />,
         color: '#f43f5e',
         pct: weightProgress,
-        desc: lang === 'id' ? `${weightBurnedKcal} / ${weightTargetKcal} kkal terbakar` : `${weightBurnedKcal} / ${weightTargetKcal} kcal burned`,
-        eta: lang === 'id' ? `Estimasi: ~${Math.max(1, Math.round((weightTargetKcal - weightBurnedKcal)/2500))} minggu lagi` : `ETA: ~${Math.max(1, Math.round((weightTargetKcal - weightBurnedKcal)/2500))} weeks`
+        desc: diffStr,
+        eta: weightProgress >= 100 ? (lang === 'id' ? 'Target Tercapai! 🎉' : 'Goal Achieved! 🎉') : (lang === 'id' ? `Estimasi: ~${weightLossETA} mgg (${programStyle})` : `ETA: ~${weightLossETA} wks (${programStyle})`)
       };
     } else if (goal === 'turun-hr') {
       return {
@@ -320,27 +353,29 @@ export default function GoalProgressWidget({ data, goal, lang = 'id', onLogWeigh
                 <>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 24 }}>
                     <div style={{ background: 'var(--bg-card)', padding: 16, borderRadius: 16, border: '1px solid var(--border)' }}>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4 }}>Total Kalori Terbakar</div>
-                      <div style={{ fontSize: 24, fontWeight: 800, color: '#f43f5e' }}>{weightBurnedKcal.toLocaleString()}</div>
-                      <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 4 }}>🔥 ~{(weightBurnedKcal/7700).toFixed(1)} kg lemak luntur</div>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4 }}>Progres BB Saat Ini</div>
+                      <div style={{ fontSize: 24, fontWeight: 800, color: '#f43f5e' }}>{currentWeight} <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>kg</span></div>
+                      <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 4 }}>
+                        🎯 Target: {targetWeight} kg | Mode: <strong style={{ textTransform: 'capitalize' }}>{programStyle}</strong>
+                      </div>
                     </div>
                     <div style={{ background: 'var(--bg-card)', padding: 16, borderRadius: 16, border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                       <button 
                         onClick={() => {
-                          const w = window.prompt(lang === 'id' ? 'Masukkan berat badan hari ini (kg):' : 'Enter weight today (kg):', profileWeight);
+                          const w = window.prompt(lang === 'id' ? 'Masukkan berat badan hari ini (kg) - Opsional:' : 'Enter weight today (kg) - Optional:', currentWeight);
                           if(w && !isNaN(parseFloat(w))) {
                             if(onLogWeight) onLogWeight(parseFloat(w));
                           }
                         }}
                         style={{ background: '#f43f5e', color: '#fff', border: 'none', padding: '12px', borderRadius: 12, fontWeight: 700, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
                       >
-                        <PlusCircle size={18} /> {lang === 'id' ? 'Log Berat' : 'Log Weight'}
+                        <PlusCircle size={18} /> {lang === 'id' ? '+ Catat BB (Opsional)' : '+ Log Weight (Optional)'}
                       </button>
                     </div>
                   </div>
 
                   <h3 style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 16 }}>Trend Penurunan Berat</h3>
-                  <div style={{ height: 200, width: '100%', background: 'var(--bg-card)', borderRadius: 16, padding: 16, border: '1px solid var(--border)' }}>
+                  <div style={{ height: 200, width: '100%', background: 'var(--bg-card)', borderRadius: 16, padding: 16, border: '1px solid var(--border)', marginBottom: 24 }}>
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={weightChartData}>
                         <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
@@ -350,6 +385,13 @@ export default function GoalProgressWidget({ data, goal, lang = 'id', onLogWeigh
                         <Line type="monotone" dataKey="weight" stroke="#f43f5e" strokeWidth={3} dot={{ r: 4, fill: '#f43f5e', strokeWidth: 2, stroke: 'var(--bg-surface)' }} />
                       </LineChart>
                     </ResponsiveContainer>
+                  </div>
+                  
+                  <h3 style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 16 }}>Aktivitas Pendukung</h3>
+                  <div style={{ background: 'var(--bg-card)', padding: 16, borderRadius: 16, border: '1px solid var(--border)' }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4 }}>Total Kalori Terbakar Ekstra</div>
+                      <div style={{ fontSize: 24, fontWeight: 800, color: '#f59e0b' }}>{weightBurnedKcal.toLocaleString()} <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>kkal</span></div>
+                      <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 4 }}>🔥 ~{(weightBurnedKcal/7700).toFixed(1)} kg lemak luntur via exercise</div>
                   </div>
                 </>
               )}

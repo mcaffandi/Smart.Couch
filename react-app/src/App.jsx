@@ -3029,6 +3029,13 @@ export default function App() {
                             value={d.height ?? ''} onChange={e => { let v = e.target.value; if (/^0+(?=\d)/.test(v)) { v = v.replace(/^0+(?=\d)/, ''); e.target.value = v; } setEditDraft(p => ({ ...p, height: v === '' ? null : parseInt(v) || null })); }} onFocus={onF} onBlur={onB} />
                         </div>
                       </div>
+                      {d.goal === 'weightloss' && (
+                        <div style={{ marginTop: 10 }}>
+                          <label style={lbl}>Target Berat (kg)</label>
+                          <input type="number" min={30} max={200} step={0.5} placeholder="-" style={inp}
+                            value={d.targetWeight ?? ''} onChange={e => { let v = e.target.value; if (/^0+(?=\d)/.test(v)) { v = v.replace(/^0+(?=\d)/, ''); e.target.value = v; } setEditDraft(p => ({ ...p, targetWeight: v === '' ? null : parseFloat(v) || null })); }} onFocus={onF} onBlur={onB} />
+                        </div>
+                      )}
                       <div style={{ marginTop: 10 }}>
                         <label style={lbl}>Jenis Kelamin</label>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
