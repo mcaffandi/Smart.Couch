@@ -6,6 +6,7 @@ export default function AICoachChat({ lang, goal, programStyle, targetPace, curr
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
+  const [isFocused, setIsFocused] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
   const [isTyping, setIsTyping] = useState(false);
   const fileInputRef = useRef(null);
@@ -382,18 +383,23 @@ STRICT RULES (MUST FOLLOW):
                 <button onClick={() => setSelectedImage(null)} style={{ position: 'absolute', top: -6, right: -6, background: '#ef4444', color: '#fff', border: 'none', borderRadius: '50%', width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.5)' }}><X size={12} /></button>
               </div>
             )}
-            <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: 10, alignItems: 'center', position: 'relative' }}>
               <input type="file" ref={fileInputRef} onChange={handleImageSelect} accept="image/*" style={{ display: 'none' }} />
-              <button onClick={() => fileInputRef.current?.click()} style={{ width: 44, height: 44, borderRadius: 22, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s', flexShrink: 0 }} onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = '#fff'; }} onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; }}>
-                <ImageIcon size={20} />
-              </button>
+              
+              {/* Upload Button - hides when focused or typing to save space */}
+              {!(isFocused || input.trim().length > 0) && (
+                <button onClick={() => fileInputRef.current?.click()} style={{ width: 44, height: 44, borderRadius: 22, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s', flexShrink: 0 }} onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = '#fff'; }} onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; }}>
+                  <ImageIcon size={20} />
+                </button>
+              )}
+              
               <input 
                 value={input} onChange={e => setInput(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleSend()}
-                placeholder={lang === 'id' ? 'Ketik pesan atau upload foto...' : 'Type a message or upload photo...'}
-                style={{ flex: 1, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', borderRadius: 24, padding: '12px 20px', fontSize: 15, outline: 'none', transition: 'all 0.3s' }}
-                onFocus={e => { e.target.style.borderColor = 'rgba(139,92,246,0.5)'; e.target.style.background = 'rgba(255,255,255,0.08)'; e.target.style.boxShadow = '0 0 0 2px rgba(139,92,246,0.2)'; }}
-                onBlur={e => { e.target.style.borderColor = 'rgba(255,255,255,0.1)'; e.target.style.background = 'rgba(255,255,255,0.05)'; e.target.style.boxShadow = 'none'; }}
+                placeholder={lang === 'id' ? 'Ketik pesan atau upload...' : 'Type a message or upload...'}
+                style={{ flex: 1, minWidth: 0, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', borderRadius: 24, padding: '12px 16px', fontSize: 14, outline: 'none', transition: 'all 0.3s' }}
+                onFocus={e => { setIsFocused(true); e.target.style.borderColor = 'rgba(139,92,246,0.5)'; e.target.style.background = 'rgba(255,255,255,0.08)'; e.target.style.boxShadow = '0 0 0 2px rgba(139,92,246,0.2)'; }}
+                onBlur={e => { setIsFocused(false); e.target.style.borderColor = 'rgba(255,255,255,0.1)'; e.target.style.background = 'rgba(255,255,255,0.05)'; e.target.style.boxShadow = 'none'; }}
               />
               <button onClick={handleSend} disabled={!input.trim() && !selectedImage} style={{ width: 44, height: 44, borderRadius: 22, background: (input.trim() || selectedImage) ? 'linear-gradient(135deg, #818cf8, #c084fc)' : 'rgba(255,255,255,0.05)', border: (input.trim() || selectedImage) ? 'none' : '1px solid rgba(255,255,255,0.1)', color: (input.trim() || selectedImage) ? '#fff' : 'rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: (input.trim() || selectedImage) ? 'pointer' : 'default', transition: 'all 0.3s', boxShadow: (input.trim() || selectedImage) ? '0 4px 16px rgba(139,92,246,0.4)' : 'none', flexShrink: 0 }}>
                 <Send size={18} style={{ transform: (input.trim() || selectedImage) ? 'translateX(2px)' : 'none', transition: 'transform 0.2s' }} />
