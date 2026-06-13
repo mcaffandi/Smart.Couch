@@ -4463,6 +4463,7 @@ export default function App() {
                             {readinessDesc.restPart}
                             {readinessDesc.actionPart}
                           </p>
+                        </div>
                       </div>
 
                     <div className="sleep-history-grid">
