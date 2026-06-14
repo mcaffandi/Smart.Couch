@@ -495,7 +495,7 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
                       </span>
                     ))}
                   </div>
-                  <h2 className="blog-title-text" style={{ fontFamily: '"Inter", sans-serif', fontSize: window.innerWidth < 768 ? 28 : 38, fontWeight: 800, marginBottom: 16, lineHeight: 1.2, color: 'var(--text-primary)', letterSpacing: '-0.5px' }}>{currentHero.title}</h2>
+                  <h2 className="blog-title-text" style={{ fontFamily: '"Inter", sans-serif', fontSize: window.innerWidth < 768 ? 24 : 32, fontWeight: 800, marginBottom: 16, lineHeight: 1.3, color: 'var(--text-primary)', letterSpacing: '-0.5px' }}>{currentHero.title}</h2>
                   <p style={{ fontSize: 16, color: 'var(--text-secondary)', marginBottom: 24, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.6 }}>
                     {currentHero.excerpt || (currentHero.content || '').replace(/<[^>]+>/g, '').substring(0, 200) + '...'}
                   </p>
