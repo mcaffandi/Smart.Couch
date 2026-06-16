@@ -4089,7 +4089,6 @@ export default function App() {
               <div className="tabs">
                 {[
                 { key: 'dashboard', label: t.tabDashboard },
-                { key: 'ai-coach', label: 'AI Coach ⚡' },
                 { key: 'training', label: t.tabTrainingPlan },
                 { key: 'race', label: t.tabRacePrediction },
                 { key: 'history', label: t.tabRunHistory },
@@ -4330,7 +4329,9 @@ export default function App() {
                     </div>
                   )}
 
-
+                  <div className="bento-2x2">
+                    <AICoach activities={data.running_activities} profile={{ age, goal, targetPace }} lang={lang} isPremium={isPremium} setShowPremiumModal={setShowPremiumModal} />
+                  </div>
 
                   {/* Sleep correlation summary */}
                   {avgRunSleep && avgNonRunSleep && (
@@ -4368,13 +4369,6 @@ export default function App() {
                     </div>
                   )}
                 </div>
-              </div>
-            )}
-
-            {/* ─────────────────── AI COACH ─────────────────── */}
-            {tab === 'ai-coach' && (
-              <div className="animate-fade-in" style={{ maxWidth: 900, margin: '0 auto' }}>
-                <AICoach activities={data.running_activities} profile={{ age, goal, targetPace }} lang={lang} isPremium={isPremium} setShowPremiumModal={setShowPremiumModal} />
               </div>
             )}
 

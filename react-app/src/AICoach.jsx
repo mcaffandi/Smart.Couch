@@ -216,6 +216,7 @@ ${jsonFormatStr}`;
           localStorage.removeItem('groq_api_key');
           setApiKey('');
         } else if (data.choices && data.choices.length > 0) {
+          try {
             let content = data.choices[0].message.content;
             const firstBrace = content.indexOf('{');
             const lastBrace = content.lastIndexOf('}');
