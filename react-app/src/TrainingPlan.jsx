@@ -586,7 +586,14 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
                   </div>
 
                   {/* Days List (Grid Squares) */}
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 12, padding: '16px 20px' }}>
+                  <div className="calendar-day-header" style={{ marginTop: 16 }}>
+                    {week.map((dItem, idx) => {
+                      const dObj = new Date(dItem.date);
+                      const fullDayName = dObj.toLocaleDateString(lang==='id'?'id-ID':'en-US', {weekday:'long'});
+                      return <div key={idx} className="calendar-day-label">{fullDayName}</div>;
+                    })}
+                  </div>
+                  <div className="calendar-grid">
                     {week.map((dItem, dIdx) => {
                        const dObj = new Date(dItem.date);
                        const dayName = dObj.toLocaleDateString(lang==='id'?'id-ID':'en-US', {weekday:'short'}).toUpperCase();
