@@ -82,38 +82,60 @@ export default function AICoach({ activities, profile, lang = 'id', isPremium, s
   "tips": "Tips khusus 1 kalimat (cuaca, nutrisi, atau mental)."
 }`;
 
+      let goalRuleId = "Pahami 'Zone 2 Training' (80% lari santai).";
+      let goalRuleEn = "Enforce 'Zone 2 Training' (80% easy runs).";
+      const g = (profile?.goal || '').toLowerCase();
+      if (g.includes('bb') || g.includes('weight')) {
+        goalRuleId = "Fokus utama pelari adalah TURUN BERAT BADAN. Beri saran untuk menjaga durasi lari di zona pembakaran lemak (Zone 2) ketimbang mengejar kecepatan. Ingatkan soal defisit kalori ringan.";
+        goalRuleEn = "Runner's main focus is WEIGHT LOSS. Emphasize consistency in the fat-burning zone (Zone 2) over speed. Remind them about mild caloric deficit.";
+      } else if (g.includes('hr') || g.includes('heart') || g.includes('lower')) {
+        goalRuleId = "Fokus utama pelari adalah MENURUNKAN DETAK JANTUNG. WAJIB galak/tegas mengingatkan mereka untuk JANGAN NGEBUT. Suruh mereka jalan kaki jika HR > 150bpm agar tubuh bisa adaptasi aerobik (Maffetone method).";
+        goalRuleEn = "Runner's main focus is LOWERING HEART RATE. Strictly warn them NOT to run fast. Tell them to walk if HR > 150bpm to build aerobic base (Maffetone method).";
+      } else if (g.includes('5k') || g.includes('10k')) {
+        goalRuleId = `Fokus utama pelari adalah RACE ${g.toUpperCase()}. Analisis apakah pace mereka sudah mampu mendekati Target Pace ${formatPace(profile?.targetPace || 6.0)}m/km. Berikan saran drill untuk speed / interval.`;
+        goalRuleEn = `Runner's main focus is ${g.toUpperCase()} RACE. Analyze if their pace is close to Target Pace ${formatPace(profile?.targetPace || 6.0)}m/km. Suggest drills for speed / intervals.`;
+      } else if (g.includes('hm') || g.includes('fm') || g.includes('marathon')) {
+        goalRuleId = `Fokus utama pelari adalah JARAK JAUH (${g.toUpperCase()}). Analisis volume lari mingguan mereka. Ingatkan sangat pentingnya Long Run di akhir pekan dan strategi hidrasi.`;
+        goalRuleEn = `Runner's main focus is LONG DISTANCE (${g.toUpperCase()}). Analyze their weekly mileage. Emphasize the importance of weekend Long Runs and hydration strategy.`;
+      } else {
+        goalRuleId = "Fokus utama pelari adalah MAINTENANCE / Kebugaran. Beri saran untuk menjaga keseimbangan antara lari santai dan lari cepat agar tetap menyenangkan.";
+        goalRuleEn = "Runner's main focus is MAINTENANCE / General Fitness. Suggest balancing easy runs and occasional fast runs to keep it fun.";
+      }
+
       const prompt = lang === 'id'
-        ? `Lo adalah pelatih lari elit (EnduraUP) yang analitis dan to the point. Evaluasi data pelari ini dan buatkan jadwal mingguan terstruktur.
+        ? `Lo adalah pelatih lari elit (EnduraUP) yang cerdas, analitis, dan to the point. Evaluasi data pelari ini dan berikan insight teknis mendalam.
 
 Data pelari:
 - Umur: ${profile?.age || 30} tahun
-- Target: ${profile?.goal || 'maintenance'}
-- Target Pace: ${formatPace(profile?.targetPace || 6.0)} min/km
+- Target Spesifik: ${profile?.goal || 'maintenance'}
+- Target Pace (jika relevan): ${formatPace(profile?.targetPace || 6.0)} min/km
 
 5 Lari Terakhir:
 ${recentRuns || "Belum ada data lari."}
 
 ATURAN WAJIB:
-1. Pahami "Zone 2 Training" (80% lari santai untuk pondasi aerobik). Pujilah jika lari pelan, beri peringatan jika HR selalu tembus >160bpm.
-2. Gunakan data Cadence (jika ada) untuk koreksi teknik. Cadence ideal >170spm.
-3. KELUARKAN HANYA FORMAT JSON VALID. JANGAN ADA TEKS APAPUN DI LUAR JSON.
+1. ${goalRuleId}
+2. Evaluasi pace dan HR mereka secara KRITIS. Jangan hanya memuji. Temukan kelemahan (misal: "HR lu ketinggian untuk pace segini", atau "Jarak lari lu kurang konsisten").
+3. Gunakan data Cadence (spm) jika ada. Cadence ideal >170spm. Jika cadence di bawah 160, jadikan perbaikan cadence sebagai fokus utama!
+4. KELUARKAN HANYA FORMAT JSON VALID. JANGAN ADA TEKS APAPUN DI LUAR JSON.
 
 Struktur JSON Wajib:
 ${jsonFormatStr}`
-        : `You are an elite analytical running coach. Evaluate the runner's data and create a structured weekly plan.
+        : `You are an elite analytical running coach. Evaluate the runner's data and provide deep technical insights.
 
 Runner profile:
 - Age: ${profile?.age || 30} years old
-- Goal: ${profile?.goal || 'maintenance'}
-- Target Pace: ${formatPace(profile?.targetPace || 6.0)} min/km
+- Specific Goal: ${profile?.goal || 'maintenance'}
+- Target Pace (if relevant): ${formatPace(profile?.targetPace || 6.0)} min/km
 
 Last 5 Runs:
 ${recentRuns || "No running data yet."}
 
 RULES:
-1. Enforce "Zone 2 Training" (80% easy runs). Praise slow running for base building.
-2. Use Cadence data if available to correct form (target >170spm).
-3. RETURN ONLY VALID JSON. NO MARKDOWN, NO EXTRA TEXT.
+1. ${goalRuleEn}
+2. Evaluate their pace and HR CRITICALLY. Don't just praise them. Find weaknesses (e.g., "Your HR is too high for this pace", or "Your mileage is inconsistent").
+3. Use Cadence data (spm) if available. Target is >170spm. If cadence is <160, making cadence correction a top priority!
+4. RETURN ONLY VALID JSON. NO MARKDOWN, NO EXTRA TEXT.
 
 Required JSON Structure:
 ${jsonFormatStr}`;
