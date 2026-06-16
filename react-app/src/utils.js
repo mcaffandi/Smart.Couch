@@ -594,6 +594,44 @@ export const buildAdaptiveCalendar = (weeklyPlan, activities = [], isPaused = fa
         }
       }
     }
+
+    // 3. Prevent back-to-back overtraining (Adaptive Recovery)
+    // If user ran on a scheduled Rest/Cross-Training day, swap it with the next Run day.
+    let extraRunsDone = [];
+    for (let i = 0; i < calendar.length; i++) {
+      const day = calendar[i];
+      // Only look at current week for extra runs to prevent snowballing over months
+      if (day.hasRun && day.dateObj.getTime() >= startOfThisWeek.getTime()) {
+        const isRunWorkout = day.workout.jenis.includes('Run') || day.workout.jenis.includes('Interval') || day.workout.jenis.includes('Tempo') || day.workout.jenis.includes('Jog');
+        if (!isRunWorkout) {
+          extraRunsDone.push({ ...day.workout });
+        }
+      }
+    }
+
+    if (extraRunsDone.length > 0) {
+      let todayIdx = calendar.findIndex(d => d.isToday);
+      if (todayIdx !== -1) {
+        let searchIdx = todayIdx;
+        while (extraRunsDone.length > 0 && searchIdx < calendar.length) {
+          const currentDay = calendar[searchIdx];
+          if (!currentDay.hasRun) {
+            const isRunWorkout = currentDay.workout.jenis.includes('Run') || currentDay.workout.jenis.includes('Interval') || currentDay.workout.jenis.includes('Tempo') || currentDay.workout.jenis.includes('Jog');
+            if (isRunWorkout) {
+              const skippedRest = extraRunsDone.shift();
+              skippedRest.rescheduled = true;
+              currentDay.workout = {
+                ...skippedRest,
+                hari: currentDay.dateObj.toLocaleDateString('id-ID', {weekday:'long'}),
+                isOverridden: true,
+                tujuan: 'Adaptasi AI: Digeser menjadi hari istirahat karena kamu sudah lari mendahului jadwal.'
+              };
+            }
+          }
+          searchIdx++;
+        }
+      }
+    }
   }
 
   return calendar;

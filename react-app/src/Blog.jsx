@@ -388,7 +388,7 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
       )}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 16 }}>
         <div>
-          <h2 style={{ fontSize: 32, fontWeight: 800, margin: 0, letterSpacing: '-0.02em', color: 'var(--text-primary)' }}>Blog & Artikel</h2>
+          <h2 style={{ fontSize: 28, fontWeight: 700, margin: 0, letterSpacing: '-0.02em', color: 'var(--text-primary)' }}>Blog & Artikel</h2>
           <p style={{ color: 'var(--text-secondary)', margin: '8px 0 0 0', fontSize: 15 }}>
             {lang === 'id' ? 'Kumpulan tips latihan, nutrisi, dan wawasan lari dari pelatih.' : 'Running tips, nutrition, and insights from coaches.'}
           </p>
@@ -495,7 +495,7 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
                       </span>
                     ))}
                   </div>
-                  <h2 className="blog-title-text" style={{ fontFamily: '"Inter", sans-serif', fontSize: window.innerWidth < 768 ? 24 : 32, fontWeight: 800, marginBottom: 16, lineHeight: 1.3, color: 'var(--text-primary)', letterSpacing: '-0.5px' }}>{currentHero.title}</h2>
+                  <h2 className="blog-title-text" style={{ fontFamily: '"Inter", sans-serif', fontSize: window.innerWidth < 768 ? 23 : 26, fontWeight: 600, marginBottom: 16, lineHeight: 1.3, color: 'var(--text-primary)', letterSpacing: '-0.5px' }}>{currentHero.title}</h2>
                   <p style={{ fontSize: 16, color: 'var(--text-secondary)', marginBottom: 24, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.6 }}>
                     {currentHero.excerpt || (currentHero.content || '').replace(/<[^>]+>/g, '').substring(0, 200) + '...'}
                   </p>
@@ -585,7 +585,7 @@ export default function BlogModule({ isAdmin, lang = 'id', onViewChange, current
                       <span style={{ color: 'var(--text-muted)' }}>·</span>
                       <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>{b.createdAt?.toDate ? b.createdAt.toDate().toLocaleDateString('id-ID', {day: 'numeric', month: 'short'}) : ''}</span>
                     </div>
-                    <h3 className="blog-title-text" style={{ fontFamily: '"Inter", sans-serif', fontSize: window.innerWidth < 768 ? 20 : 22, fontWeight: 800, marginBottom: 8, lineHeight: 1.3, color: 'var(--text-primary)' }}>{b.title}</h3>
+                    <h3 className="blog-title-text" style={{ fontFamily: '"Inter", sans-serif', fontSize: window.innerWidth < 768 ? 18 : 20, fontWeight: 600, marginBottom: 8, lineHeight: 1.3, color: 'var(--text-primary)' }}>{b.title}</h3>
                     <p style={{ fontSize: window.innerWidth < 768 ? 15 : 16, color: 'var(--text-secondary)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.5, marginBottom: 16 }}>
                       {b.excerpt || (b.content || '').replace(/<[^>]+>/g, '').substring(0, 150) + '...'}
                     </p>
