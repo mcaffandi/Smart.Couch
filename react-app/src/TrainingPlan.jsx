@@ -516,32 +516,32 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
       )}
 
       <div className="pace-grid" style={{ marginBottom: 20 }}>
-        <div className="pace-card" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 16, padding: '16px 14px', display: 'flex', flexDirection: 'column' }}>
+        <div className="pace-card" style={{ background: 'var(--alert-danger-bg)', border: '1px solid var(--alert-danger-border)', borderRadius: 16, padding: '16px 14px', display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 12 }}>
             <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent-rose)' }}></div>
-            <div style={{ color: 'var(--text-secondary)', fontSize: 11, fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase' }}>{lang === 'id' ? 'Ngepush' : 'Push'}</div>
+            <div style={{ color: 'var(--alert-danger-text)', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase' }}>{lang === 'id' ? 'Ngepush' : 'Push'}</div>
           </div>
           <div style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.1, letterSpacing: '-0.02em', marginBottom: 2 }}>{paces.ngepush}</div>
           <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>min/km</div>
-          {age && <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 12, padding: '4px 10px', background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 12, alignSelf: 'center' }}>HR {getHRForZone(0.8, 0.9)}</div>}
+          {age && <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 12, padding: '4px 10px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, alignSelf: 'center' }}>HR {getHRForZone(0.8, 0.9)}</div>}
         </div>
-        <div className="pace-card" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 16, padding: '16px 14px', display: 'flex', flexDirection: 'column' }}>
+        <div className="pace-card" style={{ background: 'var(--alert-warning-bg)', border: '1px solid var(--alert-warning-border)', borderRadius: 16, padding: '16px 14px', display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 12 }}>
             <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent-amber)' }}></div>
-            <div style={{ color: 'var(--text-secondary)', fontSize: 11, fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase' }}>{lang === 'id' ? 'Sedang' : 'Moderate'}</div>
+            <div style={{ color: 'var(--alert-warning-text)', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase' }}>{lang === 'id' ? 'Sedang' : 'Moderate'}</div>
           </div>
           <div style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.1, letterSpacing: '-0.02em', marginBottom: 2 }}>{paces.sedang}</div>
           <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>min/km</div>
-          {age && <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 12, padding: '4px 10px', background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 12, alignSelf: 'center' }}>HR {getHRForZone(0.7, 0.8)}</div>}
+          {age && <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 12, padding: '4px 10px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, alignSelf: 'center' }}>HR {getHRForZone(0.7, 0.8)}</div>}
         </div>
-        <div className="pace-card" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 16, padding: '16px 14px', display: 'flex', flexDirection: 'column' }}>
+        <div className="pace-card" style={{ background: 'var(--alert-success-bg)', border: '1px solid var(--alert-success-border)', borderRadius: 16, padding: '16px 14px', display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 12 }}>
             <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent-emerald)' }}></div>
-            <div style={{ color: 'var(--text-secondary)', fontSize: 11, fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase' }}>{lang === 'id' ? 'Santai' : 'Easy'}</div>
+            <div style={{ color: 'var(--alert-success-text)', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase' }}>{lang === 'id' ? 'Santai' : 'Easy'}</div>
           </div>
           <div style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.1, letterSpacing: '-0.02em', marginBottom: 2 }}>{paces.santai}</div>
           <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>min/km</div>
-          {age && <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 12, padding: '4px 10px', background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 12, alignSelf: 'center' }}>HR {getHRForZone(0.6, 0.7)}</div>}
+          {age && <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 12, padding: '4px 10px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, alignSelf: 'center' }}>HR {getHRForZone(0.6, 0.7)}</div>}
         </div>
       </div>
 
@@ -620,10 +620,10 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
                            onClick={() => handleDayClick(dItem)}
                            style={{
                              minHeight: 120,
-                             background: 'var(--bg-card)',
+                             background: `color-mix(in srgb, ${accentColor} 8%, var(--bg-card))`,
                              borderRadius: 14,
                              padding: '12px 14px',
-                             border: dItem.isToday ? '1px solid var(--accent-purple)' : '1px solid var(--border)',
+                             border: dItem.isToday ? '1px solid var(--accent-purple)' : `1px solid color-mix(in srgb, ${accentColor} 25%, var(--border))`,
                              boxShadow: dItem.isToday ? '0 0 0 1px var(--accent-purple)' : 'none',
                              cursor: 'pointer',
                              opacity: dItem.isPast && !dItem.isToday ? 0.55 : 1,
@@ -653,14 +653,17 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
                              {dItem.hasRun && dItem.actObjs && dItem.actObjs.length > 0 ? (
                                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                                  {dItem.actObjs.slice(0, 2).map((act, actIdx) => (
-                                   <div key={actIdx} style={{ borderLeft: `2px solid var(--accent-emerald)`, paddingLeft: 8 }}>
-                                     <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                       {act.name || (act.manualType ? act.manualType.charAt(0).toUpperCase() + act.manualType.slice(1) : (lang === 'id' ? 'Selesai' : 'Completed'))}
-                                     </div>
-                                     <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                       {act.distance > 0 ? `${(act.distance / 100000).toFixed(2)} km` : ''}
-                                       {act.distance > 0 && act.duration ? ' • ' : ''}
-                                       {act.duration ? `${Math.round(act.duration / 60000)} min` : ''}
+                                   <div key={actIdx} style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}>
+                                     <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent-emerald)', marginTop: 4, flexShrink: 0 }}></div>
+                                     <div style={{ flex: 1, minWidth: 0 }}>
+                                       <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                         {act.name || (act.manualType ? act.manualType.charAt(0).toUpperCase() + act.manualType.slice(1) : (lang === 'id' ? 'Selesai' : 'Completed'))}
+                                       </div>
+                                       <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                         {act.distance > 0 ? `${(act.distance / 100000).toFixed(2)} km` : ''}
+                                         {act.distance > 0 && act.duration ? ' • ' : ''}
+                                         {act.duration ? `${Math.round(act.duration / 60000)} min` : ''}
+                                       </div>
                                      </div>
                                    </div>
                                  ))}
@@ -676,12 +679,17 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
                                  {lang === 'id' ? 'Add (Rest)' : 'Add (Rest)'}
                                </div>
                              ) : (
-                               <div style={{ borderLeft: `2px solid ${accentColor}`, paddingLeft: 8 }}>
-                                 <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.3 }}>
-                                   {getJenis(dItem.workout.jenis)}
-                                 </div>
-                                 <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
-                                   {getDurasi(dItem.workout.durasi)}
+                               <div>
+                                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}>
+                                   <div style={{ width: 6, height: 6, borderRadius: '50%', background: accentColor, marginTop: 4, flexShrink: 0 }}></div>
+                                   <div>
+                                     <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.3 }}>
+                                       {getJenis(dItem.workout.jenis)}
+                                     </div>
+                                     <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+                                       {getDurasi(dItem.workout.durasi)}
+                                     </div>
+                                   </div>
                                  </div>
                                </div>
                              )}
