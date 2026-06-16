@@ -285,12 +285,11 @@ export default function RacePrediction({ activities, targetPace, lang = 'id', ac
             background: `color-mix(in srgb, ${p.accent} 8%, var(--bg-card))`,
             border: `1px solid color-mix(in srgb, ${p.accent} 25%, var(--border))`,
             borderRadius: 16,
-            padding: '16px 14px',
-            display: 'flex', flexDirection: 'column'
+            padding: '16px',
+            display: 'flex', flexDirection: 'column', textAlign: 'left', alignItems: 'flex-start'
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
-              <div style={{ width: 6, height: 6, borderRadius: '50%', background: p.accent }}></div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: p.accent, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{p.label}</div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: p.accent, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
+              {p.label}
             </div>
             <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em', lineHeight: 1.1, marginBottom: 2 }}>
               {secsToTime(p.predSec)}
