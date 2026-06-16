@@ -174,7 +174,7 @@ ${jsonFormatStr}`;
           method: 'POST',
           signal: controller.signal,
           headers: {
-            'Authorization': \`Bearer \${cleanKey}\`,
+            'Authorization': `Bearer ${cleanKey}`,
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
@@ -188,7 +188,7 @@ ${jsonFormatStr}`;
         const data = await res.json();
 
         if (data.error) {
-          setErrorMsg(\`API Groq Ditolak: \${data.error.message}\`);
+          setErrorMsg(`API Groq Ditolak: ${data.error.message}`);
           setSavedKey(false);
           localStorage.removeItem('groq_api_key');
           setApiKey('');
