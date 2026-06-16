@@ -629,10 +629,13 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
                              display: 'flex',
                              flexDirection: 'column',
                              gap: 8,
+                             position: 'relative',
+                             overflow: 'hidden'
                            }}
                            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = dItem.isToday ? '0 0 0 1px var(--accent-purple), 0 4px 12px rgba(0,0,0,0.15)' : '0 4px 12px rgba(0,0,0,0.1)'; }}
                            onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = dItem.isToday ? '0 0 0 1px var(--accent-purple)' : 'none'; }}
                          >
+                           <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 3, background: !isRest ? accentColor : 'color-mix(in srgb, var(--text-muted) 30%, transparent)' }} />
                            {/* Day header */}
                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                              <div>
