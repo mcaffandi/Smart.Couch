@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { Target, TrendingDown, Activity, CheckCircle, Flame, PlusCircle, ArrowRight, X, Calendar } from 'lucide-react';
+import { Target, TrendingDown, Activity, CheckCircle, Flame, PlusCircle, ArrowRight, X, Calendar, Heart } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar, ReferenceLine, CartesianGrid } from 'recharts';
 
 export default function GoalProgressWidget({ data, goal, lang = 'id', onLogWeight, onLogRaceDate }) {
