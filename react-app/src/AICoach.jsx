@@ -75,12 +75,6 @@ export default function AICoach({ activities, profile, lang = 'id', isPremium, s
     { "title": "Fokus 2", "desc": "Penjelasan detail", "badge": "Teks badge", "color": "rose" },
     { "title": "Fokus 3", "desc": "Penjelasan detail", "badge": "Teks badge", "color": "emerald" }
   ],
-  "schedule": [
-    { "day": "SENIN", "title": "Jenis Lari", "desc": "Instruksi lari (durasi, pace, hr)" },
-    { "day": "RABU", "title": "Jenis Lari", "desc": "Instruksi lari" },
-    { "day": "JUM'AT", "title": "Jenis Lari", "desc": "Instruksi lari" },
-    { "day": "MINGGU", "title": "Long Run", "desc": "Instruksi lari panjang" }
-  ],
   "drills": [
     { "title": "Nama Drill", "desc": "Cara melakukan drill" },
     { "title": "Drill Lanjutan", "desc": "Penjelasan" }
@@ -150,10 +144,13 @@ ${jsonFormatStr}`;
 
         if (data.choices && data.choices.length > 0) {
           try {
-            const parsed = JSON.parse(data.choices[0].message.content);
+            let content = data.choices[0].message.content;
+            content = content.replace(/```json/gi, '').replace(/```/g, '').trim();
+            const parsed = JSON.parse(content);
             setAnalysisRaw(parsed);
             if (!isPremium && useServer) incrementUsage();
           } catch(e) {
+            console.error("Parse Error:", data.choices[0].message.content);
             setErrorMsg("Gagal mem-parsing struktur AI (Format JSON tidak valid).");
           }
         } else {
@@ -194,9 +191,12 @@ ${jsonFormatStr}`;
           setApiKey('');
         } else if (data.choices && data.choices.length > 0) {
           try {
-            const parsed = JSON.parse(data.choices[0].message.content);
+            let content = data.choices[0].message.content;
+            content = content.replace(/```json/gi, '').replace(/```/g, '').trim();
+            const parsed = JSON.parse(content);
             setAnalysisRaw(parsed);
           } catch(e) {
+            console.error("Parse Error:", data.choices[0].message.content);
             setErrorMsg("Gagal mem-parsing struktur AI (Format JSON tidak valid).");
           }
         } else {
@@ -366,38 +366,7 @@ ${jsonFormatStr}`;
               </div>
             )}
 
-            {/* Section 2: Weekly Schedule */}
-            {analysisRaw.schedule && analysisRaw.schedule.length > 0 && (
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                  <Calendar size={16} color="var(--text-muted)" />
-                  <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    Jadwal Mingguan ({analysisRaw.schedule.length} Hari)
-                  </span>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 12 }}>
-                  {analysisRaw.schedule.map((sch, i) => {
-                    // determine highlight color based on run type
-                    let borderColor = 'var(--accent-sky)';
-                    if (sch.title.toLowerCase().includes('interval') || sch.title.toLowerCase().includes('speed')) borderColor = 'var(--accent-rose)';
-                    else if (sch.title.toLowerCase().includes('tempo')) borderColor = 'var(--accent-amber)';
-                    else if (sch.title.toLowerCase().includes('long')) borderColor = 'var(--accent-purple)';
 
-                    return (
-                      <div key={i} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, padding: 16, position: 'relative', overflow: 'hidden' }}>
-                        <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 3, background: borderColor }} />
-                        <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--text-muted)', marginBottom: 4, letterSpacing: '0.05em', textTransform: 'uppercase' }}>{sch.day}</div>
-                        <h4 style={{ margin: '0 0 4px 0', fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>{sch.title}</h4>
-                        <p style={{ margin: 0, fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.4 }}>{sch.desc}</p>
-                      </div>
-                    )
-                  })}
-                </div>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8 }}>
-                  *Sisa hari = istirahat aktif (jalan, stretching, atau off total)
-                </div>
-              </div>
-            )}
 
             {/* Section 3: Drills / Technical Tips */}
             {analysisRaw.drills && analysisRaw.drills.length > 0 && (
