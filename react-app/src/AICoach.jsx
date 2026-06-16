@@ -145,7 +145,11 @@ ${jsonFormatStr}`;
         if (data.choices && data.choices.length > 0) {
           try {
             let content = data.choices[0].message.content;
-            content = content.replace(/```json/gi, '').replace(/```/g, '').trim();
+            const firstBrace = content.indexOf('{');
+            const lastBrace = content.lastIndexOf('}');
+            if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+              content = content.substring(firstBrace, lastBrace + 1);
+            }
             const parsed = JSON.parse(content);
             setAnalysisRaw(parsed);
             if (!isPremium && useServer) incrementUsage();
@@ -190,9 +194,12 @@ ${jsonFormatStr}`;
           localStorage.removeItem('groq_api_key');
           setApiKey('');
         } else if (data.choices && data.choices.length > 0) {
-          try {
             let content = data.choices[0].message.content;
-            content = content.replace(/```json/gi, '').replace(/```/g, '').trim();
+            const firstBrace = content.indexOf('{');
+            const lastBrace = content.lastIndexOf('}');
+            if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+              content = content.substring(firstBrace, lastBrace + 1);
+            }
             const parsed = JSON.parse(content);
             setAnalysisRaw(parsed);
           } catch(e) {
