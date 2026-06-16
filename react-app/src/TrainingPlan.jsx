@@ -516,23 +516,32 @@ export default function TrainingPlan({ activities, programStyle, goal, paces, la
       )}
 
       <div className="pace-grid" style={{ marginBottom: 20 }}>
-        <div className="pace-card" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderTop: '2px solid var(--accent-rose)', padding: '12px' }}>
-          <div className="pace-label" style={{ color: 'var(--accent-rose)', fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>{lang === 'id' ? 'Ngepush' : 'Push'}</div>
-          <div className="pace-value" style={{ fontSize: '22px', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.1 }}>{paces.ngepush}</div>
-          <div className="pace-unit" style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 500 }}>min/km</div>
-          {age && <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 4 }}>HR {getHRForZone(0.8, 0.9)}</div>}
+        <div className="pace-card" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 16, padding: '16px 14px', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 12 }}>
+            <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent-rose)' }}></div>
+            <div style={{ color: 'var(--text-secondary)', fontSize: 11, fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase' }}>{lang === 'id' ? 'Ngepush' : 'Push'}</div>
+          </div>
+          <div style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.1, letterSpacing: '-0.02em', marginBottom: 2 }}>{paces.ngepush}</div>
+          <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>min/km</div>
+          {age && <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 12, padding: '4px 10px', background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 12, alignSelf: 'center' }}>HR {getHRForZone(0.8, 0.9)}</div>}
         </div>
-        <div className="pace-card" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderTop: '2px solid var(--accent-amber)', padding: '12px' }}>
-          <div className="pace-label" style={{ color: 'var(--accent-amber)', fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>{lang === 'id' ? 'Sedang' : 'Moderate'}</div>
-          <div className="pace-value" style={{ fontSize: '22px', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.1 }}>{paces.sedang}</div>
-          <div className="pace-unit" style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 500 }}>min/km</div>
-          {age && <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 4 }}>HR {getHRForZone(0.7, 0.8)}</div>}
+        <div className="pace-card" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 16, padding: '16px 14px', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 12 }}>
+            <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent-amber)' }}></div>
+            <div style={{ color: 'var(--text-secondary)', fontSize: 11, fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase' }}>{lang === 'id' ? 'Sedang' : 'Moderate'}</div>
+          </div>
+          <div style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.1, letterSpacing: '-0.02em', marginBottom: 2 }}>{paces.sedang}</div>
+          <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>min/km</div>
+          {age && <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 12, padding: '4px 10px', background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 12, alignSelf: 'center' }}>HR {getHRForZone(0.7, 0.8)}</div>}
         </div>
-        <div className="pace-card" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderTop: '2px solid var(--accent-emerald)', padding: '12px' }}>
-          <div className="pace-label" style={{ color: 'var(--accent-emerald)', fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>{lang === 'id' ? 'Santai' : 'Easy'}</div>
-          <div className="pace-value" style={{ fontSize: '22px', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.1 }}>{paces.santai}</div>
-          <div className="pace-unit" style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 500 }}>min/km</div>
-          {age && <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 4 }}>HR {getHRForZone(0.6, 0.7)}</div>}
+        <div className="pace-card" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 16, padding: '16px 14px', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 12 }}>
+            <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent-emerald)' }}></div>
+            <div style={{ color: 'var(--text-secondary)', fontSize: 11, fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase' }}>{lang === 'id' ? 'Santai' : 'Easy'}</div>
+          </div>
+          <div style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.1, letterSpacing: '-0.02em', marginBottom: 2 }}>{paces.santai}</div>
+          <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>min/km</div>
+          {age && <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 12, padding: '4px 10px', background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 12, alignSelf: 'center' }}>HR {getHRForZone(0.6, 0.7)}</div>}
         </div>
       </div>
 
