@@ -111,7 +111,7 @@ export default function GoalProgressWidget({ data, goal, lang = 'id', onLogWeigh
   }, [runActs, weightRecs, profileWeight, lang, data.profile?.targetWeight, data.profile?.programStyle]);
 
   // 2. Turun HR / Aerobic Base
-  const { hrProgress, z2Hours, z2Target, z2ChartData } = useMemo(() => {
+  const { hrProgress, z2Hours, z2Target, z2LevelName, z2ChartData } = useMemo(() => {
     let z2Ms = 0;
     const weeklyData = {};
 
