@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Star, Flame, Medal, Crown, Zap, Trophy } from 'lucide-react';
 
 import { Activity, Dumbbell, Bike, Waves, Footprints, Edit2, Trash2 } from 'lucide-react';
+import { estimateTrainingEffect } from './utils';
 const ITEMS_PER_PAGE = 12;
 
 export default function RunHistory({ activities, profileWeight = 70, lang = 'id', onEdit, onDelete, onViewDetails }) {
@@ -152,6 +153,11 @@ export default function RunHistory({ activities, profileWeight = 70, lang = 'id'
             : null;
             
           const badge = getBadge(act.avgHr, act.maxHr);
+          
+          let teScore = null;
+          if (act.duration && act.avgHr && act.maxHr) {
+            teScore = estimateTrainingEffect(act.duration, act.avgHr, act.maxHr);
+          }
             
           let finalPaceStr = '–';
           let isFastPace = false;
@@ -247,6 +253,21 @@ export default function RunHistory({ activities, profileWeight = 70, lang = 'id'
                         lineHeight: 1.6,
                       }}>
                         {badge.label}
+                      </span>
+                    )}
+                    {teScore && (
+                      <span className="badge" style={{
+                        fontSize: 10,
+                        padding: '2px 7px',
+                        borderRadius: 20,
+                        fontWeight: 700,
+                        flexShrink: 0,
+                        lineHeight: 1.6,
+                        background: `${teScore.color}20`,
+                        color: teScore.color,
+                        border: `1px solid ${teScore.color}40`,
+                      }}>
+                        TE: {teScore.score} {teScore.label}
                       </span>
                     )}
                   </div>

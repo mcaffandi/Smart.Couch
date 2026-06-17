@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { Target, TrendingDown, Activity, CheckCircle, Flame, PlusCircle, ArrowRight, X, Calendar, Heart } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar, ReferenceLine, CartesianGrid } from 'recharts';
+import { estimateTrainingEffect } from './utils';
 
 export default function GoalProgressWidget({ data, goal, lang = 'id', onLogWeight, onLogRaceDate }) {
   const [showModal, setShowModal] = useState(false);
@@ -114,29 +115,90 @@ export default function GoalProgressWidget({ data, goal, lang = 'id', onLogWeigh
     let z2Ms = 0;
     const weeklyData = {};
 
-    runActs.forEach(a => {
-      // Check if it's Z1 or Z2
-      const isEasy = (a.avgHr && a.avgHr < maxHR * 0.75) || (!a.avgHr && a.name && (a.name.toLowerCase().includes('santai') || a.name.toLowerCase().includes('easy')));
-      if (isEasy) z2Ms += (a.duration || 0);
+    // Pre-fill the last 6 weeks so skipped weeks show up as 0
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - (i * 7));
+      const dayNum = d.getDay() || 7;
+      d.setDate(d.getDate() + 4 - dayNum);
+      const yearStart = new Date(d.getFullYear(), 0, 1);
+      const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+      const wKey = `${d.getFullYear()}-W${weekNo}`;
+      if (!weeklyData[wKey]) {
+        weeklyData[wKey] = { week: wKey, z2Mins: 0, otherMins: 0, rawDate: d.getTime() };
+      }
+    }
 
+    const rollingWindowMs = 12 * 7 * 24 * 60 * 60 * 1000; // 12 weeks (3 months) rolling window
+
+    runActs.forEach(a => {
+      // Validate with TE if possible
+      let isEasy = false;
+      if (a.duration && a.avgHr && maxHR) {
+        const te = estimateTrainingEffect(a.duration, a.avgHr, maxHR);
+        isEasy = te ? te.isValidZ2 : false;
+      } else {
+        // Fallback
+        isEasy = (a.avgHr && a.avgHr < maxHR * 0.75) || (!a.avgHr && a.name && (a.name.toLowerCase().includes('santai') || a.name.toLowerCase().includes('easy')));
+      }
+      
       // Group by week for chart
       if (a.startTimeLocal) {
+        // Accumulate z2Ms ONLY if within the 12-week rolling window (preventing stale fitness data)
+        if (now - a.startTimeLocal <= rollingWindowMs) {
+           if (isEasy) z2Ms += (a.duration || 0);
+        }
+
         const d = new Date(a.startTimeLocal);
-        const wKey = d.getFullYear() + '-W' + Math.ceil(d.getDate() / 7);
-        if(!weeklyData[wKey]) weeklyData[wKey] = { week: wKey, z2Mins: 0, otherMins: 0 };
-        if(isEasy) weeklyData[wKey].z2Mins += (a.duration || 0) / 60000;
-        else weeklyData[wKey].otherMins += (a.duration || 0) / 60000;
+        const dayNum = d.getDay() || 7;
+        d.setDate(d.getDate() + 4 - dayNum);
+        const yearStart = new Date(d.getFullYear(), 0, 1);
+        const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+        const wKey = `${d.getFullYear()}-W${weekNo}`;
+        
+        if (weeklyData[wKey]) {
+          if(isEasy) weeklyData[wKey].z2Mins += (a.duration || 0) / 60000;
+          else weeklyData[wKey].otherMins += (a.duration || 0) / 60000;
+        }
       }
     });
 
     const hours = z2Ms / 3600000;
-    const target = 40; // 40 hours target
-    const pct = Math.min(100, Math.round((hours / target) * 100));
+    
+    // Gamification Levels for 12-weeks rolling window
+    const levels = [
+      { lvl: 1, target: 12, nameId: 'Level 1 (Pemula)', nameEn: 'Level 1 (Beginner)' },     // ~1 hr/week
+      { lvl: 2, target: 24, nameId: 'Level 2 (Rutin)', nameEn: 'Level 2 (Routine)' },       // ~2 hrs/week
+      { lvl: 3, target: 36, nameId: 'Level 3 (Stabil)', nameEn: 'Level 3 (Stable)' },       // ~3 hrs/week
+      { lvl: 4, target: 48, nameId: 'Level 4 (Advance)', nameEn: 'Level 4 (Advance)' },     // ~4 hrs/week
+      { lvl: 5, target: 60, nameId: 'Level 5 (Elite)', nameEn: 'Level 5 (Elite)' },         // ~5 hrs/week
+    ];
 
-    const chartData = Object.values(weeklyData).slice(-6); // last 6 weeks
+    let activeLevel = levels[0];
+    for (const l of levels) {
+      activeLevel = l;
+      if (hours < l.target) break;
+    }
 
-    return { hrProgress: pct, z2Hours: hours.toFixed(1), z2Target: target, z2ChartData: chartData };
-  }, [runActs, maxHR]);
+    const pct = Math.min(100, Math.round((hours / activeLevel.target) * 100));
+
+    const chartData = Object.values(weeklyData)
+      .sort((a,b) => a.rawDate - b.rawDate)
+      .slice(-6)
+      .map(d => ({
+        ...d,
+        z2Mins: parseFloat(d.z2Mins.toFixed(1)),
+        otherMins: parseFloat(d.otherMins.toFixed(1))
+      }));
+
+    return { 
+      hrProgress: pct, 
+      z2Hours: hours.toFixed(1), 
+      z2Target: activeLevel.target, 
+      z2LevelName: lang === 'id' ? activeLevel.nameId : activeLevel.nameEn,
+      z2ChartData: chartData 
+    };
+  }, [runActs, maxHR, now, lang]);
 
   // 3. 5K / 10K / Marathon
   const { raceProgress, currentPeak, targetPeak, raceChartData } = useMemo(() => {
@@ -215,12 +277,12 @@ export default function GoalProgressWidget({ data, goal, lang = 'id', onLogWeigh
       };
     } else if (goal === 'turun-hr') {
       return {
-        title: lang === 'id' ? 'Kapasitas Aerobik' : 'Aerobic Base',
+        title: z2LevelName,
         icon: <Heart size={20} color="#3b82f6" />,
         color: '#3b82f6',
         pct: hrProgress,
         desc: lang === 'id' ? `${z2Hours} / ${z2Target} jam di Zona 2` : `${z2Hours} / ${z2Target} hrs in Zone 2`,
-        eta: lang === 'id' ? `Efisiensi meningkat bertahap` : `Efficiency improving`
+        eta: lang === 'id' ? `Menuju Level Berikutnya!` : `Aiming for Next Level!`
       };
     } else if (goal === '5k' || goal === '10k' || goal === 'marathon') {
       return {
@@ -480,11 +542,11 @@ export default function GoalProgressWidget({ data, goal, lang = 'id', onLogWeigh
                 <>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 24 }}>
                     <div style={{ background: 'var(--bg-card)', padding: 16, borderRadius: 16, border: '1px solid var(--border)' }}>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4 }}>Akumulasi Zona 2</div>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4 }}>Akumulasi Zona 2 (3 Bln)</div>
                       <div style={{ fontSize: 24, fontWeight: 800, color: '#3b82f6' }}>{z2Hours} <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>jam</span></div>
                     </div>
                     <div style={{ background: 'var(--bg-card)', padding: 16, borderRadius: 16, border: '1px solid var(--border)' }}>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4 }}>Target Kestabilan</div>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4 }}>Target {content.title}</div>
                       <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--text-primary)' }}>{z2Target} <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>jam</span></div>
                     </div>
                   </div>
@@ -497,7 +559,7 @@ export default function GoalProgressWidget({ data, goal, lang = 'id', onLogWeigh
                         <XAxis dataKey="week" stroke="var(--text-muted)" fontSize={10} tickLine={false} axisLine={false} />
                         <Tooltip cursor={{ fill: 'var(--border)', opacity: 0.4 }} contentStyle={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 8 }} />
                         <Bar dataKey="z2Mins" stackId="a" fill="#3b82f6" radius={[0,0,4,4]} name="Zona 2 (Menit)" />
-                        <Bar dataKey="otherMins" stackId="a" fill="var(--border)" radius={[4,4,0,0]} name="Zona Lain (Menit)" />
+                        <Bar dataKey="otherMins" stackId="a" fill="#64748b" radius={[4,4,0,0]} name="Zona Lain (Menit)" />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>

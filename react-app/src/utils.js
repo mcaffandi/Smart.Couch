@@ -184,6 +184,64 @@ export const estimateVO2Max = (paceMinKm, avgHr, maxHr) => {
 };
 
 // ──────────────────────────────────────────────
+// Training Effect Estimation (0.0 - 5.0)
+// ──────────────────────────────────────────────
+export const estimateTrainingEffect = (durationMs, avgHr, maxHr) => {
+  if (!durationMs || !avgHr || !maxHr || avgHr < 60 || maxHr < 100) return null;
+  
+  const durationMins = durationMs / 60000;
+  if (durationMins < 5) return null; // Too short
+
+  const intensity = avgHr / maxHr;
+  let te = 1.0;
+
+  if (intensity < 0.6) {
+    // Active Recovery / Very Light (Z1)
+    te = 1.0 + (durationMins / 60); 
+  } else if (intensity >= 0.6 && intensity < 0.75) {
+    // Base / MAF / Z2
+    te = 1.5 + (durationMins / 45);
+  } else if (intensity >= 0.75 && intensity < 0.85) {
+    // Tempo / Moderate (Z3)
+    te = 1.5 + (durationMins / 30);
+  } else if (intensity >= 0.85 && intensity < 0.92) {
+    // Threshold (Z4)
+    te = 1.5 + (durationMins / 20);
+  } else {
+    // Max (Z5)
+    te = 2.0 + (durationMins / 20);
+  }
+
+  const finalTE = Math.min(5.0, Math.max(1.0, te));
+  
+  let label = 'Recovery';
+  let color = '#818cf8'; // Z1 color
+
+  if (intensity >= 0.6 && intensity < 0.75) {
+    label = finalTE >= 3.0 ? 'Improving Base' : 'Base';
+    color = '#3b82f6'; // Z2 color
+  } else if (intensity >= 0.75 && intensity < 0.85) {
+    label = 'Tempo';
+    color = '#10b981'; // Z3 color
+  } else if (intensity >= 0.85 && intensity < 0.92) {
+    label = 'Threshold';
+    color = '#f59e0b'; // Z4 color
+  } else if (intensity >= 0.92) {
+    label = 'VO2 Max';
+    color = '#ef4444'; // Z5 color
+  }
+
+  if (finalTE >= 5.0) label = 'Overreaching';
+  
+  return {
+    score: parseFloat(finalTE.toFixed(1)),
+    label,
+    color,
+    isValidZ2: (intensity >= 0.55 && intensity <= 0.76) // generous bounds for validation
+  };
+};
+
+// ──────────────────────────────────────────────
 // HR Zone Computation
 // ──────────────────────────────────────────────
 export const getHRZones = (maxHR, restingHR = 60) => {
