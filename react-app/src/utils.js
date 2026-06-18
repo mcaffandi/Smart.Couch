@@ -216,27 +216,36 @@ export const estimateTrainingEffect = (durationMs, avgHr, maxHr) => {
   
   let label = 'Recovery';
   let color = '#818cf8'; // Z1 color
+  let description = 'Membantu pemulihan fisik dan mental. Manfaat aerobik minimal.';
 
   if (intensity >= 0.6 && intensity < 0.75) {
     label = finalTE >= 3.0 ? 'Improving Base' : 'Base';
     color = '#3b82f6'; // Z2 color
+    description = 'Menjaga dan menambah dasar kebugaran aerobik (Endurance).';
   } else if (intensity >= 0.75 && intensity < 0.85) {
     label = 'Tempo';
     color = '#10b981'; // Z3 color
+    description = 'Meningkatkan kemampuan untuk mempertahankan usaha lari (effort) pada pace menengah.';
   } else if (intensity >= 0.85 && intensity < 0.92) {
     label = 'Threshold';
     color = '#f59e0b'; // Z4 color
+    description = 'Meningkatkan ambang laktat dan toleransi kelelahan tubuh pada pace cepat.';
   } else if (intensity >= 0.92) {
     label = 'VO2 Max';
     color = '#ef4444'; // Z5 color
+    description = 'Meningkatkan kapasitas maksimal kerja paru-paru (VO2 Max) dan potensi kecepatan maksimal.';
   }
 
-  if (finalTE >= 5.0) label = 'Overreaching';
+  if (finalTE >= 5.0) {
+    label = 'Overreaching';
+    description = 'Beban latihan terlalu intens! Butuh istirahat (recovery) lebih lama untuk mencegah cedera dan penumpukan lelah.';
+  }
   
   return {
     score: parseFloat(finalTE.toFixed(1)),
     label,
     color,
+    description,
     isValidZ2: (intensity >= 0.55 && intensity <= 0.76) // generous bounds for validation
   };
 };

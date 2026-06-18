@@ -256,7 +256,7 @@ export default function RunHistory({ activities, profileWeight = 70, lang = 'id'
                       </span>
                     )}
                     {teScore && (
-                      <span className="badge" style={{
+                      <span className="badge" title={teScore.description} style={{
                         fontSize: 10,
                         padding: '2px 7px',
                         borderRadius: 20,
@@ -266,8 +266,9 @@ export default function RunHistory({ activities, profileWeight = 70, lang = 'id'
                         background: `${teScore.color}20`,
                         color: teScore.color,
                         border: `1px solid ${teScore.color}40`,
+                        cursor: 'help'
                       }}>
-                        TE: {teScore.score} {teScore.label}
+                        {teScore.score} {teScore.label}
                       </span>
                     )}
                   </div>
