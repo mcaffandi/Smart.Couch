@@ -277,19 +277,6 @@ export function HRZoneChart({ zones, activities = [], avgHr, lang = 'id' }) {
         </BarChart>
       </ResponsiveContainer>
       </div>
-
-      <div style={{ marginTop: 20, display: 'flex', flexDirection: 'column', gap: 10, padding: '16px', background: 'var(--bg-surface)', borderRadius: 12, border: '1px solid var(--border)' }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>{lang === 'id' ? 'Panduan Zona & Talk Test' : 'Zone Guide & Talk Test'}</div>
-        {data.map(d => (
-          <div key={d.zone} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-            <div style={{ width: 12, height: 12, borderRadius: '50%', background: d.color, marginTop: 4, flexShrink: 0 }}></div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>{d.label} <span style={{ color: 'var(--text-muted)', fontWeight: 500, fontSize: 12 }}>({d.min}-{d.max} bpm)</span></div>
-              <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2, lineHeight: 1.4 }}>{d.desc}</div>
-            </div>
-          </div>
-        ))}
-      </div>
     </div>
   );
 }
