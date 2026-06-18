@@ -232,11 +232,6 @@ export function HRZoneChart({ zones, activities = [], avgHr, lang = 'id' }) {
         }}>
           <div style={{ fontWeight: 700, marginBottom: 4, color: d.color }}>{d.label}</div>
           <div style={{ color: 'var(--text-secondary)', marginBottom: 6 }}>{d.min} – {d.max} bpm</div>
-          {d.desc && (
-            <div style={{ color: 'var(--text-muted)', fontSize: 11, fontStyle: 'italic', marginBottom: 6 }}>
-              "{d.desc}"
-            </div>
-          )}
           {d.durStr && (
             <div style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
               {lang === 'id' ? 'Est. Waktu: ' : 'Est. Time: '}{d.durStr} ({d.pctStr})
