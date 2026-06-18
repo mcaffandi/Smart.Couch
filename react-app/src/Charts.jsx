@@ -261,7 +261,7 @@ export function HRZoneChart({ zones, activities = [], avgHr, lang = 'id' }) {
         <BarChart data={data} layout="vertical" margin={{ top: 0, right: 100, left: 0, bottom: 0 }} barCategoryGap="25%">
           <XAxis type="number" domain={[0, 'dataMax + 10']} tick={false} axisLine={false} tickLine={false} />
           <YAxis dataKey="zone" type="category" tick={{ fill: 'var(--text-secondary)', fontSize: 11, fontWeight: 700 }} axisLine={false} tickLine={false} width={45} tickMargin={8} />
-          <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--bg-card-hover)' }} />
+          <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--bg-card-hover)' }} offset={40} />
           <Bar dataKey="value" radius={[0, 4, 4, 0]}>
             {data.map((entry, index) => (
               <Cell key={index} fill={entry.color} fillOpacity={0.9} />
