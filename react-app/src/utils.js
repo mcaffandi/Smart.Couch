@@ -256,11 +256,11 @@ export const estimateTrainingEffect = (durationMs, avgHr, maxHr) => {
 export const getHRZones = (maxHR, restingHR = 60) => {
   const hrr = maxHR - restingHR;
   return [
-    { zone: 'Z1 – Recovery',   pct: '50–60%', min: Math.round(hrr * 0.50 + restingHR), max: Math.round(hrr * 0.60 + restingHR), color: '#818cf8' },
-    { zone: 'Z2 – Aerobic',    pct: '60–70%', min: Math.round(hrr * 0.60 + restingHR), max: Math.round(hrr * 0.70 + restingHR), color: '#3b82f6' },
-    { zone: 'Z3 – Tempo',      pct: '70–80%', min: Math.round(hrr * 0.70 + restingHR), max: Math.round(hrr * 0.80 + restingHR), color: '#10b981' },
-    { zone: 'Z4 – Threshold',  pct: '80–90%', min: Math.round(hrr * 0.80 + restingHR), max: Math.round(hrr * 0.90 + restingHR), color: '#f59e0b' },
-    { zone: 'Z5 – Max',        pct: '90–100%',min: Math.round(hrr * 0.90 + restingHR), max: maxHR,                              color: '#ef4444' },
+    { zone: 'Z1 – Recovery',   pct: '50–60%', min: Math.round(hrr * 0.50 + restingHR), max: Math.round(hrr * 0.60 + restingHR), color: '#818cf8', desc: 'Jalan santai/recovery. Badan pulih, napas lega.' },
+    { zone: 'Z2 – Aerobic',    pct: '60–70%', min: Math.round(hrr * 0.60 + restingHR), max: Math.round(hrr * 0.70 + restingHR), color: '#3b82f6', desc: 'Bisa ngobrol 1 kalimat penuh. Napas nyaman.' },
+    { zone: 'Z3 – Tempo',      pct: '70–80%', min: Math.round(hrr * 0.70 + restingHR), max: Math.round(hrr * 0.80 + restingHR), color: '#10b981', desc: 'Napas mulai berat, susah ngobrol panjang.' },
+    { zone: 'Z4 – Threshold',  pct: '80–90%', min: Math.round(hrr * 0.80 + restingHR), max: Math.round(hrr * 0.90 + restingHR), color: '#f59e0b', desc: 'Cuma bisa 1-2 kata. Keras tapi bisa ditahan sebentar.' },
+    { zone: 'Z5 – Max',        pct: '90–100%',min: Math.round(hrr * 0.90 + restingHR), max: maxHR,                              color: '#ef4444', desc: 'All out! Cuma tahan puluhan detik - 2 menit.' },
   ];
 };
 

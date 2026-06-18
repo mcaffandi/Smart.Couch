@@ -99,6 +99,7 @@ export default function App() {
   const [displayName, setDisplayName] = useState(() => data.profile?.displayName ?? '');
   const [weight, setWeight] = useState(() => data.profile?.weight ?? null);
   const [height, setHeight] = useState(() => data.profile?.height ?? null);
+  const [restingHR, setRestingHR] = useState(() => data.profile?.restingHR ?? null);
   const [gender, setGender] = useState(() => data.profile?.gender ?? '');
   const [avatar, setAvatar] = useState(() => data.profile?.avatar ?? null);
   const [croppingImageSrc, setCroppingImageSrc] = useState(null);
@@ -428,6 +429,7 @@ export default function App() {
         const safeAge = cloudData.profile?.age ?? localData.profile?.age ?? null;
         const safeWeight = cloudData.profile?.weight ?? localData.profile?.weight ?? null;
         const safeHeight = cloudData.profile?.height ?? localData.profile?.height ?? null;
+        const safeRestingHR = cloudData.profile?.restingHR ?? localData.profile?.restingHR ?? null;
         const safeGender = cloudData.profile?.gender || localData.profile?.gender || '';
         const safeGoal = cloudData.profile?.goal ?? localData.profile?.goal ?? 'maintenance';
         const safeStyle = cloudData.profile?.programStyle ?? localData.profile?.programStyle ?? 'sedang';
@@ -448,6 +450,7 @@ export default function App() {
             age: safeAge,
             weight: safeWeight,
             height: safeHeight,
+            restingHR: safeRestingHR,
             gender: safeGender,
             goal: safeGoal,
             programStyle: safeStyle,
@@ -461,6 +464,7 @@ export default function App() {
         setDisplayName(safeData.profile.displayName);
         setWeight(safeWeight);
         setHeight(safeHeight);
+        setRestingHR(safeRestingHR);
         setGender(safeGender);
         setAvatar(safeData.profile.avatar);
         setGoal(safeGoal);
@@ -990,7 +994,7 @@ export default function App() {
   const avgNonRunSleep = nonRunDayScores.length ? (nonRunDayScores.reduce((s, v) => s + v, 0) / nonRunDayScores.length).toFixed(1) : null;
 
   const paces = getPaceRecommendations(targetPace);
-  const hrZones = getHRZones(actualMaxHR || (220 - age));
+  const hrZones = getHRZones(actualMaxHR || (220 - age), restingHR || 60);
 
   // Actual best pace from ALL stored runs (same unit logic as RacePrediction)
   const actualBestPace = useMemo(() => {
@@ -2793,7 +2797,7 @@ export default function App() {
                 </div>
                 {!profileEditMode && (
                   <button 
-                    onClick={() => { setEditDraft({ displayName: curName, age: curAge, gender: curGender, weight: curWeight, height: curHeight, avatar: avatar, goal: goal, programStyle: programStyle, targetPace: targetPace, selectedDays: selectedDays, stravaSyncMode: data.profile?.stravaSyncMode || 'fast' }); setProfileEditMode(true); }}
+                    onClick={() => { setEditDraft({ displayName: curName, age: curAge, gender: curGender, weight: curWeight, height: curHeight, restingHR: restingHR, avatar: avatar, goal: goal, programStyle: programStyle, targetPace: targetPace, selectedDays: selectedDays, stravaSyncMode: data.profile?.stravaSyncMode || 'fast' }); setProfileEditMode(true); }}
                     style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 6, color: 'var(--text-primary)', cursor: 'pointer', padding: '4px 10px', fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}
                   >
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
@@ -3040,7 +3044,7 @@ export default function App() {
                     <div>
                       <div style={{ height: window.innerWidth < 768 ? 1 : 0, background: 'var(--border)', margin: window.innerWidth < 768 ? '14px 0' : '0' }} />
                       <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent-purple)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10 }}>Data Fisik</div>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                         <div>
                           <label style={lbl}>Umur</label>
                           <input type="number" min={10} max={100} placeholder="-" style={inp}
@@ -3055,6 +3059,11 @@ export default function App() {
                           <label style={lbl}>Tinggi (cm)</label>
                           <input type="number" min={100} max={250} placeholder="-" style={inp}
                             value={d.height ?? ''} onChange={e => { let v = e.target.value; if (/^0+(?=\d)/.test(v)) { v = v.replace(/^0+(?=\d)/, ''); e.target.value = v; } setEditDraft(p => ({ ...p, height: v === '' ? null : parseInt(v) || null })); }} onFocus={onF} onBlur={onB} />
+                        </div>
+                        <div>
+                          <label style={lbl}>Resting HR <span style={{fontWeight: 'normal'}}>(opsional)</span></label>
+                          <input type="number" min={30} max={100} placeholder="60" style={inp}
+                            value={d.restingHR ?? ''} onChange={e => { let v = e.target.value; if (/^0+(?=\d)/.test(v)) { v = v.replace(/^0+(?=\d)/, ''); e.target.value = v; } setEditDraft(p => ({ ...p, restingHR: v === '' ? null : parseInt(v) || null })); }} onFocus={onF} onBlur={onB} />
                         </div>
                       </div>
                       {d.goal === 'weightloss' && (

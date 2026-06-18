@@ -699,7 +699,7 @@ export default function AdminDashboard({ onBack }) {
                 )}
               </div>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px' }}>
               {displayedUsers.map(u => {
                 const isPro = u.data?.profile?.isPremium || (u.data?.profile?.premiumUntil && u.data.profile.premiumUntil > Date.now());
                 const name = u.data?.displayName || u.data?.profile?.displayName || 'Anonim';
