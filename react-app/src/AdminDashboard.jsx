@@ -463,9 +463,8 @@ export default function AdminDashboard({ onBack }) {
     if (!searchQuery) return users;
     const lowerQ = searchQuery.toLowerCase();
     return users.filter(u => {
-      const email = (u.data?.email || u.id).toLowerCase();
       const name = (u.data?.displayName || u.data?.profile?.displayName || '').toLowerCase();
-      return email.includes(lowerQ) || name.includes(lowerQ);
+      return name.includes(lowerQ);
     });
   }, [users, searchQuery]);
 
@@ -685,7 +684,7 @@ export default function AdminDashboard({ onBack }) {
               <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
                 <input 
                   type="text" 
-                  placeholder="Cari email / nama..." 
+                  placeholder="Cari nama pengguna..." 
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
                   style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-primary)', padding: '6px 12px', borderRadius: 20, fontSize: 13, outline: 'none', minWidth: 200 }}
