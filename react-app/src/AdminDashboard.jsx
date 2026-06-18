@@ -46,6 +46,7 @@ export default function AdminDashboard({ onBack }) {
   };
   const [showAllUsers, setShowAllUsers] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedUser, setSelectedUser] = useState(null);
 
   const quillRef = useRef(null);
 
@@ -699,73 +700,169 @@ export default function AdminDashboard({ onBack }) {
                 )}
               </div>
             </div>
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr style={{ borderBottom: '1px solid var(--border)', color: 'var(--text-secondary)', fontSize: 13 }}>
-                    <th style={{ padding: '12px 16px' }}>Email / ID</th>
-                    <th style={{ padding: '12px 16px' }}>Nama</th>
-                    <th style={{ padding: '12px 16px' }}>Login Terakhir</th>
-                    <th style={{ padding: '12px 16px' }}>Tujuan</th>
-                    <th style={{ padding: '12px 16px' }}>Target Pace</th>
-                    <th style={{ padding: '12px 16px' }}>Status PRO</th>
-                    <th style={{ padding: '12px 16px', textAlign: 'center' }}>Aksi</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {displayedUsers.map(u => (
-                    <tr key={u.id} style={{ borderBottom: '1px dashed rgba(128,128,128,0.1)' }}>
-                      <td style={{ padding: '16px', fontSize: 14, wordBreak: 'break-all' }}>
-                        {u.data?.email || (u.id.substring(0, 10) + '...')}
-                      </td>
-                      <td style={{ padding: '16px', fontSize: 14 }}>
-                        {u.data?.displayName || u.data?.profile?.displayName || 'Anonim'}
-                      </td>
-                      <td style={{ padding: '16px', fontSize: 13, color: 'var(--text-muted)' }}>
-                        {u.data?.lastLogin ? new Date(u.data.lastLogin.seconds ? u.data.lastLogin.seconds * 1000 : u.data.lastLogin).toLocaleDateString('id-ID') : '-'}
-                      </td>
-                      <td style={{ padding: '16px', fontSize: 14 }}>
-                        <span style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', padding: '4px 8px', borderRadius: 4 }}>
-                          {u.data?.profile?.goal || '-'}
-                        </span>
-                      </td>
-                      <td style={{ padding: '16px', fontSize: 14 }}>
-                        {u.data?.profile?.targetPace ? `${Math.floor(u.data.profile.targetPace)}:${String(Math.round((u.data.profile.targetPace % 1) * 60)).padStart(2, '0')}/km` : '-'}
-                      </td>
-                      <td style={{ padding: '16px', fontSize: 13 }}>
-                        {(() => {
-                          const isPro = u.data?.profile?.isPremium || (u.data?.profile?.premiumUntil && u.data.profile.premiumUntil > Date.now());
-                          if (!isPro) return '-';
-                          if (u.data?.profile?.premiumUntil) {
-                            return <span style={{ color: 'var(--accent-emerald)', fontWeight: 600 }}>s/d {new Date(u.data.profile.premiumUntil).toLocaleDateString('id-ID')}</span>;
-                          }
-                          return <span style={{ color: 'var(--accent-emerald)', fontWeight: 600 }}>Aktif (Permanen)</span>;
-                        })()}
-                      </td>
-                      <td style={{ padding: '16px', textAlign: 'center', display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                        <button 
-                          onClick={() => handleTogglePremium(u.id, u.data?.profile)}
-                          style={{ background: (u.data?.profile?.isPremium || (u.data?.profile?.premiumUntil && u.data.profile.premiumUntil > Date.now())) ? 'var(--accent-amber)' : 'var(--accent-emerald)', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', whiteSpace: 'nowrap' }}
-                        >
-                          {(u.data?.profile?.isPremium || (u.data?.profile?.premiumUntil && u.data.profile.premiumUntil > Date.now())) ? 'Cabut PRO' : '+ Jadikan PRO'}
-                        </button>
-                        <button 
-                          onClick={() => handleDeleteUser(u.id)}
-                          style={{ background: 'var(--accent-rose)', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
-                        >
-                          Hapus
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                  {users.length === 0 && (
-                    <tr>
-                      <td colSpan="5" style={{ padding: 20, textAlign: 'center', color: 'var(--text-muted)' }}>Belum ada data pelari.</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {displayedUsers.map(u => {
+                const isPro = u.data?.profile?.isPremium || (u.data?.profile?.premiumUntil && u.data.profile.premiumUntil > Date.now());
+                const name = u.data?.displayName || u.data?.profile?.displayName || 'Anonim';
+                const initial = name.charAt(0).toUpperCase();
+                const lastLoginStr = u.data?.lastLogin ? new Date(u.data.lastLogin.seconds ? u.data.lastLogin.seconds * 1000 : u.data.lastLogin).toLocaleDateString('id-ID') : 'Belum pernah login';
+                return (
+                  <div 
+                    key={u.id}
+                    onClick={() => setSelectedUser(u)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '16px',
+                      background: 'var(--bg-surface)',
+                      border: '1px solid var(--border)',
+                      borderRadius: '12px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = 'var(--accent-sky)';
+                      e.currentTarget.style.transform = 'translateY(-2px)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = 'var(--border)';
+                      e.currentTarget.style.transform = 'translateY(0)';
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                      <div style={{
+                        width: '40px', height: '40px', borderRadius: '50%',
+                        background: isPro ? 'linear-gradient(135deg, #f59e0b, #d97706)' : 'var(--bg-card)',
+                        border: isPro ? 'none' : '1px solid var(--border)',
+                        color: isPro ? '#fff' : 'var(--text-primary)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontWeight: 'bold', fontSize: '16px'
+                      }}>
+                        {initial}
+                      </div>
+                      <div>
+                        <div style={{ fontWeight: '600', fontSize: '15px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          {name}
+                          {isPro && <Crown size={14} color="#f59e0b" />}
+                        </div>
+                        <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+                          {u.data?.email || (u.id.substring(0, 10) + '...')}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px' }}>Login Terakhir</div>
+                      <div style={{ fontSize: '13px', fontWeight: '500', color: 'var(--text-secondary)' }}>{lastLoginStr}</div>
+                    </div>
+                  </div>
+                );
+              })}
+              {users.length === 0 && (
+                <div style={{ padding: 20, textAlign: 'center', color: 'var(--text-muted)', background: 'var(--bg-surface)', borderRadius: 12 }}>
+                  Belum ada data pelari.
+                </div>
+              )}
             </div>
+
+            {/* Modal Detail User */}
+            {selectedUser && (
+              <div style={{
+                position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                zIndex: 9999, padding: '20px'
+              }} onClick={() => setSelectedUser(null)}>
+                <div style={{
+                  background: 'var(--bg-card)', padding: '32px', borderRadius: '20px',
+                  width: '100%', maxWidth: '500px', border: '1px solid var(--border)',
+                  position: 'relative',
+                  boxShadow: '0 20px 40px rgba(0,0,0,0.4)'
+                }} onClick={e => e.stopPropagation()}>
+                  <button 
+                    onClick={() => setSelectedUser(null)}
+                    style={{ position: 'absolute', top: 16, right: 16, background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: 24 }}
+                  >&times;</button>
+                  
+                  {(() => {
+                    const u = selectedUser;
+                    const isPro = u.data?.profile?.isPremium || (u.data?.profile?.premiumUntil && u.data.profile.premiumUntil > Date.now());
+                    const name = u.data?.displayName || u.data?.profile?.displayName || 'Anonim';
+                    const email = u.data?.email || u.id;
+                    const lastLoginStr = u.data?.lastLogin ? new Date(u.data.lastLogin.seconds ? u.data.lastLogin.seconds * 1000 : u.data.lastLogin).toLocaleDateString('id-ID') : '-';
+                    const targetPace = u.data?.profile?.targetPace ? `${Math.floor(u.data.profile.targetPace)}:${String(Math.round((u.data.profile.targetPace % 1) * 60)).padStart(2, '0')}/km` : '-';
+
+                    return (
+                      <>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
+                          <div style={{
+                            width: '64px', height: '64px', borderRadius: '50%',
+                            background: isPro ? 'linear-gradient(135deg, #f59e0b, #d97706)' : 'var(--bg-surface)',
+                            border: isPro ? 'none' : '1px solid var(--border)',
+                            color: isPro ? '#fff' : 'var(--text-primary)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontWeight: 'bold', fontSize: '28px'
+                          }}>
+                            {name.charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <h2 style={{ margin: 0, fontSize: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              {name} {isPro && <Crown size={18} color="#f59e0b" />}
+                            </h2>
+                            <div style={{ color: 'var(--text-muted)', fontSize: '14px', marginTop: '4px' }}>{email}</div>
+                          </div>
+                        </div>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '32px' }}>
+                          <div style={{ background: 'var(--bg-surface)', padding: '12px', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>Tujuan Latihan</div>
+                            <div style={{ fontWeight: '600', fontSize: '14px', textTransform: 'capitalize' }}>{u.data?.profile?.goal || '-'}</div>
+                          </div>
+                          <div style={{ background: 'var(--bg-surface)', padding: '12px', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>Target Pace</div>
+                            <div style={{ fontWeight: '600', fontSize: '14px' }}>{targetPace}</div>
+                          </div>
+                          <div style={{ background: 'var(--bg-surface)', padding: '12px', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>Login Terakhir</div>
+                            <div style={{ fontWeight: '600', fontSize: '14px' }}>{lastLoginStr}</div>
+                          </div>
+                          <div style={{ background: 'var(--bg-surface)', padding: '12px', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>Status PRO</div>
+                            <div style={{ fontWeight: '600', fontSize: '14px', color: isPro ? 'var(--accent-emerald)' : 'var(--text-primary)' }}>
+                              {isPro ? (u.data?.profile?.premiumUntil ? `s/d ${new Date(u.data.profile.premiumUntil).toLocaleDateString('id-ID')}` : 'Permanen') : 'Non-PRO'}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '12px' }}>
+                          <button 
+                            onClick={() => {
+                              handleTogglePremium(u.id, u.data?.profile);
+                              setSelectedUser(null);
+                            }}
+                            className="btn"
+                            style={{ flex: 1, background: isPro ? 'var(--accent-amber)' : 'var(--accent-emerald)', color: '#fff', border: 'none' }}
+                          >
+                            {isPro ? 'Cabut Status PRO' : '+ Jadikan PRO'}
+                          </button>
+                          <button 
+                            onClick={() => {
+                              handleDeleteUser(u.id);
+                              setSelectedUser(null);
+                            }}
+                            className="btn btn-secondary"
+                            style={{ background: 'rgba(239, 68, 68, 0.1)', color: 'var(--accent-rose)', border: '1px solid rgba(239, 68, 68, 0.2)' }}
+                          >
+                            Hapus User
+                          </button>
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
