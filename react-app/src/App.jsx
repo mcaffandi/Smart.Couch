@@ -974,9 +974,25 @@ export default function App() {
   // Adjust readiness score based on sleep score and running fatigue/rest
   const trainingReadiness = useMemo(() => {
     let score = latestSleepScore !== null ? latestSleepScore : 100;
+
+    // Jika data tidur sudah lama, perlahan pulihkan base score kembali ke 100 (asumsi tubuh beristirahat)
+    if (latestSleepDate) {
+      const today = new Date();
+      // Handle format YYYY-MM-DD atau format dengan _
+      const dateStr = latestSleepDate.includes('_') ? latestSleepDate.split('_')[0] : latestSleepDate;
+      const sleepDate = new Date(dateStr);
+      if (!isNaN(sleepDate.getTime())) {
+        const diffTime = today.getTime() - sleepDate.getTime();
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        if (diffDays > 0) {
+           // Pulihkan 20 poin untuk setiap hari tanpa data tidur baru
+           score = Math.min(100, score + (diffDays * 20));
+        }
+      }
+    }
     
     if (recoveryRemainingHours <= 0) {
-      if (latestSleepScore >= 50) {
+      if (score >= 50) {
         score = Math.max(80, score);
       }
     } else {
@@ -985,7 +1001,7 @@ export default function App() {
     }
     
     return Math.round(score);
-  }, [latestSleepScore, recoveryRemainingHours]);
+  }, [latestSleepScore, latestSleepDate, recoveryRemainingHours]);
 
   const runDates = new Set(runActs.map(a => a.startTimeLocal ? msToDate(a.startTimeLocal) : null).filter(Boolean));
   const runDayScores = Object.entries(sleepRecs).filter(([k, v]) => runDates.has(v.dateStr || k.split('_')[0])).map(([, v]) => v.score);
