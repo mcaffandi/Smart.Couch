@@ -719,6 +719,7 @@ export default function AdminDashboard({ onBack }) {
                       borderRadius: '12px',
                       cursor: 'pointer',
                       transition: 'all 0.2s',
+                      gap: '12px'
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.borderColor = 'var(--accent-sky)';
@@ -729,29 +730,30 @@ export default function AdminDashboard({ onBack }) {
                       e.currentTarget.style.transform = 'translateY(0)';
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px', minWidth: 0 }}>
                       <div style={{
                         width: '40px', height: '40px', borderRadius: '50%',
                         background: isPro ? 'linear-gradient(135deg, #f59e0b, #d97706)' : 'var(--bg-card)',
                         border: isPro ? 'none' : '1px solid var(--border)',
                         color: isPro ? '#fff' : 'var(--text-primary)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontWeight: 'bold', fontSize: '16px'
+                        fontWeight: 'bold', fontSize: '16px',
+                        flexShrink: 0
                       }}>
                         {initial}
                       </div>
-                      <div>
+                      <div style={{ minWidth: 0 }}>
                         <div style={{ fontWeight: '600', fontSize: '15px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          {name}
-                          {isPro && <Crown size={14} color="#f59e0b" />}
+                          <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{name}</span>
+                          {isPro && <Crown size={14} color="#f59e0b" style={{ flexShrink: 0 }} />}
                         </div>
-                        <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+                        <div style={{ fontSize: '13px', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           {u.data?.email || (u.id.substring(0, 10) + '...')}
                         </div>
                       </div>
                     </div>
                     
-                    <div style={{ textAlign: 'right' }}>
+                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
                       <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px' }}>Login Terakhir</div>
                       <div style={{ fontSize: '13px', fontWeight: '500', color: 'var(--text-secondary)' }}>{lastLoginStr}</div>
                     </div>
