@@ -3644,7 +3644,7 @@ export default function App() {
           </button>
 
           <div style={{ fontSize: 10, color: 'var(--text-muted)', textAlign: 'center', opacity: 0.5, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-            <span>Pre-Release (Beta)</span>
+            <span>v. 1</span>
             {visitorCount !== null && (
               <>
                 <span>•</span>
