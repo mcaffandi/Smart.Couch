@@ -409,7 +409,7 @@ export default function LandingPage({ onGetStarted, onViewBlog, lang, setLang, v
       <footer className="landing-footer">
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
           <div className="badge-pill" style={{ marginBottom: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span><span className="badge-dot"></span> v. 1</span>
+            <span><span className="badge-dot"></span> v1.0.0</span>
             <span style={{ opacity: 0.5 }}>•</span>
             <span style={{ display: 'flex', alignItems: 'center', gap: 4, opacity: 0.8 }}>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
