@@ -13,6 +13,7 @@ export default function AdminDashboard({ onBack }) {
   const [blogs, setBlogs] = useState([]);
   const [requests, setRequests] = useState([]);
   const [feedbacks, setFeedbacks] = useState([]);
+  const [supportTickets, setSupportTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   
   const [adminTab, setAdminTab] = useState('overview');
@@ -172,17 +173,31 @@ export default function AdminDashboard({ onBack }) {
         console.error("Gagal ambil data requests:", err);
       }
 
-      // Fetch feedbacks
+      // Fetch feedbacks & support tickets
       try {
         const fbSnap = await getDocsFromServer(collection(db, "feedback"));
         const fbData = [];
-        fbSnap.forEach((doc) => fbData.push({ id: doc.id, ...doc.data() }));
+        const supData = [];
+        fbSnap.forEach((doc) => {
+          const data = doc.data();
+          if (data.type === 'support') {
+            supData.push({ id: doc.id, ...data });
+          } else {
+            fbData.push({ id: doc.id, ...data });
+          }
+        });
         fbData.sort((a, b) => {
           const tA = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
           const tB = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
           return tB - tA;
         });
+        supData.sort((a, b) => {
+          const tA = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+          const tB = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+          return tB - tA;
+        });
         setFeedbacks(fbData);
+        setSupportTickets(supData);
       } catch (err) {
         console.error("Gagal ambil data feedbacks:", err);
       }
@@ -554,6 +569,17 @@ export default function AdminDashboard({ onBack }) {
               style={{ background: adminTab === 'feedbacks' ? 'var(--text-primary)' : 'transparent', color: adminTab === 'feedbacks' ? 'var(--bg-base)' : 'var(--text-secondary)', border: 'none', padding: '6px 16px', borderRadius: 20, cursor: 'pointer', fontWeight: 600, fontSize: 13, transition: 'all 0.2s' }}
             >
               Reviews
+            </button>
+            <button 
+              onClick={() => { setAdminTab('support'); setShowBlogForm(false); }} 
+              style={{ background: adminTab === 'support' ? 'var(--text-primary)' : 'transparent', color: adminTab === 'support' ? 'var(--bg-base)' : 'var(--text-secondary)', border: 'none', padding: '6px 16px', borderRadius: 20, cursor: 'pointer', fontWeight: 600, fontSize: 13, transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: 6 }}
+            >
+              Bantuan
+              {supportTickets.length > 0 && (
+                <span style={{ background: '#3b82f6', color: '#fff', borderRadius: '50%', width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11 }}>
+                  {supportTickets.length}
+                </span>
+              )}
             </button>
             <button 
               onClick={() => { setAdminTab('settings'); setShowBlogForm(false); }} 
@@ -1141,6 +1167,65 @@ export default function AdminDashboard({ onBack }) {
                       onMouseOut={e => e.currentTarget.style.background = '#ef444420'}
                     >
                       Hapus
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {adminTab === 'support' && (
+        <div className="animate-fade-in">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+            <h3 style={{ margin: 0, fontSize: 18 }}>Tiket Bantuan & Pertanyaan</h3>
+          </div>
+          {supportTickets.length === 0 ? (
+            <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>Tidak ada tiket bantuan.</div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20 }}>
+              {supportTickets.map(ticket => (
+                <div key={ticket.id} className="stat-card" style={{ background: 'var(--bg-card)', padding: 20, borderRadius: 12, border: '1px solid var(--border)', display: 'flex', flexDirection: 'column' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+                    <div>
+                      <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{ticket.name}</div>
+                      <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{ticket.email || '-'}</div>
+                      <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
+                        {ticket.createdAt?.toDate ? ticket.createdAt.toDate().toLocaleString('id-ID') : ticket.date}
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ background: 'rgba(59, 130, 246, 0.05)', padding: 12, borderRadius: 8, border: '1px solid rgba(59, 130, 246, 0.1)', flex: 1, marginBottom: 16 }}>
+                    <p style={{ fontSize: 14, color: 'var(--text-primary)', lineHeight: 1.5, margin: 0, whiteSpace: 'pre-wrap' }}>
+                      {ticket.feedback}
+                    </p>
+                  </div>
+                  <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+                    {ticket.email && (
+                      <a 
+                        href={`mailto:${ticket.email}?subject=Balasan Bantuan EnduraUP&body=Halo ${ticket.name},%0D%0A%0D%0AMembalas pertanyaan Anda:%0D%0A"${ticket.feedback}"%0D%0A%0D%0A`}
+                        style={{ padding: '8px 12px', background: 'var(--accent-blue)', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 12, textDecoration: 'none', display: 'flex', alignItems: 'center' }}
+                      >
+                        Balas via Email
+                      </a>
+                    )}
+                    <button 
+                      onClick={async () => {
+                        if (window.confirm('Tandai tiket ini sebagai sudah diselesaikan/dihapus?')) {
+                          try {
+                            await deleteDoc(doc(db, 'feedback', ticket.id));
+                            setSupportTickets(prev => prev.filter(t => t.id !== ticket.id));
+                          } catch (err) {
+                            alert('Gagal menghapus tiket: ' + err.message);
+                          }
+                        }
+                      }}
+                      style={{ padding: '8px 12px', background: '#10b98120', color: '#10b981', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 12, transition: 'background 0.2s' }}
+                      onMouseOver={e => e.currentTarget.style.background = '#10b98130'}
+                      onMouseOut={e => e.currentTarget.style.background = '#10b98120'}
+                    >
+                      Selesai (Hapus)
                     </button>
                   </div>
                 </div>

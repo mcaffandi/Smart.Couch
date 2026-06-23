@@ -973,9 +973,11 @@ export default function App() {
 
   // Adjust readiness score based on sleep score and running fatigue/rest
   const trainingReadiness = useMemo(() => {
-    let score = latestSleepScore !== null ? latestSleepScore : 100;
+    // Base neutral score (75) jika tidak ada data sama sekali
+    let score = latestSleepScore !== null ? latestSleepScore : 75;
 
-    // Jika data tidur sudah lama, perlahan pulihkan base score kembali ke 100 (asumsi tubuh beristirahat)
+    // Jika data tidur sudah lama, perlahan drift ke arah neutral baseline (75)
+    // Tujuannya: menghindari exploit "sengaja tidak isi data" untuk dapat skor 100.
     if (latestSleepDate) {
       const today = new Date();
       // Handle format YYYY-MM-DD atau format dengan _
@@ -984,18 +986,22 @@ export default function App() {
       if (!isNaN(sleepDate.getTime())) {
         const diffTime = today.getTime() - sleepDate.getTime();
         const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        
         if (diffDays > 0) {
-           // Pulihkan 20 poin untuk setiap hari tanpa data tidur baru
-           score = Math.min(100, score + (diffDays * 20));
+           const neutralBaseline = 75;
+           if (score < neutralBaseline) {
+              // Jika sebelumnya skor jelek, pulih perlahan (+15 per hari) mentok di 75
+              score = Math.min(neutralBaseline, score + (diffDays * 15));
+           } else if (score > neutralBaseline) {
+              // Jika sebelumnya skor bagus (misal 100), turun perlahan (-10 per hari) mentok di 75
+              score = Math.max(neutralBaseline, score - (diffDays * 10));
+           }
         }
       }
     }
     
-    if (recoveryRemainingHours <= 0) {
-      if (score >= 50) {
-        score = Math.max(80, score);
-      }
-    } else {
+    // Potong skor berdasarkan akumulasi fatigue dari lari (jika ada)
+    if (recoveryRemainingHours > 0) {
       const penalty = Math.min(50, Math.round(recoveryRemainingHours * (50 / 48)));
       score = Math.max(10, score - penalty);
     }

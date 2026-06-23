@@ -8,12 +8,15 @@ export default function FeedbackModal({ onClose, lang = 'id', addToast }) {
   const [submitting, setSubmitting] = useState(false);
   const [testimonials, setTestimonials] = useState([]);
   const [showAllReviews, setShowAllReviews] = useState(false);
+  const [feedbackType, setFeedbackType] = useState('review'); // 'review' or 'support'
 
   useEffect(() => {
     const fetchTestimonials = async () => {
       try {
         if (!isFirebaseConfigured) throw new Error("Firebase not configured");
         let constraints = [
+          where('type', '!=', 'support'),
+          orderBy('type'),
           orderBy('createdAt', 'desc')
         ];
         if (!showAllReviews) {
@@ -60,13 +63,19 @@ export default function FeedbackModal({ onClose, lang = 'id', addToast }) {
       await setDoc(feedbackRef, {
         uid: user.uid,
         name: user.displayName || user.email || 'Runner Anonim',
-        rating,
+        email: user.email || '',
+        rating: feedbackType === 'review' ? rating : null,
         feedback,
+        type: feedbackType,
         featured: false,
         createdAt: serverTimestamp(),
         lang
       });
-      addToast(lang === 'id' ? 'Terima kasih atas masukannya! Testimoni berhasil dikirim.' : 'Thank you for your feedback! Testimonial submitted.');
+      addToast(
+        lang === 'id' 
+          ? (feedbackType === 'review' ? 'Terima kasih atas masukannya!' : 'Pesan terkirim. Admin akan segera menindaklanjuti.') 
+          : (feedbackType === 'review' ? 'Thank you for your feedback!' : 'Message sent. Admin will review shortly.')
+      );
       onClose();
     } catch (error) {
       console.error("Failed to submit feedback", error);
@@ -94,10 +103,10 @@ export default function FeedbackModal({ onClose, lang = 'id', addToast }) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: 'var(--text-primary)' }}>
-              {lang === 'id' ? 'Beri Masukan & Testimoni' : 'Feedback & Testimonial'}
+              {lang === 'id' ? 'Hubungi Kami' : 'Contact Us'}
             </h2>
             <p style={{ margin: 0, marginTop: 4, fontSize: 13, color: 'var(--text-muted)' }}>
-              {lang === 'id' ? 'Gimana pengalaman pakai EnduraUP sejauh ini?' : 'How is your experience using EnduraUP so far?'}
+              {lang === 'id' ? 'Kirim testimoni atau tanyakan kendala seputar aplikasi.' : 'Send a testimonial or ask questions about the app.'}
             </p>
           </div>
           <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: 24, cursor: 'pointer', padding: 4 }}>
@@ -105,42 +114,64 @@ export default function FeedbackModal({ onClose, lang = 'id', addToast }) {
           </button>
         </div>
 
+        {/* Type Toggle */}
+        <div style={{ display: 'flex', background: 'rgba(255,255,255,0.05)', borderRadius: 8, padding: 4 }}>
+          <button 
+            type="button"
+            onClick={() => setFeedbackType('review')}
+            style={{ flex: 1, padding: '8px', background: feedbackType === 'review' ? 'var(--text-primary)' : 'transparent', color: feedbackType === 'review' ? 'var(--bg-base)' : 'var(--text-secondary)', border: 'none', borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
+          >
+            ⭐ Testimoni / Review
+          </button>
+          <button 
+            type="button"
+            onClick={() => setFeedbackType('support')}
+            style={{ flex: 1, padding: '8px', background: feedbackType === 'support' ? 'var(--text-primary)' : 'transparent', color: feedbackType === 'support' ? 'var(--bg-base)' : 'var(--text-secondary)', border: 'none', borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
+          >
+            ❓ Bantuan / Kendala
+          </button>
+        </div>
+
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {/* Star Rating */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center' }}>
-            <div style={{ display: 'flex', gap: 8 }}>
-              {[1, 2, 3, 4, 5].map(star => (
-                <button
-                  key={star}
-                  type="button"
-                  onClick={() => setRating(star)}
-                  style={{
-                    background: 'transparent',
-                    border: 'none',
-                    cursor: 'pointer',
-                    fontSize: 32,
-                    color: star <= rating ? '#fbbf24' : 'var(--border)',
-                    transition: 'all 0.2s',
-                    transform: star <= rating ? 'scale(1.1)' : 'scale(1)'
-                  }}
-                >
-                  ★
-                </button>
-              ))}
+          {/* Star Rating - Only for Review */}
+          {feedbackType === 'review' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center' }}>
+              <div style={{ display: 'flex', gap: 8 }}>
+                {[1, 2, 3, 4, 5].map(star => (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => setRating(star)}
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      cursor: 'pointer',
+                      fontSize: 32,
+                      color: star <= rating ? '#fbbf24' : 'var(--border)',
+                      transition: 'all 0.2s',
+                      transform: star <= rating ? 'scale(1.1)' : 'scale(1)'
+                    }}
+                  >
+                    ★
+                  </button>
+                ))}
+              </div>
+              <div style={{ fontSize: 13, color: 'var(--accent-purple)', fontWeight: 600 }}>
+                {rating === 5 ? (lang === 'id' ? 'Sempurna!' : 'Perfect!') :
+                 rating === 4 ? (lang === 'id' ? 'Sangat Bagus' : 'Very Good') :
+                 rating === 3 ? (lang === 'id' ? 'Bagus' : 'Good') :
+                 rating === 2 ? (lang === 'id' ? 'Kurang Pas' : 'Could be better') :
+                 (lang === 'id' ? 'Mengecewakan' : 'Disappointing')}
+              </div>
             </div>
-            <div style={{ fontSize: 13, color: 'var(--accent-purple)', fontWeight: 600 }}>
-              {rating === 5 ? (lang === 'id' ? 'Sempurna!' : 'Perfect!') :
-               rating === 4 ? (lang === 'id' ? 'Sangat Bagus' : 'Very Good') :
-               rating === 3 ? (lang === 'id' ? 'Bagus' : 'Good') :
-               rating === 2 ? (lang === 'id' ? 'Kurang Pas' : 'Could be better') :
-               (lang === 'id' ? 'Mengecewakan' : 'Disappointing')}
-            </div>
-          </div>
+          )}
 
           {/* Feedback Textarea */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)' }}>
-              {lang === 'id' ? 'Pesan / Testimoni' : 'Message / Testimonial'}
+              {feedbackType === 'review' 
+                ? (lang === 'id' ? 'Pesan Testimoni' : 'Testimonial Message')
+                : (lang === 'id' ? 'Jelaskan Kendala/Pertanyaan Anda' : 'Describe your issue/question')}
             </label>
             <textarea
               value={feedback}
@@ -166,40 +197,42 @@ export default function FeedbackModal({ onClose, lang = 'id', addToast }) {
             />
           </div>
 
-          {/* Examples/Inspiration */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 8 }}>
-            <label style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-              {lang === 'id' ? 'Belum ada ide? Coba bahas tentang:' : 'No ideas? Try talking about:'}
-            </label>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-              {[
-                lang === 'id' ? 'Akurasi Prediksi Race' : 'Race Prediction Accuracy',
-                lang === 'id' ? 'AI Coach (Groq)' : 'AI Coach (Groq)',
-                lang === 'id' ? 'Desain UI / Dark Mode' : 'UI Design / Dark Mode',
-                lang === 'id' ? 'Fitur Import GPX/Garmin' : 'GPX/Garmin Import'
-              ].map(topic => (
-                <button
-                  key={topic}
-                  type="button"
-                  onClick={() => setFeedback(prev => prev ? prev + '\n' + topic + ': ' : topic + ': ')}
-                  style={{
-                    background: 'rgba(255,255,255,0.03)',
-                    border: '1px solid var(--border)',
-                    borderRadius: 99,
-                    padding: '4px 10px',
-                    fontSize: 11,
-                    color: 'var(--text-secondary)',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s'
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent-purple)'; e.currentTarget.style.color = 'var(--accent-purple)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
-                >
-                  + {topic}
-                </button>
-              ))}
+          {/* Examples/Inspiration - Only for review */}
+          {feedbackType === 'review' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 8 }}>
+              <label style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                {lang === 'id' ? 'Belum ada ide? Coba bahas tentang:' : 'No ideas? Try talking about:'}
+              </label>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {[
+                  lang === 'id' ? 'Akurasi Prediksi Race' : 'Race Prediction Accuracy',
+                  lang === 'id' ? 'AI Coach (Groq)' : 'AI Coach (Groq)',
+                  lang === 'id' ? 'Desain UI / Dark Mode' : 'UI Design / Dark Mode',
+                  lang === 'id' ? 'Fitur Import GPX/Garmin' : 'GPX/Garmin Import'
+                ].map(topic => (
+                  <button
+                    key={topic}
+                    type="button"
+                    onClick={() => setFeedback(prev => prev ? prev + '\n' + topic + ': ' : topic + ': ')}
+                    style={{
+                      background: 'rgba(255,255,255,0.03)',
+                      border: '1px solid var(--border)',
+                      borderRadius: 99,
+                      padding: '4px 10px',
+                      fontSize: 11,
+                      color: 'var(--text-secondary)',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s'
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent-purple)'; e.currentTarget.style.color = 'var(--accent-purple)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
+                  >
+                    + {topic}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           <button
             type="submit"
@@ -207,7 +240,11 @@ export default function FeedbackModal({ onClose, lang = 'id', addToast }) {
             className="btn btn-primary"
             style={{ width: '100%', justifyContent: 'center', padding: '12px', marginTop: 8 }}
           >
-            {submitting ? (lang === 'id' ? 'Mengirim...' : 'Sending...') : (lang === 'id' ? 'Kirim Testimoni' : 'Submit Testimonial')}
+            {submitting 
+              ? (lang === 'id' ? 'Mengirim...' : 'Sending...') 
+              : (feedbackType === 'review' 
+                  ? (lang === 'id' ? 'Kirim Testimoni' : 'Submit Testimonial')
+                  : (lang === 'id' ? 'Kirim Pesan Bantuan' : 'Submit Support Request'))}
           </button>
         </form>
 
