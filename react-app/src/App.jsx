@@ -4892,7 +4892,7 @@ export default function App() {
                       return;
                     }
                     const redirectUri = window.location.origin;
-                    window.location.href = `https://www.strava.com/oauth/authorize?client_id=${clientId}&response_type=code&redirect_uri=${redirectUri}&approval_prompt=auto&scope=activity:read_all`;
+                    window.location.href = `https://www.strava.com/oauth/authorize?client_id=${clientId}&response_type=code&redirect_uri=${redirectUri}&approval_prompt=force&scope=activity:read_all`;
                   }} 
                   style={{ 
                     width: '100%', 
