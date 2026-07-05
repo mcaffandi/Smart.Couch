@@ -857,6 +857,18 @@ export const parseGpxFile = async (file) => {
 
   let startTimeLocal = null;
   let endTime = null;
+  
+  // Variables for Lap synthesis (1km splits)
+  const laps = [];
+  let currentLap = {
+    lap_index: 1,
+    distance: 0, // meters
+    moving_time: 0, // seconds
+    sumHr: 0,
+    hrCount: 0
+  };
+  let lapStartTimeMs = null;
+  let prevTimeMs = null;
 
   for (let i = 0; i < trkpts.length; i++) {
     const pt = trkpts[i];
@@ -865,20 +877,31 @@ export const parseGpxFile = async (file) => {
     route.push({ lat, lon });
 
     const timeEl = pt.querySelector("time");
+    let timeMs = null;
     if (timeEl) {
-      const timeMs = new Date(timeEl.textContent).getTime();
+      timeMs = new Date(timeEl.textContent).getTime();
       if (!startTimeLocal) startTimeLocal = timeMs;
+      if (!lapStartTimeMs) lapStartTimeMs = timeMs;
       endTime = timeMs;
     }
 
+    let deltaDist = 0;
+    let deltaTimeMs = 0;
+
     if (i > 0) {
       const prev = trkpts[i-1];
-      distance += getDist(
+      deltaDist = getDist(
         parseFloat(prev.getAttribute("lat")),
         parseFloat(prev.getAttribute("lon")),
         lat, lon
       );
+      distance += deltaDist;
+      
+      if (timeMs && prevTimeMs) {
+        deltaTimeMs = timeMs - prevTimeMs;
+      }
     }
+    prevTimeMs = timeMs;
 
     const hrEl = pt.querySelector("hr");
     const tpxHr = pt.getElementsByTagNameNS("*", "hr")[0];
@@ -888,7 +911,44 @@ export const parseGpxFile = async (file) => {
       if (hrVal > maxHr) maxHr = hrVal;
       sumHr += hrVal;
       hrCount++;
+      
+      currentLap.sumHr += hrVal;
+      currentLap.hrCount++;
     }
+    
+    // Accumulate Lap
+    currentLap.distance += deltaDist;
+    currentLap.moving_time += (deltaTimeMs / 1000);
+    
+    // If lap distance hits 1km, emit lap
+    if (currentLap.distance >= 1000) {
+      laps.push({
+        id: `gpx-lap-${currentLap.lap_index}`,
+        lap_index: currentLap.lap_index,
+        distance: currentLap.distance, // meters
+        moving_time: currentLap.moving_time, // seconds
+        average_heartrate: currentLap.hrCount > 0 ? Math.round(currentLap.sumHr / currentLap.hrCount) : null
+      });
+      currentLap = {
+        lap_index: currentLap.lap_index + 1,
+        distance: 0,
+        moving_time: 0,
+        sumHr: 0,
+        hrCount: 0
+      };
+      lapStartTimeMs = timeMs;
+    }
+  }
+  
+  // Push remaining partial lap
+  if (currentLap.distance > 0 || currentLap.moving_time > 0) {
+     laps.push({
+        id: `gpx-lap-${currentLap.lap_index}`,
+        lap_index: currentLap.lap_index,
+        distance: currentLap.distance, // meters
+        moving_time: currentLap.moving_time, // seconds
+        average_heartrate: currentLap.hrCount > 0 ? Math.round(currentLap.sumHr / currentLap.hrCount) : null
+     });
   }
 
   if (startTimeLocal && endTime) {
@@ -914,6 +974,7 @@ export const parseGpxFile = async (file) => {
     activityType: 'running',
     name: file.name.replace(/\.gpx$/i, ''),
     route: sampledRoute,
+    laps: laps
   };
 
   return {

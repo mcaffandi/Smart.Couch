@@ -209,7 +209,7 @@ export default function RunDetailsModal({ act, onClose, lang = 'id', stravaAcces
               </div>
             )}
 
-            {act.stravaId ? (
+            {(act.stravaId || (laps && laps.length > 0)) ? (
               <div style={{ marginTop: 8 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                   <h3 style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', margin: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
