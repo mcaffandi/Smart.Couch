@@ -726,6 +726,9 @@ export default function App() {
         .then(activities => ({ activities, savedTokens }));
       })
       .then(({ activities, savedTokens }) => {
+        if (activities.message === "Authorization Error" || activities.errors) {
+          throw new Error('Unauthorized');
+        }
         if (!Array.isArray(activities)) throw new Error('Invalid Strava Data');
         
         let newRuns = [];
@@ -849,7 +852,11 @@ export default function App() {
       })
       .catch(err => {
         console.error('Strava Error:', err);
-        addToast(lang === 'id' ? 'Gagal narik data Strava!' : 'Failed to fetch Strava data!', 'error');
+        if (err.message === 'Unauthorized') {
+          addToast(lang === 'id' ? 'Akses ditolak oleh Strava. Silakan coba lagi.' : 'Access denied by Strava. Please try again.', 'error');
+        } else {
+          addToast(lang === 'id' ? 'Gagal narik data Strava!' : 'Failed to fetch Strava data!', 'error');
+        }
         setIsUploading(false);
       });
     }
@@ -1960,7 +1967,10 @@ export default function App() {
           })
         });
         const refreshData = await refreshRes.json();
-        if (!refreshData.access_token) throw new Error('Failed to refresh token');
+        if (!refreshData.access_token) {
+          console.error('Strava refresh token failed:', refreshData);
+          throw new Error('Failed to refresh token');
+        }
         
         accessToken = refreshData.access_token;
         newTokens = {
@@ -1980,6 +1990,9 @@ export default function App() {
       });
       const activities = await actsRes.json();
 
+      if (activities.message === "Authorization Error" || activities.errors) {
+        throw new Error('Unauthorized');
+      }
       if (!Array.isArray(activities)) throw new Error('Invalid Strava Data');
 
       let newRuns = [];
@@ -2087,7 +2100,25 @@ export default function App() {
 
     } catch (err) {
       console.error('Strava Sync Error:', err);
-      addToast(lang === 'id' ? 'Gagal narik data Strava!' : 'Failed to fetch Strava data!', 'error');
+      if (err.message === 'Failed to refresh token' || err.message === 'Unauthorized') {
+        addToast(lang === 'id' ? 'Sesi Strava kadaluarsa. Silakan putuskan dan hubungkan ulang.' : 'Strava session expired. Please disconnect and reconnect.', 'error');
+        setData(prev => {
+          const updated = { 
+            ...prev, 
+            profile: { 
+              ...(prev.profile || {}), 
+              stravaConnected: false,
+              stravaAccessToken: null,
+              stravaRefreshToken: null,
+              stravaTokenExpiresAt: null
+            }
+          };
+          saveAndSyncData(updated);
+          return updated;
+        });
+      } else {
+        addToast(lang === 'id' ? 'Gagal narik data Strava!' : 'Failed to fetch Strava data!', 'error');
+      }
     } finally {
       setIsUploading(false);
     }
