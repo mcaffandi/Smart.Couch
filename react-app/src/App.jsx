@@ -738,6 +738,10 @@ export default function App() {
       .then(({ activities, savedTokens }) => {
         if (activities.message === "Authorization Error" || activities.errors) {
           console.error("Strava API Rejected Request:", activities);
+          // Check if it's because the API App is inactive (due to Strava's new subscription policy)
+          const isInactive = activities.errors?.some(e => e.code === 'Inactive' || e.field === 'Status');
+          if (isInactive) throw new Error('InactiveApp');
+          
           throw new Error('Unauthorized');
         }
         if (!Array.isArray(activities)) throw new Error('Invalid Strava Data');
@@ -863,7 +867,9 @@ export default function App() {
       })
       .catch(err => {
         console.error('Strava Error:', err);
-        if (err.message === 'Unauthorized') {
+        if (err.message === 'InactiveApp') {
+          addToast(lang === 'id' ? 'Akses ditolak: Aplikasi Strava API Anda berstatus Inactive karena kebijakan langganan baru Strava.' : 'Access denied: Your Strava API App is Inactive due to Strava\'s new subscription policy.', 'error');
+        } else if (err.message === 'Unauthorized') {
           addToast(lang === 'id' ? 'Akses ditolak. Pastikan Anda mencentang kotak "View data about your activities" saat login.' : 'Access denied. Please ensure you check the "View data about your activities" box when authorizing.', 'error');
         } else {
           addToast(lang === 'id' ? 'Gagal narik data Strava!' : 'Failed to fetch Strava data!', 'error');
@@ -2003,6 +2009,8 @@ export default function App() {
 
       if (activities.message === "Authorization Error" || activities.errors) {
         console.error("Strava API Rejected Request:", activities);
+        const isInactive = activities.errors?.some(e => e.code === 'Inactive' || e.field === 'Status');
+        if (isInactive) throw new Error('InactiveApp');
         throw new Error('Unauthorized');
       }
       if (!Array.isArray(activities)) throw new Error('Invalid Strava Data');
@@ -2112,7 +2120,14 @@ export default function App() {
 
     } catch (err) {
       console.error('Strava Sync Error:', err);
-      if (err.message === 'Failed to refresh token' || err.message === 'Unauthorized') {
+      if (err.message === 'InactiveApp') {
+        addToast(lang === 'id' ? 'Gagal: Aplikasi Strava API Anda berstatus Inactive (butuh langganan Strava).' : 'Failed: Your Strava API App is Inactive (requires subscription).', 'error');
+        setData(prev => {
+          const updated = { ...prev, profile: { ...(prev.profile || {}), stravaConnected: false, stravaAccessToken: null, stravaRefreshToken: null, stravaTokenExpiresAt: null } };
+          saveAndSyncData(updated);
+          return updated;
+        });
+      } else if (err.message === 'Failed to refresh token' || err.message === 'Unauthorized') {
         addToast(lang === 'id' ? 'Sesi Strava kadaluarsa atau izin akses aktivitas belum diberikan. Silakan hubungkan ulang.' : 'Strava session expired or activity permission missing. Please reconnect.', 'error');
         setData(prev => {
           const updated = { 
