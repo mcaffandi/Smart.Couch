@@ -681,9 +681,19 @@ export default function App() {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get('code');
+    const scope = urlParams.get('scope');
+    
     if (code && currentUser && isAuthReady) {
       window.history.replaceState({}, document.title, window.location.pathname);
       
+      // Verify if the user granted the required scopes
+      if (scope && !scope.includes('activity:read')) {
+        addToast(lang === 'id' 
+          ? 'Koneksi gagal: Izin aktivitas (activity) tidak dicentang di halaman Strava. Silakan hubungkan ulang.' 
+          : 'Connection failed: Activity permission was not checked on Strava. Please reconnect.', 'error');
+        return;
+      }
+
       const clientId = import.meta.env.VITE_STRAVA_CLIENT_ID;
       const clientSecret = import.meta.env.VITE_STRAVA_CLIENT_SECRET;
       
@@ -853,7 +863,7 @@ export default function App() {
       .catch(err => {
         console.error('Strava Error:', err);
         if (err.message === 'Unauthorized') {
-          addToast(lang === 'id' ? 'Akses ditolak oleh Strava. Silakan coba lagi.' : 'Access denied by Strava. Please try again.', 'error');
+          addToast(lang === 'id' ? 'Akses ditolak. Pastikan Anda mencentang kotak "View data about your activities" saat login.' : 'Access denied. Please ensure you check the "View data about your activities" box when authorizing.', 'error');
         } else {
           addToast(lang === 'id' ? 'Gagal narik data Strava!' : 'Failed to fetch Strava data!', 'error');
         }
@@ -2101,7 +2111,7 @@ export default function App() {
     } catch (err) {
       console.error('Strava Sync Error:', err);
       if (err.message === 'Failed to refresh token' || err.message === 'Unauthorized') {
-        addToast(lang === 'id' ? 'Sesi Strava kadaluarsa. Silakan putuskan dan hubungkan ulang.' : 'Strava session expired. Please disconnect and reconnect.', 'error');
+        addToast(lang === 'id' ? 'Sesi Strava kadaluarsa atau izin akses aktivitas belum diberikan. Silakan hubungkan ulang.' : 'Strava session expired or activity permission missing. Please reconnect.', 'error');
         setData(prev => {
           const updated = { 
             ...prev, 
