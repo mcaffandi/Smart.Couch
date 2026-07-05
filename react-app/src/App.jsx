@@ -737,6 +737,7 @@ export default function App() {
       })
       .then(({ activities, savedTokens }) => {
         if (activities.message === "Authorization Error" || activities.errors) {
+          console.error("Strava API Rejected Request:", activities);
           throw new Error('Unauthorized');
         }
         if (!Array.isArray(activities)) throw new Error('Invalid Strava Data');
@@ -2001,6 +2002,7 @@ export default function App() {
       const activities = await actsRes.json();
 
       if (activities.message === "Authorization Error" || activities.errors) {
+        console.error("Strava API Rejected Request:", activities);
         throw new Error('Unauthorized');
       }
       if (!Array.isArray(activities)) throw new Error('Invalid Strava Data');
