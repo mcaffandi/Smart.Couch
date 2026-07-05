@@ -16,16 +16,16 @@ function MapBounds({ points }) {
   return null;
 }
 
-export default function RunDetailsModal({ act, onClose, lang = 'id', stravaAccessToken, isPremium, onEdit, onDelete, onShare, onSaveLaps }) {
+export default function RunDetailsModal({ act, onClose, lang = 'id', stravaAccessToken, isPremium, userMaxHr = 190, onEdit, onDelete, onShare, onSaveLaps }) {
   const [laps, setLaps] = useState(act.laps || []);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const getBadge = (avgHr, maxHr) => {
+  const getBadge = (avgHr) => {
     if (!avgHr) return null;
-    if (avgHr > 165 || maxHr > 185) return { label: lang === 'id' ? 'On Fire' : 'On Fire', cls: 'badge-fire' };
-    if (avgHr > 152) return { label: lang === 'id' ? 'Ngepush' : 'Hard', cls: 'badge-ngepush' };
-    if (avgHr > 133) return { label: lang === 'id' ? 'Sedang' : 'Moderate', cls: 'badge-sedang' };
+    const intensity = avgHr / userMaxHr;
+    if (intensity > 0.85) return { label: lang === 'id' ? 'Ngepush' : 'Hard', cls: 'badge-ngepush' };
+    if (intensity > 0.75) return { label: lang === 'id' ? 'Sedang' : 'Moderate', cls: 'badge-sedang' };
     return { label: lang === 'id' ? 'Santai' : 'Easy', cls: 'badge-santai' };
   };
 
@@ -101,7 +101,7 @@ export default function RunDetailsModal({ act, onClose, lang = 'id', stravaAcces
     if (paces.length >= 2) {
       const minPace = Math.min(...paces);
       const maxPace = Math.max(...paces);
-      const badge = getBadge(act.avgHr, act.maxHr);
+      const badge = getBadge(act.avgHr);
       const isIntense = badge && (badge.label.toLowerCase().includes('ngepush') || badge.label.toLowerCase().includes('fire') || badge.label.toLowerCase().includes('overreaching'));
       
       if (isIntense && (maxPace - minPace > 180 || maxPace > 600)) {

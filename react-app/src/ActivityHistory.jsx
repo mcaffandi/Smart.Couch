@@ -6,7 +6,7 @@ import { Activity, Dumbbell, Bike, Waves, Footprints, Edit2, Trash2 } from 'luci
 import { estimateTrainingEffect } from './utils';
 const ITEMS_PER_PAGE = 12;
 
-export default function RunHistory({ activities, profileWeight = 70, lang = 'id', onEdit, onDelete, onViewDetails }) {
+export default function RunHistory({ activities, profileWeight = 70, userMaxHr = 190, lang = 'id', onEdit, onDelete, onViewDetails }) {
   const [page, setPage] = useState(0);
 
   const sorted = [...activities].sort((a, b) =>
@@ -23,11 +23,11 @@ export default function RunHistory({ activities, profileWeight = 70, lang = 'id'
     return `${dateStr} • ${timeStr}`;
   };
 
-  const getBadge = (avgHr, maxHr) => {
+  const getBadge = (avgHr) => {
     if (!avgHr) return null;
-    const intensity = avgHr;
-    if (intensity > 170) return { label: lang === 'id' ? 'Ngepush' : 'Interval/Push', cls: 'badge-interval' };
-    if (intensity > 155) return { label: lang === 'id' ? 'Sedang' : 'Moderate', cls: 'badge-long' };
+    const intensity = avgHr / userMaxHr;
+    if (intensity > 0.85) return { label: lang === 'id' ? 'Ngepush' : 'Interval/Push', cls: 'badge-interval' };
+    if (intensity > 0.75) return { label: lang === 'id' ? 'Sedang' : 'Moderate', cls: 'badge-long' };
     return { label: lang === 'id' ? 'Santai' : 'Easy', cls: 'badge-easy' };
   };
 
@@ -152,7 +152,7 @@ export default function RunHistory({ activities, profileWeight = 70, lang = 'id'
             ? (act.duration / 1000) / (act.distance / 100000)
             : null;
             
-          const badge = getBadge(act.avgHr, act.maxHr);
+          const badge = getBadge(act.avgHr);
           
           let teScore = null;
           if (act.duration && act.avgHr && act.maxHr) {

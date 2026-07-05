@@ -4527,6 +4527,7 @@ export default function App() {
                 <ActivityHistory 
                   activities={runActs} 
                   profileWeight={data.profile?.weight || 70}
+                  userMaxHr={data.max_hr || (220 - (data.profile?.age || 30))}
                   lang={lang}
                   onViewDetails={setSelectedRunForDetails}
                   onDelete={(actTime) => {
