@@ -5,6 +5,7 @@
 ## [cf6cdc5f] — 2026-07-05 · Strava Token Expiration & Error Handling
 
 ### 🐛 Bug Fix
+- **Validasi Scope OAuth Strava**: Menambahkan pencegahan dini saat pengguna mengotorisasi aplikasi melalui Strava. Seringkali pengguna lupa mencentang kotak *"View data about your activities"* di halaman persetujuan Strava. Kini aplikasi akan langsung memvalidasi URL *callback* dan memberikan instruksi spesifik jika izin aktivitas tidak diberikan, serta memperjelas pesan *error* "Access denied" agar pengguna tahu solusi pastinya.
 - **Penanganan Sesi Kedaluwarsa**: Memperbaiki kelemahan *error handling* pada integrasi Strava. Bila sesi *access token* gagal diperbarui (karena habis atau akses dicabut pengguna), sistem kini akan secara cerdas menangkap respons `401 Unauthorized` atau `400 Bad Request`. Sistem kemudian otomatis menonaktifkan status `stravaConnected` dan menampilkan peringatan spesifik kepada pengguna agar menghubungkan ulang sesi mereka, ketimbang terjebak pada pesan *error* "Failed to fetch Strava data!" secara permanen.
 
 ---
