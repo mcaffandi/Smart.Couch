@@ -2,6 +2,13 @@
 
 ---
 
+## [cf6cdc5f] — 2026-07-05 · Strava Token Expiration & Error Handling
+
+### 🐛 Bug Fix
+- **Penanganan Sesi Kedaluwarsa**: Memperbaiki kelemahan *error handling* pada integrasi Strava. Bila sesi *access token* gagal diperbarui (karena habis atau akses dicabut pengguna), sistem kini akan secara cerdas menangkap respons `401 Unauthorized` atau `400 Bad Request`. Sistem kemudian otomatis menonaktifkan status `stravaConnected` dan menampilkan peringatan spesifik kepada pengguna agar menghubungkan ulang sesi mereka, ketimbang terjebak pada pesan *error* "Failed to fetch Strava data!" secara permanen.
+
+---
+
 ## [ebc6cfd3] — 2026-06-04 · Dynamic Admin Settings, Rotating Blog Hero & Auth Modernization
 
 ### ✨ Fitur Baru & Optimasi
