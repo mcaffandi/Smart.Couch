@@ -525,12 +525,16 @@ export default function AdminDashboard({ onBack }) {
   const now = Date.now();
   const dau = users.filter(u => {
     if (!u.data?.lastLogin) return false;
+    const email = (u.data?.email || u.id || '').toLowerCase();
+    if (ADMIN_EMAILS.includes(email)) return false;
     const lastLoginTime = u.data.lastLogin.seconds ? u.data.lastLogin.seconds * 1000 : u.data.lastLogin;
     return (now - lastLoginTime) < 24 * 60 * 60 * 1000;
   }).length;
 
   const mau = users.filter(u => {
     if (!u.data?.lastLogin) return false;
+    const email = (u.data?.email || u.id || '').toLowerCase();
+    if (ADMIN_EMAILS.includes(email)) return false;
     const lastLoginTime = u.data.lastLogin.seconds ? u.data.lastLogin.seconds * 1000 : u.data.lastLogin;
     return (now - lastLoginTime) < 30 * 24 * 60 * 60 * 1000;
   }).length;
