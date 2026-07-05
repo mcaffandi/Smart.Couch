@@ -107,6 +107,7 @@ export default function App() {
   const [showAddRunModal, setShowAddRunModal] = useState(false);
   const [showSleepModal, setShowSleepModal] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const [showSyncModal, setShowSyncModal] = useState(false);
   const [syncedRuns, setSyncedRuns] = useState([]);
   const [notifications, setNotifications] = useState([]);
@@ -4846,9 +4847,32 @@ export default function App() {
             />
 
             <div
-              className={`file-upload-area ${isUploading ? 'has-file' : ''}`}
+              className={`file-upload-area ${isUploading ? 'has-file' : ''} ${isDragging ? 'dragging' : ''}`}
               onClick={() => fileInputRef.current?.click()}
-              style={{ cursor: 'pointer', marginBottom: 16 }}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setIsDragging(true);
+              }}
+              onDragLeave={(e) => {
+                e.preventDefault();
+                setIsDragging(false);
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                setIsDragging(false);
+                const file = e.dataTransfer.files[0];
+                if (!file) return;
+                setShowUploadModal(false);
+                const name = file.name.toLowerCase();
+                if (name.endsWith('.zip') || name.endsWith('.gpx')) {
+                  handleFileUpload(file);
+                } else if (name.endsWith('.xlsx') || name.endsWith('.xls') || name.endsWith('.csv')) {
+                  handleExcelUpload(file);
+                } else {
+                  addToast(lang === 'id' ? 'Format file tidak didukung' : 'File format not supported', 'error');
+                }
+              }}
+              style={{ cursor: 'pointer', marginBottom: 16, border: isDragging ? '2px dashed var(--accent-purple)' : '2px dashed var(--border)', background: isDragging ? 'rgba(167, 139, 250, 0.05)' : 'var(--bg-card)' }}
             >
               {isUploading ? (
                 <div>
